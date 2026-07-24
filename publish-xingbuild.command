@@ -12,19 +12,20 @@ fi
 
 npm run release:check
 
-if ! command -v edgeone >/dev/null 2>&1; then
+EDGEONE_CLI="./node_modules/.bin/edgeone"
+
+if [[ ! -x "$EDGEONE_CLI" ]]; then
   echo ""
-  echo "发布已停止：尚未安装 EdgeOne CLI。"
-  echo "首次配置请执行：npm install -g edgeone"
-  echo "安装后执行：edgeone login"
+  echo "发布已停止：项目内尚未安装 EdgeOne CLI。"
+  echo "请先执行：npm ci"
   read "?按回车键关闭..."
   exit 1
 fi
 
-if ! edgeone whoami >/dev/null 2>&1; then
+if ! "$EDGEONE_CLI" whoami >/dev/null 2>&1; then
   echo ""
   echo "发布已停止：EdgeOne CLI 尚未登录。"
-  echo "请先执行：edgeone login"
+  echo "请先执行：npx edgeone login"
   read "?按回车键关闭..."
   exit 1
 fi
@@ -39,7 +40,7 @@ if [[ "$answer" != "publish" ]]; then
   exit 0
 fi
 
-edgeone makers deploy dist/client --name xingbuild --env production
+"$EDGEONE_CLI" makers deploy dist/client --name xingbuild --env production
 
 echo ""
 echo "EdgeOne 已接收部署。请继续验证部署状态、xingbuild.top、HTTPS、桌面端和手机端。"

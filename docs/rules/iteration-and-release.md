@@ -101,7 +101,7 @@ npm run release:check
 
 首次发布前需要一次性完成：
 
-1. 安装 EdgeOne CLI；
+1. 执行 `npm ci` 安装项目锁定的 EdgeOne CLI；
 2. 登录与当前 EdgeOne 免费账号一致的区域；
 3. 在 EdgeOne 建立或确认 `xingbuild` 项目；
 4. 绑定 `xingbuild.top`；
