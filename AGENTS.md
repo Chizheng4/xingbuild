@@ -27,7 +27,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Before saying an iteration is complete, run `npm run release:check`.
 - After a stable iteration passes validation, create a local Git commit and matching version tag as the normal closeout action. This does not authorize a remote push or production deployment.
 - GitHub remote creation and the first push require the user's authorization or an explicit execution request. Later pushes follow the release instruction for that iteration.
-- Production publishing uses `./publish-xingbuild.command` and targets the EdgeOne Makers project `xingbuild`. The user normally runs this command manually. Codex must not publish, trigger a remote deployment, change DNS, or bind a production domain unless the user explicitly asks Codex to do so in the current task.
+- Production publishing uses `./publish-xingbuild.command` and targets the EdgeOne Makers project `xingbuild-nochina` (`makers-ze0f6txvlhco`). The user normally runs this command manually. Codex must not publish, trigger a remote deployment, change DNS, or bind a production domain unless the user explicitly asks Codex to do so in the current task.
 - The publish command must not contain API tokens or other credentials.
 - Publishing is a separate state from implementation: code complete, locally verified, committed, deployed, domain active, and publicly verified must be reported separately.
 - `xingbuild.top` is the canonical personal-site domain. `www.xingbuild.top` is reserved for redirecting to the canonical domain. `robotaxi.xingbuild.top` belongs to the independent Robotaxi deployment and must not be published from this repository.

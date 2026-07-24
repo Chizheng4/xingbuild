@@ -98,7 +98,7 @@ npm run release:check
 3. 明确要求输入 `publish` 确认生产发布；
 4. 运行完整发布前检查并生成带版本和提交标识的 `release.json`；
 5. 推送版本标签和 `main` 到 GitHub，并确认远端提交一致；
-6. 将 `dist/client` 发布到 EdgeOne Makers 的 `xingbuild` 生产环境；
+6. 将 `dist/client` 发布到 EdgeOne Makers 的 `xingbuild-nochina` 生产环境；
 7. 访问 `xingbuild.top`，核对页面、版本号和 Git 提交；
 8. 只有全部成功后才报告正式上线。
 
@@ -108,12 +108,21 @@ npm run release:check
 
 1. 执行 `npm ci` 安装项目锁定的 EdgeOne CLI；
 2. 登录与当前 EdgeOne 免费账号一致的区域；
-3. 在 EdgeOne 建立或确认 `xingbuild` 项目；
+3. 在 EdgeOne 建立或确认 `xingbuild-nochina` 项目；
 4. 绑定 `xingbuild.top`；
 5. 配置 DNS CNAME 和 HTTPS；
 6. 确认生产域名。
 
 凭证只由 EdgeOne CLI 或控制台管理，禁止写入脚本、Git、文档或 `.env`。
+
+当前生产项目固定为：
+
+- EdgeOne 项目：`xingbuild-nochina`
+- 项目 ID：`makers-ze0f6txvlhco`
+- 加速区域：全球可用区（不含中国大陆）
+- 正式域名：`xingbuild.top`
+
+项目名是发布目标合同。不得为了命名简洁改回 `xingbuild`，否则 CLI 可能创建或更新另一个项目。
 
 ## 8. 发布状态
 

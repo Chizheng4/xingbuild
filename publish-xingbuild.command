@@ -10,6 +10,7 @@ COMMIT="$(git rev-parse HEAD)"
 DEFAULT_GITHUB_PROXY="http://127.0.0.1:7897"
 GITHUB_PROXY=""
 PUBLIC_URL="${XINGBUILD_PUBLIC_URL:-https://xingbuild.top/}"
+EDGEONE_PROJECT="${XINGBUILD_EDGEONE_PROJECT:-xingbuild-nochina}"
 EDGEONE_CLI="./node_modules/.bin/edgeone"
 
 if [[ "$BRANCH" != "main" ]]; then
@@ -91,7 +92,7 @@ push_with_retry() {
 echo ""
 echo "即将发布 $VERSION："
 echo "1. 推送版本标签和 main 到 GitHub"
-echo "2. 部署到 EdgeOne Makers 生产环境"
+echo "2. 部署到 EdgeOne Makers 生产项目：$EDGEONE_PROJECT"
 echo "3. 验证 $PUBLIC_URL"
 read "answer?输入 publish 继续："
 
@@ -115,7 +116,7 @@ if [[ "$(git rev-parse origin/main)" != "$COMMIT" ]]; then
 fi
 
 echo "==> 部署 EdgeOne 生产环境"
-"$EDGEONE_CLI" makers deploy dist/client --name xingbuild --env production
+"$EDGEONE_CLI" makers deploy dist/client --name "$EDGEONE_PROJECT" --env production
 
 echo "==> 验证公网版本"
 node scripts/verify-public-release.mjs "$PUBLIC_URL" "$VERSION" "$COMMIT"
