@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "check": "node scripts/check-project.mjs",
+    "release:verify": "node scripts/verify-public-release.mjs",
     "release:check": "npm run check && npm run build && npm run test:sites"
   },
   "dependencies": {

@@ -93,11 +93,16 @@ npm run release:check
 
 发布命令按顺序执行：
 
-1. 拒绝发布包含未提交修改的工作区；
-2. 运行完整发布前检查；
-3. 确认 EdgeOne CLI 已安装并已登录；
-4. 明确要求确认生产发布；
-5. 将 `dist/client` 发布到 EdgeOne Makers 的 `xingbuild` 项目。
+1. 确认当前位于 `main`、工作区干净、HEAD 具有与项目版本一致的标签；
+2. 确认 GitHub origin、EdgeOne CLI 和登录账号可用；
+3. 明确要求输入 `publish` 确认生产发布；
+4. 运行完整发布前检查并生成带版本和提交标识的 `release.json`；
+5. 推送版本标签和 `main` 到 GitHub，并确认远端提交一致；
+6. 将 `dist/client` 发布到 EdgeOne Makers 的 `xingbuild` 生产环境；
+7. 访问 `xingbuild.top`，核对页面、版本号和 Git 提交；
+8. 只有全部成功后才报告正式上线。
+
+因此，一次 `publish` 同时完成 GitHub 同步和 EdgeOne 生产发布，但两者仍是独立步骤。GitHub 推送成功而 EdgeOne 失败时，必须报告“代码已同步、网站未上线”，不得把部分成功描述为正式发布。
 
 首次发布前需要一次性完成：
 

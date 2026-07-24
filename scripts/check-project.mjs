@@ -10,6 +10,8 @@ const requiredFiles = [
   "src/App.jsx",
   "src/content/siteContent.js",
   "src/styles.css",
+  "publish-xingbuild.command",
+  "scripts/verify-public-release.mjs",
   ".openai/hosting.json",
   "worker/index.js",
 ];
