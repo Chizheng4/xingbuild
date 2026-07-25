@@ -11,7 +11,7 @@ export const observations = [
   {
     id: "observation-four-planes",
     slug: "four-planes-of-enterprise-digitalization",
-    title: "为什么理解企业数字化，需要同时看见四个平面",
+    title: "为什么理解企\u2060业\u2060数\u2060字\u2060化，需要同\u2060时看见四个平面",
     summary:
       "页面、流程和系统都只是局部投影。要判断数字化是否真正服务经营，需要把企业现实、经营与架构设计、数字化实现和运行反馈放在同一条因果链上。",
     format: "analysis",

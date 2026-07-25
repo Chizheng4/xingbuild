@@ -8,6 +8,9 @@ const foundations = await readFile(new URL("../src/styles/foundations.css", impo
 const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url), "utf8");
+const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
+const content = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
 test("root stylesheet imports local fonts and visual responsibility layers", () => {
@@ -53,4 +56,29 @@ test("hero and explanation roles use semantic visual contracts", () => {
   assert.match(components, /\.section-intro__description[\s\S]*var\(--font-ui\)/);
   assert.match(components, /\.wordmark[\s\S]*text-transform: lowercase/);
   assert.doesNotMatch(pages, /\.home-hero h1 br/);
+});
+
+test("Chinese semantic titles use native phrase-aware wrapping", () => {
+  assert.match(html, /<html lang="zh-CN">/);
+  assert.match(
+    foundations,
+    /\.home-hero h1,[\s\S]*\.article-header h1[\s\S]*word-break: auto-phrase;[\s\S]*text-wrap: balance;/,
+  );
+  assert.match(
+    foundations,
+    /\.section-intro h2,[\s\S]*\.work-summary h3,[\s\S]*word-break: auto-phrase;[\s\S]*text-wrap: pretty;/,
+  );
+  assert.doesNotMatch(allStyles, /word-break:\s*(?:break-all|keep-all)/);
+  assert.match(homePage, /构\\u2060建/);
+  assert.match(content, /企\\u2060业\\u2060数\\u2060字\\u2060化，需要同\\u2060时/);
+  assert.doesNotMatch(homePage, /<br\s*\/?>/);
+});
+
+test("reading flow assigns each adjacent relationship one spacing owner", () => {
+  assert.match(components, /\.prose section \{[\s\S]*display: flow-root;[\s\S]*margin: 0;/);
+  assert.match(components, /\.prose section \+ section,[\s\S]*margin-top: var\(--space-reading-section\)/);
+  assert.match(components, /\.prose h2 \{[\s\S]*margin: 0 0 var\(--space-4\)/);
+  assert.match(components, /\.prose p \{[\s\S]*margin: 0;/);
+  assert.match(components, /\.prose p \+ p \{ margin-top: var\(--space-6\); \}/);
+  assert.match(components, /\.article-summary \{[\s\S]*margin: 0;/);
 });

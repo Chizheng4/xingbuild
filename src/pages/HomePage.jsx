@@ -11,7 +11,7 @@ export function HomePage() {
     <>
       <HeroStatement
         eyebrow={site.author}
-        title="观察企业如何经营，把判断构建成可以运行和验证的系统。"
+        title={"观察企业如何经营，把判断构\u2060建成可以运行和验证的系统。"}
         summary="持续研究企业经营、业务架构与数字化实现，并把形成的判断沉淀为作品。"
       />
       <section className="home-section home-observations">

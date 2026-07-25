@@ -149,6 +149,7 @@
     letter-spacing: -0.025em;
   }
   .article-summary {
+    margin: 0;
     color: var(--color-text-muted);
     font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
   }
@@ -185,16 +186,24 @@
   .mobile-toc nav { padding: 0 var(--space-4) var(--space-4); }
   .mobile-toc a { min-height: var(--touch-target); display: flex; align-items: center; color: var(--color-text-muted); }
   .prose { min-width: 0; }
-  .prose section { margin-bottom: var(--space-reading-section); }
+  .prose section {
+    display: flow-root;
+    margin: 0;
+  }
+  .prose section + section,
+  .prose .source-note + section {
+    margin-top: var(--space-reading-section);
+  }
   .prose h2 {
-    margin-bottom: var(--space-4);
+    margin: 0 0 var(--space-4);
     font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
   }
   .prose p {
-    margin-bottom: var(--space-6);
+    margin: 0;
     font: 400 var(--type-reading)/var(--leading-reading) var(--font-reading);
   }
-  .source-note { margin-block: var(--space-12); }
+  .prose p + p { margin-top: var(--space-6); }
+  .source-note { margin: var(--space-12) 0 0; }
   .source-note p {
     margin: var(--space-2) 0 0;
     color: var(--color-text-muted);
