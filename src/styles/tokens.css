@@ -1,0 +1,62 @@
+@layer tokens {
+  :root {
+    color-scheme: only light;
+
+    --color-canvas: #f5f1e8;
+    --color-surface-subtle: #ece5d8;
+    --color-text: #20211f;
+    --color-text-muted: #625f58;
+    --color-border: #c9c3b7;
+    --color-accent: #a34322;
+    --color-accent-strong: #7d2f19;
+
+    --font-display: "Noto Serif SC Variable", "Songti SC", STSong, serif;
+    --font-reading: "Noto Serif SC Variable", "Songti SC", STSong, serif;
+    --font-ui: "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-meta: "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-wordmark: Georgia, "Times New Roman", serif;
+
+    --type-display: clamp(2.375rem, 1.6786rem + 2.8571vw, 4.25rem);
+    --type-page-title: clamp(2.25rem, 1.7857rem + 1.9048vw, 3.5rem);
+    --type-section-title: clamp(1.5rem, 1.3143rem + 0.7619vw, 2rem);
+    --type-feature-title: clamp(1.4375rem, 1.275rem + 0.6667vw, 1.875rem);
+    --type-reading: clamp(1.03125rem, 0.9964rem + 0.1429vw, 1.125rem);
+    --type-summary: clamp(0.96875rem, 0.9107rem + 0.2381vw, 1.125rem);
+    --type-ui: clamp(0.875rem, 0.8518rem + 0.0952vw, 0.9375rem);
+    --type-meta: clamp(0.75rem, 0.7268rem + 0.0952vw, 0.8125rem);
+    --type-caption: clamp(0.6875rem, 0.6643rem + 0.0952vw, 0.75rem);
+
+    --leading-display: 1.3;
+    --leading-title: 1.45;
+    --leading-reading: 1.95;
+    --leading-summary: 1.85;
+    --leading-ui: 1.6;
+    --leading-meta: 1.55;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-24: 6rem;
+    --space-32: 8rem;
+    --gutter-page: clamp(1.125rem, 0.0571rem + 4.381vw, 4rem);
+    --space-section: clamp(4rem, 2.5143rem + 6.0952vw, 8rem);
+    --space-hero: clamp(5rem, 2.7714rem + 9.1429vw, 11rem);
+    --space-reading-section: clamp(2.5rem, 2.1286rem + 1.5238vw, 3.5rem);
+
+    --measure-page: 80rem;
+    --measure-content: 65rem;
+    --measure-reading: 45rem;
+    --measure-summary: 41rem;
+    --measure-narrow: 34rem;
+    --rail-toc: 10rem;
+    --rail-year: 5.5rem;
+    --rail-index: 3rem;
+    --touch-target: 2.75rem;
+    --line-thin: 1px;
+  }
+}

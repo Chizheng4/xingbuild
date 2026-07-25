@@ -34,3 +34,9 @@
 ## 当前设计探索
 
 - [网站出版体系、品牌与视觉方向](explorations/网站出版体系、品牌与视觉方向.md)
+
+## 当前设计基线
+
+- [xingbuild Visual System v1](design/xingbuild%20Visual%20System%20v1.md)
+- [v0.4.0 视觉系统工程化升级方案](design/v0.4.0%20视觉系统工程化升级方案.md)
+- [v0.4.0 Engineering task 执行指令](design/v0.4.0%20Engineering%20task%20执行指令.md)

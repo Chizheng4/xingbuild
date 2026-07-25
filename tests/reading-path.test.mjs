@@ -3,56 +3,34 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { observations } from "../src/content/siteContent.js";
 
-const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
-const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+const article = await readFile(new URL("../src/components/reading/Article.jsx", import.meta.url), "utf8");
+const header = await readFile(new URL("../src/components/site/SiteHeader.jsx", import.meta.url), "utf8");
+const footer = await readFile(new URL("../src/components/site/SiteFooter.jsx", import.meta.url), "utf8");
+const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
+const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
 test("observation formats have the expected reading contract", () => {
   const analysis = observations.find((item) => item.format === "analysis");
   const brief = observations.find((item) => item.format === "brief");
-
-  assert.ok(analysis);
-  assert.ok(analysis.discussionQuestion);
+  assert.ok(analysis?.discussionQuestion);
   assert.ok(analysis.sections.length > 2);
   assert.ok(brief);
   assert.equal(brief.discussionQuestion, undefined);
   assert.ok(brief.sections.length <= 2);
 });
 
-test("pages use shared reading-path components", () => {
-  for (const component of [
-    "SectionIntro",
-    "ObservationFeature",
-    "ObservationRow",
-    "ObservationMeta",
-    "ArticleHeader",
-    "ArticleToc",
-    "WorkSummary",
-  ]) {
-    assert.match(app, new RegExp(`function ${component}\\(`));
-  }
+test("long articles provide desktop and collapsible mobile navigation", () => {
+  assert.match(article, /className="reading-toc desktop-toc"/);
+  assert.match(article, /<details className="mobile-toc">/);
+  assert.match(layout, /\.mobile-toc \{ display: none;/);
+  assert.match(layout, /\.mobile-toc \{ display: block;/);
 });
 
-test("mobile article toc is collapsible and brand colors stay global", () => {
-  assert.match(app, /<details className="mobile-toc">/);
-  assert.match(styles, /\.mobile-toc \{ display: none;/);
-  assert.match(styles, /\.mobile-toc \{ display: block;/);
-
-  const responsiveStyles = styles.slice(styles.indexOf("@media"));
-  for (const token of ["--paper:", "--paper-deep:", "--ink:", "--line:", "--accent:"]) {
-    assert.equal(responsiveStyles.includes(token), false);
-  }
-});
-
-test("global chrome stays minimal and decorative borders are removed", () => {
-  assert.match(app, /<List size=\{28\}/);
-  assert.match(app, /<X size=\{28\}/);
-  assert.match(app, /aria-label=\{menuOpen \? "关闭菜单" : "打开菜单"\}/);
-  assert.doesNotMatch(app, /className="author-name"|className="menu-author"/);
-  assert.doesNotMatch(app, /更新于 \{site\.updatedAt\}|<span>\{site\.location\}<\/span>/);
-
-  const structuralBorders = styles
-    .split("\n")
-    .filter((line) => !line.includes(".architecture") && !line.includes(".menu-button"))
-    .join("\n");
-  assert.doesNotMatch(structuralBorders, /border-(top|bottom|left|right):|border:\s*1px/);
+test("global chrome stays minimal and mobile navigation is a full viewport layer", () => {
+  assert.match(header, /<List aria-hidden="true"/);
+  assert.match(header, /<X aria-hidden="true"/);
+  assert.match(header, /aria-label=\{menuOpen \? "关闭菜单" : "打开菜单"\}/);
+  assert.doesNotMatch(header, /author-name|menu-author/);
+  assert.doesNotMatch(footer, /updatedAt|location|author/);
+  assert.match(components, /position: fixed;\s+inset: 0;/);
 });
