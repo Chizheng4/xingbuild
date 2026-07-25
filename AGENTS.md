@@ -12,8 +12,10 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 - `xingbuild` is an author-led personal website and an evolving body of work, not an online resume.
 - `xingbuild` connects the author identity `金星 · Xingjin` with the works he continues to design and build. This is private design context: use it to judge naming and structure, but do not turn the user's explanation about growth, social value, or long-term self-recording into public website copy unless the user explicitly asks.
-- The current `v0.2.0` information architecture is `观察 / 作品 / 关于我`.
+- The current `v0.3.0` information architecture is `观察 / 作品 / 关于我`.
 - `观察` contains author-written Robotaxi, enterprise-operation, digitalization, and related analysis. It is not a generic news feed and is not an automated engineering activity log.
+- The home page keeps the positioning statement light, then leads readers through latest observations, core works, About, and the site status at the bottom.
+- Observation lists distinguish one featured analysis from compact archive rows. A brief has no empty table of contents; an analysis with more than two sections has a desktop sticky table of contents and a mobile collapsed table of contents.
 - A future build log may project verified project and release activity, but it is not a top-level navigation item at the current stage.
 - Robotaxi and the enterprise operating system / digitalization cognition framework are both works.
 - Career experience, positioning, capabilities, direction, resume, and contact belong to `关于我`.

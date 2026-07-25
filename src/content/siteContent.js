@@ -2,7 +2,7 @@ export const site = {
   name: "xingbuild",
   author: "金星 · Xingjin",
   description: "持续观察企业如何经营，并把判断构建成可以运行和验证的系统。",
-  version: "v0.2.0",
+  version: "v0.3.0",
   updatedAt: "2026-07-25",
   location: "广州",
 };
@@ -15,6 +15,9 @@ export const observations = [
     summary:
       "页面、流程和系统都只是局部投影。要判断数字化是否真正服务经营，需要把企业现实、经营与架构设计、数字化实现和运行反馈放在同一条因果链上。",
     format: "analysis",
+    featured: true,
+    discussionQuestion:
+      "怎样把企业现实、经营设计、数字化实现和运行反馈放进同一条可验证的因果链？",
     topics: ["企业经营", "业务架构", "数字化"],
     status: "published",
     publishedAt: "2026-07-25",
@@ -52,6 +55,7 @@ export const observations = [
     summary:
       "一个经营模拟作品的可信度，来自对象、规则、事实和反馈是否形成闭环，也来自它是否诚实说明模拟与真实运营之间的边界。",
     format: "brief",
+    featured: false,
     topics: ["Robotaxi", "经营模拟", "证据边界"],
     status: "published",
     publishedAt: "2026-07-24",
