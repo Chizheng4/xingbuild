@@ -2,7 +2,7 @@ export const site = {
   name: "xingbuild",
   author: "金星 · Xingjin",
   description: "持续观察企业如何经营，并把判断构建成可以运行和验证的系统。",
-  version: "v0.4.0",
+  version: "v0.4.1",
   updatedAt: "2026-07-25",
   location: "广州",
 };

@@ -28,6 +28,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Diagrams are simple, direct business architecture diagrams. Do not use hand-drawn, sketch, watercolor, notebook, botanical, landscape, or decorative metaphor styles.
 - Keep content, presentation, and visual tokens separate so future editing does not require rewriting page components.
 - Career and Robotaxi source projects remain upstream factual authorities. Website content is a versioned presentation snapshot and must preserve evidence boundaries.
+- Mobile navigation uses a content-driven breakpoint below 520px. Widths around 557px retain the compact inline header; the full-screen mobile menu starts directly below the header instead of vertically centering a short link list.
 
 ## Iteration and release workflow
 

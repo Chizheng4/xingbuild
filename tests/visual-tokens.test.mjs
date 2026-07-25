@@ -40,7 +40,7 @@ test("font roles, readable minimums, containers and content breakpoints are expl
     "--type-reading", "--type-meta", "--type-caption",
     "--measure-page: 80rem", "--measure-content: 65rem", "--measure-reading: 45rem",
   ]) assert.ok(tokens.includes(token), `${token} must exist`);
-  for (const breakpoint of ["74.9375rem", "56.1875rem", "39.9375rem"]) {
+  for (const breakpoint of ["74.9375rem", "56.1875rem", "32.4375rem"]) {
     assert.ok(allStyles.includes(`max-width: ${breakpoint}`), `${breakpoint} breakpoint must exist`);
   }
   assert.match(components, /\.architecture small[\s\S]*var\(--type-meta\)/);

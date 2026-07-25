@@ -75,7 +75,7 @@
     .mobile-toc { display: block; }
     .work-detail-grid { grid-template-columns: minmax(0, 1fr); }
   }
-  @media (max-width: 39.9375rem) {
+  @media (max-width: 32.4375rem) {
     .site-header { min-height: 4.75rem; }
     .site-footer { min-height: 5rem; }
     .page-intro { padding-block: var(--space-12) var(--space-16); }

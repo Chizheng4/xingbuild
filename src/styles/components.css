@@ -204,7 +204,7 @@
   @media (max-width: 56.1875rem) {
     .observation-row-link { grid-template-columns: minmax(10rem, 0.45fr) minmax(0, 1fr) var(--space-6); }
   }
-  @media (max-width: 39.9375rem) {
+  @media (max-width: 32.4375rem) {
     .primary-nav {
       position: fixed;
       inset: 0;
@@ -212,9 +212,9 @@
       display: none;
       flex-direction: column;
       align-items: flex-start;
-      justify-content: center;
+      justify-content: flex-start;
       gap: var(--space-3);
-      padding: var(--gutter-page);
+      padding: calc(4.75rem + var(--space-6)) var(--gutter-page) var(--gutter-page);
       background: var(--color-canvas);
     }
     .primary-nav.is-open { display: flex; }
