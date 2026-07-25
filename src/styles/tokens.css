@@ -17,6 +17,8 @@
     --font-wordmark: Georgia, "Times New Roman", serif;
 
     --type-display: clamp(2.375rem, 1.6786rem + 2.8571vw, 4.25rem);
+    --type-hero-summary: clamp(1.03125rem, 1.008rem + 0.0952vw, 1.09375rem);
+    --type-wordmark: clamp(1.5rem, 1.3143rem + 0.7619vw, 2rem);
     --type-page-title: clamp(2.25rem, 1.7857rem + 1.9048vw, 3.5rem);
     --type-section-title: clamp(1.5rem, 1.3143rem + 0.7619vw, 2rem);
     --type-feature-title: clamp(1.4375rem, 1.275rem + 0.6667vw, 1.875rem);
@@ -45,11 +47,13 @@
     --space-32: 8rem;
     --gutter-page: clamp(1.125rem, 0.0571rem + 4.381vw, 4rem);
     --space-section: clamp(4rem, 2.5143rem + 6.0952vw, 8rem);
-    --space-hero: clamp(5rem, 2.7714rem + 9.1429vw, 11rem);
+    --space-hero-start: clamp(3rem, 2.4429rem + 2.2857vw, 4.5rem);
+    --space-content-entry: clamp(2rem, 1.6286rem + 1.5238vw, 3rem);
     --space-reading-section: clamp(2.5rem, 2.1286rem + 1.5238vw, 3.5rem);
 
     --measure-page: 80rem;
     --measure-content: 65rem;
+    --measure-display: 58.75rem;
     --measure-reading: 45rem;
     --measure-summary: 41rem;
     --measure-narrow: 34rem;

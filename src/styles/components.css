@@ -2,8 +2,9 @@
   .wordmark {
     position: relative;
     z-index: 20;
-    font: 400 clamp(1.75rem, 1.63rem + 0.48vw, 2rem)/1 var(--font-wordmark);
-    letter-spacing: -0.035em;
+    font: 500 var(--type-wordmark)/1 var(--font-wordmark);
+    letter-spacing: -0.045em;
+    text-transform: lowercase;
   }
   .primary-nav { display: flex; align-items: center; gap: var(--space-12); }
   .primary-nav a {
@@ -46,7 +47,7 @@
     max-width: var(--measure-summary);
     margin: 0;
     color: var(--color-text-muted);
-    font: 400 var(--type-summary)/var(--leading-summary) var(--font-reading);
+    font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
   }
   .page-meta, .observation-meta, .work-status {
     display: flex;
@@ -60,6 +61,12 @@
     margin: 0;
     font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
   }
+  .section-intro__description {
+    max-width: var(--measure-summary);
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-muted);
+    font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
+  }
   .section-intro > a, .feature-link, .home-about > a, .related-links a,
   .profile-projects a, .primary-action, .back-link {
     min-height: var(--touch-target);
@@ -69,13 +76,7 @@
     color: var(--color-accent-strong);
     font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui);
   }
-  .section-description {
-    max-width: var(--measure-summary);
-    margin: var(--space-4) 0 var(--space-12);
-    color: var(--color-text-muted);
-    font: 400 var(--type-summary)/var(--leading-summary) var(--font-reading);
-  }
-  .observation-feature { max-width: var(--measure-reading); padding-block: var(--space-8) var(--space-12); }
+  .observation-feature { max-width: var(--measure-reading); padding-block: 0 var(--space-12); }
   .observation-feature h3 {
     margin: var(--space-4) 0;
     font: 500 var(--type-feature-title)/var(--leading-title) var(--font-display);
@@ -83,7 +84,7 @@
   .observation-feature > p {
     margin-bottom: var(--space-4);
     color: var(--color-text-muted);
-    font: 400 var(--type-summary)/var(--leading-summary) var(--font-reading);
+    font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
   }
   .observation-list { display: grid; gap: var(--space-3); }
   .observation-row-link {
@@ -149,7 +150,7 @@
   }
   .article-summary {
     color: var(--color-text-muted);
-    font: 400 var(--type-summary)/var(--leading-summary) var(--font-reading);
+    font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
   }
   .discussion-question, .source-note, .source-boundary, .evidence-boundary,
   .contact-grid > div {

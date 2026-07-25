@@ -37,11 +37,20 @@ test("semantic brand tokens are global and immutable across breakpoints", () => 
 test("font roles, readable minimums, containers and content breakpoints are explicit", () => {
   for (const token of [
     "--font-display", "--font-reading", "--font-ui", "--font-meta", "--font-wordmark",
-    "--type-reading", "--type-meta", "--type-caption",
+    "--type-reading", "--type-meta", "--type-caption", "--type-hero-summary", "--type-wordmark",
     "--measure-page: 80rem", "--measure-content: 65rem", "--measure-reading: 45rem",
+    "--measure-display: 58.75rem", "--space-hero-start", "--space-content-entry",
   ]) assert.ok(tokens.includes(token), `${token} must exist`);
   for (const breakpoint of ["74.9375rem", "56.1875rem", "32.4375rem"]) {
     assert.ok(allStyles.includes(`max-width: ${breakpoint}`), `${breakpoint} breakpoint must exist`);
   }
   assert.match(components, /\.architecture small[\s\S]*var\(--type-meta\)/);
+});
+
+test("hero and explanation roles use semantic visual contracts", () => {
+  assert.match(pages, /\.home-hero h1[\s\S]*var\(--measure-display\)/);
+  assert.match(pages, /\.hero-description[\s\S]*var\(--type-hero-summary\)[\s\S]*var\(--font-ui\)/);
+  assert.match(components, /\.section-intro__description[\s\S]*var\(--font-ui\)/);
+  assert.match(components, /\.wordmark[\s\S]*text-transform: lowercase/);
+  assert.doesNotMatch(pages, /\.home-hero h1 br/);
 });
