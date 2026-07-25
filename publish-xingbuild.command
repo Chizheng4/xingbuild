@@ -90,16 +90,10 @@ push_with_retry() {
 }
 
 echo ""
-echo "即将发布 $VERSION："
+echo "开始发布 $VERSION："
 echo "1. 推送版本标签和 main 到 GitHub"
 echo "2. 部署到 EdgeOne Makers 生产项目：$EDGEONE_PROJECT"
 echo "3. 验证 $PUBLIC_URL"
-read "answer?输入 publish 继续："
-
-if [[ "$answer" != "publish" ]]; then
-  echo "已取消，没有发布任何内容。"
-  exit 0
-fi
 
 configure_github_network
 
