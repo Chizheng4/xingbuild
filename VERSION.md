@@ -1,5 +1,14 @@
 # xingbuild 版本记录
 
+## v0.1.4 — 完善正式域名体系
+
+日期：2026-07-25
+
+- 将 `www.xingbuild.top` 固定为兼容入口，并通过 EdgeOne 301 永久跳转至主域名 `xingbuild.top`。
+- 将 EdgeOne 主机重定向配置纳入源代码、生产构建与自动验证，避免域名行为只存在于控制台。
+- `robotaxi.xingbuild.top` 继续由独立 Robotaxi EdgeOne 项目负责，不进入本仓库的构建和发布。
+- 当前上线状态：实现中，尚未完成生产发布与公网验收。
+
 ## v0.1.3 — 固定 EdgeOne 生产项目
 
 日期：2026-07-24

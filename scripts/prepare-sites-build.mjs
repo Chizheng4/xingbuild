@@ -9,8 +9,9 @@ const dist = path.join(root, "dist");
 const index = path.join(dist, "client", "index.html");
 const worker = path.join(root, "worker", "index.js");
 const hosting = path.join(root, ".openai", "hosting.json");
+const edgeOneConfig = path.join(root, "edgeone.json");
 
-for (const file of [index, worker, hosting]) {
+for (const file of [index, worker, hosting, edgeOneConfig]) {
   if (!existsSync(file)) throw new Error("Missing Sites build input: " + file);
 }
 
@@ -18,6 +19,7 @@ mkdirSync(path.join(dist, "server"), { recursive: true });
 mkdirSync(path.join(dist, ".openai"), { recursive: true });
 copyFileSync(worker, path.join(dist, "server", "index.js"));
 copyFileSync(hosting, path.join(dist, ".openai", "hosting.json"));
+copyFileSync(edgeOneConfig, path.join(dist, "client", "edgeone.json"));
 
 const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const commit = execFileSync("git", ["rev-parse", "HEAD"], {

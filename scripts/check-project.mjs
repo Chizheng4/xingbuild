@@ -12,6 +12,7 @@ const requiredFiles = [
   "src/styles.css",
   "publish-xingbuild.command",
   "scripts/verify-public-release.mjs",
+  "edgeone.json",
   ".openai/hosting.json",
   "worker/index.js",
 ];
@@ -33,6 +34,9 @@ const content = await readFile(
   new URL("../src/content/siteContent.js", import.meta.url),
   "utf8",
 );
+const edgeOneConfig = JSON.parse(
+  await readFile(new URL("../edgeone.json", import.meta.url), "utf8"),
+);
 
 assert.match(packageJson.version, /^\d+\.\d+\.\d+$/, "package version must use x.y.z");
 assert(
@@ -45,5 +49,12 @@ assert(
 );
 assert(content.includes("Robotaxi"), "site content must include the Robotaxi work");
 assert(content.includes("企业经营"), "site content must include the cognition work");
+assert.deepEqual(edgeOneConfig.redirects, [
+  {
+    source: "$wwwhost",
+    destination: "$host",
+    statusCode: 301,
+  },
+]);
 
 console.log(`xingbuild project check passed for v${packageJson.version}`);
