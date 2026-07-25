@@ -7,7 +7,6 @@
   --muted: #6d6d66;
   --line: #c9c3b7;
   --accent: #a34322;
-  --blue: #164db8;
   --page: 1360px;
   --serif: "Noto Serif SC", "Songti SC", serif;
   --sans: "Noto Sans SC", "PingFang SC", sans-serif;
@@ -142,7 +141,6 @@ p { text-wrap: pretty; }
 footer { min-height: 78px; display: flex; gap: 28px; align-items: center; justify-content: flex-end; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
 
 @media (max-width: 900px) {
-  :root { --paper: #fbfbfa; --paper-deep: #f1f3f7; --ink: #101210; --line: #d8d9d6; --accent: var(--blue); }
   .site-shell { width: 100%; padding: 0 22px; }
   .site-header { height: 72px; position: relative; }
   .identity { display: block; }

@@ -17,7 +17,8 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - A future build log may project verified project and release activity, but it is not a top-level navigation item at the current stage.
 - Robotaxi and the enterprise operating system / digitalization cognition framework are both works.
 - Career experience, positioning, capabilities, direction, resume, and contact belong to `关于我`.
-- Desktop follows the warm editorial visual direction; mobile follows the compact Swiss systems direction.
+- Desktop follows the warm editorial visual direction; mobile uses a compact systems layout without changing the site's brand palette.
+- Responsive breakpoints may change layout, density, typography, navigation, and diagram direction, but must not redefine global brand colors. Resizing the same page must preserve its background, ink, line, and accent color identity.
 - Diagrams are simple, direct business architecture diagrams. Do not use hand-drawn, sketch, watercolor, notebook, botanical, landscape, or decorative metaphor styles.
 - Keep content, presentation, and visual tokens separate so future editing does not require rewriting page components.
 - Career and Robotaxi source projects remain upstream factual authorities. Website content is a versioned presentation snapshot and must preserve evidence boundaries.
