@@ -21,6 +21,10 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Career experience, positioning, capabilities, direction, resume, and contact belong to `关于我`.
 - Desktop follows the warm editorial visual direction; mobile uses a compact systems layout without changing the site's brand palette.
 - Responsive breakpoints may change layout, density, typography, navigation, and diagram direction, but must not redefine global brand colors. Resizing the same page must preserve its background, ink, line, and accent color identity.
+- The global header uses `xingbuild` as its only persistent identity. Author identity belongs in page content, not beside the wordmark or repeated in the footer.
+- Mobile navigation uses an icon button and a full-viewport overlay. Opening it must replace the page visually, lock background scrolling, and change the control to a close icon.
+- Use typography, alignment, and whitespace for page hierarchy. Do not use decorative horizontal rules or boxed sections as general layout scaffolding; retain lines only when they express a real relationship or boundary, such as a business architecture diagram.
+- The footer contains copyright only. Author, location, and update dates belong in relevant content rather than global chrome.
 - Diagrams are simple, direct business architecture diagrams. Do not use hand-drawn, sketch, watercolor, notebook, botanical, landscape, or decorative metaphor styles.
 - Keep content, presentation, and visual tokens separate so future editing does not require rewriting page components.
 - Career and Robotaxi source projects remain upstream factual authorities. Website content is a versioned presentation snapshot and must preserve evidence boundaries.

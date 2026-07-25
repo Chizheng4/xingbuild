@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { List, X } from "@phosphor-icons/react";
 import {
   findObservation,
   findWork,
@@ -56,23 +57,43 @@ function SiteHeader({ pathname }) {
     { href: "/about", label: "关于我" },
   ];
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const main = document.querySelector("main");
+    const footer = document.querySelector("footer");
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+      if (main) main.setAttribute("inert", "");
+      if (footer) footer.setAttribute("inert", "");
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (main) main.removeAttribute("inert");
+      if (footer) footer.removeAttribute("inert");
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
   return (
-    <header className="site-header">
-      <div className="identity">
-        <Link href="/" className="wordmark">{site.name}</Link>
-        <span className="author-name">{site.author}</span>
-      </div>
+    <header className={`site-header ${menuOpen ? "has-open-menu" : ""}`}>
+      <Link href="/" className="wordmark" onNavigate={() => setMenuOpen(false)}>{site.name}</Link>
       <button
         className="menu-button"
         type="button"
+        aria-label={menuOpen ? "关闭菜单" : "打开菜单"}
         aria-expanded={menuOpen}
         aria-controls="primary-navigation"
         onClick={() => setMenuOpen((value) => !value)}
       >
-        {menuOpen ? "关闭" : "菜单"}
+        {menuOpen ? <X size={28} weight="light" aria-hidden="true" /> : <List size={28} weight="light" aria-hidden="true" />}
       </button>
       <nav id="primary-navigation" className={menuOpen ? "is-open" : ""} aria-label="主要导航">
-        <span className="menu-author">{site.author}</span>
         {navigation.map((item) => (
           <Link
             key={item.href}
@@ -92,9 +113,6 @@ function SiteFooter() {
   return (
     <footer>
       <span>© 2026 {site.name}</span>
-      <span>{site.author}</span>
-      <span>{site.location}</span>
-      <span>更新于 {site.updatedAt}</span>
     </footer>
   );
 }
@@ -270,7 +288,6 @@ function HomePage() {
 
       <aside className="home-status" aria-label="网站当前状态">
         <div><span>当前关注</span><strong>企业经营、业务架构与数字化实现</strong></div>
-        <div><span>最近更新</span><strong>{site.updatedAt}</strong></div>
       </aside>
     </>
   );
@@ -359,7 +376,6 @@ function ObservationPage({ observation }) {
               {related.map((work) => <Link key={work.id} href={`/works/${work.slug}`}>{work.title} <span>→</span></Link>)}
             </section>
           ) : null}
-          <p className="article-version">内容更新于 {observation.updatedAt}</p>
         </div>
       </div>
     </article>

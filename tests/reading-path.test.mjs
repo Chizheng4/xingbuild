@@ -42,3 +42,17 @@ test("mobile article toc is collapsible and brand colors stay global", () => {
     assert.equal(responsiveStyles.includes(token), false);
   }
 });
+
+test("global chrome stays minimal and decorative borders are removed", () => {
+  assert.match(app, /<List size=\{28\}/);
+  assert.match(app, /<X size=\{28\}/);
+  assert.match(app, /aria-label=\{menuOpen \? "关闭菜单" : "打开菜单"\}/);
+  assert.doesNotMatch(app, /className="author-name"|className="menu-author"/);
+  assert.doesNotMatch(app, /更新于 \{site\.updatedAt\}|<span>\{site\.location\}<\/span>/);
+
+  const structuralBorders = styles
+    .split("\n")
+    .filter((line) => !line.includes(".architecture") && !line.includes(".menu-button"))
+    .join("\n");
+  assert.doesNotMatch(structuralBorders, /border-(top|bottom|left|right):|border:\s*1px/);
+});
