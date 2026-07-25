@@ -4,10 +4,10 @@
 
 - Desktop source visual truth: `/Users/kingjin/.codex/generated_images/019f936f-6fa2-7731-88ba-6325fb7973de/call_i2kLacguGN3MEeipzjDirKF9.png`
 - Mobile source visual truth: `/Users/kingjin/.codex/generated_images/019f936f-6fa2-7731-88ba-6325fb7973de/call_xauulRQZh5vrD1MxPUPHSqgg.png`
-- Desktop implementation screenshot: `/Users/kingjin/Documents/Builder/xingbuild/qa-desktop-viewport-final.png`
-- Mobile implementation screenshot: `/Users/kingjin/Documents/Builder/xingbuild/qa-mobile-viewport-final.png`
-- Desktop combined comparison: `docs/qa/desktop-viewport-comparison-final.png`
-- Mobile combined comparison: `docs/qa/mobile-viewport-comparison-final.png`
+- Desktop implementation screenshot: `local-captures/qa-desktop-viewport-final.png`（本地工作证据，不进入 Git）
+- Mobile implementation screenshot: `local-captures/qa-mobile-viewport-final.png`（本地工作证据，不进入 Git）
+- Desktop combined comparison: `comparisons/desktop-viewport-comparison-final.png`
+- Mobile combined comparison: `comparisons/mobile-viewport-comparison-final.png`
 
 ## Viewports and normalization
 
@@ -45,10 +45,10 @@
   - Post-fix evidence: desktop and mobile browser checks both reported empty hash and `scrollY: 0`.
 - [P2] Desktop implementation used substantially more vertical space than the selected desktop direction.
   - Fix: reduced header and hero height, headline scale, work-section padding, architecture-node height and about spacing.
-  - Post-fix evidence: `docs/qa/desktop-viewport-comparison-final.png`.
+  - Post-fix evidence: `comparisons/desktop-viewport-comparison-final.png`.
 - [P2] Mobile hero dominated too much of the initial viewport.
   - Fix: reduced mobile headline scale and hero/version spacing while keeping the compact Swiss direction.
-  - Post-fix evidence: `docs/qa/mobile-viewport-comparison-final.png`.
+  - Post-fix evidence: `comparisons/mobile-viewport-comparison-final.png`.
 
 ## Findings
 
