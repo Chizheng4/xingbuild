@@ -15,6 +15,8 @@ const startCommand = await readFile(new URL("../start-xingbuild.command", import
 const pageStructure = await readFile(new URL("../src/components/site/PageStructure.jsx", import.meta.url), "utf8");
 const observations = await readFile(new URL("../src/components/content/Observations.jsx", import.meta.url), "utf8");
 const works = await readFile(new URL("../src/components/works/Works.jsx", import.meta.url), "utf8");
+const aboutPage = await readFile(new URL("../src/pages/AboutPage.jsx", import.meta.url), "utf8");
+const workPage = await readFile(new URL("../src/pages/WorkPage.jsx", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
 test("root stylesheet imports local fonts and visual responsibility layers", () => {
@@ -108,6 +110,17 @@ test("visual hierarchy uses semantic relationship tokens and parent-owned flows"
   assert.match(works, /work-summary-copy object-stack/);
   assert.match(works, /work-evidence object-evidence/);
   assert.doesNotMatch(pages, /\.home-section\s*\{[^}]*padding-block/);
+});
+
+test("visible numbers keep semantic meaning instead of simulating structure", () => {
+  assert.doesNotMatch(homePage, /eyebrow="0[12]"/);
+  assert.doesNotMatch(content, /\bindex:\s*"0[12]"/);
+  assert.doesNotMatch(works, /work-index|work\.index/);
+  assert.doesNotMatch(workPage, /padStart|map\(\(section,\s*index\)/);
+  assert.doesNotMatch(aboutPage, /padStart|map\(\(item,\s*index\)/);
+  assert.match(aboutPage, /<ul>[\s\S]*profile\.problems/);
+  assert.match(works, /ArchitectureDiagram[\s\S]*padStart\(2, "0"\)/);
+  assert.doesNotMatch(allStyles, /--rail-index|\.work-index\b/);
 });
 
 test("local startup reuses a healthy service and never drifts from port 4317", () => {

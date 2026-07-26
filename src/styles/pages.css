@@ -37,7 +37,6 @@
     color: var(--color-accent);
     font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
   }
-  .work-index-list { padding: 0; }
   .work-page > .page-intro { width: 100%; }
   .work-problem, .evidence-boundary, .work-page-body > .architecture,
   .work-detail-grid, .source-boundary, .related-observations, .primary-action {
@@ -63,8 +62,7 @@
   .evidence-boundary strong { font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .work-page-body > .architecture { margin: 0; }
   .work-detail-grid { margin: 0; }
-  .work-detail-grid section > span { color: var(--color-accent); font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta); }
-  .work-detail-grid h2 { margin: var(--space-3) 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
+  .work-detail-grid h2 { margin: 0 0 var(--rhythm-relate); font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
   .work-detail-grid p { color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .source-boundary { display: grid; gap: var(--rhythm-bind); margin: 0; }
   .source-boundary strong { font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui); }
@@ -76,11 +74,10 @@
     font: 400 var(--type-reading)/var(--leading-reading) var(--font-reading);
   }
   .about-positioning { font-weight: 500 !important; }
-  .about-content ol { padding-left: var(--space-6); }
+  .about-content ul { padding-left: var(--space-6); }
   .about-content li { padding-left: var(--space-2); margin-bottom: var(--space-3); }
   .capability-list, .profile-projects { display: grid; gap: var(--rhythm-object); }
-  .capability-list > div { display: grid; grid-template-columns: var(--rail-index) minmax(8rem, 0.45fr) minmax(0, 1fr); gap: var(--space-4); }
-  .capability-list span { color: var(--color-accent); font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta); }
+  .capability-list > div { display: grid; grid-template-columns: minmax(8rem, 0.45fr) minmax(0, 1fr); gap: var(--space-4); }
   .capability-list strong, .profile-projects strong { font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .capability-list p, .profile-projects p, .boundary-text, .contact-grid p {
     margin: 0;
@@ -96,11 +93,8 @@
     .section-intro__action { justify-self: start; }
     .home-status { flex-direction: column; gap: var(--space-2); }
     .evidence-boundary { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
-    .capability-list > div { grid-template-columns: var(--rail-index) minmax(0, 1fr); }
-    .capability-list p { grid-column: 2; }
   }
   @media (max-width: 22.4375rem) {
     .capability-list > div { grid-template-columns: minmax(0, 1fr); }
-    .capability-list p { grid-column: 1; }
   }
 }

@@ -23,7 +23,6 @@ export function ArchitectureDiagram({ work }) {
 export function WorkSummary({ work, showArchitecture = false }) {
   return (
     <article className={`work-summary content-object ${showArchitecture ? "has-architecture" : ""}`}>
-      <div className="work-index object-identity">{work.index}</div>
       <div className="work-summary-copy object-stack">
         <p className="eyebrow object-identity">{work.eyebrow}</p>
         <h3 className="object-proposition"><Link href={`/works/${work.slug}`}>{work.title}</Link></h3>

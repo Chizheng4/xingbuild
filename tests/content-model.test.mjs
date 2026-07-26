@@ -26,6 +26,7 @@ test("published observations have required publication fields and valid work lin
 
 test("works preserve status, source, evidence boundary, and architecture", () => {
   for (const work of works) {
+    assert.equal("index" in work, false);
     assert.ok(work.status);
     assert.ok(work.upstream);
     assert.ok(work.boundary);

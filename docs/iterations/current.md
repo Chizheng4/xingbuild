@@ -2,7 +2,7 @@
 
 ## 当前稳定版本
 
-`v0.6.1`
+`v0.6.2`
 
 ## 目标版本
 
@@ -10,15 +10,16 @@
 
 ## 本轮完成
 
-- 将 ObjectStack 默认关系从 `object` 修正为 `relate`；
-- 重点观察与作品内部语义组恢复紧密统一的构图；
-- 保持对象间、栏目间和六层视觉结构责任不变；
-- 完成七档 Chrome 测量、关键页面回归、自动检查、本地提交和标签。
+- 删除栏目、作品、能力、无序问题和并列主题的装饰性编号；
+- 删除 `work.index`、索引 rail、视觉索引样式和响应式空列；
+- 保留年份、日期、架构节点、版本和 404 等语义数字；
+- 固定并验证手机菜单的最小内容与交互合同；
+- 完成七档 Chrome、自动检查、本地提交和标签。
 
 完成记录：
 
-- `docs/iterations/history/v0.6.1.md`
-- `docs/qa/v0.6.1-object-composition-rhythm-qa.md`
+- `docs/iterations/history/v0.6.2.md`
+- `docs/qa/v0.6.2-number-semantics-mobile-navigation-qa.md`
 
 ## 发布状态
 

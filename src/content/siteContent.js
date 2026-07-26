@@ -78,7 +78,6 @@ export const works = [
   {
     id: "robotaxi",
     slug: "robotaxi",
-    index: "01",
     title: "Robotaxi 经营闭环模拟平台",
     eyebrow: "经营模拟 · 业务架构 · B 端产品 · 工程实现",
     summary: "把需求、供给、匹配、履约、收入、成本和经营反馈连接成可运行的模拟闭环。",
@@ -114,7 +113,6 @@ export const works = [
   {
     id: "enterprise-framework",
     slug: "enterprise-operating-framework",
-    index: "02",
     title: "企业经营体系与数字化认知框架",
     eyebrow: "企业经营 · 业务架构 · 数字化 · 运行反馈",
     summary: "用统一概念和四个平面，连接企业现实、经营设计、数字化实现与运行反馈。",

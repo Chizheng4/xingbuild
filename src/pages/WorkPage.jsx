@@ -18,9 +18,8 @@ export function WorkPage({ work }) {
         </aside>
         <ArchitectureDiagram work={work} />
         <div className="work-detail-grid">
-          {work.sections.map((section, index) => (
+          {work.sections.map((section) => (
             <section key={section.heading}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
               <h2>{section.heading}</h2>
               <p>{section.body}</p>
             </section>

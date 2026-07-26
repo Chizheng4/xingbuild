@@ -111,7 +111,6 @@
   }
   .row-arrow { color: var(--color-accent); transition: transform 160ms ease; }
   .work-list { display: grid; }
-  .work-index { color: var(--color-accent); font: 400 var(--type-summary)/1.5 var(--font-display); }
   .work-summary h3 {
     margin: 0;
     font: 500 var(--type-feature-title)/var(--leading-title) var(--font-display);
