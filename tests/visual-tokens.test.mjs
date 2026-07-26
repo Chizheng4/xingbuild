@@ -11,6 +11,7 @@ const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url)
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
 const content = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
+const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
 test("root stylesheet imports local fonts and visual responsibility layers", () => {
@@ -81,4 +82,12 @@ test("reading flow assigns each adjacent relationship one spacing owner", () => 
   assert.match(components, /\.prose p \{[\s\S]*margin: 0;/);
   assert.match(components, /\.prose p \+ p \{ margin-top: var\(--space-6\); \}/);
   assert.match(components, /\.article-summary \{[\s\S]*margin: 0;/);
+});
+
+test("local startup reuses a healthy service and never drifts from port 4317", () => {
+  assert.match(startCommand, /LOCAL_URL="http:\/\/127\.0\.0\.1:4317\/"/);
+  assert.match(startCommand, /ONLINE_URL="https:\/\/xingbuild\.top\/"/);
+  assert.match(startCommand, /curl --noproxy "\*"[\s\S]*open "\$\{LOCAL_URL\}"/);
+  assert.match(startCommand, /lsof -nP -iTCP:4317 -sTCP:LISTEN/);
+  assert.match(startCommand, /--port 4317 --strictPort --open \//);
 });

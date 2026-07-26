@@ -43,3 +43,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - The publish command must not contain API tokens or other credentials.
 - Publishing is a separate state from implementation: code complete, locally verified, committed, deployed, domain active, and publicly verified must be reported separately.
 - `xingbuild.top` is the canonical personal-site domain. `www.xingbuild.top` is reserved for redirecting to the canonical domain. `robotaxi.xingbuild.top` belongs to the independent Robotaxi deployment and must not be published from this repository.
+- Every iteration completion report must include clickable links for the local preview (`http://127.0.0.1:4317/`) and production site (`https://xingbuild.top/`), while keeping local verification and production deployment status distinct.
