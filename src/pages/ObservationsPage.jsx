@@ -5,7 +5,7 @@ import { publishedObservations } from "../content/siteContent";
 export function ObservationsPage() {
   const years = [...new Set(publishedObservations.map((item) => item.publishedAt.slice(0, 4)))];
   return (
-    <>
+    <div className="observations-page page-stack">
       <PageIntro
         eyebrow="Observations"
         title="观察"
@@ -20,6 +20,6 @@ export function ObservationsPage() {
           </section>
         );
       })}
-    </>
+    </div>
   );
 }

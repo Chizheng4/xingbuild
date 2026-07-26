@@ -4,7 +4,7 @@ const formatLabels = { analysis: "分析", brief: "短观察" };
 
 export function ObservationMeta({ observation, showUpdated = false }) {
   return (
-    <div className="observation-meta">
+    <div className="observation-meta object-identity">
       <time dateTime={observation.publishedAt}>{observation.publishedAt}</time>
       <span>{formatLabels[observation.format] || observation.format}</span>
       <span>{observation.topics[0]}</span>
@@ -19,11 +19,11 @@ export function ObservationFeature({ observation }) {
   if (!observation) return null;
   const href = `/observations/${observation.slug}`;
   return (
-    <article className="observation-feature">
+    <article className="observation-feature content-object object-stack">
       <ObservationMeta observation={observation} />
-      <h3><Link href={href}>{observation.title}</Link></h3>
-      <p>{observation.summary}</p>
-      <Link className="feature-link" href={href}>
+      <h3 className="object-proposition"><Link href={href}>{observation.title}</Link></h3>
+      <p className="object-evidence">{observation.summary}</p>
+      <Link className="feature-link object-action" href={href}>
         继续阅读 <span aria-hidden="true">→</span>
       </Link>
     </article>
@@ -32,7 +32,7 @@ export function ObservationFeature({ observation }) {
 
 export function ObservationRow({ observation, showSummary = false }) {
   return (
-    <article className="observation-row">
+    <article className="observation-row content-object">
       <Link
         href={`/observations/${observation.slug}`}
         className="observation-row-link"
@@ -53,10 +53,10 @@ export function ObservationArchive({ items, featureFirst = false }) {
   const feature = featureFirst ? items[0] : null;
   const archiveItems = featureFirst ? items.slice(1) : items;
   return (
-    <>
+    <div className="observation-archive collection-flow">
       {feature ? <ObservationFeature observation={feature} /> : null}
       {archiveItems.length ? (
-        <div className="observation-list">
+        <div className="observation-list collection-flow">
           {archiveItems.map((item, index) => (
             <ObservationRow
               key={item.id}
@@ -66,6 +66,6 @@ export function ObservationArchive({ items, featureFirst = false }) {
           ))}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

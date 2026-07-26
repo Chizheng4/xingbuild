@@ -51,6 +51,12 @@
     --space-content-entry: clamp(2rem, 1.6286rem + 1.5238vw, 3rem);
     --space-reading-section: clamp(2.5rem, 2.1286rem + 1.5238vw, 3.5rem);
 
+    --rhythm-bind: clamp(0.5rem, 0.4536rem + 0.1905vw, 0.625rem);
+    --rhythm-relate: clamp(1rem, 0.8143rem + 0.7619vw, 1.5rem);
+    --rhythm-object: clamp(2rem, 1.6286rem + 1.5238vw, 3rem);
+    --rhythm-group: clamp(2.5rem, 1.9429rem + 2.2857vw, 4rem);
+    --rhythm-section: clamp(4rem, 1.9375rem + 8.47vw, 8rem);
+
     --measure-page: 80rem;
     --measure-content: 65rem;
     --measure-display: 58.75rem;

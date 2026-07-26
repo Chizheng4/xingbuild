@@ -22,18 +22,20 @@ export function ArchitectureDiagram({ work }) {
 
 export function WorkSummary({ work, showArchitecture = false }) {
   return (
-    <article className={`work-summary ${showArchitecture ? "has-architecture" : ""}`}>
-      <div className="work-index">{work.index}</div>
-      <div className="work-summary-copy">
-        <p className="eyebrow">{work.eyebrow}</p>
-        <h3><Link href={`/works/${work.slug}`}>{work.title}</Link></h3>
-        <p className="work-problem-summary">{work.problem}</p>
-        <p className="work-built">{work.summary}</p>
-        <div className="work-status">
-          <span>{work.status}</span>
-          <time dateTime={work.updatedAt}>更新 {work.updatedAt}</time>
+    <article className={`work-summary content-object ${showArchitecture ? "has-architecture" : ""}`}>
+      <div className="work-index object-identity">{work.index}</div>
+      <div className="work-summary-copy object-stack">
+        <p className="eyebrow object-identity">{work.eyebrow}</p>
+        <h3 className="object-proposition"><Link href={`/works/${work.slug}`}>{work.title}</Link></h3>
+        <div className="work-evidence object-evidence">
+          <p className="work-problem-summary">{work.problem}</p>
+          <p className="work-built">{work.summary}</p>
+          <div className="work-status">
+            <span>{work.status}</span>
+            <time dateTime={work.updatedAt}>更新 {work.updatedAt}</time>
+          </div>
+          <p className="work-boundary">{work.boundary}</p>
         </div>
-        <p className="work-boundary">{work.boundary}</p>
       </div>
       {showArchitecture ? <ArchitectureDiagram work={work} /> : null}
     </article>

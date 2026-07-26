@@ -1,4 +1,16 @@
 @layer layout {
+  .page-stack,
+  .section-flow,
+  .collection-flow,
+  .object-stack {
+    min-width: 0;
+    display: grid;
+  }
+  .page-stack { gap: var(--rhythm-section); }
+  .section-flow { gap: var(--rhythm-object); }
+  .collection-flow { gap: var(--rhythm-group); }
+  .object-stack { gap: var(--rhythm-object); }
+
   .site-shell {
     width: min(100%, var(--measure-page));
     min-height: 100vh;
@@ -26,9 +38,9 @@
     display: grid;
     grid-template-columns: var(--rail-toc) minmax(0, 1fr);
     gap: var(--space-8);
-    padding-block: var(--space-16) var(--space-section);
+    padding-block: var(--space-16) 0;
   }
-  .page-intro__content { min-width: 0; }
+  .page-intro__content { min-width: 0; gap: var(--rhythm-relate); }
   .section-intro {
     display: flex;
     align-items: end;
@@ -39,10 +51,15 @@
     display: grid;
     grid-template-columns: var(--rail-year) minmax(0, 1fr);
     gap: var(--space-8);
-    margin-bottom: var(--space-section);
+    margin: 0;
   }
-  .reading-page { width: min(100%, var(--measure-content)); margin-inline: auto; }
-  .article-header { max-width: var(--measure-reading); margin: var(--space-16) auto var(--space-12); }
+  .reading-page {
+    width: min(100%, var(--measure-content));
+    display: grid;
+    gap: var(--rhythm-group);
+    margin-inline: auto;
+  }
+  .article-header { width: 100%; max-width: var(--measure-reading); margin: var(--space-16) auto 0; }
   .reading-layout.has-toc {
     display: grid;
     grid-template-columns: var(--rail-toc) minmax(0, var(--measure-reading));
@@ -78,8 +95,8 @@
   @media (max-width: 32.4375rem) {
     .site-header { min-height: 4.75rem; }
     .site-footer { min-height: 5rem; }
-    .page-intro { padding-block: var(--space-12) var(--space-16); }
-    .article-header { margin-block: var(--space-8); }
+    .page-intro { padding-block: var(--space-12) 0; }
+    .article-header { margin-block: var(--space-8) 0; }
     .work-summary, .work-summary.has-architecture { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
     .work-summary.has-architecture .architecture { grid-column: 1; }
     .architecture { grid-template-columns: minmax(0, 1fr); }

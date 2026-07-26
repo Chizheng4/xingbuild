@@ -25,6 +25,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Mobile navigation uses an icon button and a full-viewport overlay. Opening it must replace the page visually, lock background scrolling, and change the control to a close icon.
 - Use typography, alignment, and whitespace for page hierarchy. Do not use decorative horizontal rules or boxed sections as general layout scaffolding; retain lines only when they express a real relationship or boundary, such as a business architecture diagram.
 - Vertical spacing must express the relationship between the preceding and following content objects. Define paragraph, heading, list, callout, and section rhythm by adjacent semantic roles; avoid uniform margins, accidental CSS margin collapse, and doubled spacing from both neighboring components.
+- Treat visual structure as a durable hierarchy: page frame → section → content group → content object → element → adjacent relationship. A parent flow owns spacing between siblings; child objects own only their internal composition. Preserve this hierarchy when changing templates or layouts instead of copying old pixel values.
 - The footer contains copyright only. Author, location, and update dates belong in relevant content rather than global chrome.
 - Diagrams are simple, direct business architecture diagrams. Do not use hand-drawn, sketch, watercolor, notebook, botanical, landscape, or decorative metaphor styles.
 - Keep content, presentation, and visual tokens separate so future editing does not require rewriting page components.

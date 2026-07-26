@@ -2,7 +2,7 @@ export function PageIntro({ eyebrow, title, summary, children }) {
   return (
     <header className="page-intro">
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <div className="page-intro__content">
+      <div className="page-intro__content object-stack">
         <h1>{title}</h1>
         {summary ? <p className="page-summary">{summary}</p> : null}
         {children}
@@ -24,14 +24,14 @@ export function HeroStatement({ eyebrow, title, summary }) {
 export function SectionIntro({ eyebrow, title, description, action }) {
   return (
     <header className="section-intro">
-      <div>
+      <div className="section-intro__copy">
         {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
         <h2>{title}</h2>
         {description ? (
           <p className="section-intro__description">{description}</p>
         ) : null}
       </div>
-      {action}
+      {action ? <div className="section-intro__action">{action}</div> : null}
     </header>
   );
 }

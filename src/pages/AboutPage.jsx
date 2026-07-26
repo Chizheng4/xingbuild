@@ -14,7 +14,7 @@ const sections = [
 
 export function AboutPage() {
   return (
-    <article className="about-page">
+    <article className="about-page page-stack">
       <PageIntro eyebrow={site.author} title={profile.title} summary={profile.introduction} />
       <div className="about-layout">
         <aside className="about-toc" aria-label="关于我目录">

@@ -12,6 +12,9 @@ const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
 const content = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
 const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
+const pageStructure = await readFile(new URL("../src/components/site/PageStructure.jsx", import.meta.url), "utf8");
+const observations = await readFile(new URL("../src/components/content/Observations.jsx", import.meta.url), "utf8");
+const works = await readFile(new URL("../src/components/works/Works.jsx", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
 test("root stylesheet imports local fonts and visual responsibility layers", () => {
@@ -75,13 +78,35 @@ test("Chinese semantic titles use native phrase-aware wrapping", () => {
   assert.doesNotMatch(homePage, /<br\s*\/?>/);
 });
 
-test("reading flow assigns each adjacent relationship one spacing owner", () => {
+test("reading flow assigns each adjacent relationship one semantic spacing owner", () => {
   assert.match(components, /\.prose section \{[\s\S]*display: flow-root;[\s\S]*margin: 0;/);
-  assert.match(components, /\.prose section \+ section,[\s\S]*margin-top: var\(--space-reading-section\)/);
-  assert.match(components, /\.prose h2 \{[\s\S]*margin: 0 0 var\(--space-4\)/);
+  assert.match(components, /\.prose section \+ section,[\s\S]*margin-top: var\(--rhythm-group\)/);
+  assert.match(components, /\.prose h2 \{[\s\S]*margin: 0 0 var\(--rhythm-relate\)/);
   assert.match(components, /\.prose p \{[\s\S]*margin: 0;/);
-  assert.match(components, /\.prose p \+ p \{ margin-top: var\(--space-6\); \}/);
+  assert.match(components, /\.prose p \+ p \{ margin-top: var\(--rhythm-relate\); \}/);
   assert.match(components, /\.article-summary \{[\s\S]*margin: 0;/);
+});
+
+test("visual hierarchy uses semantic relationship tokens and parent-owned flows", () => {
+  for (const token of [
+    "--rhythm-bind", "--rhythm-relate", "--rhythm-object",
+    "--rhythm-group", "--rhythm-section",
+  ]) assert.ok(tokens.includes(token), `${token} must exist`);
+  assert.match(layout, /\.page-stack \{ gap: var\(--rhythm-section\); \}/);
+  assert.match(layout, /\.section-flow \{ gap: var\(--rhythm-object\); \}/);
+  assert.match(layout, /\.collection-flow \{ gap: var\(--rhythm-group\); \}/);
+  assert.match(layout, /\.object-stack \{ gap: var\(--rhythm-object\); \}/);
+  assert.match(homePage, /home-page page-stack/);
+  assert.match(homePage, /home-section home-observations section-flow/);
+  assert.match(pageStructure, /section-intro__copy/);
+  assert.match(observations, /content-object object-stack/);
+  assert.match(observations, /object-identity/);
+  assert.match(observations, /object-proposition/);
+  assert.match(observations, /object-evidence/);
+  assert.match(observations, /object-action/);
+  assert.match(works, /work-summary-copy object-stack/);
+  assert.match(works, /work-evidence object-evidence/);
+  assert.doesNotMatch(pages, /\.home-section\s*\{[^}]*padding-block/);
 });
 
 test("local startup reuses a healthy service and never drifts from port 4317", () => {

@@ -10,29 +10,31 @@ export function WorkPage({ work }) {
       <PageIntro eyebrow={work.eyebrow} title={work.title} summary={work.summary}>
         <div className="page-meta"><span>{work.status}</span><time dateTime={work.updatedAt}>更新 {work.updatedAt}</time></div>
       </PageIntro>
-      <section className="work-problem"><span>核心问题</span><p>{work.problem}</p></section>
-      <aside className="evidence-boundary">
-        <div><span>当前状态</span><strong>{work.status}</strong></div>
-        <div><span>证据边界</span><strong>{work.boundary}</strong></div>
-      </aside>
-      <ArchitectureDiagram work={work} />
-      <div className="work-detail-grid">
-        {work.sections.map((section, index) => (
-          <section key={section.heading}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <h2>{section.heading}</h2>
-            <p>{section.body}</p>
+      <div className="work-page-body collection-flow">
+        <section className="work-problem object-stack"><span>核心问题</span><p>{work.problem}</p></section>
+        <aside className="evidence-boundary">
+          <div><span>当前状态</span><strong>{work.status}</strong></div>
+          <div><span>证据边界</span><strong>{work.boundary}</strong></div>
+        </aside>
+        <ArchitectureDiagram work={work} />
+        <div className="work-detail-grid">
+          {work.sections.map((section, index) => (
+            <section key={section.heading}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h2>{section.heading}</h2>
+              <p>{section.body}</p>
+            </section>
+          ))}
+        </div>
+        <aside className="source-boundary"><span>上游事实源</span><strong>{work.upstream}</strong></aside>
+        {related.length ? (
+          <section className="related-observations section-flow">
+            <SectionIntro title="相关观察" />
+            <ObservationArchive items={related} />
           </section>
-        ))}
+        ) : null}
+        {work.publicUrl ? <a className="primary-action" href={work.publicUrl}>打开公开作品 <span>↗</span></a> : null}
       </div>
-      <aside className="source-boundary"><span>上游事实源</span><strong>{work.upstream}</strong></aside>
-      {related.length ? (
-        <section className="related-observations">
-          <SectionIntro title="相关观察" />
-          <ObservationArchive items={related} />
-        </section>
-      ) : null}
-      {work.publicUrl ? <a className="primary-action" href={work.publicUrl}>打开公开作品 <span>↗</span></a> : null}
     </article>
   );
 }
