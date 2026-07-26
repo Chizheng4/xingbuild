@@ -95,7 +95,8 @@ test("visual hierarchy uses semantic relationship tokens and parent-owned flows"
   assert.match(layout, /\.page-stack \{ gap: var\(--rhythm-section\); \}/);
   assert.match(layout, /\.section-flow \{ gap: var\(--rhythm-object\); \}/);
   assert.match(layout, /\.collection-flow \{ gap: var\(--rhythm-group\); \}/);
-  assert.match(layout, /\.object-stack \{ gap: var\(--rhythm-object\); \}/);
+  assert.match(layout, /\.object-stack \{ gap: var\(--rhythm-relate\); \}/);
+  assert.doesNotMatch(layout, /\.object-stack \{ gap: var\(--rhythm-object\); \}/);
   assert.match(homePage, /home-page page-stack/);
   assert.match(homePage, /home-section home-observations section-flow/);
   assert.match(pageStructure, /section-intro__copy/);

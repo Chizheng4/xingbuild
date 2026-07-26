@@ -321,7 +321,7 @@ L5 Relationship    上一对象与下一对象之间的邻接关系
 | --- | ---: | ---: | --- |
 | `--rhythm-bind` | 8–12px | 8–10px | 类型 → 标题、标题 → 紧密说明 |
 | `--rhythm-relate` | 16–24px | 14–20px | 标题 → 摘要、正文 → 行动 |
-| `--rhythm-object` | 32–48px | 28–40px | 栏目导语 → 第一项内容、对象内部语义组 |
+| `--rhythm-object` | 32–48px | 28–40px | 栏目导语 → 第一项内容、对象内部主要分组 |
 | `--rhythm-group` | 48–64px | 40–56px | 同栏目的内容对象 → 下一对象 |
 | `--rhythm-section` | 96–128px | 64–88px | 一个栏目 → 下一栏目 |
 
@@ -353,8 +353,45 @@ L5 Relationship    上一对象与下一对象之间的邻接关系
 - 页面级 `stack` 统一拥有栏目间 `gap`；
 - collection 统一拥有同类对象间 `gap`；
 - 内容对象内部拆成 `identity / proposition / evidence / action` 等语义组；
-- 组内使用 `bind / relate`，组间使用 `object`，对象间使用 `group`；
+- 原始元素先进入语义组；组内使用 `bind`，相邻语义组通常使用 `relate`，只有对象内部确实存在独立主要分区时才使用 `object`；
+- `ObjectStack` 的默认节奏是 `relate`，不能因为它承载 Content Object 就机械映射为 `--rhythm-object`；
+- 对象间使用 `group`，栏目间使用 `section`；
 - 通过结构测试检查责任，通过 Chrome 截图检查实际节奏。
+
+### 9.8 结构层级与构图层级不可混用
+
+六层模型回答“对象属于哪里”，空间 token 回答“两个相邻对象是什么关系”。对象层级较高，不代表它内部所有元素都应使用更大的间距。
+
+错误推导：
+
+```text
+这是 Content Object
+→ 使用 ObjectStack
+→ 所有直接子元素统一使用 --rhythm-object
+```
+
+正确推导：
+
+```text
+Content Object
+├─ Identity
+├─ Proposition
+├─ Evidence
+└─ Action
+
+Identity → Proposition：relate
+Proposition → Evidence：relate，或经验证后使用 object
+Evidence → Action：relate
+对象 → 下一对象：group
+```
+
+验收时必须同时检查：
+
+- 结构是否有正确语义角色；
+- 角色之间使用的关系是否正确；
+- 实际视觉距离是否让对象仍被感知为一个整体。
+
+如果一个内容对象内部的每个元素看起来像四个独立区块，即使类名完整、token 合法，也不能判定结构系统实现正确。
 
 ## 10. 页面网格
 

@@ -9,7 +9,7 @@
   .page-stack { gap: var(--rhythm-section); }
   .section-flow { gap: var(--rhythm-object); }
   .collection-flow { gap: var(--rhythm-group); }
-  .object-stack { gap: var(--rhythm-object); }
+  .object-stack { gap: var(--rhythm-relate); }
 
   .site-shell {
     width: min(100%, var(--measure-page));

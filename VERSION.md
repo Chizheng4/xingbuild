@@ -1,5 +1,14 @@
 # xingbuild 版本记录
 
+## v0.6.1 — 对象内部构图节奏修订
+
+日期：2026-07-26
+
+- 将 ObjectStack 默认节奏从 `object` 修正为 `relate`，避免把内容对象层级机械映射成所有内部关系的统一大间距。
+- 重点观察和作品的 Identity、Proposition、Evidence、Action 恢复为紧密且有归属的统一构图。
+- 保持对象之间的 `group`、栏目之间的 `section` 以及 v0.6.0 六层结构不变。
+- 当前上线状态：本地实现与验证已完成，尚未推送 GitHub 或发布 EdgeOne。
+
 ## v0.6.0 — 视觉结构与空间节奏系统
 
 日期：2026-07-26
@@ -8,7 +17,7 @@
 - 以 `bind / relate / object / group / section` 语义关系 token 取代含义混杂的页面间距。
 - 引入 PageStack、SectionFlow、CollectionFlow 和 ObjectStack 最小布局责任，让相邻间距只由共同父级拥有。
 - 重组首页、观察、作品、关于我和长文的内容对象关系，消除栏目头尾空间叠加并强化 Identity、Proposition、Evidence、Action 分组。
-- 当前上线状态：本地实现与验证已完成，尚未推送 GitHub 或发布 EdgeOne。
+- 当前上线状态：用户已完成 GitHub 推送和生产发布；公网 Chrome 验收确认栏目级节奏通过，对象内部构图仍需 `v0.6.1` 修订。本次未独立读取线上版本清单。
 
 ## v0.5.2 — 修正本地启动与交付链接
 

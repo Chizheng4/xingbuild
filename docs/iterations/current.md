@@ -2,7 +2,7 @@
 
 ## 当前稳定版本
 
-`v0.6.0`
+`v0.6.1`
 
 ## 目标版本
 
@@ -10,16 +10,15 @@
 
 ## 本轮完成
 
-- 建立六层视觉结构和五级语义关系 token；
-- 建立 PageStack、SectionFlow、CollectionFlow 和 ObjectStack 的单一间距责任；
-- 消除相邻栏目头尾空间叠加，形成可复用的对象内部语义分组；
-- 完成七档 Chrome、关键页面、手机菜单、手机目录和横向溢出回归；
-- 完成自动检查、本地提交和 `v0.6.0` 标签。
+- 将 ObjectStack 默认关系从 `object` 修正为 `relate`；
+- 重点观察与作品内部语义组恢复紧密统一的构图；
+- 保持对象间、栏目间和六层视觉结构责任不变；
+- 完成七档 Chrome 测量、关键页面回归、自动检查、本地提交和标签。
 
 完成记录：
 
-- `docs/iterations/history/v0.6.0.md`
-- `docs/qa/v0.6.0-visual-structure-rhythm-qa.md`
+- `docs/iterations/history/v0.6.1.md`
+- `docs/qa/v0.6.1-object-composition-rhythm-qa.md`
 
 ## 发布状态
 
