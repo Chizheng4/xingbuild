@@ -11,6 +11,8 @@ import {
   selectHomeObservations,
 } from "../src/content/observationQueries.js";
 import { classifySourceUrl } from "../src/content/sourceUrls.js";
+import { observationBriefs, validateObservationBrief } from "../src/content/observationBriefs.js";
+import { selectObservationBriefs } from "../src/content/observationQueries.js";
 
 const observations = await readPublishedObservations();
 
@@ -178,4 +180,21 @@ test("works and profile preserve their existing boundaries", () => {
   assert.match(works.find((work) => work.id === "robotaxi").boundary, /不代表真实城市运营/);
   assert.match(profile.positioning, /供应链与企业运作/);
   assert.ok(profile.experience.note);
+});
+
+test("reading briefs are explicit projections and do not infer from published observations", () => {
+  assert.deepEqual(observationBriefs, []);
+  assert.deepEqual(selectObservationBriefs(observationBriefs), []);
+  assert.ok(validateObservationBrief({ id: "brief" }).includes("missing subject"));
+
+  const valid = {
+    id: "verified-event",
+    publishedAt: "2026-07-28",
+    subject: "示例企业",
+    primaryDimension: "运营与市场",
+    statement: "示例企业发布一项可核验的经营事件。",
+    isOpinion: false,
+  };
+  assert.deepEqual(validateObservationBrief(valid), []);
+  assert.deepEqual(selectObservationBriefs([...observations, valid]), [valid]);
 });

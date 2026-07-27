@@ -1,41 +1,22 @@
 import { useMemo, useRef, useState } from "react";
-import {
-  architectures,
-  connectedEdgeIds,
-} from "../../content/frameworkModel";
+import { architectureById, connectedEdgeIds } from "../../content/frameworkModel";
+import { clampGraphPan, isLabelSafe } from "./frameworkGeometry";
 
-function ArchitectureNode({
-  architecture,
-  item,
-  selectedId,
-  previewId,
-  connectedNodeIds,
-  onPreview,
-  onSelect,
-}) {
-  const { desktop, mobile } = item.projection;
+const overview = architectureById.get("enterprise-operation");
+
+function GraphNode({ item, selectedId, previewId, connectedNodeIds, onPreview, onSelect, suppressClickRef }) {
   const selected = selectedId === item.id;
   const previewed = previewId === item.id;
   const related = connectedNodeIds.has(item.id);
-  const classNames = [
-    "architecture-node",
-    `is-${item.kind}`,
-    selected ? "is-selected" : "",
-    previewed ? "is-previewed" : "",
-    related ? "is-related" : "",
-  ].filter(Boolean).join(" ");
-
+  const { desktop } = item.projection;
   return (
     <button
       type="button"
-      className={classNames}
+      className={["graph-node", `is-${item.kind}`, selected && "is-selected", previewed && "is-previewed", related && "is-related"].filter(Boolean).join(" ")}
       style={{
-        "--node-x-desktop": desktop.x,
-        "--node-y-desktop": `${desktop.y}px`,
-        "--node-width-desktop": desktop.width,
-        "--node-x-mobile": mobile.x,
-        "--node-y-mobile": `${mobile.y}px`,
-        "--node-width-mobile": mobile.width,
+        "--graph-node-x": `${desktop.x}%`,
+        "--graph-node-y": `${(desktop.y / overview.height.desktop) * 100}%`,
+        "--graph-node-width": `${desktop.width}%`,
       }}
       aria-pressed={selected}
       aria-label={`${item.name}，点击查看解释`}
@@ -43,7 +24,9 @@ function ArchitectureNode({
       onMouseLeave={() => onPreview(null)}
       onFocus={() => onPreview(item.id)}
       onBlur={() => onPreview(null)}
-      onClick={() => onSelect(item.id)}
+      onClick={() => {
+        if (!suppressClickRef.current) onSelect(item.id);
+      }}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -51,63 +34,29 @@ function ArchitectureNode({
         }
       }}
     >
-      <strong>{item.name}</strong>
-      <small>{item.caption}</small>
-      {selected ? <span aria-hidden="true">当前</span> : null}
+      {item.name}
     </button>
   );
 }
 
-function ArchitectureLines({
-  architecture,
-  projection,
-  selectedId,
-  previewId,
-}) {
+function GraphEdges({ selectedId, previewId }) {
   const activeNodeId = previewId ?? selectedId;
-  const activeEdgeIds = new Set(connectedEdgeIds(architecture, activeNodeId));
-  const markerId = `${architecture.id}-${projection}-arrow`;
-  const markerActiveId = `${architecture.id}-${projection}-arrow-active`;
-
+  const activeEdgeIds = new Set(connectedEdgeIds(overview, activeNodeId));
+  const markerId = "framework-overview-arrow";
   return (
-    <svg
-      className={`architecture-lines is-${projection}`}
-      viewBox={architecture.viewBox[projection]}
-      aria-hidden="true"
-      preserveAspectRatio="none"
-    >
+    <svg className="graph-canvas__edges" viewBox={overview.viewBox.desktop} aria-hidden="true" preserveAspectRatio="none">
       <defs>
         <marker id={markerId} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-          <path d="M0,0 L7,3.5 L0,7Z" className="architecture-arrow" />
-        </marker>
-        <marker id={markerActiveId} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8Z" className="architecture-arrow is-active" />
+          <path d="M0,0 L7,3.5 L0,7Z" />
         </marker>
       </defs>
-      {architecture.tracks.map((track) => {
-        const highlighted = track.relatedEdgeIds.some((id) => activeEdgeIds.has(id));
+      {overview.edges.map((edge) => {
+        const active = activeEdgeIds.has(edge.id);
+        const safe = isLabelSafe(overview, edge);
         return (
-          <path
-            key={track.id}
-            className={`architecture-track${highlighted ? " is-active" : ""}`}
-            d={track.projection[projection].path}
-          />
-        );
-      })}
-      {architecture.edges.map((item) => {
-        const geometry = item.projection[projection];
-        const highlighted = activeEdgeIds.has(item.id);
-        return (
-          <g
-            key={item.id}
-            className={`architecture-edge is-${item.kind}${highlighted ? " is-active" : ""}`}
-            data-edge-id={item.id}
-          >
-            <path
-              d={geometry.path}
-              markerEnd={`url(#${highlighted ? markerActiveId : markerId})`}
-            />
-            <text x={geometry.label.x} y={geometry.label.y}>{item.label}</text>
+          <g key={edge.id} className={`graph-edge${active ? " is-active" : ""}`} data-edge-id={edge.id}>
+            <path d={edge.projection.desktop.path} markerEnd={`url(#${markerId})`} />
+            {safe ? <text x={edge.projection.desktop.label.x} y={edge.projection.desktop.label.y}>{edge.label}</text> : null}
           </g>
         );
       })}
@@ -115,130 +64,105 @@ function ArchitectureLines({
   );
 }
 
-function NodeExplanation({ architecture, selectedNode }) {
-  const directRelations = architecture.edges.filter(
-    (item) => item.from === selectedNode.id || item.to === selectedNode.id,
-  );
-
+function ExplanationPanel({ selectedNode }) {
+  const directRelations = overview.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
-    <aside
-      className="architecture-explanation"
-      aria-labelledby={`${architecture.id}-${selectedNode.id}-title`}
-    >
-      <p className="architecture-explanation__label">当前节点</p>
-      <h3 id={`${architecture.id}-${selectedNode.id}-title`}>{selectedNode.name}</h3>
-      <p className="architecture-explanation__definition">{selectedNode.definition}</p>
-      <p className="architecture-explanation__role">{selectedNode.role}</p>
-      <div className="architecture-explanation__relations">
-        <h4>直接关系</h4>
-        <ul>
-          {directRelations.map((relation) => {
-            const from = architecture.nodes.find((item) => item.id === relation.from);
-            const to = architecture.nodes.find((item) => item.id === relation.to);
-            return (
-              <li key={relation.id}>
-                <span>{from.name}</span>
-                <strong>{relation.label}</strong>
-                <span>{to.name}</span>
-              </li>
-            );
-          })}
-        </ul>
+    <section className="framework-explanation" aria-labelledby={`framework-node-${selectedNode.id}`}>
+      <h2 id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</h2>
+      <div className="framework-explanation__body">
+        <div><h3>定义</h3><p>{selectedNode.definition}</p></div>
+        <div><h3>作用</h3><p>{selectedNode.role}</p></div>
+        <div><h3>直接关系</h3><ul>{directRelations.map((edge) => {
+          const from = overview.nodes.find((node) => node.id === edge.from);
+          const to = overview.nodes.find((node) => node.id === edge.to);
+          return <li key={edge.id}>{from.name} <strong>{edge.label}</strong> {to.name}</li>;
+        })}</ul></div>
       </div>
-    </aside>
-  );
-}
-
-function ArchitectureSection({ architecture }) {
-  const [selectedId, setSelectedId] = useState(architecture.defaultNodeId);
-  const [previewId, setPreviewId] = useState(null);
-  const liveRef = useRef(null);
-  const selectedNode = architecture.nodes.find((item) => item.id === selectedId);
-  const connectedNodeIds = useMemo(() => {
-    const ids = new Set([selectedId]);
-    for (const item of architecture.edges) {
-      if (item.from === selectedId) ids.add(item.to);
-      if (item.to === selectedId) ids.add(item.from);
-    }
-    return ids;
-  }, [architecture, selectedId]);
-
-  const selectNode = (id) => {
-    setSelectedId(id);
-    const name = architecture.nodes.find((item) => item.id === id)?.name;
-    if (liveRef.current) liveRef.current.textContent = `已选择${name}`;
-  };
-
-  return (
-    <section className="architecture-section" aria-labelledby={`${architecture.id}-question`}>
-      <header className="architecture-section__header">
-        <p className="architecture-section__kicker">{architecture.kicker}</p>
-        <div>
-          <h2 id={`${architecture.id}-question`}>{architecture.question}</h2>
-          <p>{architecture.intro}</p>
-        </div>
-      </header>
-      <div className="architecture-stage">
-        <div
-          className="architecture-diagram"
-          data-architecture={architecture.id}
-          style={{
-            "--diagram-height-desktop": `${architecture.height.desktop}px`,
-            "--diagram-height-mobile": `${architecture.height.mobile}px`,
-          }}
-        >
-          {architecture.boundary ? (
-            <div
-              className="architecture-system-boundary"
-              style={{
-                "--boundary-top-desktop": `${architecture.boundary.desktop.top}px`,
-                "--boundary-bottom-desktop": `${architecture.boundary.desktop.bottom}px`,
-                "--boundary-top-mobile": `${architecture.boundary.mobile.top}px`,
-                "--boundary-bottom-mobile": `${architecture.boundary.mobile.bottom}px`,
-              }}
-              aria-hidden="true"
-            >
-              <span>{architecture.boundary.label}</span>
-            </div>
-          ) : null}
-          <ArchitectureLines
-            architecture={architecture}
-            projection="desktop"
-            selectedId={selectedId}
-            previewId={previewId}
-          />
-          <ArchitectureLines
-            architecture={architecture}
-            projection="mobile"
-            selectedId={selectedId}
-            previewId={previewId}
-          />
-          {architecture.nodes.map((item) => (
-            <ArchitectureNode
-              key={item.id}
-              architecture={architecture}
-              item={item}
-              selectedId={selectedId}
-              previewId={previewId}
-              connectedNodeIds={connectedNodeIds}
-              onPreview={setPreviewId}
-              onSelect={selectNode}
-            />
-          ))}
-        </div>
-        <NodeExplanation architecture={architecture} selectedNode={selectedNode} />
-      </div>
-      <p className="sr-only" aria-live="polite" ref={liveRef} />
     </section>
   );
 }
 
 export function FrameworkExplorer() {
+  const [activeViewId] = useState("overview");
+  const [selectedId, setSelectedId] = useState(overview.defaultNodeId);
+  const [previewId, setPreviewId] = useState(null);
+  const [viewportTransform, setViewportTransform] = useState({ x: 0, y: 0 });
+  const startRef = useRef(null);
+  const suppressClickRef = useRef(false);
+  const liveRef = useRef(null);
+  const selectedNode = overview.nodes.find((item) => item.id === selectedId);
+  const connectedNodeIds = useMemo(() => {
+    const ids = new Set([selectedId]);
+    for (const edge of overview.edges) {
+      if (edge.from === selectedId) ids.add(edge.to);
+      if (edge.to === selectedId) ids.add(edge.from);
+    }
+    return ids;
+  }, [selectedId]);
+
+  const selectNode = (id) => {
+    setSelectedId(id);
+    liveRef.current.textContent = `已选择${overview.nodes.find((item) => item.id === id)?.name}`;
+  };
+
+  const reset = () => {
+    setViewportTransform({ x: 0, y: 0 });
+    setSelectedId(overview.defaultNodeId);
+    setPreviewId(null);
+    liveRef.current.textContent = "已复位企业经营体系总览";
+  };
+
+  const pointerDown = (event) => {
+    startRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      origin: viewportTransform,
+      canvas: { width: event.currentTarget.clientWidth, height: event.currentTarget.clientHeight },
+      dragged: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const pointerMove = (event) => {
+    const start = startRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    const x = event.clientX - start.x;
+    const y = event.clientY - start.y;
+    if (Math.hypot(x, y) > 4) start.dragged = true;
+    if (start.dragged) setViewportTransform(clampGraphPan({ x: start.origin.x + x, y: start.origin.y + y }, start.canvas));
+  };
+  const pointerUp = (event) => {
+    const start = startRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    if (start.dragged) {
+      suppressClickRef.current = true;
+      event.preventDefault();
+      window.setTimeout(() => { suppressClickRef.current = false; }, 0);
+    }
+    startRef.current = null;
+  };
+
   return (
-    <div className="architecture-page-flow">
-      {architectures.map((architecture) => (
-        <ArchitectureSection key={architecture.id} architecture={architecture} />
-      ))}
-    </div>
+    <section className="framework-explorer" data-active-view={activeViewId} aria-label="企业经营体系总览">
+      <div className="framework-explorer__tools">
+        <p>企业经营体系总览</p>
+        <button type="button" onClick={reset}>复位视图</button>
+      </div>
+      <div
+        className="graph-canvas"
+        onPointerDown={pointerDown}
+        onPointerMove={pointerMove}
+        onPointerUp={pointerUp}
+        onPointerCancel={pointerUp}
+      >
+        <div className="graph-canvas__viewport" style={{ "--graph-pan-x": `${viewportTransform.x}px`, "--graph-pan-y": `${viewportTransform.y}px` }}>
+          {overview.boundary ? <div className="graph-canvas__boundary" aria-hidden="true"><span>{overview.boundary.label}</span></div> : null}
+          <GraphEdges selectedId={selectedId} previewId={previewId} />
+          {overview.nodes.map((item) => <GraphNode key={item.id} item={item} selectedId={selectedId} previewId={previewId} connectedNodeIds={connectedNodeIds} onPreview={setPreviewId} onSelect={selectNode} suppressClickRef={suppressClickRef} />)}
+        </div>
+      </div>
+      <ExplanationPanel selectedNode={selectedNode} />
+      <p className="sr-only" aria-live="polite" ref={liveRef} />
+    </section>
   );
 }

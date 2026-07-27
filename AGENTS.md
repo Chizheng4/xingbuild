@@ -44,6 +44,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Observation content uses the `ObservationPublication → EvidenceUnit → Source` contract. Candidate tools may normalize lifecycle state, but must not invent facts, sources, business impact, dates, or evidence relationships.
 - Product releases use `publish-xingbuild.command`, require the matching version tag, and run the full release check. Content-only releases use `publish-content.command`, keep the product version unchanged, accept exactly one published observation file, and reject engineering, configuration, rule, worker, or draft changes.
 - Scheduled tasks may produce candidates only. Human review and explicit production authorization remain required before promotion or either publication command.
+- 阶段一总体结构与视觉母版：`/` 与 `/robotaxi` 是同一 PracticePage；当前无批准模块时必须诚实不渲染模块，不得用占位媒体、平台泛链或猜测对象填充。企业经营体系公开界面当前只呈现一张可平移、可选择、可复位的总览图，局部 view 只能复用同一模型并等待明确入口。观察信息流只消费人工确认的真实事件 BriefProjection；既有文章不得自动缩写、投影或充当空态填充。无有效 Brief 时，观察页显示克制空态，Practice/Framework 不保留空白 rail。
 
 ## Iteration and release workflow
 

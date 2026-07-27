@@ -1,4 +1,4 @@
-export const FRAMEWORK_BASE = "/works/enterprise-operating-framework";
+export const FRAMEWORK_BASE = "/enterprise-operating-framework";
 
 const nodeCaptions = {
   "external-context": "外部条件",
@@ -151,7 +151,7 @@ export const architectures = [
       edge("op-operation-facts", "enterprise-operation", "operating-facts-results", "产生", "standard", line("M735 358 V424", 744, 396), line("M205 580 V640", 214, 613)),
       edge("op-facts-decision", "operating-facts-results", "operating-decision", "支持", "standard", line("M495 450 H450 V486 H405", 432, 440), line("M126 665 H90 V780 H224", 98, 655)),
       edge("op-decision-design", "operating-decision", "operation-design", "调整选择与设计", "feedback", line("M153 486 H35 V216 H63", 43, 416), line("M32 780 H15 V215 H32", 22, 704)),
-      edge("op-decision-operation", "operating-decision", "enterprise-operation", "影响后续运作", "feedback", line("M405 486 H865 V332 H837", 610, 504), line("M224 780 H335 V555 H318", 236, 770)),
+      edge("op-decision-operation", "operating-decision", "enterprise-operation", "影响后续运作", "feedback", line("M405 486 V552 H882 V332 H837", 610, 544), line("M224 780 H335 V555 H318", 236, 770)),
     ],
     tracks: [],
   },

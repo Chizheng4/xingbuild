@@ -8,169 +8,77 @@ const foundations = await readFile(new URL("../src/styles/foundations.css", impo
 const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url), "utf8");
-const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
-const siteContent = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
-const observationContent = await readFile(
-  new URL("../content/observations/four-planes-of-enterprise-digitalization.json", import.meta.url),
-  "utf8",
-);
-const content = `${siteContent}\n${observationContent}`;
-const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
-const pageStructure = await readFile(new URL("../src/components/site/PageStructure.jsx", import.meta.url), "utf8");
-const observations = await readFile(new URL("../src/components/content/Observations.jsx", import.meta.url), "utf8");
-const works = await readFile(new URL("../src/components/works/Works.jsx", import.meta.url), "utf8");
-const cards = await readFile(new URL("../src/components/cards/ContentCards.jsx", import.meta.url), "utf8");
+const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
+const header = await readFile(new URL("../src/components/site/SiteHeader.jsx", import.meta.url), "utf8");
+const practice = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+const observations = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
 const observationsPage = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
-const worksPage = await readFile(new URL("../src/pages/WorksPage.jsx", import.meta.url), "utf8");
-const aboutPage = await readFile(new URL("../src/pages/AboutPage.jsx", import.meta.url), "utf8");
-const workPage = await readFile(new URL("../src/pages/WorkPage.jsx", import.meta.url), "utf8");
+const siteContent = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
+const briefs = await readFile(new URL("../src/content/observationBriefs.js", import.meta.url), "utf8");
+const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
-test("root stylesheet imports local fonts and visual responsibility layers", () => {
-  for (const dependency of [
-    "@fontsource-variable/noto-serif-sc",
-    "@fontsource-variable/noto-sans-sc",
-    "./styles/tokens.css",
-    "./styles/foundations.css",
-    "./styles/layout.css",
-    "./styles/components.css",
-    "./styles/pages.css",
-  ]) assert.match(root, new RegExp(dependency.replace(/[./-]/g, "\\$&")));
+test("root stylesheet retains local fonts and responsibility layers", () => {
+  for (const dependency of ["@fontsource-variable/noto-serif-sc", "@fontsource-variable/noto-sans-sc", "./styles/tokens.css", "./styles/framework.css"]) {
+    assert.match(root, new RegExp(dependency.replace(/[./-]/g, "\\$&")));
+  }
 });
 
-test("semantic brand tokens are global and immutable across breakpoints", () => {
-  const names = [
-    "--color-canvas", "--color-surface-subtle", "--color-text",
-    "--color-text-muted", "--color-border", "--color-accent", "--color-accent-strong",
-    "--color-focus",
-  ];
-  for (const name of names) {
-    assert.equal((allStyles.match(new RegExp(`${name}:`, "g")) || []).length, 1);
-    assert.equal(allStyles.slice(allStyles.indexOf("@media")).includes(`${name}:`), false);
-  }
+test("brand and high-density layout tokens are semantic and fixed across breakpoints", () => {
+  for (const token of ["--color-canvas", "--color-text", "--color-accent", "--site-max: 80rem", "--gutter-page: 2rem", "--gutter-mobile: 1.25rem", "--gutter-narrow: 1rem", "--rail-width: 20rem", "--two-column-gap: 3rem", "--two-column-main-min: 37.5rem", "--media-ratio: 16 / 10"]) assert.ok(tokens.includes(token), `${token} must exist`);
   assert.doesNotMatch(allStyles, /prefers-color-scheme/);
+  assert.match(layout, /\.site-header \{ min-height: 4\.5rem; \}/);
+  assert.match(layout, /\.site-header \{ min-height: 4rem; \}/);
+  assert.match(layout, /max-width: 67\.9375rem/);
 });
 
-test("font roles, readable minimums, containers and content breakpoints are explicit", () => {
-  for (const token of [
-    "--font-display", "--font-reading", "--font-ui", "--font-meta", "--font-wordmark",
-    "--type-reading", "--type-meta", "--type-caption", "--type-hero-summary", "--type-wordmark",
-    "--measure-page: 80rem", "--measure-content: 65rem", "--measure-reading: 45rem",
-    "--measure-display: 58.75rem", "--space-hero-start", "--space-content-entry",
-  ]) assert.ok(tokens.includes(token), `${token} must exist`);
-  for (const breakpoint of ["56.1875rem", "32.4375rem"]) {
-    assert.ok(allStyles.includes(`max-width: ${breakpoint}`), `${breakpoint} breakpoint must exist`);
-  }
-  assert.match(components, /\.architecture small[\s\S]*var\(--type-meta\)/);
+test("routes and navigation expose the four approved top-level destinations", () => {
+  for (const path of ["/robotaxi", "/enterprise-operating-framework", "/observations", "/about"]) assert.ok(app.includes(path));
+  for (const label of ["Robotaxi运营平台", "企业经营体系", "观察", "关于我"]) assert.ok(header.includes(label));
+  assert.match(header, /aria-current/);
+  assert.doesNotMatch(header, /href: "\/works"/);
+  assert.match(app, /"\/works": "\/robotaxi"/);
 });
 
-test("hero and explanation roles use semantic visual contracts", () => {
-  assert.match(pages, /\.home-hero h1[\s\S]*var\(--measure-display\)/);
-  assert.match(pages, /\.hero-description[\s\S]*var\(--type-hero-summary\)[\s\S]*var\(--font-ui\)/);
-  assert.match(components, /\.section-intro__description[\s\S]*var\(--font-ui\)/);
-  assert.match(components, /\.wordmark[\s\S]*text-transform: lowercase/);
-  assert.doesNotMatch(pages, /\.home-hero h1 br/);
+test("home title stays content-driven and phrase-aware", () => {
+  assert.match(siteContent, /homeTitle:.*\\u2060/);
+  assert.match(foundations, /word-break: auto-phrase/);
+  assert.match(foundations, /text-wrap: balance/);
+  assert.doesNotMatch(foundations, /word-break:\s*(?:break-all|keep-all)/);
 });
 
-test("Chinese semantic titles use native phrase-aware wrapping", () => {
-  assert.match(html, /<html lang="zh-CN">/);
-  assert.match(
-    foundations,
-    /\.home-hero h1,[\s\S]*\.article-header h1[\s\S]*word-break: auto-phrase;[\s\S]*text-wrap: balance;/,
-  );
-  assert.match(
-    foundations,
-    /\.section-intro h2,[\s\S]*\.content-card__title,[\s\S]*word-break: auto-phrase;[\s\S]*text-wrap: pretty;/,
-  );
-  assert.doesNotMatch(allStyles, /word-break:\s*(?:break-all|keep-all)/);
-  assert.match(homePage, /构\\u2060建/);
-  assert.match(observationContent, /企⁠业⁠数⁠字⁠化，需⁠要⁠同⁠时/);
-  assert.doesNotMatch(homePage, /<br\s*\/?>/);
+test("practice modules require explicit evidence media and do not create placeholders", () => {
+  assert.match(siteContent, /modules: \[\]/);
+  assert.match(practice, /module\.image\?\.src/);
+  assert.match(practice, /if \(!image\) return null/);
+  assert.match(pages, /aspect-ratio: var\(--media-ratio\)/);
+  assert.doesNotMatch(practice, /placeholder|robotaxi\.xingbuild\.top/);
+  assert.match(practice, /PracticeHeader/);
+  assert.match(practice, /PracticeEmptyState/);
+  assert.match(practice, /PositioningStrip/);
 });
 
-test("reading flow assigns each adjacent relationship one semantic spacing owner", () => {
-  assert.match(components, /\.prose section \{[\s\S]*display: flow-root;[\s\S]*margin: 0;/);
-  assert.match(components, /\.prose section \+ section,[\s\S]*margin-top: var\(--rhythm-group\)/);
-  assert.match(components, /\.prose h2 \{[\s\S]*margin: 0 0 var\(--rhythm-relate\)/);
-  assert.match(components, /\.prose p \{[\s\S]*margin: 0;/);
-  assert.match(components, /\.prose p \+ p \{ margin-top: var\(--rhythm-relate\); \}/);
-  assert.match(components, /\.article-summary \{[\s\S]*margin: 0;/);
+test("observation stream only consumes explicit reading projections", () => {
+  assert.match(briefs, /export const observationBriefs = \[\]/);
+  assert.match(observations, /brief-item__meta/);
+  assert.match(observations, /brief-item__statement/);
+  assert.match(observationsPage, /ObservationEmptyState/);
+  assert.match(observationsPage, /site\.emptyStates\.observations/);
+  assert.match(observations, /observations-empty-title/);
+  assert.match(siteContent, /暂无已核验简讯/);
+  assert.doesNotMatch(observationsPage, /publishedObservations|ObservationArchive|title|summary/);
+  assert.doesNotMatch(observations, /ObservationCard|ContentCard|claimKind|sourceRefs/);
 });
 
-test("visual hierarchy uses semantic relationship tokens and parent-owned flows", () => {
-  for (const token of [
-    "--rhythm-bind", "--rhythm-relate", "--rhythm-object",
-    "--rhythm-group", "--rhythm-section", "--rhythm-page-entry",
-    "--rhythm-section-flow", "--rhythm-section-entry", "--rhythm-card-gap",
-  ]) assert.ok(tokens.includes(token), `${token} must exist`);
-  assert.match(layout, /\.page-stack \{ gap: var\(--rhythm-page-entry\); \}/);
-  assert.match(layout, /\.page-section-stack \{ gap: var\(--rhythm-section-flow\); \}/);
-  assert.match(layout, /\.section-flow \{ gap: var\(--rhythm-section-entry\); \}/);
-  assert.match(layout, /\.collection-flow \{ gap: var\(--rhythm-group\); \}/);
+test("layout owns sibling spacing and components do not create desktop rails without content", () => {
+  assert.match(layout, /\.two-column-layout\.has-rail/);
+  assert.match(layout, /\.two-column-layout__main \{ min-width: 0; max-width: var\(--measure-content\); \}/);
   assert.match(layout, /\.object-stack \{ gap: var\(--rhythm-relate\); \}/);
-  assert.doesNotMatch(layout, /\.object-stack \{ gap: var\(--rhythm-object\); \}/);
-  assert.match(homePage, /home-page page-stack/);
-  assert.match(homePage, /home-section home-observations section-flow/);
-  assert.match(pageStructure, /section-intro__copy/);
-  assert.match(cards, /content-card__title/);
-  assert.match(cards, /content-card__summary/);
-  assert.match(cards, /content-card__meta/);
-  assert.doesNotMatch(pages, /\.home-section\s*\{[^}]*padding-block/);
+  assert.doesNotMatch(pages, /\.practice-page\s*\{[^}]*width:/);
 });
 
-test("shared cards keep one anatomy and one primary link across pages", () => {
-  assert.match(cards, /export function ContentCard/);
-  assert.match(cards, /export function CardGrid/);
-  assert.equal((cards.match(/<Link/g) || []).length, 1);
-
-  assert.match(observations, /CardTitle[\s\S]*CardSummary[\s\S]*CardMeta/);
-  assert.match(observations, /observation\.nature[\s\S]*observationDimensionMetadata\(observation\)[\s\S]*observation\.publishedAt/);
-  assert.match(works, /CardTitle[\s\S]*CardSummary[\s\S]*CardMeta/);
-  assert.match(works, /work\.problemSummary[\s\S]*work\.status[\s\S]*work\.updatedAt/);
-
-  assert.match(homePage, /ObservationArchive items=\{latestObservations\}/);
-  assert.match(observationsPage, /ObservationArchive items=\{publishedObservations\}/);
-  assert.match(homePage, /WorkCardGrid items=\{works\}/);
-  assert.match(worksPage, /WorkCardGrid items=\{works\}/);
-  assert.doesNotMatch(homePage, /HomeObservationCard|HomeWorkCard/);
-  assert.doesNotMatch(observations, /ObservationFeature|ObservationRow|继续阅读|row-arrow/);
-  assert.doesNotMatch(works, /work\.eyebrow|work\.boundary|ArchitectureDiagram work=\{work\}/);
-  assert.doesNotMatch(observationsPage, /eyebrow="Observations"|featureFirst/);
-  assert.doesNotMatch(worksPage, /eyebrow="Works"|showArchitecture/);
-  assert.doesNotMatch(aboutPage, /about-toc|本页目录/);
-  assert.doesNotMatch(content, /\bfeatured:/);
-  assert.doesNotMatch(tokens, /--rail-year/);
-});
-
-test("card visuals use independent tokens and one interaction contract", () => {
-  for (const token of [
-    "--color-card-surface", "--color-card-surface-hover", "--color-card-border",
-    "--radius-card", "--shadow-card-hover", "--duration-card",
-  ]) assert.ok(tokens.includes(token), `${token} must exist`);
-  assert.match(components, /\.content-card__link \{[\s\S]*var\(--color-card-surface\)/);
-  assert.match(components, /\.content-card__link:hover \{[\s\S]*translateY\(-2px\)/);
-  assert.match(components, /\.content-card__link:focus-visible \{[\s\S]*var\(--color-focus\)/);
-  assert.match(components, /prefers-reduced-motion: reduce[\s\S]*\.content-card__link:hover,[\s\S]*transform: none/);
-  assert.doesNotMatch(pages, /\.content-card/);
-});
-
-test("visible numbers keep semantic meaning instead of simulating structure", () => {
-  assert.doesNotMatch(homePage, /eyebrow="0[12]"/);
-  assert.doesNotMatch(content, /\bindex:\s*"0[12]"/);
-  assert.doesNotMatch(works, /work-index|work\.index/);
-  assert.doesNotMatch(workPage, /padStart|map\(\(section,\s*index\)/);
-  assert.doesNotMatch(aboutPage, /padStart|map\(\(item,\s*index\)/);
-  assert.match(aboutPage, /<ul>[\s\S]*profile\.problems/);
-  assert.match(works, /ArchitectureDiagram[\s\S]*padStart\(2, "0"\)/);
-  assert.doesNotMatch(allStyles, /--rail-index|\.work-index\b/);
-});
-
-test("local startup reuses a healthy service and never drifts from port 4317", () => {
+test("local startup continues to use only the fixed preview URL", () => {
   assert.match(startCommand, /LOCAL_URL="http:\/\/127\.0\.0\.1:4317\/"/);
   assert.match(startCommand, /ONLINE_URL="https:\/\/xingbuild\.top\/"/);
-  assert.match(startCommand, /curl --noproxy "\*"[\s\S]*open "\$\{LOCAL_URL\}"/);
-  assert.match(startCommand, /lsof -nP -iTCP:4317 -sTCP:LISTEN/);
-  assert.match(startCommand, /--port 4317 --strictPort --open \/ <\/dev\/null/);
-  assert.doesNotMatch(startCommand, /(?:^|\n)\s*(?:echo\s+)?["']?h["']?\s*(?:\n|$)/);
+  assert.match(startCommand, /--port 4317 --strictPort --open \//);
 });

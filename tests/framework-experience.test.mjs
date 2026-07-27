@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { architectureById } from "../src/content/frameworkModel.js";
+import { clampGraphPan, validateGraphGeometry } from "../src/components/framework/frameworkGeometry.js";
 
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 const explorer = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
@@ -8,52 +10,52 @@ const page = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.met
 const styles = await readFile(new URL("../src/styles/framework.css", import.meta.url), "utf8");
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
-test("the enterprise framework is one continuous public page", () => {
-  assert.match(app, /parts\[1\] === "enterprise-operating-framework"\) return <FrameworkPage/);
-  assert.match(app, /replaceState\(\{\}, "", FRAMEWORK_BASE\)/);
-  assert.doesNotMatch(app, /FrameworkConceptPage|FrameworkApplicationPage/);
-  assert.match(page, /认知企业经营体系/);
+test("the enterprise framework has one public overview route with legacy compatibility", () => {
+  assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <FrameworkPage \/>/);
+  assert.match(app, /"\/works\/enterprise-operating-framework": FRAMEWORK_BASE/);
   assert.match(page, /<FrameworkExplorer \/>/);
-  for (const removed of ["如何阅读", "来源与版本", "career", "当前视图"]) {
-    assert.doesNotMatch(page, new RegExp(removed));
-    assert.doesNotMatch(explorer, new RegExp(removed));
-  }
+  assert.match(page, /PositioningStrip/);
+  assert.doesNotMatch(page, /WORK · ENTERPRISE SYSTEMS|如何阅读|来源与版本|career/);
 });
 
-test("hover and focus preview clickability while click owns stable selection", () => {
-  assert.match(explorer, /onMouseEnter=\{\(\) => onPreview/);
-  assert.match(explorer, /onFocus=\{\(\) => onPreview/);
-  assert.match(explorer, /onClick=\{\(\) => onSelect/);
-  assert.match(explorer, /aria-pressed=\{selected\}/);
-  assert.match(explorer, /aria-live="polite"/);
-  assert.match(explorer, /const activeNodeId = previewId \?\? selectedId/);
-  assert.doesNotMatch(explorer, /navigate\(|href=/);
+test("the explorer consumes only the overview while reserving controlled view state", () => {
+  assert.match(explorer, /architectureById\.get\("enterprise-operation"\)/);
+  assert.match(explorer, /const \[activeViewId\] = useState\("overview"\)/);
+  assert.match(explorer, /viewportTransform/);
+  assert.match(explorer, /onPointerDown=\{pointerDown\}/);
+  assert.match(explorer, /复位视图/);
+  assert.doesNotMatch(explorer, /architectures\.map/);
+  assert.doesNotMatch(explorer, /href=/);
 });
 
-test("relation paths have arrows only at real edge targets and routing tracks have none", () => {
-  assert.match(explorer, /className={`architecture-track/);
-  assert.doesNotMatch(explorer, /architecture-track[\s\S]{0,160}markerEnd/);
-  assert.match(explorer, /architecture\.edges\.map[\s\S]*markerEnd=/);
-  assert.match(explorer, /data-edge-id=\{item\.id\}/);
+test("hover, focus, click and keyboard maintain a stable selected explanation", () => {
+  for (const contract of [
+    /onMouseEnter=\{\(\) => onPreview/,
+    /onFocus=\{\(\) => onPreview/,
+    /aria-pressed=\{selected\}/,
+    /event\.key === "Enter" \|\| event\.key === " "/,
+    /aria-live="polite"/,
+    /const activeNodeId = previewId \?\? selectedId/,
+    /framework-explanation/,
+  ]) assert.match(explorer, contract);
 });
 
-test("desktop and mobile consume the same architecture data with distinct projections", () => {
-  assert.match(explorer, /architectures\.map/);
-  assert.match(explorer, /projection="desktop"/);
-  assert.match(explorer, /projection="mobile"/);
-  assert.match(styles, /max-width: 56\.1875rem/);
-  assert.match(styles, /\.architecture-lines\.is-desktop[\s\S]*display: none/);
-  assert.match(styles, /\.architecture-lines\.is-mobile[\s\S]*display: block/);
-  assert.doesNotMatch(styles, /overflow-x:\s*(?:auto|scroll)/);
-  assert.match(styles, /min-height: var\(--touch-target\)/);
+test("the overview has real arrows, a 16:10 canvas, and geometry contracts", () => {
+  assert.match(explorer, /markerEnd=\{`url/);
+  assert.match(explorer, /isLabelSafe\(overview, edge\)/);
+  assert.match(styles, /aspect-ratio: var\(--media-ratio\)/);
+  assert.match(styles, /\.graph-canvas \{[\s\S]*overflow: hidden/);
+  assert.deepEqual(validateGraphGeometry(architectureById.get("enterprise-operation")), []);
 });
 
-test("no-JavaScript fallback preserves all four architecture questions", () => {
+test("canvas pan stays within bounded context while reset restores the default", () => {
+  assert.match(explorer, /clampGraphPan/);
+  assert.match(explorer, /setViewportTransform\(\{ x: 0, y: 0 \}\)/);
+  assert.deepEqual(clampGraphPan({ x: 1000, y: -1000 }, { width: 940, height: 588 }), { x: 72, y: -47 });
+});
+
+test("no-JavaScript fallback retains the single overview explanation", () => {
   assert.match(html, /<html lang="zh-CN">/);
-  for (const text of [
-    "一家企业如何持续创造价值、形成经营结果并调整自身？",
-    "如何把战略和经营目标转化为可执行、可度量的业务设计？",
-    "如何把业务设计转化为真正进入企业运作的产品、数据和系统？",
-    "如何避免同一个业务词在不同讨论中混用，失去明确边界？",
-  ]) assert.ok(html.includes(text), `${text} must remain readable without JavaScript`);
+  assert.match(html, /一家企业如何持续创造价值、形成经营结果并调整自身？/);
+  assert.doesNotMatch(html, /如何把战略和经营目标转化为可执行、可度量的业务设计？/);
 });

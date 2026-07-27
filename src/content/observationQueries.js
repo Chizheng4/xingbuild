@@ -38,3 +38,10 @@ export function selectHomeObservations(items) {
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
     .slice(0, 4);
 }
+
+export function selectObservationBriefs(items) {
+  return items
+    .filter((item) => validateObservationBrief(item).length === 0)
+    .sort((left, right) => right.publishedAt.localeCompare(left.publishedAt));
+}
+import { validateObservationBrief } from "./observationBriefs.js";

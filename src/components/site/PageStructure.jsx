@@ -14,11 +14,15 @@ export function PageIntro({ eyebrow, title, summary, children }) {
 export function HeroStatement({ eyebrow, title, summary }) {
   return (
     <section className="home-hero">
-      <p className="eyebrow">{eyebrow}</p>
+      {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
       <h1>{title}</h1>
       <p className="hero-description">{summary}</p>
     </section>
   );
+}
+
+export function PositioningStrip({ children }) {
+  return <p className="positioning-strip">{children}</p>;
 }
 
 export function SectionIntro({ eyebrow, title, description, action }) {

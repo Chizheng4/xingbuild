@@ -2,10 +2,33 @@ export const site = {
   name: "xingbuild",
   author: "金星 · Xingjin",
   description: "持续观察企业如何经营，并把判断构建成可以运行和验证的系统。",
+  homeTitle: "我对企业如何经营、学习和演进充满好\u2060奇，也持续探索如何通过 B 端产品、数\u2060据\u2060与 AI，让复杂的经\u2060营\u2060问\u2060题变得更清楚、更可行动。",
   version: "v0.5.0",
   updatedAt: "2026-07-25",
   location: "广州",
+  emptyStates: {
+    observations: {
+      title: "观察",
+      message: "暂无已核验简讯",
+      description: "当前没有符合信息流标准、可公开呈现的事件简讯。",
+    },
+  },
 };
+
+// Practice is a presentation model. Modules only enter this collection once
+// their public evidence media and destination (if any) have been confirmed.
+export const practices = [
+  {
+    id: "robotaxi",
+    route: "/robotaxi",
+    navLabel: "Robotaxi运营平台",
+    title: "Robotaxi 经营闭环模拟平台",
+    intro: "把需求、供给、匹配、履约、收入、成本和经营反馈连接成可运行的模拟闭环。",
+    boundary: "模拟作品，不代表真实城市运营、自动驾驶核心技术或真实企业经营结果。",
+    modules: [],
+    observationQuery: { scope: "robotaxi" },
+  },
+];
 
 export const works = [
   {
@@ -115,4 +138,8 @@ export const profile = {
 
 export function findWork(slug) {
   return works.find((item) => item.slug === slug);
+}
+
+export function findPractice(id) {
+  return practices.find((item) => item.id === id);
 }

@@ -36,8 +36,9 @@ export function SiteHeader({ pathname }) {
   useEffect(() => setMenuOpen(false), [pathname]);
 
   const navItems = [
+    { href: "/robotaxi", label: "Robotaxi运营平台" },
+    { href: "/enterprise-operating-framework", label: "企业经营体系" },
     { href: "/observations", label: "观察" },
-    { href: "/works", label: "作品" },
     { href: "/about", label: "关于我" },
   ];
 
@@ -56,8 +57,8 @@ export function SiteHeader({ pathname }) {
           <Link
             key={item.href}
             href={item.href}
-            className={pathname.startsWith(item.href) ? "is-active" : undefined}
-            aria-current={pathname.startsWith(item.href) ? "page" : undefined}
+            className={(item.href === "/robotaxi" ? pathname === "/" || pathname === item.href : pathname.startsWith(item.href)) ? "is-active" : undefined}
+            aria-current={(item.href === "/robotaxi" ? pathname === "/" || pathname === item.href : pathname.startsWith(item.href)) ? "page" : undefined}
             onNavigate={() => setMenuOpen(false)}
           >
             {item.label}
