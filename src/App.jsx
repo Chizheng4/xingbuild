@@ -7,22 +7,14 @@ import { WorksPage } from "./pages/WorksPage";
 import { WorkPage } from "./pages/WorkPage";
 import { AboutPage } from "./pages/AboutPage";
 import { FrameworkPage } from "./pages/FrameworkPage";
-import { FrameworkConceptPage } from "./pages/FrameworkConceptPage";
-import { FrameworkApplicationPage } from "./pages/FrameworkApplicationPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
 import { useLocation } from "./lib/navigation";
 import { findObservation, findWork, site } from "./content/siteContent";
-import {
-  frameworkApplicationBySlug,
-  frameworkConceptById,
-} from "./content/frameworkModel";
-
-const frameworkConceptExists = (id) => frameworkConceptById.has(id);
-const frameworkApplicationExists = (slug) => frameworkApplicationBySlug.has(slug);
+import { FRAMEWORK_BASE } from "./content/frameworkModel";
 
 function resolvePage(location) {
-  const { pathname, search, state } = location;
+  const { pathname } = location;
   if (pathname === "/") return <HomePage />;
   if (pathname === "/observations") return <ObservationsPage />;
   if (pathname === "/works") return <WorksPage />;
@@ -39,19 +31,7 @@ function resolvePage(location) {
 
   if (pathname.startsWith("/works/")) {
     const parts = pathname.split("/").filter(Boolean);
-    if (parts[1] === "enterprise-operating-framework" && parts[2] === "explore") {
-      return <FrameworkPage search={search} navigationState={state} />;
-    }
-    if (parts[1] === "enterprise-operating-framework" && parts[2] === "concepts" && parts[3]) {
-      return frameworkConceptExists(parts[3]) ? (
-        <FrameworkConceptPage conceptId={parts[3]} search={search} navigationState={state} />
-      ) : <NotFoundPage />;
-    }
-    if (parts[1] === "enterprise-operating-framework" && parts[2] === "applications" && parts[3]) {
-      return frameworkApplicationExists(parts[3]) ? (
-        <FrameworkApplicationPage slug={parts[3]} search={search} />
-      ) : <NotFoundPage />;
-    }
+    if (parts[1] === "enterprise-operating-framework") return <FrameworkPage />;
     const work = findWork(pathname.split("/")[2]);
     return work ? <WorkPage work={work} /> : <NotFoundPage />;
   }
@@ -64,6 +44,9 @@ export function App() {
   const { pathname } = location;
 
   useEffect(() => {
+    if (pathname.startsWith(`${FRAMEWORK_BASE}/`)) {
+      window.history.replaceState({}, "", FRAMEWORK_BASE);
+    }
     const labels = {
       "/": site.name,
       "/observations": "观察",

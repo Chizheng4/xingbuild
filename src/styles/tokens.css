@@ -9,6 +9,10 @@
     --color-border: #c9c3b7;
     --color-accent: #a34322;
     --color-accent-strong: #7d2f19;
+    --color-architecture-line: #938b7e;
+    --color-architecture-surface: #ebe2d3;
+    --color-architecture-result: #e5dccd;
+    --color-architecture-selected: #efe0d2;
 
     --font-display: "Noto Serif SC Variable", "Songti SC", STSong, serif;
     --font-reading: "Noto Serif SC Variable", "Songti SC", STSong, serif;

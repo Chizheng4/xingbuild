@@ -32,6 +32,8 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Keep content, presentation, and visual tokens separate so future editing does not require rewriting page components.
 - Career and Robotaxi source projects remain upstream factual authorities. Website content is a versioned presentation snapshot and must preserve evidence boundaries.
 - Mobile navigation uses a content-driven breakpoint below 520px. Widths around 557px retain the compact inline header; the full-screen mobile menu starts directly below the header instead of vertically centering a short link list.
+- Visual design iterations keep only the current valid interactive prototype and explicitly required final evidence. Delete rejected mockups, superseded screenshots, and temporary browser profiles after their review value has ended; do not accumulate invalid visual artifacts.
+- Browser rendering must be bounded and serial. Do not leave preview servers, headless Chrome processes, Playwright runtimes, or temporary browser profiles running after capture. Before starting another render, verify the previous process exited; when HTML/SVG inspection is sufficient, do not generate screenshots.
 
 ## Iteration and release workflow
 

@@ -1,57 +1,51 @@
-# v0.3.1 Design QA
+# v0.8.0 Design QA
 
-## Comparison target
+## QA 结论
 
-- Source visual truth: `/private/tmp/xingbuild-v031-design-qa/reference-maggie-mobile-menu.png`
-- Implementation: `/private/tmp/xingbuild-v031-design-qa/implementation-xingbuild-mobile-menu.png`
-- Viewport: `468 × 816` CSS px
-- Source pixels: `468 × 816`
-- Implementation pixels: `468 × 816`
-- Density normalization: both captures use the same browser viewport and pixel dimensions; no scaling was required.
-- State: mobile navigation open.
+Engineering 设计 QA 与结构视觉专业验收：通过。页面结构、视觉、响应式、交互和真实浏览器表现均达到 `v0.8.0` 本地稳定版本标准。
 
-The source is used for its navigation and simplification mechanism, not for its dark palette, logo, number of destinations, illustration language, or content taxonomy.
+## 事实源
 
-## Full-view comparison evidence
+- 最终结构与视觉原型：`/Users/kingjin/.codex/visualizations/2026/07/25/019f97f2-c933-70a1-841b-f4341f85cc76/v0.8.0-structure-first-high-fidelity/mockup.html`
+- 固定关系与低保真结构：`docs/design/v0.8.0 四张架构低保真结构提案.md`
+- 产品合同：`docs/design/v0.8.0 单页交互式企业认知架构方案.md`
+- 视觉基线：`docs/design/xingbuild Visual System v1.md`
 
-- Both states replace the underlying page with a full-viewport navigation surface.
-- Both keep the brand in the upper-left, place a close icon in the upper-right, and use a large vertical navigation list.
-- The xingbuild implementation intentionally keeps its warm paper, ink and ochre palette and contains only the three established destinations.
-- The underlying main content and footer are visually covered, marked inert, and cannot scroll while the menu is open.
+## 原型对照
 
-## Focused-region comparison
+- 继承页面框架、全小写 wordmark、暖白/墨色/赭色、编辑型衬线标题和无衬线图中文字。
+- 继承四段连续阅读、核心问题、一句说明、完整架构与稳定解释区。
+- 继承桌面左图右解释、手机图后解释、系统边界、主脊柱、侧向约束、反馈外轨和选中节点构图。
+- 页面专用框架使用最大 `1320px` 与流体 `18–38px` gutter；桌面标题上限 `62px`，与最终原型一致。
+- 反馈外轨不带箭头；只有进入真实目标节点的关系边带箭头。
 
-No separate crop was needed. At `468 × 816`, the brand, close icon, complete navigation list, spacing and background coverage are all readable in the full-view captures.
+## 必要工程化差异
 
-## Required fidelity surfaces
+- 使用项目现有 Phosphor 菜单图标和全屏菜单合同，不复制原型中的 CSS 占位菜单线。
+- 结构断点使用视觉系统既有的 `900px` 内容驱动边界，而不是原型演示用 `700px`；768px 已转为纵向投影，避免把完整桌面图压缩到不可读宽度。
+- 解释区增加“直接关系”文本等价物，以满足固定内容合同、键盘访问和关系不只依赖图线的要求。
+- 使用项目本地 Noto Serif/Sans SC 和语义颜色 token，不复制任何外部字体或视觉资产。
 
-- Fonts and typography: the implementation retains xingbuild's established serif editorial navigation and clear wordmark hierarchy; link size and line height match the reference mechanism without copying its font identity.
-- Spacing and layout rhythm: upper-corner controls, vertical list rhythm and full-screen negative space are aligned with the reference. The shorter list appropriately leaves more empty space.
-- Colors and visual tokens: warm paper, ink and ochre remain intentional xingbuild constraints. Responsive rules do not redefine the palette.
-- Image quality and assets: neither implementation state requires raster imagery. Menu and close controls use Phosphor vector icons rather than CSS drawings, characters or placeholders.
-- Copy and content: only `观察 / 作品 / 关于我` appear, preserving the established information architecture.
+## 真实浏览器结果
 
-## Findings
+- 视口：`1440×1000`、`1024×768`、`768×1024`、`557×816`、`520×816`、`390×844`、`320×568`。
+- 四个架构段全部存在；1440/1024 左图右解释，768 及以下图后解释。
+- 所有节点保持在各自图形边界内；320px 页面 `scrollWidth === clientWidth`。
+- 557px 与 520px 保持行内导航；390px 使用全视口菜单、背景滚动锁定和 Escape 关闭。
+- click 与 Enter 都能更新 `aria-pressed`、当前节点和解释；手机解释位于当前图下方。
+- `企业数字化` 在七档视口均保持为完整词组；未使用固定 `<br>` 或视口专用文案。
+- 图一至图四的桌面/手机投影均已逐段检查；反馈轨、箭头目标、节点和关系标签未发现阻塞性问题。
+- 浏览器控制台无 warning/error。
+- 结构视觉 task 已独立复验四图模型、桌面/手机投影、最窄宽度、菜单和键盘选择，专业验收通过。
 
-No actionable P0, P1 or P2 differences remain.
+## 自动验证
 
-The focus outline around the close control is intentionally visible and uses the xingbuild accent color. This differs from Maggie's blue treatment but preserves keyboard clarity and the local brand system.
+- `npm run test:sites`：30/30 通过。
+- `npm run build`：通过，Sites 交付文件完整。
+- `npm run release:check`：通过；项目检查、生产构建与 30 项测试全部成功。
 
-## Interaction verification
+## 已知边界
 
-- Menu icon opens the full-viewport navigation.
-- Open state changes the accessible button name to `关闭菜单`.
-- Main content and footer receive `inert`; body scrolling is locked.
-- `Escape` closes the menu and restores the page.
-- Selecting a navigation destination closes the menu, removes `inert`, restores scrolling and navigates correctly.
-- Browser console errors checked: none.
-
-## Comparison history
-
-Initial implementation used a text button and an inserted navigation panel that left the underlying page visible. v0.3.1 replaced it with icon controls and a fixed full-viewport overlay, then added background scroll locking and inert content isolation. The final comparison evidence above confirms those P1 differences are resolved.
-
-## Follow-up polish
-
-No blocking polish remains. Future content additions should preserve the current sparse menu rather than filling the overlay with secondary information.
-
-final result: passed
+- 1024px 的架构图密度高于 1440px，但节点、边、关系标签和解释区仍可读，且符合 900px 以上双区合同。
+- 当前四图是固定内容模型与受控 SVG 投影，不提供拖拽、缩放、编辑或自动布局；这是 v0.8.0 的明确范围。
+- 线上网站仍是此前生产版本；本轮未推送、未发布、未修改域名。
