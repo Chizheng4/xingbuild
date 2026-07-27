@@ -128,5 +128,6 @@ test("local startup reuses a healthy service and never drifts from port 4317", (
   assert.match(startCommand, /ONLINE_URL="https:\/\/xingbuild\.top\/"/);
   assert.match(startCommand, /curl --noproxy "\*"[\s\S]*open "\$\{LOCAL_URL\}"/);
   assert.match(startCommand, /lsof -nP -iTCP:4317 -sTCP:LISTEN/);
-  assert.match(startCommand, /--port 4317 --strictPort --open \//);
+  assert.match(startCommand, /--port 4317 --strictPort --open \/ <\/dev\/null/);
+  assert.doesNotMatch(startCommand, /(?:^|\n)\s*(?:echo\s+)?["']?h["']?\s*(?:\n|$)/);
 });
