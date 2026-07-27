@@ -67,7 +67,7 @@
   .source-boundary { display: grid; gap: var(--rhythm-bind); margin: 0; }
   .source-boundary strong { font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .related-observations { margin: 0; }
-  .about-content { display: grid; gap: var(--rhythm-group); }
+  .about-content { display: grid; gap: var(--rhythm-about-section); }
   .about-content section { margin: 0; }
   .about-content h2 { margin-bottom: var(--rhythm-relate); font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
   .about-content > section > p, .about-content li {

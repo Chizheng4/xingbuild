@@ -24,9 +24,7 @@
   }
   :where(
     .section-intro h2,
-    .observation-feature h3,
-    .observation-row-copy h3,
-    .work-summary h3,
+    .content-card__title,
     .prose h2,
     .work-detail-grid h2,
     .about-content h2
@@ -44,4 +42,7 @@
   }
   ::selection { background: var(--color-surface-subtle); color: var(--color-text); }
   [id] { scroll-margin-top: var(--space-12); }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
 }

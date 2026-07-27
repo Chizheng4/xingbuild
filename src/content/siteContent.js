@@ -11,11 +11,11 @@ export const observations = [
   {
     id: "observation-four-planes",
     slug: "four-planes-of-enterprise-digitalization",
-    title: "为什么理解企\u2060业\u2060数\u2060字\u2060化，需要同\u2060时看见四个平面",
+    title: "为什么理解企\u2060业\u2060数\u2060字\u2060化，需\u2060要同\u2060时看见四个平面",
     summary:
       "页面、流程和系统都只是局部投影。要判断数字化是否真正服务经营，需要把企业现实、经营与架构设计、数字化实现和运行反馈放在同一条因果链上。",
     format: "analysis",
-    featured: true,
+    primaryTopic: "企业经营",
     discussionQuestion:
       "怎样把企业现实、经营设计、数字化实现和运行反馈放进同一条可验证的因果链？",
     topics: ["企业经营", "业务架构", "数字化"],
@@ -55,7 +55,7 @@ export const observations = [
     summary:
       "一个经营模拟作品的可信度，来自对象、规则、事实和反馈是否形成闭环，也来自它是否诚实说明模拟与真实运营之间的边界。",
     format: "brief",
-    featured: false,
+    primaryTopic: "Robotaxi",
     topics: ["Robotaxi", "经营模拟", "证据边界"],
     status: "published",
     publishedAt: "2026-07-24",
@@ -81,6 +81,7 @@ export const works = [
     title: "Robotaxi 经营闭环模拟平台",
     eyebrow: "经营模拟 · 业务架构 · B 端产品 · 工程实现",
     summary: "把需求、供给、匹配、履约、收入、成本和经营反馈连接成可运行的模拟闭环。",
+    problemSummary: "从经营目标、业务对象和事实关系出发，持续验证 Robotaxi 经营逻辑。",
     problem:
       "如何不从页面清单出发，而是从经营目标、业务对象和事实关系出发，构建一个能够持续验证经营逻辑的 B 端系统。",
     boundary: "模拟作品，不代表真实城市运营、自动驾驶核心技术或真实企业经营结果。",
@@ -116,6 +117,7 @@ export const works = [
     title: "企业经营体系与数字化认知框架",
     eyebrow: "企业经营 · 业务架构 · 数字化 · 运行反馈",
     summary: "用统一概念和四个平面，连接企业现实、经营设计、数字化实现与运行反馈。",
+    problemSummary: "让战略、业务、产品、数据和技术使用同一套可实现、可验证的语言。",
     problem:
       "如何避免战略、业务、产品、数据和技术各自使用一套语言，并让复杂经营问题可以逐层理解、实现和验证。",
     boundary: "框架是持续演进的认知成果，不替代具体企业的行业数据、组织判断和经营责任。",

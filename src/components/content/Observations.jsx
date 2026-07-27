@@ -1,4 +1,10 @@
-import { Link } from "../../lib/navigation";
+import {
+  CardGrid,
+  CardMeta,
+  CardSummary,
+  CardTitle,
+  ContentCard,
+} from "../cards/ContentCards";
 
 const formatLabels = { analysis: "分析", brief: "短观察" };
 
@@ -15,57 +21,28 @@ export function ObservationMeta({ observation, showUpdated = false }) {
   );
 }
 
-export function ObservationFeature({ observation }) {
-  if (!observation) return null;
-  const href = `/observations/${observation.slug}`;
+export function ObservationCard({ observation }) {
   return (
-    <article className="observation-feature content-object object-stack">
-      <ObservationMeta observation={observation} />
-      <h3 className="object-proposition"><Link href={href}>{observation.title}</Link></h3>
-      <p className="object-evidence">{observation.summary}</p>
-      <Link className="feature-link object-action" href={href}>
-        继续阅读 <span aria-hidden="true">→</span>
-      </Link>
-    </article>
+    <ContentCard
+      href={`/observations/${observation.slug}`}
+      accessibleName={`阅读观察：${observation.title}`}
+      type="observation"
+    >
+      <CardTitle>{observation.title}</CardTitle>
+      <CardSummary>{observation.summary}</CardSummary>
+      <CardMeta>
+        <span>{formatLabels[observation.format] || observation.format}</span>
+        <span>{observation.primaryTopic}</span>
+        <time dateTime={observation.publishedAt}>{observation.publishedAt}</time>
+      </CardMeta>
+    </ContentCard>
   );
 }
 
-export function ObservationRow({ observation, showSummary = false }) {
+export function ObservationArchive({ items }) {
   return (
-    <article className="observation-row content-object">
-      <Link
-        href={`/observations/${observation.slug}`}
-        className="observation-row-link"
-        aria-label={`阅读：${observation.title}`}
-      >
-        <ObservationMeta observation={observation} />
-        <div className="observation-row-copy">
-          <h3>{observation.title}</h3>
-          {showSummary ? <p>{observation.summary}</p> : null}
-        </div>
-        <span className="row-arrow" aria-hidden="true">↗</span>
-      </Link>
-    </article>
-  );
-}
-
-export function ObservationArchive({ items, featureFirst = false }) {
-  const feature = featureFirst ? items[0] : null;
-  const archiveItems = featureFirst ? items.slice(1) : items;
-  return (
-    <div className="observation-archive collection-flow">
-      {feature ? <ObservationFeature observation={feature} /> : null}
-      {archiveItems.length ? (
-        <div className="observation-list collection-flow">
-          {archiveItems.map((item, index) => (
-            <ObservationRow
-              key={item.id}
-              observation={item}
-              showSummary={!featureFirst && index === 0}
-            />
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <CardGrid type="observation">
+      {items.map((item) => <ObservationCard key={item.id} observation={item} />)}
+    </CardGrid>
   );
 }

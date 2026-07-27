@@ -1,4 +1,10 @@
-import { Link } from "../../lib/navigation";
+import {
+  CardGrid,
+  CardMeta,
+  CardSummary,
+  CardTitle,
+  ContentCard,
+} from "../cards/ContentCards";
 
 export function ArchitectureDiagram({ work }) {
   const items = work.flow || work.planes;
@@ -20,23 +26,27 @@ export function ArchitectureDiagram({ work }) {
   );
 }
 
-export function WorkSummary({ work, showArchitecture = false }) {
+export function WorkCard({ work }) {
   return (
-    <article className={`work-summary content-object ${showArchitecture ? "has-architecture" : ""}`}>
-      <div className="work-summary-copy object-stack">
-        <p className="eyebrow object-identity">{work.eyebrow}</p>
-        <h3 className="object-proposition"><Link href={`/works/${work.slug}`}>{work.title}</Link></h3>
-        <div className="work-evidence object-evidence">
-          <p className="work-problem-summary">{work.problem}</p>
-          <p className="work-built">{work.summary}</p>
-          <div className="work-status">
-            <span>{work.status}</span>
-            <time dateTime={work.updatedAt}>更新 {work.updatedAt}</time>
-          </div>
-          <p className="work-boundary">{work.boundary}</p>
-        </div>
-      </div>
-      {showArchitecture ? <ArchitectureDiagram work={work} /> : null}
-    </article>
+    <ContentCard
+      href={`/works/${work.slug}`}
+      accessibleName={`查看作品：${work.title}`}
+      type="work"
+    >
+      <CardTitle>{work.title}</CardTitle>
+      <CardSummary>{work.problemSummary}</CardSummary>
+      <CardMeta>
+        <span>{work.status}</span>
+        <time dateTime={work.updatedAt}>更新于 {work.updatedAt}</time>
+      </CardMeta>
+    </ContentCard>
+  );
+}
+
+export function WorkCardGrid({ items }) {
+  return (
+    <CardGrid type="work">
+      {items.map((work) => <WorkCard key={work.id} work={work} />)}
+    </CardGrid>
   );
 }

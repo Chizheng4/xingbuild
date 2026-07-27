@@ -9,10 +9,16 @@
     --color-border: #c9c3b7;
     --color-accent: #a34322;
     --color-accent-strong: #7d2f19;
+    --color-focus: #7d2f19;
     --color-architecture-line: #938b7e;
     --color-architecture-surface: #ebe2d3;
     --color-architecture-result: #e5dccd;
     --color-architecture-selected: #efe0d2;
+    --color-card-surface: #f1ebe1;
+    --color-card-surface-hover: #ede5d9;
+    --color-card-border: #d5ccbe;
+    --color-card-border-hover: #b9aa98;
+    --shadow-card-hover: 0 0.5rem 1.5rem rgba(71, 52, 34, 0.06);
 
     --font-display: "Noto Serif SC Variable", "Songti SC", STSong, serif;
     --font-reading: "Noto Serif SC Variable", "Songti SC", STSong, serif;
@@ -60,6 +66,13 @@
     --rhythm-object: clamp(2rem, 1.6286rem + 1.5238vw, 3rem);
     --rhythm-group: clamp(2.5rem, 1.9429rem + 2.2857vw, 4rem);
     --rhythm-section: clamp(4rem, 1.9375rem + 8.47vw, 8rem);
+    --rhythm-page-entry: clamp(2.5rem, 1.7571rem + 3.0476vw, 4.5rem);
+    --rhythm-section-flow: clamp(3rem, 2.0714rem + 3.8095vw, 5.5rem);
+    --rhythm-section-entry: clamp(1.5rem, 1.1286rem + 1.5238vw, 2.5rem);
+    --rhythm-card-gap: clamp(1rem, 0.6286rem + 1.5238vw, 2rem);
+    --rhythm-card-title-summary: clamp(0.625rem, 0.4857rem + 0.5714vw, 1rem);
+    --rhythm-card-summary-meta: clamp(1rem, 0.8143rem + 0.7619vw, 1.5rem);
+    --rhythm-about-section: clamp(2.5rem, 1.7571rem + 3.0476vw, 4.5rem);
 
     --measure-page: 80rem;
     --measure-content: 65rem;
@@ -68,8 +81,9 @@
     --measure-summary: 41rem;
     --measure-narrow: 34rem;
     --rail-toc: 10rem;
-    --rail-year: 5.5rem;
     --touch-target: 2.75rem;
     --line-thin: 1px;
+    --radius-card: 0.25rem;
+    --duration-card: 160ms;
   }
 }

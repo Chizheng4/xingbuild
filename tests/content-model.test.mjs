@@ -18,6 +18,7 @@ test("published observations have required publication fields and valid work lin
   for (const observation of observations.filter((item) => item.status === "published")) {
     assert.match(observation.publishedAt, /^\d{4}-\d{2}-\d{2}$/);
     assert.match(observation.updatedAt, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(observation.primaryTopic);
     assert.ok(observation.sections.length > 0);
     assert.ok(observation.sourceNotes);
     for (const workId of observation.relatedWorks) assert.ok(workIds.has(workId));
@@ -30,6 +31,7 @@ test("works preserve status, source, evidence boundary, and architecture", () =>
     assert.ok(work.status);
     assert.ok(work.upstream);
     assert.ok(work.boundary);
+    assert.ok(work.problemSummary);
     assert.ok(work.flow || work.planes);
   }
   assert.match(works.find((work) => work.id === "robotaxi").boundary, /不代表真实城市运营/);
