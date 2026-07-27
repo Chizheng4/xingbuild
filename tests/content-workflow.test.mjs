@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -18,10 +18,21 @@ function runScript(script, args, contentRoot) {
   });
 }
 
+async function pathExists(file) {
+  try {
+    await access(file);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 test("valid candidate moves through isolated draft preview and promote", async () => {
   const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-"));
   const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
   assert.equal(imported.status, 0, imported.stderr);
+  assert.match(imported.stdout, /Workspace import consumed: no \(external input retained\)/);
+  assert.equal(await pathExists(fixturePath), true);
   const preview = runScript("content-preview.mjs", ["--slug", "sanitized-candidate-preview"], contentRoot);
   assert.equal(preview.status, 0, preview.stderr);
   assert.match(preview.stdout, /\?draft=1/);
@@ -33,15 +44,69 @@ test("valid candidate moves through isolated draft preview and promote", async (
   assert.equal(publication.status, "published");
 });
 
+test("workspace import is consumed only after a valid draft is written", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-consume-"));
+  const importsDirectory = path.join(contentRoot, ".content-workspace", "imports");
+  const inputFile = path.join(importsDirectory, "sanitized-candidate-preview.json");
+  const draftFile = path.join(contentRoot, ".content-workspace", "drafts", "sanitized-candidate-preview.json");
+  await mkdir(importsDirectory, { recursive: true });
+  await writeFile(inputFile, await readFile(fixturePath, "utf8"));
+
+  const imported = runScript("content-import.mjs", ["--input", inputFile], contentRoot);
+  assert.equal(imported.status, 0, imported.stderr);
+  assert.match(imported.stdout, /Workspace import consumed: yes/);
+  assert.equal(await pathExists(inputFile), false);
+  assert.equal(await pathExists(draftFile), true);
+});
+
 test("invalid candidates fail instead of receiving invented fields", async () => {
   const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-invalid-"));
   const candidate = JSON.parse(await readFile(fixturePath, "utf8"));
   delete candidate.operatingImpact;
-  const invalidFile = path.join(contentRoot, "invalid.json");
+  const importsDirectory = path.join(contentRoot, ".content-workspace", "imports");
+  const invalidFile = path.join(importsDirectory, "sanitized-candidate-preview.json");
+  await mkdir(importsDirectory, { recursive: true });
   await writeFile(invalidFile, JSON.stringify(candidate));
   const result = runScript("content-import.mjs", ["--input", invalidFile], contentRoot);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /operatingImpact is required/);
+  assert.equal(await pathExists(invalidFile), true);
+});
+
+test("duplicate draft keeps the workspace import", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-duplicate-"));
+  const importsDirectory = path.join(contentRoot, ".content-workspace", "imports");
+  const draftsDirectory = path.join(contentRoot, ".content-workspace", "drafts");
+  const inputFile = path.join(importsDirectory, "sanitized-candidate-preview.json");
+  const draftFile = path.join(draftsDirectory, "sanitized-candidate-preview.json");
+  await mkdir(importsDirectory, { recursive: true });
+  await mkdir(draftsDirectory, { recursive: true });
+  await writeFile(inputFile, await readFile(fixturePath, "utf8"));
+  await writeFile(draftFile, await readFile(fixturePath, "utf8"));
+
+  const result = runScript("content-import.mjs", ["--input", inputFile], contentRoot);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Draft observation already exists/);
+  assert.equal(await pathExists(inputFile), true);
+});
+
+test("draft write failure keeps the workspace import", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-write-failure-"));
+  const importsDirectory = path.join(contentRoot, ".content-workspace", "imports");
+  const blockedDraftPath = path.join(
+    contentRoot,
+    ".content-workspace",
+    "drafts",
+    "sanitized-candidate-preview.json",
+  );
+  const inputFile = path.join(importsDirectory, "sanitized-candidate-preview.json");
+  await mkdir(importsDirectory, { recursive: true });
+  await mkdir(blockedDraftPath, { recursive: true });
+  await writeFile(inputFile, await readFile(fixturePath, "utf8"));
+
+  const result = runScript("content-import.mjs", ["--input", inputFile], contentRoot);
+  assert.notEqual(result.status, 0);
+  assert.equal(await pathExists(inputFile), true);
 });
 
 test("content-only scope rejects mixed engineering files", () => {

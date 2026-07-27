@@ -47,6 +47,10 @@
 
 本地 candidate、import 和 draft 只允许位于被 Git 忽略的 `.content-workspace/`。生产读取层只消费 `content/observations/`，生产 bundle、静态资源和公开集合不得包含 draft。
 
+`.content-workspace/imports/` 使用安全消费语义：只有候选校验通过、文件名与 slug 一致且 draft 通过排他写入成功后，导入工具才删除这一条精确输入；外部输入和任何失败输入必须保留，不允许通配清理。
+
+新观察进入人工审核前，必须分别在 1440px 与 390px 核对标题中的完整业务词组。只有真实渲染确认发生拆词时，才在该内容的必要词组中加入最小 WORD JOINER；不得以固定换行、视口专用文案或自动中文分词替代人工语义判断。
+
 ## 4. 当前迭代
 
 唯一当前指针：`docs/iterations/current.md`。
