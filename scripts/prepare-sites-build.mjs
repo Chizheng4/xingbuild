@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ const index = path.join(dist, "client", "index.html");
 const worker = path.join(root, "worker", "index.js");
 const hosting = path.join(root, ".openai", "hosting.json");
 const edgeOneConfig = path.join(root, "edgeone.json");
+const observationsDirectory = path.join(root, "content", "observations");
 
 for (const file of [index, worker, hosting, edgeOneConfig]) {
   if (!existsSync(file)) throw new Error("Missing Sites build input: " + file);
@@ -26,6 +27,19 @@ const commit = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: root,
   encoding: "utf8",
 }).trim();
+const publishedSlugs = readdirSync(observationsDirectory)
+  .filter((name) => name.endsWith(".json"))
+  .map((name) => {
+    const observation = JSON.parse(readFileSync(path.join(observationsDirectory, name), "utf8"));
+    if (observation.status !== "published") {
+      throw new Error(`Production content must be published: ${name}`);
+    }
+    if (name !== `${observation.slug}.json`) {
+      throw new Error(`Observation filename must match slug: ${name}`);
+    }
+    return observation.slug;
+  })
+  .sort();
 
 writeFileSync(
   path.join(dist, "client", "release.json"),
@@ -39,5 +53,19 @@ writeFileSync(
     2,
   )}\n`,
 );
+writeFileSync(
+  path.join(dist, "client", "content-manifest.json"),
+  `${JSON.stringify(
+    {
+      version: `v${packageJson.version}`,
+      commit,
+      publishedSlugs,
+    },
+    null,
+    2,
+  )}\n`,
+);
 
-console.log("Prepared Sites build: dist/server/index.js and dist/.openai/hosting.json");
+console.log(
+  `Prepared Sites build and content manifest: ${publishedSlugs.length} published observation(s)`,
+);

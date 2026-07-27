@@ -1,11 +1,12 @@
-import { profile, publishedObservations, site, works } from "../content/siteContent";
+import { profile, site, works } from "../content/siteContent";
+import { selectHomeObservations } from "../content/observationRepository";
 import { Link } from "../lib/navigation";
 import { ObservationArchive } from "../components/content/Observations";
 import { HeroStatement, SectionIntro } from "../components/site/PageStructure";
 import { WorkCardGrid } from "../components/works/Works";
 
 export function HomePage() {
-  const latestObservations = publishedObservations.slice(0, 4);
+  const latestObservations = selectHomeObservations();
   return (
     <div className="home-page page-stack">
       <HeroStatement

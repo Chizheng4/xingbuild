@@ -9,6 +9,9 @@ const requiredFiles = [
   "docs/rules/iteration-and-release.md",
   "src/App.jsx",
   "src/content/siteContent.js",
+  "src/content/observationRepository.js",
+  "src/content/sourceUrls.js",
+  "content/schema/observation.schema.json",
   "src/styles.css",
   "src/styles/tokens.css",
   "src/styles/foundations.css",
@@ -19,6 +22,7 @@ const requiredFiles = [
   "src/components/reading/Article.jsx",
   "src/components/works/Works.jsx",
   "publish-xingbuild.command",
+  "publish-content.command",
   "scripts/verify-public-release.mjs",
   "edgeone.json",
   ".openai/hosting.json",
@@ -38,8 +42,12 @@ const current = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),
   "utf8",
 );
-const content = await readFile(
+const siteContent = await readFile(
   new URL("../src/content/siteContent.js", import.meta.url),
+  "utf8",
+);
+const observationRepository = await readFile(
+  new URL("../src/content/observationRepository.js", import.meta.url),
   "utf8",
 );
 const app = await readFile(
@@ -59,19 +67,16 @@ assert(
   current.includes(`v${packageJson.version}`),
   "current iteration must contain the package version",
 );
-assert(content.includes("Robotaxi"), "site content must include the Robotaxi work");
-assert(content.includes("企业经营"), "site content must include the cognition work");
-assert(content.includes("export const observations"), "site content must define observations");
-assert(content.includes("export const profile"), "site content must define the profile");
-assert(content.includes('status: "published"'), "site content must include a published observation");
+assert(siteContent.includes("Robotaxi"), "site content must include the Robotaxi work");
+assert(siteContent.includes("企业经营"), "site content must include the cognition work");
+assert(siteContent.includes("export const profile"), "site content must define the profile");
+assert(!siteContent.includes("export const observations"), "observations must not be inlined in site content");
+assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
 for (const route of ["/observations", "/works", "/about"]) {
   assert(app.includes(route), `app must include the ${route} route`);
 }
-for (const field of ["slug", "publishedAt", "updatedAt", "relatedWorks", "sourceNotes"]) {
-  assert(content.includes(field), `content must include the ${field} field`);
-}
 assert(
-  content.includes("不代表真实城市运营、自动驾驶核心技术或真实企业经营结果"),
+  siteContent.includes("不代表真实城市运营、自动驾驶核心技术或真实企业经营结果"),
   "Robotaxi evidence boundary must remain explicit",
 );
 assert.deepEqual(edgeOneConfig.redirects, [

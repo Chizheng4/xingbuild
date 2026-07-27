@@ -1,0 +1,69 @@
+{
+  "id": "observation-sanitized-candidate",
+  "slug": "sanitized-candidate-preview",
+  "status": "draft",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "示例候选：只用于验证内容流水线",
+  "summary": "这是脱敏的工程测试数据，不代表真实企业、事件、结论或公开内容。",
+  "companies": ["示例企业"],
+  "regions": ["示例区域"],
+  "dimensions": ["运营与市场"],
+  "primaryDimension": "运营与市场",
+  "eventAt": "2026-07-20",
+  "publishedAt": "2026-07-27",
+  "updatedAt": "2026-07-27",
+  "factOverview": [
+    { "label": "数据性质", "value": "脱敏示例" },
+    { "label": "公开状态", "value": "不得公开" }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": ["本段仅验证候选内容可以进入隔离草稿。"],
+    "evidenceUnitIds": ["evidence-sanitized-fact"]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": ["本段仅验证经营影响字段必须由候选显式提供。"],
+    "evidenceUnitIds": ["evidence-sanitized-impact"]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-sanitized-fact",
+      "claim": "这是一条脱敏示例事实。",
+      "claimKind": "verified_fact",
+      "sourceRefs": ["source-sanitized-example"]
+    },
+    {
+      "id": "evidence-sanitized-impact",
+      "claim": "这是一条脱敏示例推断。",
+      "claimKind": "inference",
+      "sourceRefs": ["source-sanitized-example"]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-sanitized-example",
+      "publisher": "示例来源",
+      "title": "脱敏测试来源",
+      "url": "https://example.com/sanitized-fixture",
+      "publishedAt": "2026-07-20",
+      "sourceTier": "primary",
+      "sourceType": "report",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [
+    {
+      "id": "level-extension",
+      "heading": "层级扩展",
+      "paragraphs": ["标准层级可以包含必要扩展，但本示例不表达真实判断。"],
+      "evidenceUnitIds": ["evidence-sanitized-impact"]
+    }
+  ],
+  "evidenceBoundary": "本 fixture 只用于自动测试和本地草稿预览，不得视为真实内容或进入生产集合。",
+  "relatedWorks": [],
+  "promoteToHome": false
+}

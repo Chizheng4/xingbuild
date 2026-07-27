@@ -1,6 +1,6 @@
 import { ObservationArchive } from "../components/content/Observations";
 import { PageIntro } from "../components/site/PageStructure";
-import { publishedObservations } from "../content/siteContent";
+import { publishedObservations } from "../content/observationRepository";
 
 export function ObservationsPage() {
   const years = [...new Set(publishedObservations.map((item) => item.publishedAt.slice(0, 4)))];

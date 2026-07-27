@@ -37,6 +37,22 @@
     color: var(--color-accent);
     font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
   }
+  .draft-preview-banner {
+    width: min(100%, var(--measure-reading));
+    margin: var(--space-6) auto 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-subtle);
+    color: var(--color-accent-strong);
+    font: 600 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .draft-preview-state {
+    width: min(100%, var(--measure-reading));
+    margin: var(--space-16) auto;
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .draft-preview-state h1 {
+    font: 500 var(--type-page-title)/var(--leading-title) var(--font-display);
+  }
   .work-page > .page-intro { width: 100%; }
   .work-problem, .evidence-boundary, .work-page-body > .architecture,
   .work-detail-grid, .source-boundary, .related-observations, .primary-action {

@@ -10,7 +10,12 @@ const components = await readFile(new URL("../src/styles/components.css", import
 const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url), "utf8");
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
-const content = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
+const siteContent = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
+const observationContent = await readFile(
+  new URL("../content/observations/four-planes-of-enterprise-digitalization.json", import.meta.url),
+  "utf8",
+);
+const content = `${siteContent}\n${observationContent}`;
 const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
 const pageStructure = await readFile(new URL("../src/components/site/PageStructure.jsx", import.meta.url), "utf8");
 const observations = await readFile(new URL("../src/components/content/Observations.jsx", import.meta.url), "utf8");
@@ -80,7 +85,7 @@ test("Chinese semantic titles use native phrase-aware wrapping", () => {
   );
   assert.doesNotMatch(allStyles, /word-break:\s*(?:break-all|keep-all)/);
   assert.match(homePage, /构\\u2060建/);
-  assert.match(content, /企\\u2060业\\u2060数\\u2060字\\u2060化，需\\u2060要同\\u2060时/);
+  assert.match(observationContent, /企⁠业⁠数⁠字⁠化，需⁠要⁠同⁠时/);
   assert.doesNotMatch(homePage, /<br\s*\/?>/);
 });
 
@@ -120,7 +125,7 @@ test("shared cards keep one anatomy and one primary link across pages", () => {
   assert.equal((cards.match(/<Link/g) || []).length, 1);
 
   assert.match(observations, /CardTitle[\s\S]*CardSummary[\s\S]*CardMeta/);
-  assert.match(observations, /formatLabels\[observation\.format\][\s\S]*observation\.primaryTopic[\s\S]*observation\.publishedAt/);
+  assert.match(observations, /observation\.nature[\s\S]*observationDimensionMetadata\(observation\)[\s\S]*observation\.publishedAt/);
   assert.match(works, /CardTitle[\s\S]*CardSummary[\s\S]*CardMeta/);
   assert.match(works, /work\.problemSummary[\s\S]*work\.status[\s\S]*work\.updatedAt/);
 

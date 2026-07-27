@@ -5,15 +5,22 @@ import {
   CardTitle,
   ContentCard,
 } from "../cards/ContentCards";
+import {
+  observationDimensionMetadata,
+  observationScopeLabel,
+} from "../../content/observationQueries";
 
-const formatLabels = { analysis: "分析", brief: "短观察" };
+const levelLabels = { brief: "精简", standard: "标准", deep: "深度" };
+const natureLabels = { "evidence-led": "事实", "opinion-led": "观点" };
 
 export function ObservationMeta({ observation, showUpdated = false }) {
+  const scopeLabel = observationScopeLabel(observation);
   return (
     <div className="observation-meta object-identity">
       <time dateTime={observation.publishedAt}>{observation.publishedAt}</time>
-      <span>{formatLabels[observation.format] || observation.format}</span>
-      <span>{observation.topics[0]}</span>
+      <span>{levelLabels[observation.level] || observation.level}</span>
+      <span>{natureLabels[observation.nature] || observation.nature}</span>
+      <span>{scopeLabel || observation.primaryDimension}</span>
       {showUpdated && observation.updatedAt !== observation.publishedAt ? (
         <time dateTime={observation.updatedAt}>更新 {observation.updatedAt}</time>
       ) : null}
@@ -22,6 +29,7 @@ export function ObservationMeta({ observation, showUpdated = false }) {
 }
 
 export function ObservationCard({ observation }) {
+  const dimensionMetadata = observationDimensionMetadata(observation);
   return (
     <ContentCard
       href={`/observations/${observation.slug}`}
@@ -31,8 +39,8 @@ export function ObservationCard({ observation }) {
       <CardTitle>{observation.title}</CardTitle>
       <CardSummary>{observation.summary}</CardSummary>
       <CardMeta>
-        <span>{formatLabels[observation.format] || observation.format}</span>
-        <span>{observation.primaryTopic}</span>
+        <span>{observation.nature === "opinion-led" ? natureLabels[observation.nature] : levelLabels[observation.level]}</span>
+        {dimensionMetadata.map((item) => <span key={item}>{item}</span>)}
         <time dateTime={observation.publishedAt}>{observation.publishedAt}</time>
       </CardMeta>
     </ContentCard>

@@ -17,7 +17,7 @@
 
 网站可以重组表达，但不得自行提升上游事实、项目完成状态或结果证据。
 
-## 3. 迭代分级
+## 3. 产品版本与观察内容发布
 
 ### 3.1 版本迭代
 
@@ -30,6 +30,22 @@
 用于文案、间距、颜色、响应式缺陷、链接等局部调整。多个快速修订可以在验证稳定后合并成一个版本。
 
 不为每次对话、每次试验或未完成尝试增加版本号。
+
+### 3.3 日常观察内容发布
+
+观察内容发布不是产品版本迭代。它只允许新增或修改一篇符合 schema 的已发布观察，并保持 `package.json` 版本不变：
+
+- 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
+- 必须经过 candidate → draft → 本地直接预览 → 人工审核 → promote；
+- 必须通过 `npm run content:check` 和 `npm run content:scope-check`；
+- 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
+- 必须形成独立 Git 提交，且提交范围只能是一篇 `content/observations/*.json`；
+- 发布仍需用户执行 `./publish-content.command` 或在当前任务明确授权；
+- Scheduled task 只能生成 candidate，不能直接写入公开内容或执行生产发布。
+
+`ObservationPublication → EvidenceUnit → Source` 是观察内容的固定三层模型。缺失字段必须失败或保留明确待补项，脚本不得虚构事实、来源、经营影响或证据关系。
+
+本地 candidate、import 和 draft 只允许位于被 Git 忽略的 `.content-workspace/`。生产读取层只消费 `content/observations/`，生产 bundle、静态资源和公开集合不得包含 draft。
 
 ## 4. 当前迭代
 
@@ -77,6 +93,17 @@ npm run release:check
 
 涉及视觉或响应式变化时，还必须进行桌面和手机真实页面验证。构建成功不等于视觉验收完成。
 
+日常内容发布执行更窄的内容专项门槛：
+
+```bash
+npm run content:check
+npm run content:scope-check
+npm run build
+npm run test:sites
+```
+
+内容专项验证聚焦 schema、枚举、来源引用、事实边界、草稿隔离、目标文章与相关集合，不替代首次建立或修改内容系统时的产品版本完整验收。
+
 ## 7. EdgeOne 发布
 
 生产发布入口由用户手动执行：
@@ -104,6 +131,25 @@ npm run release:check
 7. 只有全部成功后才报告正式上线。
 
 双击 `publish-xingbuild.command` 本身就是明确的生产发布动作，脚本不再要求二次输入 `publish`。一次执行同时完成 GitHub 同步和 EdgeOne 生产发布，但两者仍是独立步骤。GitHub 推送成功而 EdgeOne 失败时，必须报告“代码已同步、网站未上线”，不得把部分成功描述为正式发布。
+
+### 7.1 内容专用发布
+
+日常观察使用：
+
+```bash
+./publish-content.command
+```
+
+该命令不创建或推送版本 tag，但必须：
+
+1. 确认 `main`、工作区干净，且 `.content-workspace/` 没有残留 JSON；
+2. 确认最新提交只包含一篇已发布观察，且相对父提交的产品版本未变化；
+3. 执行内容检查、生产构建和 Sites 测试；
+4. 只推送 `main`；
+5. 部署既有 `xingbuild-nochina` 项目；
+6. 以稳定产品版本、新提交和目标文章 URL 完成公网验证。
+
+脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
 
 首次发布前需要一次性完成：
 

@@ -7,73 +7,6 @@ export const site = {
   location: "广州",
 };
 
-export const observations = [
-  {
-    id: "observation-four-planes",
-    slug: "four-planes-of-enterprise-digitalization",
-    title: "为什么理解企\u2060业\u2060数\u2060字\u2060化，需\u2060要同\u2060时看见四个平面",
-    summary:
-      "页面、流程和系统都只是局部投影。要判断数字化是否真正服务经营，需要把企业现实、经营与架构设计、数字化实现和运行反馈放在同一条因果链上。",
-    format: "analysis",
-    primaryTopic: "企业经营",
-    discussionQuestion:
-      "怎样把企业现实、经营设计、数字化实现和运行反馈放进同一条可验证的因果链？",
-    topics: ["企业经营", "业务架构", "数字化"],
-    status: "published",
-    publishedAt: "2026-07-25",
-    updatedAt: "2026-07-25",
-    relatedWorks: ["enterprise-framework"],
-    sourceNotes: "基于 career 项目《企业经营体系、数字化与职业定位认知框架 v5.1》的网站表达快照。",
-    sections: [
-      {
-        heading: "从系统清单回到经营问题",
-        paragraphs: [
-          "企业数字化经常被描述成系统、功能和项目的集合，但这些实现本身不能说明企业解决了什么经营问题。判断一项数字化建设是否成立，必须继续追问：它改变了哪些业务对象、规则和事实，又通过什么指标回到经营结果。",
-          "因此，页面是否完整、流程是否跑通，只是实现层面的事实；它们不能自动等同于业务能力已经形成，更不能等同于经营结果已经出现。",
-        ],
-      },
-      {
-        heading: "四个平面承担不同责任",
-        paragraphs: [
-          "企业现实描述业务现状、组织能力、资源和约束；经营与架构设计把目标转成能力、价值流、对象、规则和指标；数字化实现把这些设计落到产品、数据、技术和工程；运行反馈记录事实、计算指标并支持新的分析与决策。",
-          "四个平面不是四个孤立模块，而是一条可以向下实现、再向上验证的闭环。缺少任何一个平面，局部正确都可能无法形成整体结果。",
-        ],
-      },
-      {
-        heading: "判断数字化工作的最小闭环",
-        paragraphs: [
-          "一个可验证的数字化问题至少需要说明：目标是什么，哪些对象被改变，规则如何执行，系统记录了什么事实，指标如何计算，结果怎样反馈到下一轮判断。",
-          "这也是我整理企业经营体系认知框架、设计 Robotaxi 经营模拟以及复盘职业经历时共同使用的分析路径。",
-        ],
-      },
-    ],
-  },
-  {
-    id: "observation-robotaxi-boundary",
-    slug: "robotaxi-simulation-boundary",
-    title: "Robotaxi 作品首先要证明的，不是页面数量",
-    summary:
-      "一个经营模拟作品的可信度，来自对象、规则、事实和反馈是否形成闭环，也来自它是否诚实说明模拟与真实运营之间的边界。",
-    format: "brief",
-    primaryTopic: "Robotaxi",
-    topics: ["Robotaxi", "经营模拟", "证据边界"],
-    status: "published",
-    publishedAt: "2026-07-24",
-    updatedAt: "2026-07-25",
-    relatedWorks: ["robotaxi"],
-    sourceNotes: "基于 Robotaxi 项目定位、代码和运行结果形成的网站表达快照。",
-    sections: [
-      {
-        heading: "作品证明什么",
-        paragraphs: [
-          "Robotaxi 经营闭环模拟平台用于验证我如何把经营问题转成业务架构、B 端产品、数据对象和可运行工程，并通过持续迭代检查这些层次是否一致。",
-          "它可以证明认知迁移、产品设计、数据与系统实现以及 AI 协作能力，但不能证明真实城市运营、自动驾驶核心技术或真实企业经营结果。",
-        ],
-      },
-    ],
-  },
-];
-
 export const works = [
   {
     id: "robotaxi",
@@ -179,14 +112,6 @@ export const profile = {
     note: "公开联系方式将在确认合适的长期入口后提供。",
   },
 };
-
-export const publishedObservations = observations
-  .filter((item) => item.status === "published")
-  .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-
-export function findObservation(slug) {
-  return observations.find((item) => item.slug === slug);
-}
 
 export function findWork(slug) {
   return works.find((item) => item.slug === slug);

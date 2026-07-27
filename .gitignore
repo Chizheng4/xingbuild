@@ -7,3 +7,6 @@ qa-*.png
 .env
 .edgeone/*
 .tef_dist/*
+
+# Local observation candidates and drafts never enter Git or production bundles
+.content-workspace/

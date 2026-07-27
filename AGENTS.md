@@ -40,6 +40,10 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Mobile navigation uses a content-driven breakpoint below 520px. Widths around 557px retain the compact inline header; the full-screen mobile menu starts directly below the header instead of vertically centering a short link list.
 - Visual design iterations keep only the current valid interactive prototype and explicitly required final evidence. Delete rejected mockups, superseded screenshots, and temporary browser profiles after their review value has ended; do not accumulate invalid visual artifacts.
 - Browser rendering must be bounded and serial. Do not leave preview servers, headless Chrome processes, Playwright runtimes, or temporary browser profiles running after capture. Before starting another render, verify the previous process exited; when HTML/SVG inspection is sufficient, do not generate screenshots.
+- Daily observation publication is separate from website product version iteration. Published observations live only in `content/observations/`; local candidates and drafts live under ignored `.content-workspace/` and must never enter a production bundle.
+- Observation content uses the `ObservationPublication → EvidenceUnit → Source` contract. Candidate tools may normalize lifecycle state, but must not invent facts, sources, business impact, dates, or evidence relationships.
+- Product releases use `publish-xingbuild.command`, require the matching version tag, and run the full release check. Content-only releases use `publish-content.command`, keep the product version unchanged, accept exactly one published observation file, and reject engineering, configuration, rule, worker, or draft changes.
+- Scheduled tasks may produce candidates only. Human review and explicit production authorization remain required before promotion or either publication command.
 
 ## Iteration and release workflow
 
@@ -49,7 +53,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Before saying an iteration is complete, run `npm run release:check`.
 - After a stable iteration passes validation, create a local Git commit and matching version tag as the normal closeout action. This does not authorize a remote push or production deployment.
 - GitHub remote creation and the first push require the user's authorization or an explicit execution request. Later pushes follow the release instruction for that iteration.
-- Production publishing uses `./publish-xingbuild.command` and targets the EdgeOne Makers project `xingbuild-nochina` (`makers-ze0f6txvlhco`). The user normally runs this command manually. Codex must not publish, trigger a remote deployment, change DNS, or bind a production domain unless the user explicitly asks Codex to do so in the current task.
+- Product-version publishing uses `./publish-xingbuild.command`; content-only publishing uses `./publish-content.command`. Both target the EdgeOne Makers project `xingbuild-nochina` (`makers-ze0f6txvlhco`). The user normally runs these commands manually. Codex must not publish, trigger a remote deployment, change DNS, or bind a production domain unless the user explicitly asks Codex to do so in the current task.
 - The publish command must not contain API tokens or other credentials.
 - Publishing is a separate state from implementation: code complete, locally verified, committed, deployed, domain active, and publicly verified must be reported separately.
 - `xingbuild.top` is the canonical personal-site domain. `www.xingbuild.top` is reserved for redirecting to the canonical domain. `robotaxi.xingbuild.top` belongs to the independent Robotaxi deployment and must not be published from this repository.

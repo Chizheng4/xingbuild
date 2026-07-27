@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xingbuild.top/schema/observation.schema.json",
+  "title": "ObservationPublication",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "slug",
+    "status",
+    "level",
+    "nature",
+    "title",
+    "summary",
+    "companies",
+    "regions",
+    "dimensions",
+    "primaryDimension",
+    "publishedAt",
+    "updatedAt",
+    "factOverview",
+    "rangeAndFacts",
+    "operatingImpact",
+    "evidenceUnits",
+    "sources",
+    "sections",
+    "evidenceBoundary",
+    "relatedWorks",
+    "promoteToHome"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^observation-[a-z0-9-]+$" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "status": { "enum": ["draft", "published"] },
+    "level": { "enum": ["brief", "standard", "deep"] },
+    "nature": { "enum": ["evidence-led", "opinion-led"] },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "companies": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "regions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["准入与政策", "运营与市场", "安全与事件", "产品与能力", "合作与扩张", "经营与资本"]
+      }
+    },
+    "primaryDimension": {
+      "enum": ["准入与政策", "运营与市场", "安全与事件", "产品与能力", "合作与扩张", "经营与资本"]
+    },
+    "eventAt": { "$ref": "#/$defs/date" },
+    "periodStart": { "$ref": "#/$defs/date" },
+    "periodEnd": { "$ref": "#/$defs/date" },
+    "publishedAt": { "$ref": "#/$defs/date" },
+    "updatedAt": { "$ref": "#/$defs/date" },
+    "factOverview": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "value"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "value": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "rangeAndFacts": { "$ref": "#/$defs/contentSection" },
+    "operatingImpact": { "$ref": "#/$defs/contentSection" },
+    "evidenceUnits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidenceUnit" }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contentSection" }
+    },
+    "evidenceBoundary": { "type": "string", "minLength": 1 },
+    "relatedWorks": {
+      "type": "array",
+      "items": { "enum": ["robotaxi", "enterprise-framework"] },
+      "uniqueItems": true
+    },
+    "promoteToHome": { "type": "boolean" }
+  },
+  "$defs": {
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "contentSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "heading", "paragraphs", "evidenceUnitIds"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "heading": { "type": "string", "minLength": 1 },
+        "paragraphs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidenceUnitIds": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^evidence-[a-z0-9-]+$" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "evidenceUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "claim", "claimKind", "sourceRefs"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^evidence-[a-z0-9-]+$" },
+        "claim": { "type": "string", "minLength": 1 },
+        "claimKind": {
+          "enum": ["verified_fact", "company_statement", "media_report", "opinion", "inference"]
+        },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^source-[a-z0-9-]+$" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "publisher",
+        "title",
+        "url",
+        "publishedAt",
+        "sourceTier",
+        "sourceType",
+        "accessedAt"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^source-[a-z0-9-]+$" },
+        "publisher": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "anyOf": [
+            { "pattern": "^https://[^\\s]+$" },
+            { "pattern": "^/(?!/)[^\\s]*$" }
+          ]
+        },
+        "publishedAt": { "$ref": "#/$defs/date" },
+        "sourceTier": {
+          "enum": ["primary", "official", "established_media", "specialist_media", "internal_snapshot"]
+        },
+        "sourceType": {
+          "enum": ["official_statement", "report", "article", "interview", "social_original", "internal_snapshot"]
+        },
+        "accessedAt": { "$ref": "#/$defs/date" }
+      }
+    }
+  }
+}

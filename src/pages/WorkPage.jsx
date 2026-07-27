@@ -1,7 +1,7 @@
 import { ObservationArchive } from "../components/content/Observations";
 import { PageIntro, SectionIntro } from "../components/site/PageStructure";
 import { ArchitectureDiagram } from "../components/works/Works";
-import { publishedObservations } from "../content/siteContent";
+import { publishedObservations } from "../content/observationRepository";
 import { Link } from "../lib/navigation";
 
 export function WorkPage({ work }) {

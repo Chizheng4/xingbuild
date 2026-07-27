@@ -3,6 +3,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { HomePage } from "./pages/HomePage";
 import { ObservationsPage } from "./pages/ObservationsPage";
 import { ObservationPage } from "./pages/ObservationPage";
+import { DraftObservationPage } from "./pages/DraftObservationPage";
 import { WorksPage } from "./pages/WorksPage";
 import { WorkPage } from "./pages/WorkPage";
 import { AboutPage } from "./pages/AboutPage";
@@ -10,7 +11,8 @@ import { FrameworkPage } from "./pages/FrameworkPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
 import { useLocation } from "./lib/navigation";
-import { findObservation, findWork, site } from "./content/siteContent";
+import { findWork, site } from "./content/siteContent";
+import { findObservation } from "./content/observationRepository";
 import { FRAMEWORK_BASE } from "./content/frameworkModel";
 
 function resolvePage(location) {
@@ -21,7 +23,11 @@ function resolvePage(location) {
   if (pathname === "/about") return <AboutPage />;
 
   if (pathname.startsWith("/observations/")) {
-    const observation = findObservation(pathname.split("/")[2]);
+    const slug = pathname.split("/")[2];
+    if (new URLSearchParams(location.search).get("draft") === "1") {
+      return <DraftObservationPage slug={slug} />;
+    }
+    const observation = findObservation(slug);
     return observation ? (
       <ObservationPage observation={observation} />
     ) : (
