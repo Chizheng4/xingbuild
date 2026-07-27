@@ -6,12 +6,23 @@ import { ObservationPage } from "./pages/ObservationPage";
 import { WorksPage } from "./pages/WorksPage";
 import { WorkPage } from "./pages/WorkPage";
 import { AboutPage } from "./pages/AboutPage";
+import { FrameworkPage } from "./pages/FrameworkPage";
+import { FrameworkConceptPage } from "./pages/FrameworkConceptPage";
+import { FrameworkApplicationPage } from "./pages/FrameworkApplicationPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
-import { usePathname } from "./lib/navigation";
+import { useLocation } from "./lib/navigation";
 import { findObservation, findWork, site } from "./content/siteContent";
+import {
+  frameworkApplicationBySlug,
+  frameworkConceptById,
+} from "./content/frameworkModel";
 
-function resolvePage(pathname) {
+const frameworkConceptExists = (id) => frameworkConceptById.has(id);
+const frameworkApplicationExists = (slug) => frameworkApplicationBySlug.has(slug);
+
+function resolvePage(location) {
+  const { pathname, search, state } = location;
   if (pathname === "/") return <HomePage />;
   if (pathname === "/observations") return <ObservationsPage />;
   if (pathname === "/works") return <WorksPage />;
@@ -27,6 +38,20 @@ function resolvePage(pathname) {
   }
 
   if (pathname.startsWith("/works/")) {
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts[1] === "enterprise-operating-framework" && parts[2] === "explore") {
+      return <FrameworkPage search={search} navigationState={state} />;
+    }
+    if (parts[1] === "enterprise-operating-framework" && parts[2] === "concepts" && parts[3]) {
+      return frameworkConceptExists(parts[3]) ? (
+        <FrameworkConceptPage conceptId={parts[3]} search={search} navigationState={state} />
+      ) : <NotFoundPage />;
+    }
+    if (parts[1] === "enterprise-operating-framework" && parts[2] === "applications" && parts[3]) {
+      return frameworkApplicationExists(parts[3]) ? (
+        <FrameworkApplicationPage slug={parts[3]} search={search} />
+      ) : <NotFoundPage />;
+    }
     const work = findWork(pathname.split("/")[2]);
     return work ? <WorkPage work={work} /> : <NotFoundPage />;
   }
@@ -35,7 +60,8 @@ function resolvePage(pathname) {
 }
 
 export function App() {
-  const pathname = usePathname();
+  const location = useLocation();
+  const { pathname } = location;
 
   useEffect(() => {
     const labels = {
@@ -53,7 +79,7 @@ export function App() {
   return (
     <div className="site-shell">
       <SiteHeader pathname={pathname} />
-      <main id="main-content">{resolvePage(pathname)}</main>
+      <main id="main-content">{resolvePage(location)}</main>
       <SiteFooter />
     </div>
   );

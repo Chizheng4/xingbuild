@@ -1,0 +1,367 @@
+@layer pages {
+  .framework-page,
+  .framework-concept-page,
+  .framework-application-page {
+    width: min(100%, var(--measure-page));
+    margin-inline: auto;
+    padding-block: var(--space-12) 0;
+  }
+
+  .framework-section-flow {
+    display: grid;
+    gap: clamp(4.5rem, 6vw, 7rem);
+  }
+
+  .framework-header,
+  .framework-concept-page > header,
+  .framework-application-page > header {
+    width: min(100%, var(--measure-content));
+  }
+
+  .framework-header h1,
+  .framework-application-page h1 {
+    max-width: 18em;
+    margin: 0;
+    font: 500 var(--type-page-title)/var(--leading-title) var(--font-display);
+    letter-spacing: -0.025em;
+    word-break: auto-phrase;
+    text-wrap: balance;
+  }
+
+  .framework-header > p:not(.eyebrow),
+  .framework-application-page header > p:not(.eyebrow) {
+    max-width: var(--measure-summary);
+    margin: 0;
+    color: var(--color-text-muted);
+    font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
+  }
+
+  .framework-reading-hint,
+  .framework-evidence-note {
+    display: grid;
+    gap: var(--rhythm-bind);
+    padding: var(--space-6);
+    background: var(--color-surface-subtle);
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+
+  .framework-reading-hint strong,
+  .framework-evidence-note strong,
+  .framework-source span {
+    color: var(--color-accent-strong);
+    font: 600 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+
+  .framework-reading-hint span,
+  .framework-evidence-note p,
+  .framework-source p { margin: 0; }
+
+  .framework-explorer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(22.5rem, 25rem);
+    align-items: start;
+    gap: clamp(2rem, 4vw, 4rem);
+  }
+
+  .framework-canvas,
+  .framework-detail-column { min-width: 0; }
+
+  .framework-view-header {
+    display: grid;
+    gap: var(--rhythm-bind);
+    margin-bottom: var(--rhythm-object);
+  }
+
+  .framework-view-header > p,
+  .preview-label {
+    margin: 0;
+    color: var(--color-accent);
+    font: 600 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+
+  .framework-view-header h2 {
+    margin: 0;
+    font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
+  }
+
+  .framework-view-header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--rhythm-bind);
+  }
+
+  .framework-view-header nav a,
+  .complete-perspectives a {
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-muted);
+    font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .framework-view-header nav a.is-current {
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+    text-underline-offset: 0.35em;
+  }
+
+  .framework-node-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .is-business-architecture .framework-node-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .framework-node {
+    min-height: 8.5rem;
+    display: grid;
+    align-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-block: var(--line-thin) solid var(--color-border);
+    transition: color 160ms ease, border-color 160ms ease;
+  }
+
+  .framework-node strong {
+    font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .framework-node span {
+    color: var(--color-text-muted);
+    font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .framework-node em {
+    color: var(--color-accent-strong);
+    font: normal 600 var(--type-caption)/var(--leading-meta) var(--font-meta);
+  }
+  .framework-node:hover,
+  .framework-node:focus-visible,
+  .framework-node.is-previewed,
+  .framework-node.is-current {
+    border-color: var(--color-accent-strong);
+    color: var(--color-accent-strong);
+  }
+  .framework-node.is-current { border-block-width: 2px; }
+
+  .complete-perspectives,
+  .relation-equivalents {
+    margin-top: var(--rhythm-group);
+  }
+  .complete-perspectives h3,
+  .concept-detail h3,
+  .application-mapping h2 {
+    margin: 0;
+    font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .complete-perspectives > p,
+  .structure-note {
+    margin: var(--rhythm-bind) 0 0;
+    color: var(--color-text-muted);
+    font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .complete-perspectives ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin: var(--rhythm-bind) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .relation-equivalents {
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .relation-equivalents summary {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    color: var(--color-accent-strong);
+    cursor: pointer;
+  }
+  .relation-equivalents ul {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .relation-equivalents li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: var(--space-3);
+    color: var(--color-text-muted);
+  }
+  .relation-equivalents strong { color: var(--color-accent-strong); font-weight: 500; }
+
+  .framework-detail-column {
+    position: sticky;
+    top: var(--space-6);
+    display: grid;
+    gap: var(--rhythm-bind);
+  }
+
+  .concept-detail {
+    min-width: 0;
+    padding: var(--space-6);
+    background: var(--color-surface-subtle);
+  }
+  .concept-detail.is-empty {
+    color: var(--color-text-muted);
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .concept-detail.is-empty p { margin: 0; }
+
+  .framework-path {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .framework-path a { color: var(--color-accent-strong); }
+
+  .concept-detail__header {
+    display: grid;
+    gap: var(--rhythm-bind);
+  }
+  .concept-detail__header p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .concept-detail__header h2 {
+    margin: 0;
+    font: 500 var(--type-section-title)/var(--leading-title) var(--font-display);
+    word-break: auto-phrase;
+    text-wrap: balance;
+  }
+  .concept-definition,
+  .concept-distinction,
+  .framework-source {
+    display: grid;
+    gap: var(--rhythm-bind);
+  }
+  .concept-definition p {
+    margin: 0;
+    font: 500 var(--type-summary)/var(--leading-summary) var(--font-reading);
+  }
+  .concept-distinction p,
+  .framework-source p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .framework-source .source-version {
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+  }
+  .concept-properties {
+    display: grid;
+    gap: var(--rhythm-relate);
+    margin: 0;
+  }
+  .concept-properties div { display: grid; gap: var(--rhythm-bind); }
+  .concept-properties dt {
+    color: var(--color-accent-strong);
+    font: 600 var(--type-meta)/var(--leading-meta) var(--font-meta);
+  }
+  .concept-properties dd {
+    margin: 0;
+    font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+  .concept-properties a,
+  .framework-action,
+  .framework-read-more {
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+  .framework-action,
+  .framework-read-more {
+    min-height: var(--touch-target);
+    display: inline-flex;
+    align-items: center;
+    font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui);
+  }
+
+  .framework-concept-page,
+  .framework-application-page {
+    width: min(100%, var(--measure-reading));
+  }
+  .framework-concept-page .concept-detail {
+    padding: 0;
+    background: transparent;
+  }
+  .framework-concept-page .concept-detail__header h2 {
+    font-size: var(--type-page-title);
+  }
+  .framework-application-page .application-mapping p {
+    max-width: var(--measure-reading);
+    margin: 0;
+    font: 500 var(--type-feature-title)/var(--leading-summary) var(--font-reading);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 74.9375rem) and (min-width: 56.25rem) {
+    .framework-explorer {
+      grid-template-columns: minmax(0, 3fr) minmax(22.5rem, 2fr);
+      gap: var(--space-8);
+    }
+    .is-business-architecture .framework-node-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 56.1875rem) {
+    .framework-explorer { grid-template-columns: minmax(0, 1fr); }
+    .framework-detail-column { display: none; }
+    .framework-node-list,
+    .is-business-architecture .framework-node-list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+    .framework-node {
+      min-height: var(--touch-target);
+      padding-block: var(--space-4);
+      border-block-start: 0;
+    }
+    .framework-node-list li:first-child .framework-node { border-block-start: var(--line-thin) solid var(--color-border); }
+    .relation-equivalents li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-1);
+      padding-block: var(--space-2);
+    }
+    .relation-equivalents strong::before { content: "↓ "; }
+  }
+
+  @media (max-width: 32.4375rem) {
+    .framework-page,
+    .framework-concept-page,
+    .framework-application-page { padding-block-start: var(--space-8); }
+    .framework-section-flow { gap: var(--rhythm-section); }
+    .framework-reading-hint,
+    .framework-evidence-note,
+    .concept-detail { padding: var(--space-4); }
+    .framework-concept-page .concept-detail { padding: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .framework-node { transition: none; }
+  }
+}

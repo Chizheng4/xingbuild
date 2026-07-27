@@ -1,18 +1,33 @@
 import { useEffect, useState } from "react";
 
-export function usePathname() {
-  const [pathname, setPathname] = useState(window.location.pathname);
+export function useLocation() {
+  const readLocation = () => ({
+    pathname: window.location.pathname,
+    search: window.location.search,
+    state: window.history.state,
+  });
+  const [location, setLocation] = useState(readLocation);
 
   useEffect(() => {
-    const syncPath = () => setPathname(window.location.pathname);
+    const syncPath = () => setLocation(readLocation());
     window.addEventListener("popstate", syncPath);
     return () => window.removeEventListener("popstate", syncPath);
   }, []);
 
-  return pathname;
+  return location;
 }
 
-export function Link({ href, children, className, onNavigate, ...props }) {
+export function usePathname() {
+  return useLocation().pathname;
+}
+
+export function navigate(href, { replace = false, state = {}, scroll = true } = {}) {
+  window.history[replace ? "replaceState" : "pushState"](state, "", href);
+  window.dispatchEvent(new PopStateEvent("popstate", { state }));
+  if (scroll) window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+export function Link({ href, children, className, onNavigate, state, replace, ...props }) {
   const handleClick = (event) => {
     if (
       event.button !== 0 ||
@@ -27,10 +42,9 @@ export function Link({ href, children, className, onNavigate, ...props }) {
     }
 
     event.preventDefault();
-    if (window.location.pathname !== href) {
-      window.history.pushState({}, "", href);
-      window.dispatchEvent(new PopStateEvent("popstate"));
-      window.scrollTo({ top: 0, behavior: "auto" });
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (current !== href) {
+      navigate(href, { replace, state });
     }
     onNavigate?.();
   };

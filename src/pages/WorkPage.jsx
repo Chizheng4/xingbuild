@@ -2,6 +2,8 @@ import { ObservationArchive } from "../components/content/Observations";
 import { PageIntro, SectionIntro } from "../components/site/PageStructure";
 import { ArchitectureDiagram } from "../components/works/Works";
 import { publishedObservations } from "../content/siteContent";
+import { explorerHref } from "../content/frameworkModel";
+import { Link } from "../lib/navigation";
 
 export function WorkPage({ work }) {
   const related = publishedObservations.filter((item) => item.relatedWorks.includes(work.id));
@@ -26,6 +28,11 @@ export function WorkPage({ work }) {
           ))}
         </div>
         <aside className="source-boundary"><span>上游事实源</span><strong>{work.upstream}</strong></aside>
+        {work.id === "enterprise-framework" ? (
+          <Link className="primary-action" href={explorerHref("overview")}>
+            进入认知框架
+          </Link>
+        ) : null}
         {related.length ? (
           <section className="related-observations section-flow">
             <SectionIntro title="相关观察" />
