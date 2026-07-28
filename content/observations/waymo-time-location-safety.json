@@ -105,7 +105,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "Waymo安全研究",
-    "statement": "Waymo发布按地点和时段匹配人类驾驶风险的自动驾驶安全比较研究。",
+    "statement": "Waymo称，其发布的两项研究按地点、道路、日期和时段校准人类驾驶风险，并已获同行评审期刊接收。公司称1.27亿英里样本相对匹配基准少发生359起伤害事故；这一结果依赖Waymo数据，不能视为已获独立复核的行业结论。",
     "sourceRefs": ["source-waymo-safety"],
     "isOpinion": false
   }
