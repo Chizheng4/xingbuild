@@ -54,12 +54,24 @@ test("home title stays content-driven and phrase-aware", () => {
 });
 
 test("practice modules require explicit evidence media and do not create placeholders", () => {
-  assert.match(practiceContent, /"modules": \[\]/);
+  assert.match(practiceContent, /robotaxi-operations-current-simulation/);
+  assert.match(practiceContent, /robotaxi-operations-city-spatial-progress/);
+  assert.match(practiceContent, /robotaxi-operating-model/);
+  assert.match(practiceContent, /robotaxi-operating-metrics-overview/);
+  assert.match(practiceContent, /"group": "运营中控台"/);
   assert.match(practiceRepository, /robotaxiMediaManifest/);
-  assert.match(practice, /module\.image\?\.src/);
+  assert.match(practice, /module\.media\?\.src/);
   assert.match(practice, /if \(!image\) return null/);
+  assert.match(practice, /InteractiveMedia/);
+  assert.match(practice, /PracticeModuleGroup/);
+  assert.match(practice, /groupPracticeModules/);
+  assert.match(practice, /headingLevel = 2/);
+  assert.match(practice, /headingLevel=\{hasVisibleLabel \? 3 : 2\}/);
+  assert.match(practice, /target="_blank" rel="noreferrer"/);
   assert.match(pages, /aspect-ratio: var\(--media-ratio\)/);
-  assert.doesNotMatch(practice, /placeholder|robotaxi\.xingbuild\.top/);
+  assert.match(pages, /\.interactive-media:hover/);
+  assert.match(pages, /prefers-reduced-motion/);
+  assert.doesNotMatch(practice, /placeholder/);
   assert.match(practice, /PracticeHeader/);
   assert.match(practice, /PracticeEmptyState/);
   assert.doesNotMatch(practice, /PositioningStrip/);

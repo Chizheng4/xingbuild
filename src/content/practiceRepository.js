@@ -7,7 +7,7 @@ function resolvePractice(practice, manifest) {
     ...practice,
     modules: practice.modules.map(({ mediaId, ...module }) => ({
       ...module,
-      image: mediaById.get(mediaId),
+      media: mediaById.get(mediaId),
     })),
   };
 }

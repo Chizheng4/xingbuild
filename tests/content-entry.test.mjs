@@ -6,15 +6,28 @@ import { countCompleteBriefs } from "../src/content/briefRail.js";
 import { selectObservationBriefs as selectBriefs } from "../src/content/observationQueries.js";
 import { findPractice } from "../src/content/practiceRepository.js";
 
-test("practice content is a controlled empty source until real evidence media exists", async () => {
+test("practice content consumes exactly the approved Robotaxi evidence manifest", async () => {
   const { practice, manifest } = await assertCurrentPracticeContent();
   assert.equal(practice.id, "robotaxi");
-  assert.deepEqual(practice.modules, []);
-  assert.deepEqual(manifest.assets, []);
-  assert.deepEqual(findPractice("robotaxi").modules, []);
+  assert.equal(manifest.reviewStatus, "approved");
+  assert.equal(manifest.publicStatus, "public");
+  assert.equal(manifest.approvalRecord.approvalStatus, "approved");
+  assert.equal(manifest.provenance.commit, "50d452f5");
+  assert.deepEqual(practice.modules.map((module) => module.id), [
+    "robotaxi-operations-current-simulation",
+    "robotaxi-operations-city-spatial-progress",
+    "robotaxi-operating-model",
+    "robotaxi-operating-metrics-overview",
+  ]);
+  assert.deepEqual(practice.modules.map((module) => module.group), ["运营中控台", "运营中控台", "经营模型", "经营总览"]);
+  assert.equal(manifest.assets.length, 4);
+  assert.ok(manifest.assets.every((asset) => asset.type === "image" && asset.ratio === "16:10"));
+  assert.ok(manifest.assets.every((asset) => asset.provenance.approvalStatus === "approved"));
+  assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
+  assert.ok(findPractice("robotaxi").modules.every((module) => module.media?.src));
 });
 
-test("practice modules require one public 16:10 media record and cannot use a platform root", () => {
+test("practice media keeps reader interaction separate from internal provenance", () => {
   const practice = {
     id: "robotaxi",
     route: "/robotaxi",
@@ -22,25 +35,59 @@ test("practice modules require one public 16:10 media record and cannot use a pl
     title: "标题",
     intro: "说明",
     boundary: "边界",
-    modules: [{ id: "planning", label: "经营目标与规划", shortDescription: "说明", loopRelation: "关系", mediaId: "planning" }],
+    modules: [{
+      id: "planning",
+      group: "运营中控台",
+      label: "经营目标与规划",
+      shortDescription: "说明",
+      loopRelation: "关系",
+      mediaId: "planning",
+      action: { href: "https://robotaxi.xingbuild.top/" },
+    }],
   };
   const manifest = {
-    id: "robotaxi-public-media",
-    version: "2026-07-28",
+    id: "robotaxi-approved-evidence-media",
+    version: "v1",
     directory: "/media/robotaxi",
+    reviewStatus: "approved",
+    publicStatus: "public",
+    approvalRecord: {
+      approvalId: "approval-1",
+      approvalStatus: "approved",
+      authority: "user",
+      approvedAt: "2026-07-28",
+      scope: "测试",
+    },
+    provenance: {
+      repository: "Robotaxi",
+      manifestPath: "media/evidence-approved/manifest.json",
+      version: "v1",
+      commit: "abcdef0",
+      sourceDraftManifestSha256: "a".repeat(64),
+    },
     assets: [{
       id: "planning",
+      type: "image",
       src: "/media/robotaxi/planning.png",
-      alt: "公开运行界面",
-      sourceVersion: "v1",
-      sourceUrl: "https://robotaxi.xingbuild.top/operations/planning",
+      altZh: "公开运行界面",
       ratio: "16:10",
-      availability: "public",
+      assetSha256: "b".repeat(64),
+      provenance: {
+        mediaRole: "current_system_evidence",
+        stateBoundary: "系统证据。",
+        robotaxiVersion: "v1",
+        commit: "abcdef0",
+        approvalStatus: "approved",
+      },
     }],
   };
   assert.deepEqual(validatePracticeBundle(practice, manifest), []);
   assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], ratio: "4:3" }] }).length);
-  assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], href: "https://robotaxi.xingbuild.top/" }] }, manifest).length);
+  assert.ok(validatePracticeBundle(practice, { ...manifest, reviewStatus: "draft" }).length);
+  assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], provenance: { ...manifest.assets[0].provenance, approvalStatus: "revoked" } }] }).length);
+  assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], assetSha256: "not-a-hash" }] }).length);
+  assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], action: { href: "javascript:alert(1)" } }] }, manifest).length);
+  assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], group: "" }] }, manifest).length);
 });
 
 test("brief reading source belongs to published observations, not an independent JS list", async () => {

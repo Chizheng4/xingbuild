@@ -47,6 +47,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - 作品母版：左栏固定按“短作品说明 → 真实视觉证据”两段组织；Robotaxi 使用受控模块说明 + 真实16:10平台图，企业经营体系使用一张可平移、可选择、可复位的总览图和同宽解释面板。当前无批准模块时必须诚实不渲染模块，不得用占位媒体、平台泛链或猜测对象填充。框架局部 view 只能复用同一模型并等待明确入口。
 - 布局母版：桌面唯一 shell 最大1280px、外边距至少32px；作品双栏为剩余主栏 + 48px + 固定320px rail，只有可同时容纳时成立。观察集合页使用独立居中单列，不得借用双栏主列左边界。无有效 Brief 时，Practice/Framework 不保留空白 rail。
 - 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察内容只通过 ObservationPublication 中人工写入的显式 `presentation` 产生。二者都不得再通过页面、组件或视觉特例填充。
+- Robotaxi 作品媒体分为三个责任：`media` 是读者可见的图片或未来视频内容；`action` 是可选读者互动，当前全框链接到经批准的 Robotaxi 独立系统；`provenance` 保存审批状态、媒体角色、状态边界、版本、Git commit 与哈希，不默认投影为读者界面。批准媒体只可从上游 approved manifest 导入；draft、rejected、revoked 或哈希不一致必须拒绝。
 
 ## Iteration and release workflow
 
