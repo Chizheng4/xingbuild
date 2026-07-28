@@ -114,7 +114,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "美国无人驾驶监管",
-    "statement": "NHTSA要求无人驾驶ADS开发商优先解决车辆干扰急救人员和应急现场的问题。",
+    "statement": "NHTSA于7月8日要求无人驾驶ADS开发商优先解决车辆干扰急救人员和应急现场的问题，并计划月底前听取解决方案。该要求面向整个无人驾驶ADS行业，而非只针对Robotaxi；应急响应能力可能进一步影响安全审查、执法与城市扩张。",
     "sourceRefs": ["source-nhtsa-release", "source-nhtsa-letter"],
     "isOpinion": false
   }
