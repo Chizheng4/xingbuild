@@ -16,7 +16,7 @@
   }
   .practice-page .two-column-layout__main, .framework-page .two-column-layout__main { max-width: var(--measure-display); }
   .practice-header { display: grid; gap: var(--rhythm-relate); max-width: var(--measure-summary); }
-  .practice-header h1, .observation-empty-state h1 {
+  .practice-header h1, .observation-empty-state h1, .observation-stream-header h1 {
     margin: 0;
     font: 500 var(--type-page-title)/var(--leading-title) var(--font-display);
     letter-spacing: -0.025em;
@@ -56,6 +56,16 @@
   .evidence-image-frame img { width: 100%; height: 100%; object-fit: contain; }
   .evidence-image-frame:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
   .observations-page { width: min(100%, var(--measure-observation)); }
+  .observation-stream-header { margin: 0 0 var(--rhythm-relate); }
+  .observation-stream-header h1 { margin: 0; }
+  .observation-rail { position: relative; }
+  .observation-rail__measure {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    visibility: hidden;
+    pointer-events: none;
+  }
   .home-section { padding: 0; }
   .home-about { padding: 0; }
   .home-about > p:not(.eyebrow) {

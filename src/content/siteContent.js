@@ -15,21 +15,6 @@ export const site = {
   },
 };
 
-// Practice is a presentation model. Modules only enter this collection once
-// their public evidence media and destination (if any) have been confirmed.
-export const practices = [
-  {
-    id: "robotaxi",
-    route: "/robotaxi",
-    navLabel: "Robotaxi运营平台",
-    title: "Robotaxi 经营闭环模拟平台",
-    intro: "把需求、供给、匹配、履约、收入、成本和经营反馈连接成可运行的模拟闭环。",
-    boundary: "模拟作品，不代表真实城市运营、自动驾驶核心技术或真实企业经营结果。",
-    modules: [],
-    observationQuery: { scope: "robotaxi" },
-  },
-];
-
 export const works = [
   {
     id: "robotaxi",
@@ -138,8 +123,4 @@ export const profile = {
 
 export function findWork(slug) {
   return works.find((item) => item.slug === slug);
-}
-
-export function findPractice(id) {
-  return practices.find((item) => item.id === id);
 }

@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { classifySourceUrl } from "../../src/content/sourceUrls.js";
+import { validateBriefDefinition } from "../../src/content/briefProjection.js";
 
 export const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -193,6 +194,7 @@ export function validateObservation(observation, { expectedStatus } = {}) {
     if (!enumValues.relatedWork.has(work)) errors.push(`relatedWorks has invalid value: ${work}`);
   }
   if (typeof observation.promoteToHome !== "boolean") errors.push("promoteToHome must be boolean");
+  errors.push(...validateBriefDefinition(observation));
   return errors;
 }
 

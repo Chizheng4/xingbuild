@@ -1,5 +1,15 @@
 # xingbuild 版本记录
 
+## v0.11.1 — 内容入口结构收口
+
+日期：2026-07-28
+
+- Robotaxi Practice 与模块配置从页面内容 JavaScript 迁至受控内容文件；媒体只由受版本记录的 manifest 解析，当前没有经批准媒体或模块，因此不填充伪截图、占位模块或泛化链接。
+- ObservationPublication 增加显式 BriefProjection；日期与经营维度从父对象继承，既有两篇公开观察不自动转换为简讯。
+- Practice 读取 Robotaxi 相关最新公开 Brief，企业经营体系读取全站最新公开 Brief；没有公开 Brief 时两页均不保留空 rail。
+- 观察 rail 按完整条目高度预算截取，公开读取层继续严格排除 ignored workspace drafts/imports。
+- 当前上线状态：本地实现、自动检查、真实浏览器验证与结构视觉专业验收均已完成；已完成本地稳定版本收口，未推送 GitHub 或发布 EdgeOne。
+
 ## v0.11.0 — 总体结构与高密度视觉母版
 
 日期：2026-07-28

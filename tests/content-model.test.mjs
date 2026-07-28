@@ -11,8 +11,7 @@ import {
   selectHomeObservations,
 } from "../src/content/observationQueries.js";
 import { classifySourceUrl } from "../src/content/sourceUrls.js";
-import { observationBriefs, validateObservationBrief } from "../src/content/observationBriefs.js";
-import { selectObservationBriefs } from "../src/content/observationQueries.js";
+import { projectObservationBrief, validateBriefDefinition } from "../src/content/briefProjection.js";
 
 const observations = await readPublishedObservations();
 
@@ -183,18 +182,28 @@ test("works and profile preserve their existing boundaries", () => {
 });
 
 test("reading briefs are explicit projections and do not infer from published observations", () => {
-  assert.deepEqual(observationBriefs, []);
-  assert.deepEqual(selectObservationBriefs(observationBriefs), []);
-  assert.ok(validateObservationBrief({ id: "brief" }).includes("missing subject"));
-
-  const valid = {
-    id: "verified-event",
-    publishedAt: "2026-07-28",
-    subject: "示例企业",
-    primaryDimension: "运营与市场",
-    statement: "示例企业发布一项可核验的经营事件。",
-    isOpinion: false,
+  assert.deepEqual(observations.map(projectObservationBrief).filter(Boolean), []);
+  const publication = {
+    ...observations[0],
+    brief: {
+      subject: "示例企业",
+      statement: "示例企业发布一项可核验的经营事件。",
+      isOpinion: false,
+      articleHref: `/observations/${observations[0].slug}`,
+    },
   };
-  assert.deepEqual(validateObservationBrief(valid), []);
-  assert.deepEqual(selectObservationBriefs([...observations, valid]), [valid]);
+  assert.deepEqual(validateObservation(publication, { expectedStatus: "published" }), []);
+  assert.deepEqual(projectObservationBrief(publication), {
+    id: `brief-${publication.slug}`,
+    publishedAt: publication.publishedAt,
+    subject: publication.brief.subject,
+    primaryDimension: publication.primaryDimension,
+    statement: publication.brief.statement,
+    isOpinion: false,
+    articleHref: `/observations/${publication.slug}`,
+    relatedWorks: publication.relatedWorks,
+  });
+  assert.equal(projectObservationBrief({ ...publication, status: "draft" }), null);
+  assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, publishedAt: "2026-07-28" } }).length);
+  assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, articleHref: "/about" } }).length);
 });

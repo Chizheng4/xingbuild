@@ -39,9 +39,8 @@ export function selectHomeObservations(items) {
     .slice(0, 4);
 }
 
-export function selectObservationBriefs(items) {
+export function selectObservationBriefs(items, { scope } = {}) {
   return items
-    .filter((item) => validateObservationBrief(item).length === 0)
+    .filter((item) => !scope || item.relatedWorks.includes(scope))
     .sort((left, right) => right.publishedAt.localeCompare(left.publishedAt));
 }
-import { validateObservationBrief } from "./observationBriefs.js";

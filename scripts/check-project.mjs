@@ -9,9 +9,12 @@ const requiredFiles = [
   "docs/rules/iteration-and-release.md",
   "src/App.jsx",
   "src/content/siteContent.js",
+  "src/content/practiceRepository.js",
   "src/content/observationRepository.js",
   "src/content/sourceUrls.js",
   "content/schema/observation.schema.json",
+  "content/practices/robotaxi.json",
+  "content/media/robotaxi/manifest.json",
   "src/styles.css",
   "src/styles/tokens.css",
   "src/styles/foundations.css",
@@ -50,6 +53,10 @@ const observationRepository = await readFile(
   new URL("../src/content/observationRepository.js", import.meta.url),
   "utf8",
 );
+const practiceRepository = await readFile(
+  new URL("../src/content/practiceRepository.js", import.meta.url),
+  "utf8",
+);
 const app = await readFile(
   new URL("../src/App.jsx", import.meta.url),
   "utf8",
@@ -71,7 +78,9 @@ assert(siteContent.includes("Robotaxi"), "site content must include the Robotaxi
 assert(siteContent.includes("企业经营"), "site content must include the cognition work");
 assert(siteContent.includes("export const profile"), "site content must define the profile");
 assert(!siteContent.includes("export const observations"), "observations must not be inlined in site content");
+assert(!siteContent.includes("export const practices"), "practices must use the controlled content repository");
 assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
+assert(practiceRepository.includes("content/practices/robotaxi.json"), "practice content must use the repository");
 for (const route of ["/observations", "/works", "/about"]) {
   assert(app.includes(route), `app must include the ${route} route`);
 }

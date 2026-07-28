@@ -14,7 +14,9 @@ const practice = await readFile(new URL("../src/components/practice/PracticePage
 const observations = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
 const observationsPage = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
 const siteContent = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
-const briefs = await readFile(new URL("../src/content/observationBriefs.js", import.meta.url), "utf8");
+const observationRepository = await readFile(new URL("../src/content/observationRepository.js", import.meta.url), "utf8");
+const practiceRepository = await readFile(new URL("../src/content/practiceRepository.js", import.meta.url), "utf8");
+const practiceContent = await readFile(new URL("../content/practices/robotaxi.json", import.meta.url), "utf8");
 const startCommand = await readFile(new URL("../start-xingbuild.command", import.meta.url), "utf8");
 const allStyles = [tokens, foundations, layout, components, pages].join("\n");
 
@@ -48,7 +50,8 @@ test("home title stays content-driven and phrase-aware", () => {
 });
 
 test("practice modules require explicit evidence media and do not create placeholders", () => {
-  assert.match(siteContent, /modules: \[\]/);
+  assert.match(practiceContent, /"modules": \[\]/);
+  assert.match(practiceRepository, /robotaxiMediaManifest/);
   assert.match(practice, /module\.image\?\.src/);
   assert.match(practice, /if \(!image\) return null/);
   assert.match(pages, /aspect-ratio: var\(--media-ratio\)/);
@@ -59,14 +62,15 @@ test("practice modules require explicit evidence media and do not create placeho
 });
 
 test("observation stream only consumes explicit reading projections", () => {
-  assert.match(briefs, /export const observationBriefs = \[\]/);
+  assert.match(observationRepository, /projectObservationBrief/);
+  assert.match(observationRepository, /projectObservationBrief/);
   assert.match(observations, /brief-item__meta/);
   assert.match(observations, /brief-item__statement/);
   assert.match(observationsPage, /ObservationEmptyState/);
   assert.match(observationsPage, /site\.emptyStates\.observations/);
   assert.match(observations, /observations-empty-title/);
   assert.match(siteContent, /暂无已核验简讯/);
-  assert.doesNotMatch(observationsPage, /publishedObservations|ObservationArchive|title|summary/);
+  assert.doesNotMatch(observationsPage, /ObservationArchive|summary/);
   assert.doesNotMatch(observations, /ObservationCard|ContentCard|claimKind|sourceRefs/);
 });
 
