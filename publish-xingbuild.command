@@ -3,7 +3,6 @@ set -euo pipefail
 
 cd "${0:A:h}"
 
-BRANCH="$(git branch --show-current)"
 VERSION="v$(node -p "require('./package.json').version")"
 HEAD_TAG="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
 COMMIT="$(git rev-parse HEAD)"
@@ -13,26 +12,8 @@ PUBLIC_URL="${XINGBUILD_PUBLIC_URL:-https://xingbuild.top/}"
 EDGEONE_PROJECT="${XINGBUILD_EDGEONE_PROJECT:-xingbuild-nochina}"
 EDGEONE_CLI="./node_modules/.bin/edgeone"
 
-if [[ "$BRANCH" != "main" ]]; then
-  echo "发布已停止：当前分支是 $BRANCH，请切换到 main。"
-  exit 1
-fi
-
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "发布已停止：工作区仍有未提交修改。"
-  echo "请先完成版本检查、提交和标签，再重新发布。"
-  exit 1
-fi
-
-if [[ "$HEAD_TAG" != "$VERSION" ]]; then
-  echo "发布已停止：当前提交标签为 ${HEAD_TAG:-无}，项目版本为 $VERSION。"
-  exit 1
-fi
-
-if [[ "$(git remote get-url origin 2>/dev/null || true)" != "https://github.com/Chizheng4/xingbuild.git" ]]; then
-  echo "发布已停止：origin 不是预期的 xingbuild GitHub 仓库。"
-  exit 1
-fi
+echo "==> 检查本地发布就绪状态"
+npm run release:preflight
 
 if [[ ! -x "$EDGEONE_CLI" ]]; then
   echo "发布已停止：项目内尚未安装 EdgeOne CLI。"

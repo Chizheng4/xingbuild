@@ -56,6 +56,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Use `./start-xingbuild.command` for the standard local startup path.
 - Before saying an iteration is complete, run `npm run release:check`.
 - After a stable iteration passes validation, create a local Git commit and matching version tag as the normal closeout action. This does not authorize a remote push or production deployment.
+- Before creating that commit, stage the intended version scope and run `npm run release:closeout-check`; it rejects unstaged or untracked carryover work. A tagged local version is publish-ready only after `npm run release:preflight` confirms main, an empty worktree, aligned package/version/current-iteration records, the matching HEAD tag, and the expected origin. If either check fails, report the explicit blockers rather than describing the version as clean or publishable.
 - GitHub remote creation and the first push require the user's authorization or an explicit execution request. Later pushes follow the release instruction for that iteration.
 - Product-version publishing uses `./publish-xingbuild.command`; content-only publishing uses `./publish-content.command`. Both target the EdgeOne Makers project `xingbuild-nochina` (`makers-ze0f6txvlhco`). The user normally runs these commands manually. Codex must not publish, trigger a remote deployment, change DNS, or bind a production domain unless the user explicitly asks Codex to do so in the current task.
 - The publish command must not contain API tokens or other credentials.

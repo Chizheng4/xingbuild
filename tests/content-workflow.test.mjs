@@ -7,6 +7,11 @@ import test from "node:test";
 import { validateContentScope } from "../scripts/content-scope-check.mjs";
 import { readPublishedObservations } from "../scripts/lib/observation-content.mjs";
 import { verifyContentReleaseOnce } from "../scripts/verify-content-release.mjs";
+import {
+  evaluateCloseoutReadiness,
+  evaluateProductReleaseReadiness,
+  expectedOrigin,
+} from "../scripts/lib/release-readiness.mjs";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname);
 const fixturePath = path.join(root, "tests", "fixtures", "observation-candidate.valid.json");
@@ -139,11 +144,58 @@ test("production source and bundle contracts exclude local drafts", async () => 
 test("product and content publish scripts retain distinct safety contracts", async () => {
   const product = await readFile(path.join(root, "publish-xingbuild.command"), "utf8");
   const content = await readFile(path.join(root, "publish-content.command"), "utf8");
-  assert.match(product, /HEAD_TAG[\s\S]*HEAD_TAG" != "\$VERSION"/);
+  assert.match(product, /npm run release:preflight/);
   assert.match(content, /content-scope-check\.mjs --commit HEAD/);
   assert.match(content, /\.content-workspace/);
   assert.match(content, /npm run content:check[\s\S]*npm run build[\s\S]*npm run test:sites/);
   assert.doesNotMatch(content, /git push origin "\$HEAD_TAG"|push_with_retry "\$HEAD_TAG"/);
+});
+
+test("product release readiness requires a clean, tagged, version-consistent repository", () => {
+  const readyInput = {
+    branch: "main",
+    statusEntries: [],
+    packageVersion: "0.12.2",
+    versionRecord: "v0.12.2",
+    currentVersion: "v0.12.2",
+    headTag: "v0.12.2",
+    origin: expectedOrigin,
+  };
+  assert.equal(evaluateProductReleaseReadiness(readyInput).ready, true);
+
+  const blocked = evaluateProductReleaseReadiness({
+    ...readyInput,
+    statusEntries: [" M AGENTS.md", "?? docs/design/v0.13.0.md"],
+    headTag: "v0.12.1",
+  });
+  assert.equal(blocked.ready, false);
+  assert.equal(blocked.blockers.length, 2);
+  assert.match(blocked.blockers[0], /2 项未提交修改/);
+  assert.match(blocked.blockers[1], /HEAD 标签/);
+});
+
+test("version closeout stops before commit when work remains outside the staged scope", () => {
+  const stagedInput = {
+    branch: "main",
+    stagedEntries: ["scripts/release-preflight.mjs"],
+    unstagedEntries: [],
+    untrackedEntries: [],
+    packageVersion: "0.12.2",
+    versionRecord: "v0.12.2",
+    currentVersion: "v0.12.2",
+  };
+  assert.equal(evaluateCloseoutReadiness(stagedInput).ready, true);
+
+  const blocked = evaluateCloseoutReadiness({
+    ...stagedInput,
+    unstagedEntries: ["AGENTS.md"],
+    untrackedEntries: ["docs/design/v0.13.0.md"],
+  });
+  assert.equal(blocked.ready, false);
+  assert.deepEqual(blocked.blockers.slice(0, 2), [
+    "仍有 1 项未暂存修改。",
+    "仍有 1 项未追踪文件。",
+  ]);
 });
 
 test("public content verification requires the target slug in the build manifest", async () => {

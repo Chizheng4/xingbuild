@@ -89,6 +89,22 @@ Robotaxi 作品媒体是独立于观察的受控内容入口：`media` 保存读
 npm run release:check
 ```
 
+在提交本轮版本前，先暂存预计提交范围并执行：
+
+```bash
+npm run release:closeout-check
+```
+
+它会阻止未暂存修改或未追踪文件跨入本次收口。通过后再提交与打标签。
+
+本地提交和标签完成后、双击发布前，再执行一次快速只读门槛：
+
+```bash
+npm run release:preflight
+```
+
+它只核对 `main`、工作区为空、`package.json`/`VERSION.md`/当前迭代版本一致、`HEAD` 标签一致和预期 `origin`；不联网、不构建、不部署。只有该命令通过，版本才是“可发布”，不能把“已提交并打标签”误报为“工作区干净或可发布”。若存在下一轮未提交工作，必须先由负责人决定提交、暂存隔离或延后发布，不能混入当前稳定版本。
+
 检查包括：
 
 - 必需项目文件和内容入口存在；
@@ -128,7 +144,7 @@ npm run test:sites
 
 发布命令按顺序执行：
 
-1. 确认当前位于 `main`、工作区干净、HEAD 具有与项目版本一致的标签；
+1. 执行 `release:preflight`，确认当前位于 `main`、工作区干净、版本记录与 HEAD 标签一致；
 2. 确认 GitHub origin、EdgeOne CLI 和登录账号可用；
 3. 运行完整发布前检查并生成带版本和提交标识的 `release.json`；
 4. 推送版本标签和 `main` 到 GitHub，并确认远端提交一致；
@@ -184,6 +200,7 @@ npm run test:sites
 - **实现完成**：内容和代码已修改；
 - **本地验证完成**：完整检查和页面验证通过；
 - **稳定版本完成**：版本记录、Git 提交和标签完成；
+- **可发布**：稳定版本完成，且 `release:preflight` 已通过；
 - **部署完成**：EdgeOne 报告生产部署成功；
 - **域名生效**：`xingbuild.top` 已指向该部署且 HTTPS 正常；
 - **公网验收完成**：通过桌面和手机从公网打开并验证核心页面。
@@ -199,9 +216,11 @@ npm run test:sites
 1. 每个稳定版本完成验证；
 2. 更新当前迭代和 `VERSION.md`；
 3. 检查变更范围；
-4. 创建本地提交；
-5. 创建同名版本标签；
-6. 需要共享、备份或触发 EdgeOne Git 部署时，再单独推送 GitHub。
+4. 暂存本轮范围并执行 `npm run release:closeout-check`；
+5. 创建本地提交；
+6. 创建同名版本标签；
+7. 执行 `npm run release:preflight`；只有通过后才报告“可发布”；
+8. 需要共享、备份或触发 EdgeOne Git 部署时，再单独推送 GitHub。
 
 本地 Git、GitHub 和 EdgeOne 分别承担不同责任：
 
