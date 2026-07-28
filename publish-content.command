@@ -43,10 +43,16 @@ if ! "$EDGEONE_CLI" whoami >/dev/null 2>&1; then
   exit 1
 fi
 
-CONTENT_FILE="$(git diff-tree --no-commit-id --name-only -r HEAD^ HEAD)"
+CONTENT_FILE="$(git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -E '^content/(products|business-observations|observations|articles|profile)/[a-z0-9-]+\.json$')"
 node scripts/content-scope-check.mjs --commit HEAD
-CONTENT_SLUG="$(node -p "require('./${CONTENT_FILE}').slug")"
-TARGET_PATH="/observations/${CONTENT_SLUG}"
+case "$CONTENT_FILE" in
+  content/observations/*) CONTENT_SLUG="$(node -p "require('./${CONTENT_FILE}').slug")"; TARGET_PATH="/observations/${CONTENT_SLUG}"; VERIFY_KIND="observation" ;;
+  content/products/*) TARGET_PATH="/products"; VERIFY_KIND="page" ;;
+  content/business-observations/*) TARGET_PATH="/business-observations"; VERIFY_KIND="page" ;;
+  content/profile/*) TARGET_PATH="/about"; VERIFY_KIND="page" ;;
+  content/articles/*) CONTENT_SLUG="$(node -p "require('./${CONTENT_FILE}').slug")"; TARGET_PATH="/observations/${CONTENT_SLUG}"; VERIFY_KIND="observation" ;;
+  *) echo "内容发布已停止：未找到唯一内容对象。"; exit 1 ;;
+esac
 
 configure_github_network() {
   local proxy_candidate="${XINGBUILD_GITHUB_PROXY:-${HTTPS_PROXY:-${https_proxy:-$DEFAULT_GITHUB_PROXY}}}"
@@ -111,7 +117,11 @@ echo "==> 部署 EdgeOne 生产环境"
 "$EDGEONE_CLI" makers deploy dist/client --name "$EDGEONE_PROJECT" --env production
 
 echo "==> 验证公网内容"
-node scripts/verify-content-release.mjs "$PUBLIC_URL" "$VERSION" "$COMMIT" "$TARGET_PATH"
+if [[ "$VERIFY_KIND" == "observation" ]]; then
+  node scripts/verify-content-release.mjs "$PUBLIC_URL" "$VERSION" "$COMMIT" "$TARGET_PATH"
+else
+  node scripts/verify-public-release.mjs "${PUBLIC_URL%/}${TARGET_PATH}" "$VERSION" "$COMMIT"
+fi
 
 echo ""
 echo "==> 内容已正式上线"

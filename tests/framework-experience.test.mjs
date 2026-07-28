@@ -12,7 +12,7 @@ const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
 test("the enterprise framework has one public overview route with legacy compatibility", () => {
   assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <FrameworkPage \/>/);
-  assert.match(app, /"\/works\/enterprise-operating-framework": FRAMEWORK_BASE/);
+  assert.match(app, /"\/works\/enterprise-operating-framework": "\/business-observations"/);
   assert.match(page, /<FrameworkExplorer \/>/);
   assert.match(page, /framework-page__header/);
   assert.doesNotMatch(page, /WORK · ENTERPRISE SYSTEMS|如何阅读|来源与版本|career/);
@@ -36,7 +36,7 @@ test("hover, focus, click and keyboard maintain a stable selected explanation", 
     /event\.key === "Enter" \|\| event\.key === " "/,
     /aria-live="polite"/,
     /const activeNodeId = previewId \?\? selectedId/,
-    /framework-explanation/,
+    /framework-description/,
   ]) assert.match(explorer, contract);
 });
 

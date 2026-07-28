@@ -8,12 +8,8 @@ export function ObservationsPage() {
   return (
     <LayoutShell className="observations-page">
       <CollectionLayout>
-        {briefs.length ? (
-          <>
-          <header className="observation-stream-header"><h1>观察</h1></header>
-          <ObservationStream items={briefs} />
-          </>
-        ) : <ObservationEmptyState {...site.emptyStates.observations} />}
+        <header className="observation-stream-header"><h1>观察</h1></header>
+        {briefs.length ? <ObservationStream items={briefs} /> : <ObservationEmptyState {...site.emptyStates.observations} />}
       </CollectionLayout>
     </LayoutShell>
   );

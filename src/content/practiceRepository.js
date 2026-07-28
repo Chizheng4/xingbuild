@@ -1,4 +1,4 @@
-import robotaxiPractice from "../../content/practices/robotaxi.json" with { type: "json" };
+import robotaxiPractice from "../../content/products/robotaxi.json" with { type: "json" };
 import robotaxiMediaManifest from "../../content/media/robotaxi/manifest.json" with { type: "json" };
 
 function resolvePractice(practice, manifest) {

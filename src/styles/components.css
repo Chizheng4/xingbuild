@@ -341,7 +341,7 @@
       align-items: flex-start;
       justify-content: flex-start;
       gap: var(--space-3);
-      padding: calc(4rem + var(--space-6)) var(--gutter-mobile) var(--gutter-mobile);
+      padding: calc(var(--header-height-mobile) + var(--space-6)) var(--gutter-mobile) var(--gutter-mobile);
       background: var(--color-canvas);
     }
     .primary-nav.is-open { display: flex; }
@@ -376,4 +376,21 @@
     .content-card__link:hover,
     .content-card__link:active { transform: none; }
   }
+
+  .brief-item__identity { flex-wrap: nowrap; }
+  .brief-item__article-preview { display: grid; gap: var(--rhythm-bind); color: var(--color-text); font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui); }
+  .brief-item__article-preview span { color: var(--color-text-muted); font-weight: 400; }
+  .rich-document { display: grid; gap: var(--rhythm-relate); }
+  .rich-document > :is(h2, h3) { margin: var(--rhythm-group) 0 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
+  .rich-document > h3 { font-size: var(--type-ui); }
+  .rich-document > p, .rich-document li, .rich-document dd { margin: 0; font: 400 var(--type-reading)/var(--leading-reading) var(--font-reading); }
+  .rich-document__lead { font-weight: 500 !important; }
+  .rich-document ul { display: grid; gap: var(--rhythm-bind); margin: 0; padding-inline-start: var(--space-6); }
+  .rich-document dl { display: grid; gap: var(--rhythm-relate); margin: 0; }
+  .rich-document dl div { display: grid; gap: var(--rhythm-bind); }
+  .rich-document dt { font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui); }
+  .rich-document dd { color: var(--color-text-muted); }
+  .rich-document__callout { margin: 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
+  .rich-document__sources { color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta) !important; }
+  .rich-document__sources a { color: inherit; text-decoration: underline; text-underline-offset: 0.18em; }
 }

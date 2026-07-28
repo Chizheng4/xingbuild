@@ -19,3 +19,16 @@ export function TwoColumnLayout({ children, renderRail }) {
 export function CollectionLayout({ className = "", children }) {
   return <div className={`collection-layout ${className}`.trim()}>{children}</div>;
 }
+
+export function ReadingShell({ className = "", children }) {
+  return <article className={`reading-shell ${className}`.trim()}>{children}</article>;
+}
+
+export function ShowcaseLayout({ className = "", description, stage }) {
+  return (
+    <section className={`showcase-layout ${className}`.trim()}>
+      <div className="showcase-layout__description">{description}</div>
+      <div className="showcase-layout__stage">{stage}</div>
+    </section>
+  );
+}

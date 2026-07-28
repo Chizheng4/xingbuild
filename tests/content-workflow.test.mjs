@@ -117,6 +117,8 @@ test("draft write failure keeps the workspace import", async () => {
 
 test("content-only scope rejects mixed engineering files", () => {
   assert.deepEqual(validateContentScope(["content/observations/new-item.json"]), []);
+  assert.deepEqual(validateContentScope(["content/products/new-product.json"]), []);
+  assert.deepEqual(validateContentScope(["content/business-observations/new-observation.json"]), []);
   assert.ok(
     validateContentScope(["content/observations/new-item.json", "src/App.jsx"])
       .some((error) => error.includes("forbidden files")),

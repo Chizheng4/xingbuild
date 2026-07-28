@@ -3,7 +3,7 @@ import { site } from "../../content/siteContent";
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <span>© {site.year} {site.name}</span>
+      <span>© 2026 {site.name} · {__XINGBUILD_VERSION__}</span>
     </footer>
   );
 }

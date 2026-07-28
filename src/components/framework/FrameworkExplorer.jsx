@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { architectureById, connectedEdgeIds } from "../../content/frameworkModel";
 import { clampGraphPan, isLabelSafe } from "./frameworkGeometry";
+import { ShowcaseLayout } from "../site/LayoutShell";
+import { SystemStage } from "../showcase/SystemStage";
 
 const overview = architectureById.get("enterprise-operation");
 
@@ -64,12 +66,12 @@ function GraphEdges({ selectedId, previewId }) {
   );
 }
 
-function ExplanationPanel({ selectedNode }) {
+function FrameworkDescription({ selectedNode }) {
   const directRelations = overview.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
-    <section className="framework-explanation" aria-labelledby={`framework-node-${selectedNode.id}`}>
+    <section className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`}>
       <h2 id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</h2>
-      <div className="framework-explanation__body">
+      <div className="framework-description__body">
         <div><h3>定义</h3><p>{selectedNode.definition}</p></div>
         <div><h3>作用</h3><p>{selectedNode.role}</p></div>
         <div><h3>直接关系</h3><ul>{directRelations.map((edge) => {
@@ -142,26 +144,25 @@ export function FrameworkExplorer() {
     startRef.current = null;
   };
 
-  return (
-    <section className="framework-explorer" data-active-view={activeViewId} aria-label="企业经营体系总览">
-      <div className="framework-explorer__tools">
-        <p>企业经营体系总览</p>
-        <button type="button" onClick={reset}>复位视图</button>
-      </div>
-      <div
-        className="graph-canvas"
-        onPointerDown={pointerDown}
-        onPointerMove={pointerMove}
-        onPointerUp={pointerUp}
-        onPointerCancel={pointerUp}
-      >
+  const stage = (
+    <SystemStage>
+      <div className="framework-explorer__tools"><p>企业经营体系总览</p><button type="button" onClick={reset}>复位视图</button></div>
+      <div className="graph-canvas" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
         <div className="graph-canvas__viewport" style={{ "--graph-pan-x": `${viewportTransform.x}px`, "--graph-pan-y": `${viewportTransform.y}px` }}>
           {overview.boundary ? <div className="graph-canvas__boundary" aria-hidden="true"><span>{overview.boundary.label}</span></div> : null}
           <GraphEdges selectedId={selectedId} previewId={previewId} />
           {overview.nodes.map((item) => <GraphNode key={item.id} item={item} selectedId={selectedId} previewId={previewId} connectedNodeIds={connectedNodeIds} onPreview={setPreviewId} onSelect={selectNode} suppressClickRef={suppressClickRef} />)}
         </div>
       </div>
-      <ExplanationPanel selectedNode={selectedNode} />
+    </SystemStage>
+  );
+
+  return (
+    <section className="framework-explorer" data-active-view={activeViewId} aria-label="企业经营体系总览">
+      <ShowcaseLayout
+        description={<FrameworkDescription selectedNode={selectedNode} />}
+        stage={stage}
+      />
       <p className="sr-only" aria-live="polite" ref={liveRef} />
     </section>
   );

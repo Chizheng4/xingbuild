@@ -181,12 +181,24 @@
     "brief": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["subject", "statement", "sourceRefs", "isOpinion"],
+      "required": ["subject", "sourceRefs", "isOpinion"],
       "properties": {
         "subject": { "type": "string", "minLength": 1 },
         "statement": { "type": "string", "minLength": 1 },
+        "body": { "type": "string", "minLength": 1 },
         "sourceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^source-[a-z0-9-]+$" } },
-        "isOpinion": { "type": "boolean" }
+        "isOpinion": { "type": "boolean" },
+        "articlePreview": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["articleId", "title", "excerpt", "href"],
+          "properties": {
+            "articleId": { "type": "string", "minLength": 1 },
+            "title": { "type": "string", "minLength": 1 },
+            "excerpt": { "type": "string", "minLength": 1 },
+            "href": { "type": "string", "pattern": "^/observations/[a-z0-9]+(?:-[a-z0-9]+)*$" }
+          }
+        }
       }
     },
     "article": {

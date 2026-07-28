@@ -10,14 +10,15 @@ function BriefBody({ item }) {
   return (
     <>
       <p className="brief-item__identity">
-        <time dateTime={item.eventAt}>{item.eventAt}</time>
         <span>{item.subject}</span>
+        <time dateTime={item.eventAt}>{item.eventAt}</time>
       </p>
       <p className="brief-item__dimension">
         <span>#{item.primaryDimension}</span>
         {item.isOpinion ? <span>#观点</span> : null}
       </p>
-      <p className="brief-item__statement">{item.statement}</p>
+      <p className="brief-item__statement">{item.body || item.statement}</p>
+      {item.articlePreview ? <Link className="brief-item__article-preview" href={`${item.articlePreview.href}?returnTo=${encodeURIComponent("/observations")}`}>{item.articlePreview.title}<span>{item.articlePreview.excerpt}</span></Link> : null}
       <p className="brief-item__sources">
         来源：{sources.map((source, index) => {
           const safe = classifySourceUrl(source);
@@ -40,7 +41,6 @@ export function ObservationStream({ items }) {
 export function ObservationEmptyState({ title, message, description }) {
   return (
     <section className="observation-empty-state" aria-labelledby="observations-empty-title">
-      <h1 id="observations-empty-title">{title}</h1>
       <p>{message}</p>
       {description ? <p>{description}</p> : null}
     </section>

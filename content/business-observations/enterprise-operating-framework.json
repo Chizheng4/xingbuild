@@ -1,0 +1,8 @@
+{
+  "id": "enterprise-operating-framework",
+  "route": "/business-observations",
+  "navLabel": "企业经营体系",
+  "title": "企业经营体系",
+  "summary": "用统一概念和四个平面，连接企业现实、经营设计、数字化实现与运行反馈。",
+  "boundary": "网站只组织当前表达快照；正式定义、层级关系和版本以 career 项目当前基线为准。"
+}

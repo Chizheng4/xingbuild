@@ -33,13 +33,13 @@
 
 ### 3.3 日常观察内容发布
 
-观察内容发布不是产品版本迭代。它只允许新增或修改一篇符合 schema 的已发布观察，并保持 `package.json` 版本不变：
+日常内容发布不是产品版本迭代。它只允许新增或修改一个受控内容对象，并保持 `package.json` 版本不变：
 
 - 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
 - 必须经过 candidate → draft → 本地直接预览 → 人工审核 → promote；
 - 必须通过 `npm run content:check` 和 `npm run content:scope-check`；
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
-- 必须形成独立 Git 提交，且提交范围只能是一篇 `content/observations/*.json`；
+- 必须形成独立 Git 提交；范围只能是一项 `content/products|business-observations|observations|articles|profile/*.json`，或该对象必需的已批准媒体 manifest/资产；
 - 发布仍需用户执行 `./publish-content.command` 或在当前任务明确授权；
 - Scheduled task 只能生成 candidate，不能直接写入公开内容或执行生产发布。
 
@@ -165,7 +165,7 @@ npm run test:sites
 该命令不创建或推送版本 tag，但必须：
 
 1. 确认 `main`、工作区干净，且 `.content-workspace/` 没有残留 JSON；
-2. 确认最新提交只包含一篇已发布观察，且相对父提交的产品版本未变化；
+2. 确认最新提交只包含一项受控内容对象（以及必需的已批准媒体），且相对父提交的产品版本未变化；
 3. 执行内容检查、生产构建和 Sites 测试；
 4. 只推送 `main`；
 5. 部署既有 `xingbuild-nochina` 项目；

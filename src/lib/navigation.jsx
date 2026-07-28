@@ -27,6 +27,13 @@ export function navigate(href, { replace = false, state = {}, scroll = true } = 
   if (scroll) window.scrollTo({ top: 0, behavior: "auto" });
 }
 
+export function safeReturnTo(value, fallback = "/observations") {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return fallback;
+  const parsed = new URL(value, window.location.origin);
+  if (parsed.origin !== window.location.origin || !["/", "/products", "/business-observations", "/observations", "/about"].some((prefix) => parsed.pathname === prefix || parsed.pathname.startsWith(`${prefix}/`))) return fallback;
+  return `${parsed.pathname}${parsed.search}`;
+}
+
 export function Link({ href, children, className, onNavigate, state, replace, ...props }) {
   const handleClick = (event) => {
     if (

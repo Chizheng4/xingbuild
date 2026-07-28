@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
 
-export const practiceDirectory = path.join(projectRoot, "content", "practices");
+export const practiceDirectory = path.join(projectRoot, "content", "products");
 export const robotaxiPracticeFile = path.join(practiceDirectory, "robotaxi.json");
 export const robotaxiMediaManifestFile = path.join(projectRoot, "content", "media", "robotaxi", "manifest.json");
 export const robotaxiPublicMediaDirectory = path.join(projectRoot, "public", "media", "robotaxi");
@@ -65,7 +65,7 @@ export function validatePracticeBundle(practice, manifest) {
     if (!hasText(practice[field])) errors.push(`practice.${field} must be a non-empty string`);
   }
   if (!slugPattern.test(practice.id || "")) errors.push("practice.id must be kebab-case");
-  if (practice.route !== "/robotaxi") errors.push("practice.route must be /robotaxi");
+  if (practice.route !== "/products") errors.push("practice.route must be /products");
   if (!Array.isArray(practice.modules)) errors.push("practice.modules must be an array");
 
   const manifestAllowed = new Set([

@@ -8,10 +8,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export function validateContentScope(files) {
   const normalized = files.filter(Boolean).map((file) => file.replaceAll("\\", "/"));
-  const allowed = normalized.filter((file) => /^content\/observations\/[a-z0-9-]+\.json$/.test(file));
+  const entries = normalized.filter((file) => /^(?:content\/(?:products|business-observations|observations|articles|profile)\/[a-z0-9-]+\.json)$/.test(file));
+  const media = normalized.filter((file) => /^(?:content\/media\/[a-z0-9-]+\/manifest\.json|public\/media\/[a-z0-9-]+\/[a-z0-9._-]+)$/.test(file));
+  const allowed = [...entries, ...media];
   const rejected = normalized.filter((file) => !allowed.includes(file));
   const errors = [];
-  if (allowed.length !== 1) errors.push(`content-only change must contain exactly one observation JSON; found ${allowed.length}`);
+  if (entries.length !== 1) errors.push(`content-only change must contain exactly one content object JSON; found ${entries.length}`);
   if (rejected.length) errors.push(`content-only change contains forbidden files: ${rejected.join(", ")}`);
   return errors;
 }
@@ -42,9 +44,9 @@ async function main() {
     if (currentVersion !== parentVersion) errors.push("content-only publication must not change package version");
   }
 
-  if (!errors.length && files.length === 1) {
-    const file = path.join(root, files[0]);
-    const observation = await readJson(file);
+  const entry = files.find((file) => /^content\/(?:products|business-observations|observations|articles|profile)\/[a-z0-9-]+\.json$/.test(file));
+  if (!errors.length && entry?.startsWith("content/observations/")) {
+    const observation = await readJson(path.join(root, entry));
     errors.push(...validateObservation(observation, { expectedStatus: "published" }));
   }
 
@@ -53,7 +55,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  console.log(`Content-only scope check passed: ${files[0]}`);
+  console.log(`Content-only scope check passed: ${entry}`);
 }
 
 if (fileURLToPath(import.meta.url) === path.resolve(process.argv[1] || "")) {

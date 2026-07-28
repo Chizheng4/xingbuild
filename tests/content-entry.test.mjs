@@ -30,7 +30,7 @@ test("practice content consumes exactly the approved Robotaxi evidence manifest"
 test("practice media keeps reader interaction separate from internal provenance", () => {
   const practice = {
     id: "robotaxi",
-    route: "/robotaxi",
+    route: "/products",
     navLabel: "Robotaxi运营平台",
     title: "标题",
     intro: "说明",

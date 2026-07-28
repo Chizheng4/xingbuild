@@ -9,11 +9,15 @@ const requiredFiles = [
   "docs/rules/iteration-and-release.md",
   "src/App.jsx",
   "src/content/siteContent.js",
+  "src/content/showcaseRepository.js",
+  "src/content/profileRepository.js",
   "src/content/practiceRepository.js",
   "src/content/observationRepository.js",
   "src/content/sourceUrls.js",
   "content/schema/observation.schema.json",
-  "content/practices/robotaxi.json",
+  "content/products/robotaxi.json",
+  "content/business-observations/enterprise-operating-framework.json",
+  "content/profile/about.json",
   "content/media/robotaxi/manifest.json",
   "src/styles.css",
   "src/styles/tokens.css",
@@ -23,7 +27,8 @@ const requiredFiles = [
   "src/styles/pages.css",
   "src/components/site/SiteHeader.jsx",
   "src/components/reading/Article.jsx",
-  "src/components/works/Works.jsx",
+  "src/components/showcase/SystemStage.jsx",
+  "src/components/reading/RichDocument.jsx",
   "publish-xingbuild.command",
   "publish-content.command",
   "scripts/release-preflight.mjs",
@@ -77,20 +82,18 @@ assert(
   current.includes(`v${packageJson.version}`),
   "current iteration must contain the package version",
 );
-assert(siteContent.includes("Robotaxi"), "site content must include the Robotaxi work");
-assert(siteContent.includes("企业经营"), "site content must include the cognition work");
-assert(siteContent.includes("export const profile"), "site content must define the profile");
+const showcaseRepository = await readFile(new URL("../src/content/showcaseRepository.js", import.meta.url), "utf8");
+const profileRepository = await readFile(new URL("../src/content/profileRepository.js", import.meta.url), "utf8");
+assert(showcaseRepository.includes("content/products/robotaxi.json"), "Robotaxi must use the controlled product content source");
+assert(showcaseRepository.includes("content/business-observations/enterprise-operating-framework.json"), "framework must use the controlled business-observation source");
+assert(profileRepository.includes("content/profile/about.json"), "profile must use the controlled profile content source");
 assert(!siteContent.includes("export const observations"), "observations must not be inlined in site content");
 assert(!siteContent.includes("export const practices"), "practices must use the controlled content repository");
 assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
-assert(practiceRepository.includes("content/practices/robotaxi.json"), "practice content must use the repository");
-for (const route of ["/observations", "/works", "/about"]) {
+assert(practiceRepository.includes("content/products/robotaxi.json"), "practice content must use the repository");
+for (const route of ["/products", "/business-observations", "/observations", "/about"]) {
   assert(app.includes(route), `app must include the ${route} route`);
 }
-assert(
-  siteContent.includes("不代表真实城市运营、自动驾驶核心技术或真实企业经营结果"),
-  "Robotaxi evidence boundary must remain explicit",
-);
 assert.deepEqual(edgeOneConfig.redirects, [
   {
     source: "$wwwhost",

@@ -1,20 +1,7 @@
-import { PageIntro } from "../components/site/PageStructure";
-import { profile, site, works } from "../content/siteContent";
-import { Link } from "../lib/navigation";
+import { RichDocument } from "../components/reading/RichDocument";
+import { LayoutShell, ReadingShell } from "../components/site/LayoutShell";
+import { profile } from "../content/profileRepository";
 
 export function AboutPage() {
-  return (
-    <article className="about-page page-stack">
-      <PageIntro eyebrow={site.author} title={profile.title} summary={profile.introduction} />
-      <div className="about-content">
-          <section id="positioning"><h2>当前定位</h2><p className="about-positioning">{profile.positioning}</p></section>
-          <section id="problems"><h2>能够解决的问题</h2><ul>{profile.problems.map((item) => <li key={item}>{item}</li>)}</ul></section>
-          <section id="capabilities"><h2>核心能力</h2><div className="capability-list">{profile.capabilities.map((item) => <div key={item.name}><strong>{item.name}</strong><p>{item.description}</p></div>)}</div></section>
-          <section id="projects"><h2>代表项目成果</h2><div className="profile-projects">{works.map((work) => <div key={work.id}><strong>{work.title}</strong><p>{work.summary}</p><Link href={work.id === "robotaxi" ? "/robotaxi" : "/enterprise-operating-framework"}>查看作品 →</Link></div>)}</div></section>
-          <section id="experience"><h2>职业经历</h2><p>{profile.experience.summary}</p><p className="boundary-text">{profile.experience.note}</p></section>
-          <section id="resume"><h2>简历</h2><div className="contact-grid single"><div><span>简历 · {profile.resume.status}</span><p>{profile.resume.note}</p></div></div></section>
-          <section id="direction"><h2>当前方向与联系</h2><p>{profile.direction}</p><div className="contact-grid single"><div><span>{profile.contact.location}</span><p>{profile.contact.note}</p></div></div></section>
-      </div>
-    </article>
-  );
+  return <LayoutShell className="about-page"><ReadingShell><header className="reading-shell__header"><h1>{profile.title}</h1><p>{profile.summary}</p></header><RichDocument blocks={profile.blocks} /></ReadingShell></LayoutShell>;
 }

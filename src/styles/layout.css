@@ -1,68 +1,49 @@
 @layer layout {
-  .page-stack, .page-section-stack, .section-flow, .collection-flow, .object-stack {
-    min-width: 0;
-    display: grid;
-  }
+  .page-stack, .page-section-stack, .section-flow, .collection-flow, .object-stack { min-width: 0; display: grid; }
   .page-stack { gap: var(--rhythm-page-entry); }
   .page-section-stack { gap: var(--rhythm-section-flow); }
   .section-flow { gap: var(--rhythm-section-entry); }
   .collection-flow { gap: var(--rhythm-group); }
   .object-stack { gap: var(--rhythm-relate); }
 
-  .site-shell {
-    width: min(100%, var(--site-max));
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    margin-inline: auto;
-    padding-inline: var(--gutter-page);
-  }
-  main { min-height: 0; flex: 0 0 auto; }
+  .site-shell { width: min(100%, calc(var(--site-max) + (var(--gutter-page) * 2))); min-height: 100vh; margin-inline: auto; padding-inline: var(--gutter-page); }
+  main { min-width: 0; }
   .site-header, .site-footer { display: flex; align-items: center; justify-content: space-between; }
-  .site-header { min-height: 4.5rem; }
-  .site-footer { min-height: 5rem; margin-top: var(--rhythm-section); justify-content: flex-end; }
+  .site-header { position: sticky; z-index: 20; top: 0; min-height: var(--header-height); background: var(--color-canvas); }
+  .site-footer { min-height: var(--footer-height); margin-top: var(--rhythm-section); justify-content: flex-end; }
 
   .layout-shell { width: 100%; min-width: 0; padding-block: var(--space-content-entry) 0; }
   .two-column-layout { min-width: 0; }
-  .two-column-layout__main { min-width: 0; max-width: var(--measure-practice); }
-  .two-column-layout.has-rail { display: grid; grid-template-columns: minmax(var(--two-column-main-min), 1fr) var(--rail-width); gap: var(--two-column-gap); }
+  .two-column-layout__main { min-width: 0; max-width: var(--measure-main); }
+  .two-column-layout.has-rail { display: grid; grid-template-columns: minmax(0, var(--two-column-main)) var(--rail-width); gap: var(--two-column-gap); }
   .two-column-layout.has-rail .two-column-layout__main { max-width: none; }
   .two-column-layout__rail { min-width: 0; }
-  .collection-layout { width: min(100%, var(--measure-observation)); margin-inline: auto; }
+  .collection-layout, .reading-shell { width: min(100%, var(--measure-reading)); margin-inline: auto; }
+  .reading-shell { display: grid; gap: var(--rhythm-group); }
 
-  .page-intro, .home-hero, .home-sections, .home-section, .home-about, .home-status,
-  .year-group, .card-grid, .work-page, .about-page { width: min(100%, var(--measure-content)); margin-inline: auto; }
-  .page-intro { display: grid; gap: var(--rhythm-bind); padding-block: var(--space-content-entry) 0; }
-  .page-intro__content { min-width: 0; gap: var(--rhythm-relate); }
-  .section-intro { display: flex; align-items: end; justify-content: space-between; gap: var(--space-8); }
-  .year-group { display: grid; gap: var(--rhythm-section-entry); margin: 0; }
-  .card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rhythm-card-gap); }
-  .reading-page { width: min(100%, var(--measure-content)); display: grid; gap: var(--rhythm-group); margin-inline: auto; }
-  .article-header { width: 100%; max-width: var(--measure-reading); margin: var(--space-16) auto 0; }
-  .reading-layout.has-toc { display: grid; grid-template-columns: var(--rail-toc) minmax(0, var(--measure-reading)); justify-content: center; gap: var(--space-12); }
-  .reading-layout.without-toc { max-width: var(--measure-reading); margin-inline: auto; }
-  .reading-toc { position: sticky; top: var(--space-6); align-self: start; }
-  .mobile-toc { display: none; }
-  .architecture { display: grid; grid-template-columns: repeat(var(--architecture-columns, 5), minmax(0, 1fr)); }
-  .architecture.is-planes { --architecture-columns: 4; }
-  .work-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-12); }
-  .about-content { width: min(100%, var(--measure-reading)); margin-inline: 0; }
+  .showcase-layout { display: grid; grid-template-columns: var(--showcase-description-width) minmax(0, 1fr); gap: var(--showcase-gap); align-items: center; }
+  .showcase-layout__description { min-width: 0; }
+  .showcase-layout__stage { min-width: 0; }
+  .system-stage { display: block; width: 100%; min-width: 0; }
+  .system-stage:is(a) { color: inherit; }
+  .system-stage > :is(img, video) { width: 100%; aspect-ratio: var(--media-ratio); display: block; object-fit: contain; border: var(--line-thin) solid var(--color-border); }
+  .system-stage.is-interactive > :is(img, video) { transition: border-color var(--duration-card) ease; }
+  .system-stage.is-interactive:hover > :is(img, video) { border-color: var(--color-accent); }
+  .system-stage.is-interactive:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
 
-  @media (max-width: 64.5rem) {
+  @media (max-width: 83.9375rem) {
     .two-column-layout.has-rail { display: block; }
-    .two-column-layout__rail { margin-top: var(--rhythm-section); }
+    .two-column-layout__rail { margin-top: var(--rail-mobile-gap); }
   }
-  @media (max-width: 56.1875rem) {
-    .card-grid, .reading-layout.has-toc, .work-detail-grid { grid-template-columns: minmax(0, 1fr); }
-    .desktop-toc { display: none; }
-    .mobile-toc { display: block; }
+  @media (max-width: 58.25rem) {
+    .showcase-layout { grid-template-columns: minmax(0, 1fr); gap: var(--showcase-mobile-gap); }
+    .showcase-layout__stage { order: -1; }
   }
   @media (max-width: 32.4375rem) {
     .site-shell { padding-inline: var(--gutter-mobile); }
-    .site-header { min-height: 4rem; }
-    .site-footer { min-height: 4rem; }
-    .article-header { margin-block: var(--space-8) 0; }
-    .architecture { grid-template-columns: minmax(0, 1fr); }
+    .site-header { min-height: var(--header-height-mobile); }
+    .site-footer { min-height: var(--footer-height-mobile); }
   }
   @media (max-width: 22.5rem) { .site-shell { padding-inline: var(--gutter-narrow); } }
+  @media (prefers-reduced-motion: reduce) { .system-stage.is-interactive > :is(img, video) { transition: none; } }
 }

@@ -12,11 +12,12 @@ export function validateBriefDefinition(observation) {
     errors.push("brief requires publication.eventAt as YYYY-MM-DD");
   }
 
-  const allowed = new Set(["subject", "statement", "sourceRefs", "isOpinion"]);
+  const allowed = new Set(["subject", "statement", "body", "sourceRefs", "isOpinion", "articlePreview"]);
   for (const key of Object.keys(brief)) if (!allowed.has(key)) errors.push(`brief.${key} is not allowed`);
-  for (const field of ["subject", "statement"]) {
+  for (const field of ["subject"]) {
     if (!hasText(brief[field])) errors.push(`brief.${field} must be a non-empty string`);
   }
+  if (!hasText(brief.body || brief.statement)) errors.push("brief.body or brief.statement must be a non-empty string");
   if (!Array.isArray(brief.sourceRefs) || !brief.sourceRefs.length || new Set(brief.sourceRefs).size !== brief.sourceRefs.length) {
     errors.push("brief.sourceRefs must contain unique source ids");
   }
@@ -36,10 +37,12 @@ export function projectObservationBrief(observation) {
     publishedAt: observation.publishedAt,
     subject: observation.brief.subject,
     primaryDimension: observation.primaryDimension,
+    body: observation.brief.body || observation.brief.statement,
     statement: observation.brief.statement,
     isOpinion: observation.brief.isOpinion,
     sourceRefs: observation.brief.sourceRefs,
     sources: observation.sources,
     relatedWorks: observation.relatedWorks,
+    articlePreview: observation.brief.articlePreview,
   };
 }

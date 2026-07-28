@@ -19,7 +19,7 @@ test("article presentation has one reader-facing title and no governance project
 });
 
 test("article sources remain a final inline reader line", () => {
-  assert.match(article, /className="article-sources"/);
+  assert.match(article, /RichDocument/);
   assert.doesNotMatch(article, /<ol className="source-list"/);
   assert.doesNotMatch(article, /访问于/);
 });

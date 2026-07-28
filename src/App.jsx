@@ -2,26 +2,28 @@ import { useEffect } from "react";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { HomePage } from "./pages/HomePage";
 import { RobotaxiPage } from "./pages/RobotaxiPage";
+import { ProductsPage } from "./pages/ProductsPage";
+import { BusinessObservationsPage } from "./pages/BusinessObservationsPage";
 import { ObservationsPage } from "./pages/ObservationsPage";
 import { ObservationPage } from "./pages/ObservationPage";
 import { DraftObservationPage } from "./pages/DraftObservationPage";
-import { WorkPage } from "./pages/WorkPage";
 import { AboutPage } from "./pages/AboutPage";
 import { FrameworkPage } from "./pages/FrameworkPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
 import { navigate, useLocation } from "./lib/navigation";
-import { findWork, site } from "./content/siteContent";
+import { site } from "./content/siteContent";
 import { findObservation } from "./content/observationRepository";
 import { FRAMEWORK_BASE } from "./content/frameworkModel";
 
 function resolvePage(location) {
   const { pathname } = location;
   if (pathname === "/") return <HomePage />;
-  if (pathname === "/robotaxi") return <RobotaxiPage />;
+  if (pathname === "/products") return <ProductsPage />;
+  if (pathname === "/products/robotaxi") return <RobotaxiPage />;
+  if (pathname === "/business-observations") return <BusinessObservationsPage />;
   if (pathname === FRAMEWORK_BASE) return <FrameworkPage />;
   if (pathname === "/observations") return <ObservationsPage />;
-  if (pathname === "/works") return <RobotaxiPage />;
   if (pathname === "/about") return <AboutPage />;
 
   if (pathname.startsWith("/observations/")) {
@@ -31,7 +33,7 @@ function resolvePage(location) {
     }
     const observation = findObservation(slug);
     return observation ? (
-      observation.presentation === "brief" ? <BriefRedirect /> : <ObservationPage observation={observation} />
+      observation.presentation === "brief" ? <BriefRedirect /> : <ObservationPage observation={observation} location={location} />
     ) : (
       <NotFoundPage />
     );
@@ -41,8 +43,7 @@ function resolvePage(location) {
     const parts = pathname.split("/").filter(Boolean);
     if (parts[1] === "enterprise-operating-framework") return <FrameworkPage />;
     if (parts[1] === "robotaxi") return <RobotaxiPage />;
-    const work = findWork(pathname.split("/")[2]);
-    return work ? <WorkPage work={work} /> : <NotFoundPage />;
+    return <NotFoundPage />;
   }
 
   return <NotFoundPage />;
@@ -59,9 +60,11 @@ export function App() {
 
   useEffect(() => {
     const redirects = {
-      "/works": "/robotaxi",
-      "/works/robotaxi": "/robotaxi",
-      "/works/enterprise-operating-framework": FRAMEWORK_BASE,
+      "/robotaxi": "/products",
+      "/works": "/products",
+      "/works/robotaxi": "/products",
+      "/enterprise-operating-framework": "/business-observations",
+      "/works/enterprise-operating-framework": "/business-observations",
     };
     if (redirects[pathname]) {
       navigate(redirects[pathname], { replace: true });
@@ -69,7 +72,9 @@ export function App() {
     }
     const labels = {
       "/": site.name,
-      "/robotaxi": "Robotaxi运营平台",
+      "/products": "B端产品",
+      "/products/robotaxi": "Robotaxi运营平台",
+      "/business-observations": "经营观察",
       [FRAMEWORK_BASE]: "企业经营体系",
       "/observations": "观察",
       "/about": "关于我",

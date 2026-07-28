@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import {
   assertValidObservation,
   draftsDirectory,
@@ -41,6 +42,9 @@ function isolatedDraftPreview() {
 }
 
 export default defineConfig({
+  define: {
+    __XINGBUILD_VERSION__: JSON.stringify(`v${JSON.parse(readFileSync(new URL("./package.json", import.meta.url))).version}`),
+  },
   build: {
     outDir: "dist/client",
   },
