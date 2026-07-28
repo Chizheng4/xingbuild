@@ -1,0 +1,112 @@
+{
+  "id": "observation-waymo-four-city-expansion",
+  "slug": "waymo-four-city-expansion",
+  "status": "published",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "Waymo在四座新城市推进全无人运营，并验证IONIQ 5平台",
+  "summary": "四座城市将先进入员工全无人运营，IONIQ 5仍处于有安全员验证阶段，分别对应城市复制与车队平台扩张。",
+  "companies": [
+    "Waymo",
+    "Hyundai"
+  ],
+  "regions": [
+    "美国丹佛",
+    "美国拉斯维加斯",
+    "美国圣迭戈",
+    "美国坦帕"
+  ],
+  "dimensions": [
+    "合作与扩张",
+    "运营与市场",
+    "产品与能力"
+  ],
+  "primaryDimension": "合作与扩张",
+  "eventAt": "2026-07-08",
+  "publishedAt": "2026-07-28",
+  "updatedAt": "2026-07-28",
+  "factOverview": [
+    {
+      "label": "城市",
+      "value": "丹佛、拉斯维加斯、圣迭戈、坦帕"
+    },
+    {
+      "label": "运营阶段",
+      "value": "员工全无人运营准备"
+    },
+    {
+      "label": "新平台",
+      "value": "Hyundai IONIQ 5有安全员验证"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Waymo宣布准备在四座城市开始无车内安全员的员工全无人运营，同时以有安全员方式验证搭载第六代Waymo Driver的IONIQ 5。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-cities",
+      "evidence-waymo-ioniq"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "多城市同步推进显示城市复制能力正在扩展；新车型验证关系到未来车队供给，但公众开放时间尚未确定。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-expansion-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-waymo-cities",
+      "claim": "Waymo准备在丹佛、拉斯维加斯、圣迭戈和坦帕开始无安全员的员工全无人运营。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-road"
+      ]
+    },
+    {
+      "id": "evidence-waymo-ioniq",
+      "claim": "Waymo已开始在有安全员条件下自动驾驶Hyundai IONIQ 5进行验证。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-road"
+      ]
+    },
+    {
+      "id": "evidence-waymo-expansion-impact",
+      "claim": "这些进展分别对应城市运营复制和未来车队平台扩张。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-waymo-road"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-waymo-road",
+      "publisher": "Waymo",
+      "title": "From the road — July 8, 2026",
+      "url": "https://waymo.com/blog/shorts/ro-den-lv-sd-tmpa/",
+      "publishedAt": "2026-07-08",
+      "sourceTier": "primary",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "公众商业开放日期、车辆数量和服务范围未披露；公司计划不得表述为已完成公众运营。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "brief": {
+    "subject": "Waymo美国四城扩张",
+    "statement": "Waymo准备在丹佛、拉斯维加斯、圣迭戈和坦帕先启动员工全无人运营。",
+    "isOpinion": false
+  }
+}
