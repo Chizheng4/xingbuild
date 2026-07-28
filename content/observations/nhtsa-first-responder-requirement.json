@@ -1,0 +1,120 @@
+{
+  "id": "observation-nhtsa-first-responder-requirement",
+  "slug": "nhtsa-first-responder-requirement",
+  "status": "published",
+  "level": "deep",
+  "nature": "evidence-led",
+  "title": "美国监管机构要求无人驾驶企业优先解决应急现场响应问题",
+  "summary": "NHTSA把无人驾驶车辆干扰急救人员的问题明确列为功能不足，并要求开发商在月底前说明解决方案。",
+  "companies": [
+    "美国无人驾驶ADS开发商与运营商"
+  ],
+  "regions": [
+    "美国"
+  ],
+  "dimensions": [
+    "准入与政策",
+    "安全与事件"
+  ],
+  "primaryDimension": "准入与政策",
+  "eventAt": "2026-07-08",
+  "publishedAt": "2026-07-28",
+  "updatedAt": "2026-07-28",
+  "factOverview": [
+    {
+      "label": "监管动作",
+      "value": "公开行动要求"
+    },
+    {
+      "label": "时间",
+      "value": "2026-07-08"
+    },
+    {
+      "label": "适用范围",
+      "value": "美国无人驾驶ADS开发商与运营商"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "NHTSA称近月出现无人驾驶车辆进入应急现场、阻挡急救通道或未能正确识别闪灯、烟火和交通锥等模式，并要求企业优先修复，计划在7月底前与开发商会面。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-nhtsa-action",
+      "evidence-nhtsa-pattern"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "应急现场响应能力正在从技术边缘场景转为明确监管能力门槛，可能影响安全审查、执法和跨城市扩张节奏。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-nhtsa-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-nhtsa-action",
+      "claim": "NHTSA于2026年7月8日向无人驾驶ADS开发商发布公开行动要求，并计划月底前听取解决方案。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-nhtsa-release",
+        "source-nhtsa-letter"
+      ]
+    },
+    {
+      "id": "evidence-nhtsa-pattern",
+      "claim": "NHTSA称已观察到无人驾驶车辆干扰急救人员和应急车辆的多起模式。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-nhtsa-release",
+        "source-nhtsa-letter"
+      ]
+    },
+    {
+      "id": "evidence-nhtsa-impact",
+      "claim": "应急现场响应能力可能成为更明确的准入和执法门槛。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-nhtsa-letter"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-nhtsa-release",
+      "publisher": "NHTSA",
+      "title": "Trump’s Transportation Department to AV Developers: An Automated Vehicle That Cannot Safely Interact With First Responders is a Danger to the General Public",
+      "url": "https://www.nhtsa.gov/press-releases/av-developers-automated-vehicle-that-cannot-safely-interact-first-responders-danger",
+      "publishedAt": "2026-07-08",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-27"
+    },
+    {
+      "id": "source-nhtsa-letter",
+      "publisher": "NHTSA",
+      "title": "ADS Developer Letter July 2026",
+      "url": "https://www.nhtsa.gov/sites/nhtsa.gov/files/2026-07/ADS-developers-letter-july-2026.pdf",
+      "publishedAt": "2026-07-08",
+      "sourceTier": "official",
+      "sourceType": "report",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "监管表述针对无人驾驶ADS行业整体，并非只针对Robotaxi；经营影响为推断，未独立核实每一起底层事件。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "brief": {
+    "subject": "美国无人驾驶监管",
+    "statement": "NHTSA要求无人驾驶ADS开发商优先解决车辆干扰急救人员和应急现场的问题。",
+    "isOpinion": false,
+    "articleHref": "/observations/nhtsa-first-responder-requirement"
+  }
+}
