@@ -11,6 +11,7 @@ const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url
 const practice = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
 const framework = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
 const brief = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
+const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
 test("v0.13 uses one shell, showcase geometry, reading width and sticky compact header", () => {
   for (const token of ["--site-max: 80rem", "--rail-width: 19rem", "--two-column-gap: 1.5rem", "--two-column-main: 59.5rem", "--showcase-description-width: 13rem", "--showcase-gap: 1.25rem", "--measure-reading: 46rem", "--header-height: 3.5rem", "--header-height-mobile: 3.25rem"]) assert.match(tokens, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -39,4 +40,9 @@ test("showcase and observation components preserve data-driven reader anatomy", 
   assert.match(brief, /brief-item__dimension/);
   assert.match(brief, /brief-item__sources/);
   assert.match(pages, /home-page__positioning/);
+  assert.match(components, /background: var\(--color-observation-surface\)/);
+  assert.match(components, /white-space: nowrap/);
+  assert.match(components, /brief-item__sources a \{ color: inherit/);
+  assert.match(components, /rich-document > \* \+ h2 \{ margin-top: 2rem/);
+  assert.doesNotMatch(components, /\.brief-item \{[^}]*border:/s);
 });

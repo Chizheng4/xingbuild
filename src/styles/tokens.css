@@ -4,6 +4,7 @@
 
     --color-canvas: #f5f1e8;
     --color-surface-subtle: #ece5d8;
+    --color-observation-surface: #eee8dc;
     --color-text: #20211f;
     --color-text-muted: #625f58;
     --color-border: #c9c3b7;
@@ -87,6 +88,7 @@
     --footer-height-mobile: 3.25rem;
     --line-thin: 1px;
     --radius-card: 0.25rem;
+    --radius-observation: 0.25rem;
     --duration-card: 160ms;
 
     --rhythm-bind: 0.5rem;

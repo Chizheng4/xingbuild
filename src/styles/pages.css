@@ -169,7 +169,7 @@
     .interactive-media { transition: none; }
   }
 
-  .home-page__positioning { max-width: var(--measure-reading); margin: 0; font: 500 var(--type-display)/var(--leading-display) var(--font-display); letter-spacing: -0.025em; }
+  .home-page__positioning { max-width: 48rem; margin: 0; font: 500 clamp(1.5rem, 1.3036rem + 0.5455vw, 1.75rem)/1.42 var(--font-display); letter-spacing: -0.02em; text-wrap: pretty; }
   .home-page__projection { display: grid; gap: var(--rhythm-object); margin: var(--rhythm-section) 0 0; }
   .home-page__business-header { display: grid; gap: var(--rhythm-bind); max-width: var(--measure-summary); }
   .home-page__business-header h2 { margin: 0; font: 500 var(--type-page-title)/var(--leading-title) var(--font-display); }
@@ -185,12 +185,14 @@
   .practice-module .showcase-layout__description :is(h2, h3) { margin: 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
   .practice-module .showcase-layout__description p { margin: 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .framework-page__header { margin-bottom: var(--rhythm-object); }
-  .reading-shell__header { display: grid; gap: var(--rhythm-bind); }
+  .reading-shell__header { display: grid; gap: 0.75rem; }
   .reading-shell__header h1 { margin: 0; font: 500 var(--type-page-title)/var(--leading-title) var(--font-display); }
   .reading-shell__header p { margin: 0; color: var(--color-text-muted); font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui); }
   .article-header { width: 100%; max-width: none; margin: 0; }
   .article-header__return { color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta); }
-  .observation-stream-header { margin: 0 0 var(--rhythm-object); }
+  .observation-stream-header { display: grid; gap: var(--rhythm-bind); margin: 0 0 var(--rhythm-object); }
+  .observation-stream-header__navigation { margin: 0; color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta); }
+  .observation-stream-header__navigation a:hover, .article-header__navigation a:hover { color: var(--color-accent); }
   .observation-empty-state { padding: 0; }
 
   @media (max-width: 58.25rem) {

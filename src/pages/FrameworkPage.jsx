@@ -8,7 +8,7 @@ export function FrameworkPage() {
   const framework = findBusinessObservation("enterprise-operating-framework");
   const briefs = selectObservationBriefs();
   const renderRail = briefs.length
-    ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} />
+    ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/business-observations" />
     : undefined;
   return (
     <LayoutShell className="framework-page">

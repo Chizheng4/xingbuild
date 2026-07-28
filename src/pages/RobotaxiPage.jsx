@@ -7,7 +7,7 @@ export function RobotaxiPage() {
   const practice = findPractice("robotaxi");
   const briefs = selectObservationBriefs(practice.observationQuery);
   const renderRail = briefs.length
-    ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} />
+    ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/products" />
     : undefined;
   return <PracticePage practice={practice} renderRail={renderRail} />;
 }

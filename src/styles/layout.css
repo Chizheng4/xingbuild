@@ -19,7 +19,8 @@
   .two-column-layout.has-rail .two-column-layout__main { max-width: none; }
   .two-column-layout__rail { min-width: 0; }
   .collection-layout, .reading-shell { width: min(100%, var(--measure-reading)); margin-inline: auto; }
-  .reading-shell { display: grid; gap: var(--rhythm-group); }
+  .reading-shell { display: block; }
+  .reading-shell > .rich-document { margin-top: 2rem; }
 
   .showcase-layout { display: grid; grid-template-columns: var(--showcase-description-width) minmax(0, 1fr); gap: var(--showcase-gap); align-items: center; }
   .showcase-layout__description { min-width: 0; }

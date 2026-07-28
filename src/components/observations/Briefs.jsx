@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Link } from "../../lib/navigation";
+import { Link, observationCollectionHref } from "../../lib/navigation";
 import { countCompleteBriefs } from "../../content/briefRail";
 import { classifySourceUrl } from "../../content/sourceUrls";
 
-function BriefBody({ item }) {
+function BriefBody({ item, returnTo = "/observations" }) {
   const sources = item.sourceRefs
     .map((id) => item.sources.find((source) => source.id === id))
     .filter((source, index, all) => source && all.findIndex((candidate) => candidate?.publisher === source.publisher) === index);
@@ -18,7 +18,7 @@ function BriefBody({ item }) {
         {item.isOpinion ? <span>#观点</span> : null}
       </p>
       <p className="brief-item__statement">{item.body || item.statement}</p>
-      {item.articlePreview ? <Link className="brief-item__article-preview" href={`${item.articlePreview.href}?returnTo=${encodeURIComponent("/observations")}`}>{item.articlePreview.title}<span>{item.articlePreview.excerpt}</span></Link> : null}
+      {item.articlePreview ? <Link className="brief-item__article-preview" href={`${item.articlePreview.href}?returnTo=${encodeURIComponent(returnTo)}`}>{item.articlePreview.title}<span>{item.articlePreview.excerpt}</span></Link> : null}
       <p className="brief-item__sources">
         来源：{sources.map((source, index) => {
           const safe = classifySourceUrl(source);
@@ -30,12 +30,12 @@ function BriefBody({ item }) {
   );
 }
 
-export function BriefItem({ item }) {
-  return <article className="brief-item"><BriefBody item={item} /></article>;
+export function BriefItem({ item, returnTo }) {
+  return <article className="brief-item"><BriefBody item={item} returnTo={returnTo} /></article>;
 }
 
-export function ObservationStream({ items }) {
-  return <div className="observation-stream">{items.map((item) => <BriefItem item={item} key={item.id} />)}</div>;
+export function ObservationStream({ items, returnTo }) {
+  return <div className="observation-stream">{items.map((item) => <BriefItem item={item} returnTo={returnTo} key={item.id} />)}</div>;
 }
 
 export function ObservationEmptyState({ title, message, description }) {
@@ -47,7 +47,7 @@ export function ObservationEmptyState({ title, message, description }) {
   );
 }
 
-export function ObservationRail({ items, anchorRef }) {
+export function ObservationRail({ items, anchorRef, origin }) {
   const railRef = useRef(null);
   const measureRef = useRef(null);
   const [visibleCount, setVisibleCount] = useState(Math.min(items.length, 2));
@@ -75,8 +75,8 @@ export function ObservationRail({ items, anchorRef }) {
           <article className="brief-item" data-brief-measure key={item.id}><BriefBody item={item} /></article>
         ))}
       </div>
-      <ObservationStream items={visible} />
-      <Link className="observation-rail__more" href="/observations">更多观察</Link>
+      <ObservationStream items={visible} returnTo={observationCollectionHref(origin)} />
+      <Link className="observation-rail__more" href={observationCollectionHref(origin)}>更多观察</Link>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export function HomePage() {
   const practice = findPractice("robotaxi");
   const framework = latestBusinessObservation();
   const briefs = selectObservationBriefs();
-  const renderRail = briefs.length ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} /> : undefined;
+  const renderRail = briefs.length ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/" /> : undefined;
   return (
     <LayoutShell className="home-page">
       <TwoColumnLayout renderRail={renderRail}>

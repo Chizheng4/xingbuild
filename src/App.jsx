@@ -23,7 +23,7 @@ function resolvePage(location) {
   if (pathname === "/products/robotaxi") return <RobotaxiPage />;
   if (pathname === "/business-observations") return <BusinessObservationsPage />;
   if (pathname === FRAMEWORK_BASE) return <FrameworkPage />;
-  if (pathname === "/observations") return <ObservationsPage />;
+  if (pathname === "/observations") return <ObservationsPage location={location} />;
   if (pathname === "/about") return <AboutPage />;
 
   if (pathname.startsWith("/observations/")) {

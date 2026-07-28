@@ -33,3 +33,20 @@ test("global chrome stays minimal and mobile navigation is a full viewport layer
   assert.doesNotMatch(footer, /updatedAt|location|author/);
   assert.match(components, /position: fixed;\s+inset: 0;/);
 });
+
+test("observation return context is safe, refreshable, and labelled from its real destination", async () => {
+  const navigation = await readFile(new URL("../src/lib/navigation.jsx", import.meta.url), "utf8");
+  const briefs = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
+  const collection = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
+  const article = await readFile(new URL("../src/components/reading/Article.jsx", import.meta.url), "utf8");
+  assert.match(navigation, /value\.startsWith\("\/"\)/);
+  assert.match(navigation, /value\.startsWith\("\/\/"\)/);
+  assert.match(navigation, /return "返回 B端产品"/);
+  assert.match(navigation, /return "返回经营观察"/);
+  assert.match(navigation, /`\/observations\?origin=\$\{encodeURIComponent\(safeOrigin\)\}`/);
+  assert.match(briefs, /observationCollectionHref\(origin\)/);
+  assert.match(collection, /safeReturnTo/);
+  assert.match(collection, /returnLabelFor\(origin\)/);
+  assert.match(article, /returnLabelFor\(returnTo\)/);
+  assert.match(article, /经营观察/);
+});
