@@ -8,6 +8,10 @@ export function validateBriefDefinition(observation) {
   const brief = observation.brief;
   if (!brief || typeof brief !== "object" || Array.isArray(brief)) return ["brief must be an object"];
 
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(observation.eventAt || "")) {
+    errors.push("brief requires publication.eventAt as YYYY-MM-DD");
+  }
+
   const allowed = new Set(["subject", "statement", "isOpinion", "articleHref"]);
   for (const key of Object.keys(brief)) if (!allowed.has(key)) errors.push(`brief.${key} is not allowed`);
   for (const field of ["subject", "statement"]) {
@@ -24,6 +28,7 @@ export function projectObservationBrief(observation) {
   if (observation.status !== "published" || !observation.brief) return null;
   return {
     id: `brief-${observation.slug}`,
+    eventAt: observation.eventAt,
     publishedAt: observation.publishedAt,
     subject: observation.brief.subject,
     primaryDimension: observation.primaryDimension,

@@ -6,7 +6,7 @@ function BriefBody({ item }) {
   return (
     <>
       <p className="brief-item__meta">
-        <time dateTime={item.publishedAt}>{item.publishedAt}</time>
+        <time dateTime={item.eventAt}>{item.eventAt}</time>
         <span>{item.subject}</span>
         <span>{item.primaryDimension}</span>
         {item.isOpinion ? <span>观点</span> : null}

@@ -92,6 +92,12 @@
     "promoteToHome": { "type": "boolean" },
     "brief": { "$ref": "#/$defs/brief" }
   },
+  "allOf": [
+    {
+      "if": { "required": ["brief"] },
+      "then": { "required": ["eventAt"] }
+    }
+  ],
   "$defs": {
     "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
     "contentSection": {

@@ -188,6 +188,7 @@ test("reading briefs are explicit projections and do not infer from published ob
 
   const publication = {
     ...withoutBrief,
+    eventAt: "2026-07-20",
     brief: {
       subject: "示例企业",
       statement: "示例企业发布一项可核验的经营事件。",
@@ -198,6 +199,7 @@ test("reading briefs are explicit projections and do not infer from published ob
   assert.deepEqual(validateObservation(publication, { expectedStatus: "published" }), []);
   assert.deepEqual(projectObservationBrief(publication), {
     id: `brief-${publication.slug}`,
+    eventAt: publication.eventAt,
     publishedAt: publication.publishedAt,
     subject: publication.brief.subject,
     primaryDimension: publication.primaryDimension,
@@ -207,6 +209,7 @@ test("reading briefs are explicit projections and do not infer from published ob
     relatedWorks: publication.relatedWorks,
   });
   assert.equal(projectObservationBrief({ ...publication, status: "draft" }), null);
+  assert.ok(validateBriefDefinition({ ...publication, eventAt: undefined }).length);
   assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, publishedAt: "2026-07-28" } }).length);
   assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, articleHref: "/about" } }).length);
 });

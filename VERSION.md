@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.11.3 — Brief 事件日期与稳定排序修订
+
+日期：2026-07-28
+
+- 对 explicit BriefProjection 要求父 ObservationPublication 提供 `eventAt`，并在投影中同时保留事件日期与 `publishedAt` 公开追溯日期。
+- Brief 流与 rail 展示 `eventAt`，按事件日期倒序、公开日期倒序、稳定 id 排序；不再以统一 promote 日期伪装为事件日期。
+- 当前上线状态：本地检查与专业复验完成；已完成本地稳定版本收口，未推送 GitHub 或发布 EdgeOne。
+
 ## v0.11.2 — 内容合同测试修订
 
 日期：2026-07-28

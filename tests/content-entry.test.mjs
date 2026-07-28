@@ -69,6 +69,7 @@ test("rail budgets every candidate before selecting only complete items", () => 
 test("practice and framework rails both receive the newest robotaxi-only brief", async () => {
   const robotaxiOnlyBrief = {
     id: "brief-robotaxi-event",
+    eventAt: "2026-07-10",
     publishedAt: "2026-07-28",
     subject: "Robotaxi主体",
     primaryDimension: "运营与市场",
@@ -84,4 +85,23 @@ test("practice and framework rails both receive the newest robotaxi-only brief",
   assert.match(homePage, /selectObservationBriefs\(practice\.observationQuery\)/);
   assert.match(frameworkPage, /selectObservationBriefs\(\)/);
   assert.doesNotMatch(frameworkPage, /enterprise-framework/);
+});
+
+test("briefs display and sort by event date without repurposing publication date", async () => {
+  const items = [
+    { id: "brief-z", eventAt: "2026-07-08", publishedAt: "2026-07-28", relatedWorks: ["robotaxi"] },
+    { id: "brief-a", eventAt: "2026-07-08", publishedAt: "2026-07-28", relatedWorks: ["robotaxi"] },
+    { id: "brief-later-published", eventAt: "2026-07-04", publishedAt: "2026-07-29", relatedWorks: ["robotaxi"] },
+    { id: "brief-newest-event", eventAt: "2026-07-10", publishedAt: "2026-07-28", relatedWorks: ["robotaxi"] },
+  ];
+  assert.deepEqual(selectBriefs(items).map((item) => item.id), [
+    "brief-newest-event",
+    "brief-a",
+    "brief-z",
+    "brief-later-published",
+  ]);
+
+  const briefs = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
+  assert.match(briefs, /dateTime=\{item\.eventAt\}/);
+  assert.doesNotMatch(briefs, /dateTime=\{item\.publishedAt\}/);
 });

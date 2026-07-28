@@ -42,5 +42,9 @@ export function selectHomeObservations(items) {
 export function selectObservationBriefs(items, { scope } = {}) {
   return items
     .filter((item) => !scope || item.relatedWorks.includes(scope))
-    .sort((left, right) => right.publishedAt.localeCompare(left.publishedAt));
+    .sort((left, right) =>
+      right.eventAt.localeCompare(left.eventAt)
+      || right.publishedAt.localeCompare(left.publishedAt)
+      || left.id.localeCompare(right.id),
+    );
 }
