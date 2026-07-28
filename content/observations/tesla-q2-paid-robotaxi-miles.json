@@ -1,0 +1,141 @@
+{
+  "id": "observation-tesla-q2-paid-robotaxi-miles",
+  "slug": "tesla-q2-paid-robotaxi-miles",
+  "status": "published",
+  "level": "deep",
+  "nature": "evidence-led",
+  "title": "Tesla扩展Robotaxi城市，但Q2付费里程可能环比下降",
+  "summary": "Tesla公布累计图表；季度下降约36%来自媒体拆分计算，不是公司直接披露的季度指标。",
+  "companies": [
+    "Tesla"
+  ],
+  "regions": [
+    "美国得克萨斯州",
+    "美国佛罗里达州",
+    "美国旧金山湾区"
+  ],
+  "dimensions": [
+    "经营与资本",
+    "运营与市场"
+  ],
+  "primaryDimension": "经营与资本",
+  "eventAt": "2026-07-22",
+  "publishedAt": "2026-07-28",
+  "updatedAt": "2026-07-28",
+  "factOverview": [
+    {
+      "label": "公司披露",
+      "value": "累计Robotaxi付费里程图表"
+    },
+    {
+      "label": "媒体计算",
+      "value": "Q2较Q1约下降36%"
+    },
+    {
+      "label": "口径风险",
+      "value": "监督与无监督范围不透明"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Tesla在Q2更新中发布累计Robotaxi付费行驶里程图表。TechCrunch按图表拆分季度后估算，付费里程由Q1约110万英里降至Q2约70万英里；公司在电话会称Cybercab需要先积累底盘专属数据才能大规模部署。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-tesla-chart",
+      "evidence-tesla-media-calc",
+      "evidence-tesla-cybercab"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "若媒体计算成立，城市覆盖尚未转化为付费运营规模增长，说明城市数量不能替代订单、里程和车队利用率等经营指标。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-tesla-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-tesla-chart",
+      "claim": "Tesla于7月22日发布Q2 2026更新及累计Robotaxi付费里程图表。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-tesla-update",
+        "source-tesla-ir"
+      ]
+    },
+    {
+      "id": "evidence-tesla-media-calc",
+      "claim": "TechCrunch根据累计图表估算Q2付费Robotaxi里程较Q1下降约36%。",
+      "claimKind": "media_report",
+      "sourceRefs": [
+        "source-techcrunch-tesla"
+      ]
+    },
+    {
+      "id": "evidence-tesla-cybercab",
+      "claim": "Musk称Cybercab需要积累该车型特定的驾驶数据后才能大量投放。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-techcrunch-tesla"
+      ]
+    },
+    {
+      "id": "evidence-tesla-impact",
+      "claim": "城市覆盖与真实付费运营规模可能正在分离。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-tesla-update",
+        "source-techcrunch-tesla"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-tesla-update",
+      "publisher": "Tesla",
+      "title": "TSLA Q2 2026 Update",
+      "url": "https://assets-ir.tesla.com/tesla-contents/IR/TSLA-Q2-2026-Update.pdf",
+      "publishedAt": "2026-07-22",
+      "sourceTier": "primary",
+      "sourceType": "report",
+      "accessedAt": "2026-07-27"
+    },
+    {
+      "id": "source-tesla-ir",
+      "publisher": "Tesla Investor Relations",
+      "title": "Tesla Investor Relations — Q2 2026 documents and events",
+      "url": "https://ir.tesla.com/",
+      "publishedAt": "2026-07-22",
+      "sourceTier": "primary",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-27"
+    },
+    {
+      "id": "source-techcrunch-tesla",
+      "publisher": "TechCrunch",
+      "title": "Tesla’s robotaxis are moving in reverse",
+      "url": "https://techcrunch.com/2026/07/23/teslas-robotaxis-are-moving-in-reverse/",
+      "publishedAt": "2026-07-23",
+      "sourceTier": "established_media",
+      "sourceType": "article",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "约36%降幅是媒体对累计图表的推算；Tesla未直接披露该季度比较。公司PDF本轮未由搜索工具解析全文，湾区及监督/无监督里程口径不透明。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "brief": {
+    "subject": "Tesla Robotaxi经营规模",
+    "statement": "TechCrunch根据Tesla累计图表估算，其Q2付费Robotaxi里程较Q1下降约36%。",
+    "isOpinion": false,
+    "articleHref": "/observations/tesla-q2-paid-robotaxi-miles"
+  }
+}
