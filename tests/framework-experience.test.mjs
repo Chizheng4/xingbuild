@@ -7,6 +7,8 @@ import { clampGraphPan, validateGraphGeometry } from "../src/components/framewor
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 const explorer = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
 const page = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.meta.url), "utf8");
+const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
+const presentation = await readFile(new URL("../src/components/business-observations/BusinessObservationPresentation.jsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("../src/styles/framework.css", import.meta.url), "utf8");
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
@@ -46,6 +48,18 @@ test("framework explanation uses one source-driven heading level and a mobile cu
   assert.match(styles, /framework-description__status \{ display: none;/);
   assert.match(styles, /@media \(max-width: 58\.25rem\)[\s\S]*framework-description__status/);
   assert.match(styles, /background: var\(--color-observation-surface\)/);
+});
+
+test("framework projections advance the explanation hierarchy from their own root heading", () => {
+  assert.match(page, /BusinessObservationPresentation[\s\S]*headingLevel=\{1\}/);
+  assert.match(home, /BusinessObservationPresentation[\s\S]*headingLevel=\{2\}/);
+  assert.match(presentation, /descriptionHeadingLevel=\{headingLevel \+ 1\}/);
+  assert.match(explorer, /const Subheading = `h\$\{headingLevel \+ 1\}`/);
+  for (const label of ["定义", "作用", "直接关系"]) {
+    assert.match(explorer, new RegExp(`<Subheading>${label}</Subheading>`));
+  }
+  assert.match(styles, /\.framework-description > :is\(h2, h3\)/);
+  assert.match(styles, /\.framework-description__body :is\(h3, h4\)/);
 });
 
 test("the overview has real arrows, a 16:10 canvas, and geometry contracts", () => {

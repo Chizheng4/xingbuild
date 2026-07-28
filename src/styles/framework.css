@@ -86,10 +86,10 @@
   .graph-node:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
   .framework-description { display: grid; gap: var(--rhythm-relate); }
   .framework-description__status { display: none; }
-  .framework-description :is(h2, h3) { margin: 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
+  .framework-description > :is(h2, h3) { margin: 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
   .framework-description__body { display: grid; gap: var(--rhythm-relate); }
   .framework-description__body > div { min-width: 0; }
-  .framework-description h3 { margin: 0 0 var(--rhythm-bind); color: var(--color-text-muted); font: 600 var(--type-caption)/var(--leading-meta) var(--font-meta); }
+  .framework-description__body :is(h3, h4) { margin: 0 0 var(--rhythm-bind); color: var(--color-text-muted); font: 600 var(--type-caption)/var(--leading-meta) var(--font-meta); }
   .framework-description p, .framework-description li { margin: 0; font: 400 var(--type-ui)/var(--leading-ui) var(--font-reading); }
   .framework-description ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
   .framework-description strong { color: var(--color-accent-strong); font-weight: 600; }

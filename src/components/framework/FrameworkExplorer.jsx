@@ -68,15 +68,16 @@ function GraphEdges({ selectedId, previewId }) {
 
 function FrameworkDescription({ selectedNode, headingLevel = 2 }) {
   const Heading = `h${headingLevel}`;
+  const Subheading = `h${headingLevel + 1}`;
   const directRelations = overview.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
     <section className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`}>
       <p className="framework-description__status">当前节点</p>
       <Heading id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</Heading>
       <div className="framework-description__body">
-        <div><h3>定义</h3><p>{selectedNode.definition}</p></div>
-        <div><h3>作用</h3><p>{selectedNode.role}</p></div>
-        <div><h3>直接关系</h3><ul>{directRelations.map((edge) => {
+        <div><Subheading>定义</Subheading><p>{selectedNode.definition}</p></div>
+        <div><Subheading>作用</Subheading><p>{selectedNode.role}</p></div>
+        <div><Subheading>直接关系</Subheading><ul>{directRelations.map((edge) => {
           const from = overview.nodes.find((node) => node.id === edge.from);
           const to = overview.nodes.find((node) => node.id === edge.to);
           return <li key={edge.id}>{from.name} <strong>{edge.label}</strong> {to.name}</li>;
