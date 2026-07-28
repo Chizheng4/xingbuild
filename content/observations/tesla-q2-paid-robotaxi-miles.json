@@ -135,7 +135,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "Tesla Robotaxi经营规模",
-    "statement": "TechCrunch根据Tesla累计图表估算，其Q2付费Robotaxi里程较Q1下降约36%。",
+    "statement": "Tesla发布Q2累计Robotaxi付费里程图表；TechCrunch据此估算，Q2付费里程较Q1下降约36%，这并非Tesla直接披露的季度比较。Musk同时称，Cybercab仍需积累车型专属驾驶数据后才能大量投放，城市覆盖暂不能替代真实付费运营规模。",
     "sourceRefs": ["source-techcrunch-tesla"],
     "isOpinion": false
   }
