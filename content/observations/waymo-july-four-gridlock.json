@@ -1,0 +1,109 @@
+{
+  "id": "observation-waymo-july-four-gridlock",
+  "slug": "waymo-july-four-gridlock",
+  "status": "published",
+  "level": "deep",
+  "nature": "evidence-led",
+  "title": "旧金山7月4日拥堵事件把Waymo车队韧性推向监管议题",
+  "summary": "车辆停滞、耗电和道路阻塞暴露大型活动条件下的车队运营问题，并触发市长要求强化监管。",
+  "companies": [
+    "Waymo"
+  ],
+  "regions": [
+    "美国旧金山"
+  ],
+  "dimensions": [
+    "安全与事件",
+    "准入与政策",
+    "运营与市场"
+  ],
+  "primaryDimension": "安全与事件",
+  "eventAt": "2026-07-04",
+  "publishedAt": "2026-07-28",
+  "updatedAt": "2026-07-28",
+  "factOverview": [
+    {
+      "label": "事件日期",
+      "value": "2026-07-04"
+    },
+    {
+      "label": "披露日期",
+      "value": "2026-07-16"
+    },
+    {
+      "label": "证据性质",
+      "value": "可靠媒体转述市长信件"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "据TechCrunch引述旧金山市长致州交通主管部门的信，7月4日大型活动期间数十辆Waymo车辆停滞并耗尽电量，进一步阻塞街道；市长随后要求州监管机构加强自动驾驶规则。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-gridlock",
+      "evidence-waymo-mayor"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "事件暴露极端拥堵、活动调度、补能和异常退出机制的车队韧性问题，并已转化为地方监管压力。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-gridlock-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-waymo-gridlock",
+      "claim": "TechCrunch报道7月4日旧金山大型活动期间数十辆Waymo车辆停滞并加剧交通堵塞。",
+      "claimKind": "media_report",
+      "sourceRefs": [
+        "source-techcrunch-sf"
+      ]
+    },
+    {
+      "id": "evidence-waymo-mayor",
+      "claim": "TechCrunch报道旧金山市长要求州监管机构强化自动驾驶车辆规则。",
+      "claimKind": "media_report",
+      "sourceRefs": [
+        "source-techcrunch-sf"
+      ]
+    },
+    {
+      "id": "evidence-waymo-gridlock-impact",
+      "claim": "该事件反映的是车队级运营韧性问题，而不仅是单车驾驶问题。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-techcrunch-sf"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-techcrunch-sf",
+      "publisher": "TechCrunch",
+      "title": "San Francisco mayor pushes for tougher rules after the Waymo traffic fiasco",
+      "url": "https://techcrunch.com/2026/07/16/san-francisco-mayor-pushes-for-tougher-rules-after-the-waymo-traffic-fiasco/",
+      "publishedAt": "2026-07-16",
+      "sourceTier": "established_media",
+      "sourceType": "article",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "市长原始信件和Waymo完整技术说明本轮未取得；事件细节只能标为媒体报道，不能升级为verified_fact。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "brief": {
+    "subject": "Waymo旧金山运营事件",
+    "statement": "据TechCrunch报道，7月4日大型活动期间数十辆Waymo车辆停滞并加剧旧金山交通堵塞。",
+    "isOpinion": false,
+    "articleHref": "/observations/waymo-july-four-gridlock"
+  }
+}
