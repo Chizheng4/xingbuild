@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.11.2 — 内容合同测试修订
+
+日期：2026-07-28
+
+- 将 Brief 测试从“当前公开集合没有 Brief”改为验证内容合同：无 explicit brief 不投影，合法 explicit brief 可以投影；不再让真实内容数量决定工程测试结果。
+- 将构建 manifest 测试改为与当前 `content/observations/` 的 published 集合动态比对，不固定公开数量或 slug。
+- 当前上线状态：本地检查与专业复验完成；已完成本地稳定版本收口，未推送 GitHub 或发布 EdgeOne。
+
 ## v0.11.1 — 内容入口结构收口
 
 日期：2026-07-28

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { validateContentScope } from "../scripts/content-scope-check.mjs";
+import { readPublishedObservations } from "../scripts/lib/observation-content.mjs";
 import { verifyContentReleaseOnce } from "../scripts/verify-content-release.mjs";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname);
@@ -185,8 +186,8 @@ test("built content manifest contains only current published slugs", async () =>
   const manifest = JSON.parse(
     await readFile(path.join(root, "dist", "client", "content-manifest.json"), "utf8"),
   );
-  assert.deepEqual(
-    manifest.publishedSlugs,
-    ["four-planes-of-enterprise-digitalization", "robotaxi-simulation-boundary"],
-  );
+  const expectedPublishedSlugs = (await readPublishedObservations())
+    .map((publication) => publication.slug)
+    .sort();
+  assert.deepEqual([...manifest.publishedSlugs].sort(), expectedPublishedSlugs);
 });

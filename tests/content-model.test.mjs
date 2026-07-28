@@ -182,9 +182,12 @@ test("works and profile preserve their existing boundaries", () => {
 });
 
 test("reading briefs are explicit projections and do not infer from published observations", () => {
-  assert.deepEqual(observations.map(projectObservationBrief).filter(Boolean), []);
+  const withoutBrief = { ...observations[0] };
+  delete withoutBrief.brief;
+  assert.equal(projectObservationBrief(withoutBrief), null);
+
   const publication = {
-    ...observations[0],
+    ...withoutBrief,
     brief: {
       subject: "示例企业",
       statement: "示例企业发布一项可核验的经营事件。",
