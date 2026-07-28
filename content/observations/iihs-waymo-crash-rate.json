@@ -126,7 +126,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "IIHS对Waymo的安全研究",
-    "statement": "IIHS研究称Waymo全无人车辆的可比总体事故率比人类驾驶低68%。",
+    "statement": "IIHS研究称，Waymo全无人车辆在可比口径下的总体事故率比人类驾驶低68%，伤害事故率低81%；但奥斯汀小样本中高4%。由于其他企业未披露可比的无人驾驶里程，这一结果不能扩展为整个Robotaxi行业的横向安全结论。",
     "sourceRefs": ["source-iihs-news", "source-iihs-study"],
     "isOpinion": false
   }
