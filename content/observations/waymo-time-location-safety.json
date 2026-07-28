@@ -1,0 +1,111 @@
+{
+  "id": "observation-waymo-time-location-safety",
+  "slug": "waymo-time-location-safety",
+  "status": "published",
+  "level": "deep",
+  "nature": "evidence-led",
+  "title": "Waymo把Robotaxi安全比较推进到时间与地点匹配",
+  "summary": "Waymo发布按地点和时段校准的安全研究；方法具有行业意义，但结果必须明确标注为公司研究。",
+  "companies": [
+    "Waymo"
+  ],
+  "regions": [
+    "美国凤凰城",
+    "美国旧金山",
+    "美国洛杉矶",
+    "美国奥斯汀"
+  ],
+  "dimensions": [
+    "安全与事件",
+    "产品与能力"
+  ],
+  "primaryDimension": "安全与事件",
+  "eventAt": "2026-07-07",
+  "publishedAt": "2026-07-28",
+  "updatedAt": "2026-07-28",
+  "factOverview": [
+    {
+      "label": "研究样本",
+      "value": "127百万自动驾驶英里"
+    },
+    {
+      "label": "比较方法",
+      "value": "匹配地点、日期与时段"
+    },
+    {
+      "label": "来源性质",
+      "value": "Waymo公司研究"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Waymo发布两项已获期刊接收的研究，提出按地点、道路、日期和时段校准人类驾驶风险；公司称在127百万英里样本中相对匹配基准少发生359起伤害事故。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-method",
+      "evidence-waymo-result"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "更细粒度的安全基准可支持准入和规模化论证，但具体收益数字依赖Waymo数据和公司研究。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-safety-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-waymo-method",
+      "claim": "Waymo于7月7日发布两项按时间和地点校准安全基准的研究，并称论文已获同行评审期刊接收。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-safety"
+      ]
+    },
+    {
+      "id": "evidence-waymo-result",
+      "claim": "Waymo称其127百万英里样本相对匹配人类基准少发生359起伤害事故。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-safety"
+      ]
+    },
+    {
+      "id": "evidence-waymo-safety-impact",
+      "claim": "更细粒度安全基准可能支持监管和公众信任论证。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-waymo-safety"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-waymo-safety",
+      "publisher": "Waymo",
+      "title": "Not All Miles are Equal: Why Time and Location Matter When Benchmarking Autonomous Safety",
+      "url": "https://waymo.com/blog/2026/07/time-geo-crash-risk-effect/",
+      "publishedAt": "2026-07-07",
+      "sourceTier": "primary",
+      "sourceType": "report",
+      "accessedAt": "2026-07-27"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "核心收益数字来自公司研究；论文全文和底层数据未在本轮逐项复核，不得写成独立确认事实。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "brief": {
+    "subject": "Waymo安全研究",
+    "statement": "Waymo发布按地点和时段匹配人类驾驶风险的自动驾驶安全比较研究。",
+    "isOpinion": false,
+    "articleHref": "/observations/waymo-time-location-safety"
+  }
+}
