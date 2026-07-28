@@ -103,7 +103,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "Waymo旧金山运营事件",
-    "statement": "据TechCrunch报道，7月4日大型活动期间数十辆Waymo车辆停滞并加剧旧金山交通堵塞。",
+    "statement": "据TechCrunch报道，7月4日旧金山大型活动期间，数十辆Waymo车辆停滞并加剧交通拥堵，市长随后要求州监管机构强化自动驾驶规则。事件指向大型活动、补能和异常退出条件下的车队运营韧性，但市长原信与Waymo完整技术说明尚未取得。",
     "sourceRefs": ["source-techcrunch-sf"],
     "isOpinion": false
   }
