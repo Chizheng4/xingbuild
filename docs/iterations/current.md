@@ -2,27 +2,27 @@
 
 ## 当前目标版本
 
-`v0.14.1`
+`v0.14.2`
 
 ## 要解决的问题
 
-`v0.14.0` 线上验收发现 Framework 同源投影的内部说明标题固定为 `H3`：来源页正确，但首页形成 `H2 → H3 → H3` 的语义并列。
+`v0.14.1` 线上验收发现 Header 的全宽伪元素使用 `100vw` 与水平位移，在垂直滚动条存在时扩大文档滚动宽度，造成约 7–8px 横向溢出。
 
 ## 本轮范围
 
-- 只让 FrameworkDescription 的内部说明标题相对选中节点标题自动递进；
-- 来源页固定为 `H1 → H2 → H3`，首页投影固定为 `H2 → H3 → H4`；
-- 不改 Framework 的字号、间距、文案、模型、边集、视觉或交互。
+- 只修复 Header 全视口背景层的几何责任，使其不参与文档横向滚动范围；
+- 保持 Header top/scrolled 两态、暖白透明背景、12px blur、轻影与 56px / 52px 几何不变；
+- 不改标题、内容、信息架构、FrameworkModel 或视觉值。
 
 ## 验收标准
 
-- 首页与来源页各有可执行标题层级合同；
-- 所有说明标题仍使用同一既有视觉角色；
+- Header 全宽层不得使用 `100vw` 或水平位移；
+- 1440、1024、390 的滚动前后均满足 `scrollWidth === clientWidth`；
 - `npm run release:check`、closeout/preflight 与公网最小回归通过。
 
 ## 当前状态
 
-本地语义修复、自动检查与定点浏览器回归已通过；待本轮 stable commit、matching tag、preflight 与已授权生产发布闭环。完成后必须主动回传当前设计 task 做专业验收，不轮询等待。
+本地 Header 几何修复、自动检查与定点浏览器回归已通过；待本轮 stable commit、matching tag、preflight 与已授权生产发布闭环。完成后必须主动回传当前设计 task 做专业验收，不轮询等待。
 
 ## 明确 backlog
 

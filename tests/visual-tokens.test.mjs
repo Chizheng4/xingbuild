@@ -17,7 +17,10 @@ test("v0.14 uses one shell, showcase geometry, reading width and two-state compa
   for (const token of ["--site-max: 80rem", "--rail-width: 19rem", "--two-column-gap: 1.5rem", "--two-column-main: 59.5rem", "--showcase-description-width: 13rem", "--showcase-gap: 1.25rem", "--measure-reading: 46rem", "--header-height: 3.5rem", "--header-height-mobile: 3.25rem"]) assert.match(tokens, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(layout, /position: sticky/);
   assert.match(layout, /site-header\.is-scrolled::before/);
+  assert.match(layout, /site-header::before \{[\s\S]*position: fixed;[\s\S]*inset: 0 0 auto;[\s\S]*height: var\(--header-background-height\)/);
   assert.match(layout, /backdrop-filter: blur\(12px\)/);
+  assert.doesNotMatch(layout, /\.site-header::before[\s\S]*width: 100vw/);
+  assert.doesNotMatch(layout, /\.site-header::before[\s\S]*translateX\(-50%\)/);
   assert.match(header, /window\.scrollY > 8/);
   assert.match(layout, /grid-template-columns: var\(--showcase-description-width\)/);
   assert.match(layout, /showcase-layout__stage \{ order: -1/);
