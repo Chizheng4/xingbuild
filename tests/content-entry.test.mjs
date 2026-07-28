@@ -90,6 +90,12 @@ test("practice media keeps reader interaction separate from internal provenance"
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], group: "" }] }, manifest).length);
 });
 
+test("practice headings advance from the presentation root rather than using a fixed module level", async () => {
+  const practicePage = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+  assert.match(practicePage, /headingLevel=\{headingLevel \+ 1\}/);
+  assert.match(practicePage, /const Heading = `h\$\{headingLevel\}`/);
+});
+
 test("brief reading source belongs to published observations, not an independent JS list", async () => {
   const observationsPage = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
   const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");

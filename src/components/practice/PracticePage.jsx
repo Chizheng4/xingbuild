@@ -24,10 +24,10 @@ export function PracticeModule({ module, headingLevel = 2 }) {
   );
 }
 
-export function PracticeModuleList({ modules }) {
+export function PracticeModuleList({ modules, headingLevel = 2 }) {
   const visibleModules = modules.filter((module) => module.media?.src);
   if (!visibleModules.length) return null;
-  return <section className="practice-module-list">{visibleModules.map((module) => <PracticeModule key={module.id} module={module} />)}</section>;
+  return <section className="practice-module-list">{visibleModules.map((module) => <PracticeModule key={module.id} module={module} headingLevel={headingLevel} />)}</section>;
 }
 
 export function PracticePresentation({ practice, headingLevel = 1, headingId }) {
@@ -35,7 +35,7 @@ export function PracticePresentation({ practice, headingLevel = 1, headingId }) 
   return (
     <div className="practice-presentation">
       <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} />
-      {hasModules ? <PracticeModuleList modules={practice.modules} /> : null}
+      {hasModules ? <PracticeModuleList modules={practice.modules} headingLevel={headingLevel + 1} /> : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Link } from "../../lib/navigation";
 
 export function SiteHeader({ pathname }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuButtonRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +36,13 @@ export function SiteHeader({ pathname }) {
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
+  useEffect(() => {
+    const syncScrolled = () => setScrolled(window.scrollY > 8);
+    syncScrolled();
+    window.addEventListener("scroll", syncScrolled, { passive: true });
+    return () => window.removeEventListener("scroll", syncScrolled);
+  }, []);
+
   const navItems = [
     { href: "/products", label: "B端产品" },
     { href: "/business-observations", label: "经营观察" },
@@ -42,7 +50,7 @@ export function SiteHeader({ pathname }) {
   ];
 
   return (
-    <header className="site-header">
+    <header className={`site-header${scrolled ? " is-scrolled" : ""}`}>
       <Link className="identity-lockup" href="/" aria-label="xingbuild 首页">
         <span className="wordmark">{site.name}</span>
         <span className="author-lockup">{site.author}</span>

@@ -66,11 +66,13 @@ function GraphEdges({ selectedId, previewId }) {
   );
 }
 
-function FrameworkDescription({ selectedNode }) {
+function FrameworkDescription({ selectedNode, headingLevel = 2 }) {
+  const Heading = `h${headingLevel}`;
   const directRelations = overview.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
     <section className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`}>
-      <h2 id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</h2>
+      <p className="framework-description__status">当前节点</p>
+      <Heading id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</Heading>
       <div className="framework-description__body">
         <div><h3>定义</h3><p>{selectedNode.definition}</p></div>
         <div><h3>作用</h3><p>{selectedNode.role}</p></div>
@@ -84,7 +86,7 @@ function FrameworkDescription({ selectedNode }) {
   );
 }
 
-export function FrameworkExplorer() {
+export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   const [activeViewId] = useState("overview");
   const [selectedId, setSelectedId] = useState(overview.defaultNodeId);
   const [previewId, setPreviewId] = useState(null);
@@ -160,7 +162,7 @@ export function FrameworkExplorer() {
   return (
     <section className="framework-explorer" data-active-view={activeViewId} aria-label="企业经营体系总览">
       <ShowcaseLayout
-        description={<FrameworkDescription selectedNode={selectedNode} />}
+        description={<FrameworkDescription selectedNode={selectedNode} headingLevel={descriptionHeadingLevel} />}
         stage={stage}
       />
       <p className="sr-only" aria-live="polite" ref={liveRef} />

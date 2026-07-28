@@ -1,4 +1,4 @@
-import { FrameworkExplorer } from "../components/framework/FrameworkExplorer";
+import { BusinessObservationPresentation } from "../components/business-observations/BusinessObservationPresentation";
 import { ObservationRail } from "../components/observations/Briefs";
 import { LayoutShell, TwoColumnLayout } from "../components/site/LayoutShell";
 import { selectObservationBriefs } from "../content/observationRepository";
@@ -13,12 +13,7 @@ export function FrameworkPage() {
   return (
     <LayoutShell className="framework-page">
       <TwoColumnLayout renderRail={renderRail}>
-        <header className="practice-header framework-page__header">
-          <h1>{framework.title}</h1>
-          <p>{framework.summary}</p>
-          <p className="framework-page__boundary">{framework.boundary}</p>
-        </header>
-        <FrameworkExplorer />
+        <BusinessObservationPresentation observation={framework} headingLevel={1} headingId="business-observation-title" />
       </TwoColumnLayout>
     </LayoutShell>
   );

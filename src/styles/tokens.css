@@ -28,20 +28,20 @@
     --font-meta: "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
     --font-wordmark: Georgia, "Times New Roman", serif;
 
-    --type-display: clamp(2rem, 1.5357rem + 1.9048vw, 3.25rem);
-    --type-hero-summary: 1rem;
-    --type-wordmark: clamp(1.5rem, 1.3143rem + 0.7619vw, 2rem);
-    --type-page-title: clamp(1.875rem, 1.7821rem + 0.381vw, 2.125rem);
+    --type-positioning: clamp(1.5rem, 1.3143rem + 0.7619vw, 2rem);
+    --type-wordmark: clamp(1.5rem, 1.4063rem + 0.381vw, 1.75rem);
+    --type-page-title: clamp(1.5rem, 1.4063rem + 0.381vw, 1.75rem);
+    --type-article-title: clamp(1.625rem, 1.4857rem + 0.5714vw, 2rem);
     --type-section-title: clamp(1.125rem, 1.0786rem + 0.1905vw, 1.25rem);
-    --type-feature-title: clamp(1.25rem, 1.1571rem + 0.381vw, 1.5rem);
     --type-reading: clamp(1rem, 0.9768rem + 0.0952vw, 1.0625rem);
-    --type-summary: 1rem;
+    --type-summary: clamp(0.9375rem, 0.9143rem + 0.0952vw, 1rem);
     --type-ui: 0.875rem;
     --type-meta: 0.8125rem;
     --type-caption: 0.75rem;
 
-    --leading-display: 1.28;
+    --leading-positioning: 1.45;
     --leading-title: 1.35;
+    --leading-article-title: 1.4;
     --leading-reading: 1.9;
     --leading-summary: 1.75;
     --leading-ui: 1.6;
@@ -68,6 +68,7 @@
     --measure-practice: 59.5rem;
     --measure-observation: 46rem;
     --measure-display: 45.25rem;
+    --measure-positioning: 64rem;
     --measure-reading: 46rem;
     --measure-summary: 41rem;
     --measure-narrow: 34rem;
@@ -76,7 +77,7 @@
     --two-column-main: 59.5rem;
     --showcase-description-width: 13rem;
     --showcase-gap: 1.25rem;
-    --showcase-mobile-gap: 1.5rem;
+    --showcase-mobile-gap: 0.875rem;
     --rail-mobile-gap: 2.5rem;
     --media-ratio: 16 / 10;
     --graph-min-height-narrow: 18.75rem;
