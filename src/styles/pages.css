@@ -1,19 +1,11 @@
 @layer pages {
-  .home-hero {
-    padding-block: var(--space-hero-start) 0;
-  }
-  .home-hero h1 {
-    max-width: min(100%, var(--measure-display));
-    margin: 0;
-    font: 500 var(--type-display)/var(--leading-display) var(--font-display);
-    letter-spacing: -0.035em;
-  }
-  .hero-description {
-    max-width: var(--measure-narrow);
-    margin: 0;
-    color: var(--color-text-muted);
-    font: 400 var(--type-hero-summary)/1.8 var(--font-ui);
-  }
+  .home-practices { display: grid; gap: var(--rhythm-relate); margin-top: var(--rhythm-section); max-width: var(--measure-practice); }
+  .home-practices h2 { margin: 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
+  .home-practice-link { display: grid; gap: var(--rhythm-bind); padding-block: var(--space-4); color: var(--color-text); }
+  .home-practice-link > span { font: 500 var(--type-feature-title)/var(--leading-title) var(--font-display); }
+  .home-practice-link > small { color: var(--color-text-muted); font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui); }
+  .home-practice-link:hover > span { color: var(--color-accent-strong); }
+  .home-practice-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
   .practice-page .two-column-layout__main, .framework-page .two-column-layout__main { max-width: var(--measure-display); }
   .practice-header { display: grid; gap: var(--rhythm-relate); max-width: var(--measure-summary); }
   .practice-header h1, .observation-empty-state h1, .observation-stream-header h1 {
@@ -26,6 +18,7 @@
     color: var(--color-text-muted);
     font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui);
   }
+  .framework-page__boundary { font-size: var(--type-meta) !important; }
   .practice-empty-state, .observation-empty-state {
     display: grid;
     gap: var(--rhythm-relate);
@@ -55,8 +48,8 @@
   .evidence-image-frame { display: block; aspect-ratio: var(--media-ratio); overflow: hidden; border: var(--line-thin) solid var(--color-border); }
   .evidence-image-frame img { width: 100%; height: 100%; object-fit: contain; }
   .evidence-image-frame:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
-  .observations-page { width: min(100%, var(--measure-observation)); }
-  .observation-stream-header { margin: 0 0 var(--rhythm-relate); }
+  .observations-page { width: 100%; }
+  .observation-stream-header { margin: 0 0 var(--space-5); }
   .observation-stream-header h1 { margin: 0; }
   .observation-rail { position: relative; }
   .observation-rail__measure {

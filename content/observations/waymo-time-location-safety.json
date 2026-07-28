@@ -102,10 +102,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "Waymo安全研究",
     "statement": "Waymo发布按地点和时段匹配人类驾驶风险的自动驾驶安全比较研究。",
-    "isOpinion": false,
-    "articleHref": "/observations/waymo-time-location-safety"
+    "sourceRefs": ["source-waymo-safety"],
+    "isOpinion": false
   }
 }

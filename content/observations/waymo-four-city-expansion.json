@@ -104,9 +104,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "Waymo美国四城扩张",
     "statement": "Waymo准备在丹佛、拉斯维加斯、圣迭戈和坦帕先启动员工全无人运营。",
+    "sourceRefs": ["source-waymo-road"],
     "isOpinion": false
   }
 }

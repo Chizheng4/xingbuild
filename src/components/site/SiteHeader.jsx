@@ -44,8 +44,9 @@ export function SiteHeader({ pathname }) {
 
   return (
     <header className="site-header">
-      <Link className="wordmark" href="/" aria-label="xingbuild 首页">
-        {site.name}
+      <Link className="identity-lockup" href="/" aria-label="xingbuild 首页">
+        <span className="wordmark">{site.name}</span>
+        <span className="author-lockup">{site.author}</span>
       </Link>
 
       <nav
@@ -57,8 +58,8 @@ export function SiteHeader({ pathname }) {
           <Link
             key={item.href}
             href={item.href}
-            className={(item.href === "/robotaxi" ? pathname === "/" || pathname === item.href : pathname.startsWith(item.href)) ? "is-active" : undefined}
-            aria-current={(item.href === "/robotaxi" ? pathname === "/" || pathname === item.href : pathname.startsWith(item.href)) ? "page" : undefined}
+            className={(item.href === "/robotaxi" ? pathname === item.href : pathname.startsWith(item.href)) ? "is-active" : undefined}
+            aria-current={(item.href === "/robotaxi" ? pathname === item.href : pathname.startsWith(item.href)) ? "page" : undefined}
             onNavigate={() => setMenuOpen(false)}
           >
             {item.label}

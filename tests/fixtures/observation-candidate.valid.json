@@ -65,5 +65,7 @@
   ],
   "evidenceBoundary": "本 fixture 只用于自动测试和本地草稿预览，不得视为真实内容或进入生产集合。",
   "relatedWorks": [],
-  "promoteToHome": false
+  "promoteToHome": false,
+  "presentation": "article",
+  "article": { "sourceRefs": ["source-sanitized-example"] }
 }

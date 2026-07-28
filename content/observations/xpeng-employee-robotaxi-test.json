@@ -99,9 +99,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "小鹏Robotaxi",
     "statement": "小鹏宣布启动Robotaxi员工测试，并称已打通下单、调度、接驾、载客和完单链路。",
+    "sourceRefs": ["source-xpeng-release"],
     "isOpinion": false
   }
 }

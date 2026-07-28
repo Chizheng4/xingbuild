@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { HomePage } from "./pages/HomePage";
+import { RobotaxiPage } from "./pages/RobotaxiPage";
 import { ObservationsPage } from "./pages/ObservationsPage";
 import { ObservationPage } from "./pages/ObservationPage";
 import { DraftObservationPage } from "./pages/DraftObservationPage";
@@ -17,10 +18,10 @@ import { FRAMEWORK_BASE } from "./content/frameworkModel";
 function resolvePage(location) {
   const { pathname } = location;
   if (pathname === "/") return <HomePage />;
-  if (pathname === "/robotaxi") return <HomePage />;
+  if (pathname === "/robotaxi") return <RobotaxiPage />;
   if (pathname === FRAMEWORK_BASE) return <FrameworkPage />;
   if (pathname === "/observations") return <ObservationsPage />;
-  if (pathname === "/works") return <HomePage />;
+  if (pathname === "/works") return <RobotaxiPage />;
   if (pathname === "/about") return <AboutPage />;
 
   if (pathname.startsWith("/observations/")) {
@@ -30,7 +31,7 @@ function resolvePage(location) {
     }
     const observation = findObservation(slug);
     return observation ? (
-      <ObservationPage observation={observation} />
+      observation.presentation === "brief" ? <BriefRedirect /> : <ObservationPage observation={observation} />
     ) : (
       <NotFoundPage />
     );
@@ -39,12 +40,17 @@ function resolvePage(location) {
   if (pathname.startsWith("/works/")) {
     const parts = pathname.split("/").filter(Boolean);
     if (parts[1] === "enterprise-operating-framework") return <FrameworkPage />;
-    if (parts[1] === "robotaxi") return <HomePage />;
+    if (parts[1] === "robotaxi") return <RobotaxiPage />;
     const work = findWork(pathname.split("/")[2]);
     return work ? <WorkPage work={work} /> : <NotFoundPage />;
   }
 
   return <NotFoundPage />;
+}
+
+function BriefRedirect() {
+  useEffect(() => { navigate("/observations", { replace: true }); }, []);
+  return null;
 }
 
 export function App() {

@@ -14,7 +14,7 @@ test("the enterprise framework has one public overview route with legacy compati
   assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <FrameworkPage \/>/);
   assert.match(app, /"\/works\/enterprise-operating-framework": FRAMEWORK_BASE/);
   assert.match(page, /<FrameworkExplorer \/>/);
-  assert.match(page, /PositioningStrip/);
+  assert.match(page, /framework-page__header/);
   assert.doesNotMatch(page, /WORK · ENTERPRISE SYSTEMS|如何阅读|来源与版本|career/);
 });
 

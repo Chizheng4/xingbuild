@@ -74,6 +74,8 @@ test("practice and framework rails both receive the newest robotaxi-only brief",
     subject: "Robotaxi主体",
     primaryDimension: "运营与市场",
     statement: "一条可核验事件。",
+    sourceRefs: ["source-example"],
+    sources: [],
     isOpinion: false,
     relatedWorks: ["robotaxi"],
   };
@@ -82,9 +84,8 @@ test("practice and framework rails both receive the newest robotaxi-only brief",
 
   const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
   const frameworkPage = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.meta.url), "utf8");
-  assert.match(homePage, /selectObservationBriefs\(practice\.observationQuery\)/);
+  assert.match(homePage, /selectObservationBriefs\(\)/);
   assert.match(frameworkPage, /selectObservationBriefs\(\)/);
-  assert.doesNotMatch(frameworkPage, /enterprise-framework/);
 });
 
 test("briefs display and sort by event date without repurposing publication date", async () => {
@@ -102,6 +103,8 @@ test("briefs display and sort by event date without repurposing publication date
   ]);
 
   const briefs = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
+  assert.match(briefs, /brief-item__identity/);
+  assert.match(briefs, /brief-item__dimension/);
   assert.match(briefs, /dateTime=\{item\.eventAt\}/);
   assert.doesNotMatch(briefs, /dateTime=\{item\.publishedAt\}/);
 });

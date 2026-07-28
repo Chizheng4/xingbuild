@@ -123,10 +123,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "IIHS对Waymo的安全研究",
     "statement": "IIHS研究称Waymo全无人车辆的可比总体事故率比人类驾驶低68%。",
-    "isOpinion": false,
-    "articleHref": "/observations/iihs-waymo-crash-rate"
+    "sourceRefs": ["source-iihs-news", "source-iihs-study"],
+    "isOpinion": false
   }
 }

@@ -111,10 +111,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "美国无人驾驶监管",
     "statement": "NHTSA要求无人驾驶ADS开发商优先解决车辆干扰急救人员和应急现场的问题。",
-    "isOpinion": false,
-    "articleHref": "/observations/nhtsa-first-responder-requirement"
+    "sourceRefs": ["source-nhtsa-release", "source-nhtsa-letter"],
+    "isOpinion": false
   }
 }

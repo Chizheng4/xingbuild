@@ -188,12 +188,13 @@ test("reading briefs are explicit projections and do not infer from published ob
 
   const publication = {
     ...withoutBrief,
+    presentation: "brief",
     eventAt: "2026-07-20",
     brief: {
       subject: "示例企业",
       statement: "示例企业发布一项可核验的经营事件。",
+      sourceRefs: [withoutBrief.sources[0].id],
       isOpinion: false,
-      articleHref: `/observations/${observations[0].slug}`,
     },
   };
   assert.deepEqual(validateObservation(publication, { expectedStatus: "published" }), []);
@@ -204,12 +205,24 @@ test("reading briefs are explicit projections and do not infer from published ob
     subject: publication.brief.subject,
     primaryDimension: publication.primaryDimension,
     statement: publication.brief.statement,
+    sourceRefs: publication.brief.sourceRefs,
+    sources: publication.sources,
     isOpinion: false,
-    articleHref: `/observations/${publication.slug}`,
     relatedWorks: publication.relatedWorks,
   });
   assert.equal(projectObservationBrief({ ...publication, status: "draft" }), null);
   assert.ok(validateBriefDefinition({ ...publication, eventAt: undefined }).length);
   assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, publishedAt: "2026-07-28" } }).length);
-  assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, articleHref: "/about" } }).length);
+  assert.ok(validateBriefDefinition({ ...publication, brief: { ...publication.brief, sourceRefs: ["source-missing"] } }).length);
+});
+
+test("scheduled brief publications have no article route and preserve an explicit source line", () => {
+  const scheduled = observations.filter((item) => item.eventAt?.startsWith("2026-07-") && item.presentation === "brief");
+  assert.equal(scheduled.length, 8);
+  for (const item of scheduled) {
+    assert.equal(item.brief.articleHref, undefined);
+    assert.ok(item.brief.sourceRefs.length);
+    assert.deepEqual(validateBriefDefinition(item), []);
+    assert.ok(projectObservationBrief(item)?.sources.length);
+  }
 });

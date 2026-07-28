@@ -100,10 +100,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "Waymo旧金山运营事件",
     "statement": "据TechCrunch报道，7月4日大型活动期间数十辆Waymo车辆停滞并加剧旧金山交通堵塞。",
-    "isOpinion": false,
-    "articleHref": "/observations/waymo-july-four-gridlock"
+    "sourceRefs": ["source-techcrunch-sf"],
+    "isOpinion": false
   }
 }

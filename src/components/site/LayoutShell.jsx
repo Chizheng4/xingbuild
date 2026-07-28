@@ -15,3 +15,7 @@ export function TwoColumnLayout({ children, renderRail }) {
     </div>
   );
 }
+
+export function CollectionLayout({ className = "", children }) {
+  return <div className={`collection-layout ${className}`.trim()}>{children}</div>;
+}

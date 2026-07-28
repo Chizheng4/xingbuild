@@ -17,17 +17,18 @@
     margin-inline: auto;
     padding-inline: var(--gutter-page);
   }
-  main { min-height: 0; flex: 1 0 auto; }
+  main { min-height: 0; flex: 0 0 auto; }
   .site-header, .site-footer { display: flex; align-items: center; justify-content: space-between; }
   .site-header { min-height: 4.5rem; }
   .site-footer { min-height: 5rem; margin-top: var(--rhythm-section); justify-content: flex-end; }
 
   .layout-shell { width: 100%; min-width: 0; padding-block: var(--space-content-entry) 0; }
   .two-column-layout { min-width: 0; }
-  .two-column-layout__main { min-width: 0; max-width: var(--measure-content); }
+  .two-column-layout__main { min-width: 0; max-width: var(--measure-practice); }
   .two-column-layout.has-rail { display: grid; grid-template-columns: minmax(var(--two-column-main-min), 1fr) var(--rail-width); gap: var(--two-column-gap); }
   .two-column-layout.has-rail .two-column-layout__main { max-width: none; }
   .two-column-layout__rail { min-width: 0; }
+  .collection-layout { width: min(100%, var(--measure-observation)); margin-inline: auto; }
 
   .page-intro, .home-hero, .home-sections, .home-section, .home-about, .home-status,
   .year-group, .card-grid, .work-page, .about-page { width: min(100%, var(--measure-content)); margin-inline: auto; }
@@ -47,7 +48,7 @@
   .work-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-12); }
   .about-content { width: min(100%, var(--measure-reading)); margin-inline: 0; }
 
-  @media (max-width: 67.9375rem) {
+  @media (max-width: 64.5rem) {
     .two-column-layout.has-rail { display: block; }
     .two-column-layout__rail { margin-top: var(--rhythm-section); }
   }

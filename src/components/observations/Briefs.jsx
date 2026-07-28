@@ -1,28 +1,36 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "../../lib/navigation";
 import { countCompleteBriefs } from "../../content/briefRail";
+import { classifySourceUrl } from "../../content/sourceUrls";
 
 function BriefBody({ item }) {
+  const sources = item.sourceRefs
+    .map((id) => item.sources.find((source) => source.id === id))
+    .filter((source, index, all) => source && all.findIndex((candidate) => candidate?.publisher === source.publisher) === index);
   return (
     <>
-      <p className="brief-item__meta">
+      <p className="brief-item__identity">
         <time dateTime={item.eventAt}>{item.eventAt}</time>
         <span>{item.subject}</span>
-        <span>{item.primaryDimension}</span>
-        {item.isOpinion ? <span>观点</span> : null}
+      </p>
+      <p className="brief-item__dimension">
+        <span>#{item.primaryDimension}</span>
+        {item.isOpinion ? <span>#观点</span> : null}
       </p>
       <p className="brief-item__statement">{item.statement}</p>
+      <p className="brief-item__sources">
+        来源：{sources.map((source, index) => {
+          const safe = classifySourceUrl(source);
+          if (!safe.valid) return null;
+          return <span key={source.id}>{index ? "、" : null}<a href={safe.href} {...(safe.kind === "external" ? { target: "_blank", rel: "noreferrer" } : {})}>{source.publisher}</a></span>;
+        })}
+      </p>
     </>
   );
 }
 
 export function BriefItem({ item }) {
-  const className = item.articleHref ? "brief-item is-linked" : "brief-item";
-  return item.articleHref ? (
-    <Link className={className} href={item.articleHref} aria-label={`阅读简讯：${item.subject}，${item.statement}`}>
-      <BriefBody item={item} />
-    </Link>
-  ) : <article className={className}><BriefBody item={item} /></article>;
+  return <article className="brief-item"><BriefBody item={item} /></article>;
 }
 
 export function ObservationStream({ items }) {

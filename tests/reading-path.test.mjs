@@ -10,31 +10,26 @@ const footer = await readFile(new URL("../src/components/site/SiteFooter.jsx", i
 const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
-test("brief and deep observations share one detail skeleton with level-aware toc", () => {
+test("article presentation has one reader-facing title and no governance projection", () => {
   const deep = observations.find((item) => item.level === "deep");
-  const brief = observations.find((item) => item.level === "brief");
   assert.ok(deep);
-  assert.ok(brief);
-  assert.equal(brief.sections.length, 0);
-  assert.match(article, /observation\.level === "deep" && sections\.length >= 3/);
-  assert.match(article, /observation\.rangeAndFacts[\s\S]*observation\.operatingImpact/);
-  assert.match(article, /fact-overview/);
-  assert.match(article, /evidence-and-boundary/);
+  assert.match(article, /article-dimensions/);
   assert.match(article, /sourceRefs/);
+  assert.doesNotMatch(article, /claim-kind|fact-overview|evidence-and-boundary|ArticleToc|reading-toc|rangeAndFacts|operatingImpact/);
 });
 
-test("long articles provide desktop and collapsible mobile navigation", () => {
-  assert.match(article, /className="reading-toc desktop-toc"/);
-  assert.match(article, /<details className="mobile-toc">/);
-  assert.match(layout, /\.mobile-toc \{ display: none;/);
-  assert.match(layout, /\.mobile-toc \{ display: block;/);
+test("article sources remain a final inline reader line", () => {
+  assert.match(article, /className="article-sources"/);
+  assert.doesNotMatch(article, /<ol className="source-list"/);
+  assert.doesNotMatch(article, /访问于/);
 });
 
 test("global chrome stays minimal and mobile navigation is a full viewport layer", () => {
   assert.match(header, /<List aria-hidden="true"/);
   assert.match(header, /<X aria-hidden="true"/);
   assert.match(header, /aria-label=\{menuOpen \? "关闭菜单" : "打开菜单"\}/);
-  assert.doesNotMatch(header, /author-name|menu-author/);
+  assert.match(header, /identity-lockup/);
+  assert.match(header, /author-lockup/);
   assert.doesNotMatch(footer, /updatedAt|location|author/);
   assert.match(components, /position: fixed;\s+inset: 0;/);
 });

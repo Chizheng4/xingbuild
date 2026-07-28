@@ -3,7 +3,7 @@ function hasText(value) {
 }
 
 export function validateBriefDefinition(observation) {
-  if (observation.brief === undefined) return [];
+  if (observation.presentation !== "brief") return observation.brief === undefined ? [] : ["brief requires presentation=brief"];
   const errors = [];
   const brief = observation.brief;
   if (!brief || typeof brief !== "object" || Array.isArray(brief)) return ["brief must be an object"];
@@ -12,20 +12,24 @@ export function validateBriefDefinition(observation) {
     errors.push("brief requires publication.eventAt as YYYY-MM-DD");
   }
 
-  const allowed = new Set(["subject", "statement", "isOpinion", "articleHref"]);
+  const allowed = new Set(["subject", "statement", "sourceRefs", "isOpinion"]);
   for (const key of Object.keys(brief)) if (!allowed.has(key)) errors.push(`brief.${key} is not allowed`);
   for (const field of ["subject", "statement"]) {
     if (!hasText(brief[field])) errors.push(`brief.${field} must be a non-empty string`);
   }
-  if (typeof brief.isOpinion !== "boolean") errors.push("brief.isOpinion must be boolean");
-  if (brief.articleHref !== undefined && brief.articleHref !== `/observations/${observation.slug}`) {
-    errors.push("brief.articleHref must be this observation's site-relative detail path");
+  if (!Array.isArray(brief.sourceRefs) || !brief.sourceRefs.length || new Set(brief.sourceRefs).size !== brief.sourceRefs.length) {
+    errors.push("brief.sourceRefs must contain unique source ids");
   }
+  const sourceIds = new Set((observation.sources || []).map((source) => source.id));
+  for (const sourceRef of brief.sourceRefs || []) {
+    if (!sourceIds.has(sourceRef)) errors.push(`brief.sourceRefs references missing ${sourceRef}`);
+  }
+  if (typeof brief.isOpinion !== "boolean") errors.push("brief.isOpinion must be boolean");
   return errors;
 }
 
 export function projectObservationBrief(observation) {
-  if (observation.status !== "published" || !observation.brief) return null;
+  if (observation.status !== "published" || observation.presentation !== "brief" || !observation.brief) return null;
   return {
     id: `brief-${observation.slug}`,
     eventAt: observation.eventAt,
@@ -34,7 +38,8 @@ export function projectObservationBrief(observation) {
     primaryDimension: observation.primaryDimension,
     statement: observation.brief.statement,
     isOpinion: observation.brief.isOpinion,
-    articleHref: observation.brief.articleHref,
+    sourceRefs: observation.brief.sourceRefs,
+    sources: observation.sources,
     relatedWorks: observation.relatedWorks,
   };
 }

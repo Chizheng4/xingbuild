@@ -63,6 +63,7 @@
     --gutter-narrow: 1rem;
     --measure-page: var(--site-max);
     --measure-content: 46rem;
+    --measure-practice: 60rem;
     --measure-observation: 46rem;
     --measure-display: 58.75rem;
     --measure-reading: 45rem;

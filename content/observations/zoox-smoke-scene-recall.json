@@ -120,9 +120,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "Zoox软件召回",
     "statement": "Zoox因车辆在浓烟应急场景中的处理问题，对105辆车实施软件召回。",
+    "sourceRefs": ["source-nhtsa-zoox", "source-techcrunch-zoox"],
     "isOpinion": false
   }
 }

@@ -14,6 +14,8 @@ const practice = await readFile(new URL("../src/components/practice/PracticePage
 const observations = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
 const observationsPage = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
 const siteContent = await readFile(new URL("../src/content/siteContent.js", import.meta.url), "utf8");
+const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
+const robotaxiPage = await readFile(new URL("../src/pages/RobotaxiPage.jsx", import.meta.url), "utf8");
 const observationRepository = await readFile(new URL("../src/content/observationRepository.js", import.meta.url), "utf8");
 const practiceRepository = await readFile(new URL("../src/content/practiceRepository.js", import.meta.url), "utf8");
 const practiceContent = await readFile(new URL("../content/practices/robotaxi.json", import.meta.url), "utf8");
@@ -31,7 +33,7 @@ test("brand and high-density layout tokens are semantic and fixed across breakpo
   assert.doesNotMatch(allStyles, /prefers-color-scheme/);
   assert.match(layout, /\.site-header \{ min-height: 4\.5rem; \}/);
   assert.match(layout, /\.site-header \{ min-height: 4rem; \}/);
-  assert.match(layout, /max-width: 67\.9375rem/);
+  assert.match(layout, /max-width: 64\.5rem/);
 });
 
 test("routes and navigation expose the four approved top-level destinations", () => {
@@ -47,6 +49,8 @@ test("home title stays content-driven and phrase-aware", () => {
   assert.match(foundations, /word-break: auto-phrase/);
   assert.match(foundations, /text-wrap: balance/);
   assert.doesNotMatch(foundations, /word-break:\s*(?:break-all|keep-all)/);
+  assert.match(homePage, /site\.homeTitle/);
+  assert.doesNotMatch(robotaxiPage, /site\.homeTitle/);
 });
 
 test("practice modules require explicit evidence media and do not create placeholders", () => {
@@ -58,26 +62,32 @@ test("practice modules require explicit evidence media and do not create placeho
   assert.doesNotMatch(practice, /placeholder|robotaxi\.xingbuild\.top/);
   assert.match(practice, /PracticeHeader/);
   assert.match(practice, /PracticeEmptyState/);
-  assert.match(practice, /PositioningStrip/);
+  assert.doesNotMatch(practice, /PositioningStrip/);
 });
 
 test("observation stream only consumes explicit reading projections", () => {
   assert.match(observationRepository, /projectObservationBrief/);
   assert.match(observationRepository, /projectObservationBrief/);
-  assert.match(observations, /brief-item__meta/);
+  assert.match(observations, /brief-item__identity/);
+  assert.match(observations, /brief-item__dimension/);
   assert.match(observations, /brief-item__statement/);
   assert.match(observationsPage, /ObservationEmptyState/);
   assert.match(observationsPage, /site\.emptyStates\.observations/);
   assert.match(observations, /observations-empty-title/);
   assert.match(siteContent, /暂无已核验简讯/);
   assert.doesNotMatch(observationsPage, /ObservationArchive|summary/);
-  assert.doesNotMatch(observations, /ObservationCard|ContentCard|claimKind|sourceRefs/);
+  assert.doesNotMatch(observations, /ObservationCard|ContentCard|claimKind|articleHref/);
+  assert.match(observations, /brief-item__sources/);
+  assert.doesNotMatch(components, /border-block-(?:start|end):.*color-mix/);
 });
 
 test("layout owns sibling spacing and components do not create desktop rails without content", () => {
   assert.match(layout, /\.two-column-layout\.has-rail/);
-  assert.match(layout, /\.two-column-layout__main \{ min-width: 0; max-width: var\(--measure-content\); \}/);
-  assert.match(layout, /\.object-stack \{ gap: var\(--rhythm-relate\); \}/);
+  assert.match(layout, /\.two-column-layout__main \{ min-width: 0; max-width: var\(--measure-practice\); \}/);
+  assert.match(layout, /\.collection-layout \{ width: min\(100%, var\(--measure-observation\)\); margin-inline: auto; \}/);
+  assert.match(layout, /main \{ min-height: 0; flex: 0 0 auto; \}/);
+  assert.match(components, /\.observation-stream \{ display: grid; gap: var\(--space-5\); \}/);
+  assert.match(components, /@media \(max-width: 32\.4375rem\) \{[\s\S]*?\.observation-stream \{ gap: var\(--space-4\); \}/);
   assert.doesNotMatch(pages, /\.practice-page\s*\{[^}]*width:/);
 });
 

@@ -1,4 +1,3 @@
-import { PositioningStrip } from "../site/PageStructure";
 import { LayoutShell, TwoColumnLayout } from "../site/LayoutShell";
 
 export function EvidenceImageFrame({ image, href }) {
@@ -46,12 +45,11 @@ export function PracticeEmptyState({ practice }) {
   );
 }
 
-export function PracticePage({ practice, homeTitle, renderRail }) {
+export function PracticePage({ practice, renderRail }) {
   const hasModules = practice.modules.some((module) => module.image?.src);
   return (
     <LayoutShell className="practice-page">
       <TwoColumnLayout renderRail={renderRail}>
-        <PositioningStrip>{homeTitle}</PositioningStrip>
         <PracticeHeader practice={practice} />
         {hasModules ? <PracticeModuleList modules={practice.modules} /> : <PracticeEmptyState practice={practice} />}
       </TwoColumnLayout>

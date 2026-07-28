@@ -132,10 +132,11 @@
     "robotaxi"
   ],
   "promoteToHome": false,
+  "presentation": "brief",
   "brief": {
     "subject": "Tesla Robotaxi经营规模",
     "statement": "TechCrunch根据Tesla累计图表估算，其Q2付费Robotaxi里程较Q1下降约36%。",
-    "isOpinion": false,
-    "articleHref": "/observations/tesla-q2-paid-robotaxi-miles"
+    "sourceRefs": ["source-techcrunch-tesla"],
+    "isOpinion": false
   }
 }

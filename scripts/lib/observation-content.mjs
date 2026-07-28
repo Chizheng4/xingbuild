@@ -27,6 +27,7 @@ export const enumValues = {
   claimKind: new Set(schema.$defs.evidenceUnit.properties.claimKind.enum),
   sourceTier: new Set(schema.$defs.source.properties.sourceTier.enum),
   sourceType: new Set(schema.$defs.source.properties.sourceType.enum),
+  presentation: new Set(schema.properties.presentation.enum),
   relatedWork: new Set(schema.properties.relatedWorks.items.enum),
 };
 
@@ -194,6 +195,31 @@ export function validateObservation(observation, { expectedStatus } = {}) {
     if (!enumValues.relatedWork.has(work)) errors.push(`relatedWorks has invalid value: ${work}`);
   }
   if (typeof observation.promoteToHome !== "boolean") errors.push("promoteToHome must be boolean");
+  if (observation.presentation !== undefined && !enumValues.presentation.has(observation.presentation)) {
+    errors.push(`presentation has invalid value: ${observation.presentation}`);
+  }
+  if (observation.presentation === "brief") {
+    if (!observation.eventAt) errors.push("brief presentation requires eventAt");
+    if (!observation.brief) errors.push("brief presentation requires brief");
+    if (observation.article !== undefined) errors.push("brief presentation cannot contain article");
+  }
+  if (observation.presentation === "article") {
+    if (!isObject(observation.article)) errors.push("article presentation requires article");
+    else {
+      if (Object.keys(observation.article).some((key) => key !== "sourceRefs")) errors.push("article contains unsupported fields");
+      if (!Array.isArray(observation.article.sourceRefs) || !observation.article.sourceRefs.length) {
+        errors.push("article.sourceRefs must contain at least one source id");
+      }
+    }
+    if (observation.brief !== undefined) errors.push("article presentation cannot contain brief");
+  }
+  for (const [field, projection] of [["brief", observation.brief], ["article", observation.article]]) {
+    if (projection === undefined) continue;
+    if (!isObject(projection) || !Array.isArray(projection.sourceRefs)) continue;
+    for (const ref of projection.sourceRefs) {
+      if (!sourceIds.has(ref)) errors.push(`${field}.sourceRefs references missing ${ref}`);
+    }
+  }
   errors.push(...validateBriefDefinition(observation));
   return errors;
 }

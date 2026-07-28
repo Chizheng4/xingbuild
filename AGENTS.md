@@ -12,21 +12,21 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 - `xingbuild` is an author-led personal website and an evolving body of work, not an online resume.
 - `xingbuild` connects the author identity `金星 · Xingjin` with the works he continues to design and build. This is private design context: use it to judge naming and structure, but do not turn the user's explanation about growth, social value, or long-term self-recording into public website copy unless the user explicitly asks.
-- The current `v0.3.0` information architecture is `观察 / 作品 / 关于我`.
+- The current top-level information architecture is `Robotaxi运营平台 / 企业经营体系 / 观察 / 关于我`; `/` is the author landing page and is not a duplicate Robotaxi page.
 - `观察` contains author-written Robotaxi, enterprise-operation, digitalization, and related analysis. It is not a generic news feed and is not an automated engineering activity log.
-- The home page keeps the positioning statement light, then leads readers through latest observations, core works, About, and the site status at the bottom.
-- Observation lists distinguish one featured analysis from compact archive rows. A brief has no empty table of contents; an analysis with more than two sections has a desktop sticky table of contents and a mobile collapsed table of contents.
+- The home page uses the positioning statement once as a compact author entrance, then gives direct entry to the two core practices and a latest-observation projection when real content exists. It must not use an oversized display Hero or empty visual staging.
+- Observation has exactly two reader forms: `Brief` (date + subject, hashtag dimension, fact body, final source line; no title/card/detail page) and `Article` (one canonical title, dimensions, summary, body, final source line). Evidence governance remains in data and production flow; reader UI does not display claim kinds, source tiers, or governance labels.
 - A future build log may project verified project and release activity, but it is not a top-level navigation item at the current stage.
 - Robotaxi and the enterprise operating system / digitalization cognition framework are both works.
 - Career experience, positioning, capabilities, direction, resume, and contact belong to `关于我`.
 - Desktop follows the warm editorial visual direction; mobile uses a compact systems layout without changing the site's brand palette.
 - Responsive breakpoints may change layout, density, typography, navigation, and diagram direction, but must not redefine global brand colors. Resizing the same page must preserve its background, ink, line, and accent color identity.
-- The global header uses `xingbuild` as its only persistent identity. Author identity belongs in page content, not beside the wordmark or repeated in the footer.
+- The global header keeps one compact horizontal identity group: larger `xingbuild` followed by smaller `金星 Xingjin`, with an 8px relationship gap, baseline alignment, and no dot, @, separator, second line, or extra header height. The author text remains a site content field, not hard-coded markup.
 - Mobile navigation uses an icon button and a full-viewport overlay. Opening it must replace the page visually, lock background scrolling, and change the control to a close icon.
 - Use typography, alignment, and whitespace for page hierarchy. Do not use decorative horizontal rules or boxed sections as general layout scaffolding; retain lines only when they express a real relationship or boundary, such as a business architecture diagram.
-- Repeated content collections on the home, observation, and work index pages use one shared interactive card system. A card boundary is allowed only when it identifies one real, clickable content object; do not turn arbitrary page sections into decorative boxes.
+- Repeated clickable collections may use one shared interactive card system. A card boundary is allowed only when it identifies one real, clickable content object; do not turn arbitrary page sections into decorative boxes. Brief streams are deliberately not cards and use their own fixed four-line reading grammar.
 - The shared card system fixes the site-wide shell, spacing roles, typography roles, surface/border treatment, hit area, hover, focus-visible, and responsive behavior. Cards may vary only by a small declared content-type schema; page-specific card styling and one-off interaction variants are not allowed.
-- Every instance of the same content type uses the same field order and anatomy. Observation cards do not switch between a featured-card grammar and a compact-row grammar; work cards do not invent page-specific metadata arrangements. Emphasis may change grid span only when needed, never field order, interaction, or internal spacing.
+- Every instance of the same content type uses the same field order and anatomy. Article previews do not switch between featured-card and compact-row grammar; work entries do not invent page-specific metadata arrangements. Emphasis may change grid span only when needed, never field order, interaction, or internal spacing.
 - Card reading order is reader-first and consistent: title → concise explanation or summary → necessary metadata such as type, topic, date, status, or update time. Omit metadata that does not help recognition, chronology, or decision-making.
 - The whole card is the primary link. Use one restrained hover response and a clear keyboard focus state; do not add redundant per-card calls to action such as “继续阅读” when the title or card already opens the content.
 - Desktop collections use a consistent grid and card gap; mobile projects the same cards into one column without changing their content schema. Cards of the same type in the same row align visually, but different content types are not forced to contain false fields or identical text lengths.
@@ -44,8 +44,9 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Observation content uses the `ObservationPublication → EvidenceUnit → Source` contract. Candidate tools may normalize lifecycle state, but must not invent facts, sources, business impact, dates, or evidence relationships.
 - Product releases use `publish-xingbuild.command`, require the matching version tag, and run the full release check. Content-only releases use `publish-content.command`, keep the product version unchanged, accept exactly one published observation file, and reject engineering, configuration, rule, worker, or draft changes.
 - Scheduled tasks may produce candidates only. Human review and explicit production authorization remain required before promotion or either publication command.
-- 阶段一总体结构与视觉母版：`/` 与 `/robotaxi` 是同一 PracticePage；当前无批准模块时必须诚实不渲染模块，不得用占位媒体、平台泛链或猜测对象填充。企业经营体系公开界面当前只呈现一张可平移、可选择、可复位的总览图，局部 view 只能复用同一模型并等待明确入口。观察信息流只消费人工确认的真实事件 BriefProjection；既有文章不得自动缩写、投影或充当空态填充。无有效 Brief 时，观察页显示克制空态，Practice/Framework 不保留空白 rail。
-- 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察简讯只通过 ObservationPublication 中人工写入的显式 brief 投影产生。二者都不得再通过页面、组件或视觉特例填充。
+- 作品母版：左栏固定按“短作品说明 → 真实视觉证据”两段组织；Robotaxi 使用受控模块说明 + 真实16:10平台图，企业经营体系使用一张可平移、可选择、可复位的总览图和同宽解释面板。当前无批准模块时必须诚实不渲染模块，不得用占位媒体、平台泛链或猜测对象填充。框架局部 view 只能复用同一模型并等待明确入口。
+- 布局母版：桌面唯一 shell 最大1280px、外边距至少32px；作品双栏为剩余主栏 + 48px + 固定320px rail，只有可同时容纳时成立。观察集合页使用独立居中单列，不得借用双栏主列左边界。无有效 Brief 时，Practice/Framework 不保留空白 rail。
+- 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察内容只通过 ObservationPublication 中人工写入的显式 `presentation` 产生。二者都不得再通过页面、组件或视觉特例填充。
 
 ## Iteration and release workflow
 
