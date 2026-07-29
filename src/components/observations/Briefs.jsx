@@ -48,32 +48,46 @@ export function ObservationEmptyState({ title, message, description }) {
 }
 
 export function ObservationRail({ items, anchorRef, origin }) {
-  const railRef = useRef(null);
   const measureRef = useRef(null);
-  const [visibleCount, setVisibleCount] = useState(Math.min(items.length, 2));
+  const [visibleCount, setVisibleCount] = useState(0);
 
   useLayoutEffect(() => {
     if (!anchorRef?.current || !measureRef.current || !items.length) return undefined;
     const update = () => {
       const budget = Math.min(anchorRef.current.getBoundingClientRect().height, window.innerHeight * 2);
-      const entries = [...measureRef.current.querySelectorAll("[data-brief-measure]")]
-        .map((entry) => ({ top: entry.offsetTop, height: entry.offsetHeight }));
-      const count = countCompleteBriefs(entries, budget);
-      setVisibleCount(Math.max(1, Math.min(count, items.length)));
+      const measureBounds = measureRef.current.getBoundingClientRect();
+      const entries = [...measureRef.current.querySelectorAll("[data-brief-measure]")].map((entry) => {
+        const bounds = entry.getBoundingClientRect();
+        return { top: bounds.top - measureBounds.top, height: bounds.height };
+      });
+      const more = measureRef.current.querySelector("[data-rail-more-measure]")?.getBoundingClientRect();
+      const railGap = Number.parseFloat(getComputedStyle(measureRef.current).rowGap) || 0;
+      const count = countCompleteBriefs(entries, budget, {
+        moreHeight: more?.height ?? 0,
+        railGap,
+      });
+      setVisibleCount((current) => current === count ? current : count);
     };
     const observer = new ResizeObserver(update);
     observer.observe(anchorRef.current);
+    window.addEventListener("resize", update);
     update();
-    return () => observer.disconnect();
-  }, [anchorRef, items]);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [anchorRef, items.length]);
 
   const visible = items.slice(0, visibleCount);
   return (
-    <div className="observation-rail" ref={railRef}>
-      <div className="observation-rail__measure" ref={measureRef} aria-hidden="true">
-        {items.map((item) => (
-          <article className="brief-item" data-brief-measure key={item.id}><BriefBody item={item} /></article>
-        ))}
+    <div className="observation-rail">
+      <div className="observation-rail__measure" ref={measureRef} aria-hidden="true" inert>
+        <div className="observation-stream">
+          {items.map((item) => (
+            <article className="brief-item" data-brief-measure key={item.id}><BriefBody item={item} /></article>
+          ))}
+        </div>
+        <span className="observation-rail__more" data-rail-more-measure>更多观察</span>
       </div>
       <ObservationStream items={visible} returnTo={observationCollectionHref(origin)} />
       <Link className="observation-rail__more" href={observationCollectionHref(origin)}>更多观察</Link>

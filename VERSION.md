@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.15.3 — ObservationRail 从属预算与跨 task 边界修订
+
+日期：2026-07-29
+
+- 将 ObservationRail 的可见项预算收口为主栏 intrinsic content height 与最多两个视口高度的较小值；完整项、真实 gap 与“更多观察”共同计入预算，允许零项。
+- Grid 双栏显式使用 `align-items: start`，右栏不再反向撑高主栏；Robotaxi Practice 在公开模块为零时不挂载 Rail。
+- 固化轻量跨 task 治理：交接传递有界摘要和明确事实源，浏览器串行且有内存停止阈值；实现、验证、版本、推送、部署分别报告。
+
 ## v0.15.2 — Robotaxi 媒体生命周期与公开投影修订
 
 日期：2026-07-29

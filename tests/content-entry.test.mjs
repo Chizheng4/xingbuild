@@ -146,6 +146,25 @@ test("rail budgets every candidate before selecting only complete items", () => 
   ];
   assert.equal(countCompleteBriefs(boxes, 280), 3);
   assert.equal(countCompleteBriefs(boxes, 250), 2);
+  assert.equal(countCompleteBriefs(boxes, 280, { moreHeight: 32, railGap: 16 }), 2);
+  assert.equal(countCompleteBriefs(boxes, 120, { moreHeight: 32, railGap: 16 }), 0);
+});
+
+test("rail contracts keep main height independent, reserve more and allow zero visible briefs", async () => {
+  const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
+  const rail = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
+  const robotaxiPage = await readFile(new URL("../src/pages/RobotaxiPage.jsx", import.meta.url), "utf8");
+  const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
+  const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url), "utf8");
+  assert.match(layout, /\.two-column-layout\.has-rail[^}]*align-items: start/);
+  assert.match(rail, /moreHeight: more\?\.height/);
+  assert.match(rail, /setVisibleCount\(\(current\) => current === count \? current : count\)/);
+  assert.doesNotMatch(rail, /Math\.max\(1/);
+  assert.match(rail, /aria-hidden="true" inert>/);
+  assert.doesNotMatch(rail, /inert=""/);
+  assert.match(robotaxiPage, /practice\.modules\.length && briefs\.length/);
+  assert.match(components, /\.observation-rail \.brief-item__statement/);
+  assert.match(pages, /\.observation-rail__measure[^}]*height: 0;[^}]*overflow: hidden;/);
 });
 
 test("practice and framework rails both receive the newest robotaxi-only brief", async () => {

@@ -6,7 +6,7 @@ import { findPractice } from "../content/practiceRepository";
 export function RobotaxiPage() {
   const practice = findPractice("robotaxi");
   const briefs = selectObservationBriefs(practice.observationQuery);
-  const renderRail = briefs.length
+  const renderRail = practice.modules.length && briefs.length
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/products" />
     : undefined;
   return <PracticePage practice={practice} renderRail={renderRail} />;

@@ -59,6 +59,14 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 ## Iteration and release workflow
 
+## 跨 task 协作边界
+
+- task 不是历史数据库。跨 task 只传递决策摘要、当前事实源或证据路径、修改文件、未完成项、执行范围与验收合同；不传递完整媒体、base64 或无界历史。
+- 当前唯一版本未完成实现、验证、专业验收与约定的本地收口前，不开启、不夹带、不宣告下一版本。跨 task 检查点必须明确当前唯一版本、已完成证据、未完成项与下一动作。
+- Engineering 不为“复盘历史”读取其他 task 全历史或媒体。复盘默认只读当前项目事实源与明确列出的决策；信息不足时列出缺口，不扩展取证。
+- 实现、验证、提交/标签、推送与发布必须分别报告；正式版本 tag 只由当前主线发布责任任务创建。
+- 浏览器验证必须串行且结束即释放资源。发现单个浏览器工作进程超过 2GB、Codex 合计超过 6GB、swap 持续增长或重复 worker 时，立即停止验证并请求用户决定；不得自行终止或清理用户进程。
+
 - Before changing product content, structure, visual language, deployment behavior, or domain configuration, read `docs/rules/iteration-and-release.md`.
 - The active iteration is recorded only in `docs/iterations/current.md`. Completed plans move to `docs/iterations/history/`; do not rewrite completed history.
 - Use `./start-xingbuild.command` for the standard local startup path.

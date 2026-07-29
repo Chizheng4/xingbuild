@@ -333,6 +333,7 @@
   .observation-rail { display: grid; gap: var(--space-3); }
   .observation-rail .brief-item { padding: var(--space-4); }
   .observation-rail .observation-stream { gap: var(--space-3); }
+  .observation-rail .brief-item__statement { font: 400 var(--type-ui)/var(--leading-ui) var(--font-reading); }
   .observation-rail__more { color: var(--color-accent-strong); font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta); }
 
   @media (max-width: 45rem) {

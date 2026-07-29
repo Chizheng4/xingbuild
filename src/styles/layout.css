@@ -36,7 +36,7 @@
   .layout-shell { width: 100%; min-width: 0; padding-block: var(--space-content-entry) 0; }
   .two-column-layout { min-width: 0; }
   .two-column-layout__main { min-width: 0; max-width: var(--measure-main); }
-  .two-column-layout.has-rail { display: grid; grid-template-columns: minmax(0, var(--two-column-main)) var(--rail-width); gap: var(--two-column-gap); }
+  .two-column-layout.has-rail { display: grid; grid-template-columns: minmax(0, var(--two-column-main)) var(--rail-width); gap: var(--two-column-gap); align-items: start; }
   .two-column-layout.has-rail .two-column-layout__main { max-width: none; }
   .two-column-layout__rail { min-width: 0; }
   .collection-layout, .reading-shell { width: min(100%, var(--measure-reading)); margin-inline: auto; }
