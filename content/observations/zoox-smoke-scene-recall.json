@@ -123,7 +123,7 @@
   "presentation": "brief",
   "brief": {
     "subject": "Zoox软件召回",
-    "statement": "Zoox因车辆在浓烟应急场景中的处理问题，对105辆车实施软件召回。",
+    "statement": "NHTSA召回编号26E044000涉及105辆Zoox车辆及浓烟应急场景软件问题；据TechCrunch报道，触发事件没有人员受伤，远程操作员将车辆倒离现场。Zoox称已向车队发送软件更新，这说明应急识别与远程异常处置会直接影响实际运营和监管信任。",
     "sourceRefs": ["source-nhtsa-zoox", "source-techcrunch-zoox"],
     "isOpinion": false
   }
