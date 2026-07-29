@@ -1,0 +1,126 @@
+{
+  "id": "observation-baidu-lyft-london-road-test",
+  "slug": "baidu-lyft-london-road-test",
+  "status": "published",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "百度Apollo Go与Freenow在伦敦启动有安全员道路测试",
+  "summary": "测试已在伦敦布伦特区启动，当前仍有安全员，公众乘坐计划指向2027年且取决于监管批准。",
+  "companies": [
+    "Baidu Apollo Go",
+    "Freenow by Lyft"
+  ],
+  "regions": [
+    "英国伦敦布伦特区"
+  ],
+  "dimensions": [
+    "合作与扩张",
+    "产品与能力",
+    "准入与政策"
+  ],
+  "primaryDimension": "合作与扩张",
+  "eventAt": "2026-07-28",
+  "publishedAt": "2026-07-29",
+  "updatedAt": "2026-07-29",
+  "factOverview": [
+    {
+      "label": "测试区域",
+      "value": "伦敦布伦特区"
+    },
+    {
+      "label": "车辆",
+      "value": "Apollo Go第六代RT6"
+    },
+    {
+      "label": "当前阶段",
+      "value": "有安全员道路测试"
+    },
+    {
+      "label": "公众计划",
+      "value": "2027年，取决于监管批准"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "百度称，Apollo Go与Freenow by Lyft已在伦敦布伦特区启动第六代RT6道路测试，当前车内配有安全员。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-baidu-london-test",
+      "evidence-baidu-london-safety-operator",
+      "evidence-baidu-london-public-plan"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "该进展把此前的欧洲合作计划推进到本地道路验证阶段，但尚不能证明无人化、监管准入或公众商业运营已经成立。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-baidu-london-operating-impact"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-baidu-london-test",
+      "claim": "百度称Apollo Go与Freenow by Lyft已在伦敦布伦特区开始第六代RT6道路测试。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-baidu-london-test"
+      ]
+    },
+    {
+      "id": "evidence-baidu-london-safety-operator",
+      "claim": "百度称初始道路测试阶段车内配有安全员。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-baidu-london-test"
+      ]
+    },
+    {
+      "id": "evidence-baidu-london-public-plan",
+      "claim": "百度称双方计划于2027年开始接待公众乘客，前提是获得监管批准。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-baidu-london-test"
+      ]
+    },
+    {
+      "id": "evidence-baidu-london-operating-impact",
+      "claim": "道路测试意味着合作进入本地验证阶段，但不能证明无人化运营、监管准入或公众商业服务已经完成。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-baidu-london-test"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-baidu-london-test",
+      "publisher": "Baidu / PR Newswire",
+      "title": "Baidu's Apollo Go and Freenow by Lyft Begin Road Testing in London",
+      "url": "https://www.prnewswire.com/news-releases/baidus-apollo-go-and-freenow-by-lyft-begin-road-testing-in-london-302836171.html",
+      "publishedAt": "2026-07-28",
+      "sourceTier": "primary",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-29"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "当前来源为百度公司新闻稿。已确认的是在指定区域开展有安全员道路测试；车辆规模、测试里程、运行时段、脱离安全员条件、监管审批结果、公众开放日期和商业运营指标均未披露或尚未实现。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "萝卜快跑伦敦测试",
+    "body": "百度称，Apollo Go与Freenow by Lyft已在伦敦布伦特区启动第六代RT6道路测试，当前车内仍配有安全员。双方计划在监管批准后于2027年接待公众乘客；这表示合作进入本地验证阶段，不代表无人化运营或公众商业服务已经成立。",
+    "sourceRefs": [
+      "source-baidu-london-test"
+    ],
+    "isOpinion": false
+  }
+}
