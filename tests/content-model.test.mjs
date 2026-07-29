@@ -3,7 +3,7 @@ import test from "node:test";
 import { readPublishedObservations, validateObservation } from "../scripts/lib/observation-content.mjs";
 import { products, businessObservations } from "../src/content/showcaseRepository.js";
 import { profile } from "../src/content/profileRepository.js";
-import { LEGACY_BRIEF_MIGRATION_SLUGS, chineseEquivalentLength, projectObservationBrief, validateBriefDefinition } from "../src/content/briefProjection.js";
+import { chineseEquivalentLength, projectObservationBrief, validateBriefDefinition } from "../src/content/briefProjection.js";
 import { selectObservationBriefs } from "../src/content/observationQueries.js";
 
 const observations = await readPublishedObservations();
@@ -46,19 +46,25 @@ test("future brief grammar accepts explicit body without deriving content", () =
   assert.ok(chineseEquivalentLength(candidate.brief.body) <= 160);
 });
 
-test("brief migration exemption is explicit, narrow, and cannot bypass future reader grammar", () => {
-  const legacy = observations.find((item) => item.presentation === "brief");
-  assert.ok(LEGACY_BRIEF_MIGRATION_SLUGS.has(legacy.slug));
-  assert.deepEqual(validateBriefDefinition(legacy), []);
+test("every published brief follows the reader-body contract without slug exemptions", () => {
+  const publishedBriefs = observations.filter((item) => item.presentation === "brief");
+  assert.ok(publishedBriefs.length > 0);
+  for (const briefObservation of publishedBriefs) {
+    const readerBody = briefObservation.brief.body || briefObservation.brief.statement;
+    assert.deepEqual(validateBriefDefinition(briefObservation), []);
+    assert.ok(chineseEquivalentLength(readerBody) >= 80);
+    assert.ok(chineseEquivalentLength(readerBody) <= 160);
+  }
 
-  const future = structuredClone(legacy);
-  future.slug = "future-short-brief";
-  assert.match(validateBriefDefinition(future).join("\n"), /brief\.body/);
+  const short = structuredClone(publishedBriefs[0]);
+  short.slug = "future-short-brief";
+  short.brief = { ...short.brief, body: undefined, statement: "这是一条过短的简讯。" };
+  assert.match(validateBriefDefinition(short).join("\n"), /80–160/);
 
-  const tooLongSubject = structuredClone(future);
+  const tooLongSubject = structuredClone(short);
   tooLongSubject.brief = {
     ...tooLongSubject.brief,
-    body: "这是一条人工编辑的合格观察正文。它围绕经过核验的事件事实说明主体、经营维度和必要背景，并保留来源链接供读者追溯，不从其他字段自动拼接生成。内容长度满足新的阅读合同。",
+    statement: "这是一条人工编辑的合格观察正文。它围绕经过核验的事件事实说明主体、经营维度和必要背景，并保留来源链接供读者追溯，不从其他字段自动拼接生成。内容长度满足新的阅读合同。",
     subject: "超过十六个全角等价字符的主体名称必须在内容校验阶段被拒绝",
   };
   assert.match(validateBriefDefinition(tooLongSubject).join("\n"), /brief\.subject/);

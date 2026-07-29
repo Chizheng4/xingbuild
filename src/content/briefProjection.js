@@ -2,28 +2,12 @@ function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
 }
 
-// These eight publications predate the v0.13 reader-body contract. They stay
-// readable without silently rewriting their verified statements; every future
-// Brief must provide an editorial body that satisfies the full contract.
-export const LEGACY_BRIEF_MIGRATION_SLUGS = new Set([
-  "nhtsa-first-responder-requirement",
-  "waymo-four-city-expansion",
-  "waymo-time-location-safety",
-  "xpeng-employee-robotaxi-test",
-  "waymo-july-four-gridlock",
-  "zoox-smoke-scene-recall",
-  "tesla-q2-paid-robotaxi-miles",
-  "iihs-waymo-crash-rate",
-]);
-
 export function chineseEquivalentLength(value) {
   return Array.from(value.trim()).reduce((length, character) => length + (/^[\x00-\x7F]$/.test(character) ? 0.5 : 1), 0);
 }
 
-function isLegacyBriefMigration(observation, brief) {
-  return LEGACY_BRIEF_MIGRATION_SLUGS.has(observation.slug)
-    && !hasText(brief.body)
-    && hasText(brief.statement);
+function readerBody(brief) {
+  return hasText(brief.body) ? brief.body : brief.statement;
 }
 
 export function validateBriefDefinition(observation) {
@@ -44,13 +28,12 @@ export function validateBriefDefinition(observation) {
   if (hasText(brief.subject) && chineseEquivalentLength(brief.subject) > 16) {
     errors.push("brief.subject must be at most 16 Chinese-equivalent characters");
   }
-  if (isLegacyBriefMigration(observation, brief)) {
-    // The exception is intentionally both slug- and shape-bound.
-  } else if (!hasText(brief.body)) {
-    errors.push("brief.body must be an explicit 80–160 Chinese-equivalent-character reader body");
+  const body = readerBody(brief);
+  if (!hasText(body)) {
+    errors.push("brief.body or brief.statement must be an explicit 80–160 Chinese-equivalent-character reader body");
   } else {
-    const length = chineseEquivalentLength(brief.body);
-    if (length < 80 || length > 160) errors.push("brief.body must be 80–160 Chinese-equivalent characters");
+    const length = chineseEquivalentLength(body);
+    if (length < 80 || length > 160) errors.push("brief reader body must be 80–160 Chinese-equivalent characters");
   }
   if (!Array.isArray(brief.sourceRefs) || !brief.sourceRefs.length || new Set(brief.sourceRefs).size !== brief.sourceRefs.length) {
     errors.push("brief.sourceRefs must contain unique source ids");
@@ -71,7 +54,7 @@ export function projectObservationBrief(observation) {
     publishedAt: observation.publishedAt,
     subject: observation.brief.subject,
     primaryDimension: observation.primaryDimension,
-    body: observation.brief.body || observation.brief.statement,
+    body: readerBody(observation.brief),
     statement: observation.brief.statement,
     isOpinion: observation.brief.isOpinion,
     sourceRefs: observation.brief.sourceRefs,
