@@ -55,6 +55,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - 观察层级与返回：第一层首页/B端产品/经营观察可直接进入长文，或先经“更多观察”进入集中观察页再进入长文；长文逐层返回真实上层，并提供经营观察栏目入口。返回上下文必须使用安全站内 origin/returnTo 并在刷新后成立，不能只依赖 history.back。
 - 富文本母版：Article 与 About 共用 RichDocument，只允许 lead、H2/H3、paragraph、list、definitionList、figure、callout、sources 等受控 block；页面不得直接写业务正文 JSX、私有字号或任意 margin。内容块、类型令牌和相邻关系一旦验收，后续只增改内容而不改页面组件。
 - 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察内容只通过 ObservationPublication 中人工写入的显式 `presentation` 产生。二者都不得再通过页面、组件或视觉特例填充。
+- 内容工作以读者获得的知识价值为第一目标，覆盖首页、B端产品、经营观察、关于我四个栏目。我负责确定和迭代公开内容的主题、事实边界、阅读顺序、正文与必要元数据，并在用户明确授权后按既有内容发布合同低成本发布；不承担页面、样式、交互或工程编码。产品与视觉 task 负责信息结构、展示母版、视觉和交互；Engineering 只负责获批内容与设计的工程实现。内容、视觉与工程 task 交接时必须分别给出已确认内容、事实源、展示约束、修改范围和验收标准，任何一方不得擅自改写另一方的责任对象。
 - Robotaxi 作品媒体分为三个责任：`media` 是读者可见的图片或未来视频内容；`action` 是可选读者互动，当前全框链接到经批准的 Robotaxi 独立系统；`provenance` 保存审批状态、媒体角色、状态边界、版本、Git commit 与哈希，不默认投影为读者界面。manifest 是生命周期与 provenance 事实记录，不等于公开集合；只有总 publication active、manifest/资产逐项 review 与 approval 为 approved、资产 publicStatus 为 public，且文件/hash/version/provenance 校验通过时才能投影。suspended、superseded、paused、pending_review、revoked、internal 或哈希不一致的记录必须保留追溯但不得进入读者界面。
 
 ## Iteration and release workflow
