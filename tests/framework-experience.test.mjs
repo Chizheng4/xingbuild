@@ -51,6 +51,13 @@ test("overview drilldown enters immediately while local nodes retain selection s
   assert.match(explorer, /复位视图/);
 });
 
+test("only the canvas background owns pan pointer sessions", () => {
+  assert.match(explorer, /event\.target\.closest\("\.graph-node, button, a, input, select, textarea"\)\) return;/);
+  assert.match(explorer, /event\.currentTarget\.setPointerCapture\(event\.pointerId\)/);
+  assert.match(explorer, /if \(start\.dragged\) \{[\s\S]*suppressClickRef\.current = true/);
+  assert.match(explorer, /if \(!suppressClickRef\.current\) \{[\s\S]*if \(isDrilldown\) onEnterView\(\);/);
+});
+
 test("hover, focus, click and keyboard maintain an active-architecture explanation", () => {
   for (const contract of [
     /onMouseEnter=\{\(\) => onPreview/,

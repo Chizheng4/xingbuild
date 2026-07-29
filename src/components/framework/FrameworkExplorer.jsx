@@ -180,6 +180,7 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   };
 
   const pointerDown = (event) => {
+    if (event.target.closest(".graph-node, button, a, input, select, textarea")) return;
     startRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,

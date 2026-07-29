@@ -2,24 +2,25 @@
 
 ## 当前目标版本
 
-`v0.15.0`
+`v0.15.1`
 
 ## 要解决的问题
 
-v0.15.0 已建立总览进入数字化实现局部视图的单一阅读路径。后续迭代从稳定版本另行立项，不把新入口、内容扩写或视觉调整混入本版本。
+修复总览下钻节点与画布平移之间的 pointer 责任冲突，确保真实鼠标 click 与键盘进入具有相同结果。
 
 ## 本轮范围
 
-- 已归档：`docs/iterations/history/v0.15.0.md`。
-- 当前不包含待实施工作；任何下一轮产品变化必须建立新的当前迭代记录。
+- 仅限 FrameworkExplorer 的 pointer session 边界、对应测试与 v0.15.1 版本记录。
+- 不改 frameworkModel、几何、构图、URL、观察、Robotaxi、About 或导航。
 
 ## 验收标准
 
-- 本版本的验证与发布证据记录在 `docs/iterations/history/v0.15.0.md` 与 Git tag `v0.15.0`。
+- 390/320/1440 的真实 mouse click、Playwright click、Enter、Space 均进入局部；背景 pan、普通节点选择、reset、返回焦点无回退。
+- `npm run release:check`、closeout/preflight、生产发布与公网复验通过。
 
 ## 当前状态
 
-稳定版本收口中：等待本地与公网验证、版本提交和生产发布完成后更新状态。
+已授权直接完成最小修订、版本化和生产发布。
 
 ## 明确 backlog
 
