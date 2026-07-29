@@ -2,25 +2,25 @@
 
 ## 当前目标版本
 
-`v0.15.1`
+`v0.15.2`
 
 ## 要解决的问题
 
-修复总览下钻节点与画布平移之间的 pointer 责任冲突，确保真实鼠标 click 与键盘进入具有相同结果。
+收口 Robotaxi 媒体生命周期与公开 projection，执行上游已撤回媒体的真实隐藏，同时让未来媒体状态同步可走 content-only。
 
 ## 本轮范围
 
-- 仅限 FrameworkExplorer 的 pointer session 边界、对应测试与 v0.15.1 版本记录。
-- 不改 frameworkModel、几何、构图、URL、观察、Robotaxi、About 或导航。
+- 仅限 Robotaxi 媒体 manifest 生命周期、Practice 公开读取层、内容发布范围、对应测试与 v0.15.2 版本记录。
+- 不改 IA、Showcase anatomy、视觉 token、Header、Framework、Observation、About 或 Robotaxi 模块文字。
 
 ## 验收标准
 
-- 390/320/1440 的真实 mouse click、Playwright click、Enter、Space 均进入局部；背景 pan、普通节点选择、reset、返回焦点无回退。
-- `npm run release:check`、closeout/preflight、生产发布与公网复验通过。
+- 仅完整 active + approved + public 媒体可公开投影；suspended、superseded、paused、pending_review、revoked、internal、hash mismatch 均不得投影。
+- 首页与 `/products` 在四项撤回后无模块、无空框、无横向溢出；`npm run release:check`、closeout/preflight、生产发布与公网复验通过。
 
 ## 当前状态
 
-已授权直接完成最小修订、版本化和生产发布。
+已授权直接完成最小维护补丁、版本化和生产发布。
 
 ## 明确 backlog
 

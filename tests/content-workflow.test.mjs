@@ -119,6 +119,12 @@ test("content-only scope rejects mixed engineering files", () => {
   assert.deepEqual(validateContentScope(["content/observations/new-item.json"]), []);
   assert.deepEqual(validateContentScope(["content/products/new-product.json"]), []);
   assert.deepEqual(validateContentScope(["content/business-observations/new-observation.json"]), []);
+  assert.deepEqual(validateContentScope([
+    "content/media/robotaxi/manifest.json",
+    "content/media/robotaxi/archive/retired-media.png",
+    "public/media/robotaxi/new-approved-media.png",
+  ]), []);
+  assert.ok(validateContentScope(["content/media/robotaxi/manifest.json", "content/products/new-product.json"]).length);
   assert.ok(
     validateContentScope(["content/observations/new-item.json", "src/App.jsx"])
       .some((error) => error.includes("forbidden files")),
@@ -149,7 +155,8 @@ test("product and content publish scripts retain distinct safety contracts", asy
   assert.match(product, /npm run release:preflight/);
   assert.match(content, /content-scope-check\.mjs --commit HEAD/);
   assert.match(content, /\.content-workspace/);
-  assert.match(content, /npm run content:check[\s\S]*npm run build[\s\S]*npm run test:sites/);
+  assert.ok(content.includes("content/media/[a-z0-9-]+/manifest\\.json"));
+  assert.match(content, /npm run content:check[\s\S]*npm run practice:check[\s\S]*npm run build[\s\S]*npm run test:sites/);
   assert.doesNotMatch(content, /git push origin "\$HEAD_TAG"|push_with_retry "\$HEAD_TAG"/);
 });
 

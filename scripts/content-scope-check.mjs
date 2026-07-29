@@ -9,11 +9,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export function validateContentScope(files) {
   const normalized = files.filter(Boolean).map((file) => file.replaceAll("\\", "/"));
   const entries = normalized.filter((file) => /^(?:content\/(?:products|business-observations|observations|articles|profile)\/[a-z0-9-]+\.json)$/.test(file));
-  const media = normalized.filter((file) => /^(?:content\/media\/[a-z0-9-]+\/manifest\.json|public\/media\/[a-z0-9-]+\/[a-z0-9._-]+)$/.test(file));
-  const allowed = [...entries, ...media];
+  const manifests = normalized.filter((file) => /^content\/media\/[a-z0-9-]+\/manifest\.json$/.test(file));
+  const media = normalized.filter((file) => /^(?:content\/media\/[a-z0-9-]+\/archive\/[a-z0-9._-]+|public\/media\/[a-z0-9-]+\/[a-z0-9._-]+)$/.test(file));
+  const contentObjects = [...entries, ...manifests];
+  const allowed = [...contentObjects, ...media];
   const rejected = normalized.filter((file) => !allowed.includes(file));
   const errors = [];
-  if (entries.length !== 1) errors.push(`content-only change must contain exactly one content object JSON; found ${entries.length}`);
+  if (contentObjects.length !== 1) errors.push(`content-only change must contain exactly one content object JSON or media manifest; found ${contentObjects.length}`);
   if (rejected.length) errors.push(`content-only change contains forbidden files: ${rejected.join(", ")}`);
   return errors;
 }
@@ -44,7 +46,7 @@ async function main() {
     if (currentVersion !== parentVersion) errors.push("content-only publication must not change package version");
   }
 
-  const entry = files.find((file) => /^content\/(?:products|business-observations|observations|articles|profile)\/[a-z0-9-]+\.json$/.test(file));
+  const entry = files.find((file) => /^(?:content\/(?:products|business-observations|observations|articles|profile)\/[a-z0-9-]+\.json|content\/media\/[a-z0-9-]+\/manifest\.json)$/.test(file));
   if (!errors.length && entry?.startsWith("content/observations/")) {
     const observation = await readJson(path.join(root, entry));
     errors.push(...validateObservation(observation, { expectedStatus: "published" }));

@@ -4,15 +4,16 @@ import test from "node:test";
 import { assertCurrentPracticeContent, validatePracticeBundle } from "../scripts/lib/practice-content.mjs";
 import { countCompleteBriefs } from "../src/content/briefRail.js";
 import { selectObservationBriefs as selectBriefs } from "../src/content/observationQueries.js";
-import { findPractice } from "../src/content/practiceRepository.js";
+import { findPractice, projectPractice } from "../src/content/practiceRepository.js";
 
-test("practice content consumes exactly the approved Robotaxi evidence manifest", async () => {
+test("practice preserves superseded Robotaxi media records without projecting them publicly", async () => {
   const { practice, manifest } = await assertCurrentPracticeContent();
   assert.equal(practice.id, "robotaxi");
-  assert.equal(manifest.reviewStatus, "approved");
-  assert.equal(manifest.publicStatus, "public");
+  assert.equal(manifest.reviewStatus, "superseded");
+  assert.equal(manifest.publicStatus, "internal");
+  assert.equal(manifest.currentPublication.status, "suspended");
   assert.equal(manifest.approvalRecord.approvalStatus, "approved");
-  assert.equal(manifest.provenance.commit, "50d452f5");
+  assert.equal(manifest.provenance.commit, "1e01d4998f21212f4c716522fbb1f880fbee73b8");
   assert.deepEqual(practice.modules.map((module) => module.id), [
     "robotaxi-operations-current-simulation",
     "robotaxi-operations-city-spatial-progress",
@@ -22,9 +23,10 @@ test("practice content consumes exactly the approved Robotaxi evidence manifest"
   assert.deepEqual(practice.modules.map((module) => module.group), ["运营中控台", "运营中控台", "经营模型", "经营总览"]);
   assert.equal(manifest.assets.length, 4);
   assert.ok(manifest.assets.every((asset) => asset.type === "image" && asset.ratio === "16:10"));
-  assert.ok(manifest.assets.every((asset) => asset.provenance.approvalStatus === "approved"));
+  assert.ok(manifest.assets.every((asset) => asset.archivePath?.startsWith("content/media/robotaxi/archive/")));
+  assert.deepEqual(manifest.assets.map((asset) => asset.provenance.approvalStatus), ["paused", "revoked", "paused", "paused"]);
   assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
-  assert.ok(findPractice("robotaxi").modules.every((module) => module.media?.src));
+  assert.deepEqual(findPractice("robotaxi").modules, []);
 });
 
 test("practice media keeps reader interaction separate from internal provenance", () => {
@@ -58,6 +60,12 @@ test("practice media keeps reader interaction separate from internal provenance"
       approvedAt: "2026-07-28",
       scope: "测试",
     },
+    currentPublication: {
+      status: "active",
+      effectiveAt: "2026-07-29",
+      authority: "user",
+      reason: "测试",
+    },
     provenance: {
       repository: "Robotaxi",
       manifestPath: "media/evidence-approved/manifest.json",
@@ -72,6 +80,8 @@ test("practice media keeps reader interaction separate from internal provenance"
       altZh: "公开运行界面",
       ratio: "16:10",
       assetSha256: "b".repeat(64),
+      reviewStatus: "approved",
+      publicStatus: "public",
       provenance: {
         mediaRole: "current_system_evidence",
         stateBoundary: "系统证据。",
@@ -82,12 +92,31 @@ test("practice media keeps reader interaction separate from internal provenance"
     }],
   };
   assert.deepEqual(validatePracticeBundle(practice, manifest), []);
+  assert.equal(projectPractice(practice, manifest).modules.length, 1);
   assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], ratio: "4:3" }] }).length);
   assert.ok(validatePracticeBundle(practice, { ...manifest, reviewStatus: "draft" }).length);
-  assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], provenance: { ...manifest.assets[0].provenance, approvalStatus: "revoked" } }] }).length);
   assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], assetSha256: "not-a-hash" }] }).length);
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], action: { href: "javascript:alert(1)" } }] }, manifest).length);
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], group: "" }] }, manifest).length);
+
+  const archivedAsset = {
+    ...manifest.assets[0],
+    src: undefined,
+    archivePath: "content/media/robotaxi/archive/planning.png",
+    publicStatus: "internal",
+  };
+  for (const change of [
+    { currentPublication: { ...manifest.currentPublication, status: "suspended" }, assets: [archivedAsset] },
+    { reviewStatus: "superseded", assets: [archivedAsset] },
+    { publicStatus: "internal", assets: [archivedAsset] },
+    { assets: [{ ...manifest.assets[0], reviewStatus: "revoked", publicStatus: "internal", archivePath: "content/media/robotaxi/archive/planning.png", src: undefined, provenance: { ...manifest.assets[0].provenance, approvalStatus: "revoked" } }] },
+    { assets: [{ ...manifest.assets[0], reviewStatus: "pending_review", publicStatus: "internal", archivePath: "content/media/robotaxi/archive/planning.png", src: undefined, provenance: { ...manifest.assets[0].provenance, approvalStatus: "paused" } }] },
+  ]) {
+    const candidate = { ...manifest, ...change };
+    assert.deepEqual(validatePracticeBundle(practice, candidate), []);
+    assert.deepEqual(projectPractice(practice, candidate).modules, []);
+  }
+
 });
 
 test("practice headings advance from the presentation root rather than using a fixed module level", async () => {

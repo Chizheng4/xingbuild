@@ -2,16 +2,23 @@ import { access, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
+import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.js";
 
 export const practiceDirectory = path.join(projectRoot, "content", "products");
 export const robotaxiPracticeFile = path.join(practiceDirectory, "robotaxi.json");
 export const robotaxiMediaManifestFile = path.join(projectRoot, "content", "media", "robotaxi", "manifest.json");
 export const robotaxiPublicMediaDirectory = path.join(projectRoot, "public", "media", "robotaxi");
+export const robotaxiArchivedMediaDirectory = path.join(projectRoot, "content", "media", "robotaxi", "archive");
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const absoluteHttpsPattern = /^https:\/\/[^\s]+$/;
 const sha256Pattern = /^[a-f0-9]{64}$/;
 const approvedMediaRoles = new Set(["current_system_evidence", "in_progress_context"]);
+const manifestReviewStatuses = new Set(["approved", "superseded"]);
+const manifestPublicStatuses = new Set(["public", "internal"]);
+const publicationStatuses = new Set(["active", "suspended"]);
+const assetReviewStatuses = new Set(["approved", "pending_review", "revoked"]);
+const assetApprovalStatuses = new Set(["approved", "paused", "revoked"]);
 
 function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
@@ -54,6 +61,33 @@ function validateApprovalRecord(errors, approvalRecord, field) {
   if (approvalRecord.approvalStatus !== "approved") errors.push(`${field}.approvalStatus must be approved`);
 }
 
+function validateCurrentPublication(errors, currentPublication, field) {
+  if (!isObject(currentPublication)) {
+    errors.push(`${field} must be an object`);
+    return;
+  }
+  for (const key of ["status", "effectiveAt", "authority", "reason"]) {
+    if (!hasText(currentPublication[key])) errors.push(`${field}.${key} must be a non-empty string`);
+  }
+  if (!publicationStatuses.has(currentPublication.status)) errors.push(`${field}.status is invalid`);
+}
+
+function validateReviewRecord(errors, reviewRecord, field) {
+  if (reviewRecord === undefined) return;
+  if (!isObject(reviewRecord)) {
+    errors.push(`${field} must be an object`);
+    return;
+  }
+  for (const key of ["reviewId", "status", "effectiveAt", "authority", "reason"]) {
+    if (!hasText(reviewRecord[key])) errors.push(`${field}.${key} must be a non-empty string`);
+  }
+  if (!assetApprovalStatuses.has(reviewRecord.status)) errors.push(`${field}.status is invalid`);
+}
+
+export function isPublicMediaAsset(manifest, asset) {
+  return isPublicPracticeMedia(manifest, asset);
+}
+
 export function validatePracticeBundle(practice, manifest) {
   const errors = [];
   if (!isObject(practice)) return ["practice must be an object"];
@@ -69,16 +103,17 @@ export function validatePracticeBundle(practice, manifest) {
   if (!Array.isArray(practice.modules)) errors.push("practice.modules must be an array");
 
   const manifestAllowed = new Set([
-    "id", "version", "directory", "reviewStatus", "publicStatus", "approvalRecord", "provenance", "assets",
+    "id", "version", "directory", "reviewStatus", "publicStatus", "approvalRecord", "currentPublication", "provenance", "assets",
   ]);
   for (const key of Object.keys(manifest)) if (!manifestAllowed.has(key)) errors.push(`mediaManifest.${key} is not allowed`);
   for (const field of ["id", "version", "directory", "reviewStatus", "publicStatus"]) {
     if (!hasText(manifest[field])) errors.push(`mediaManifest.${field} must be a non-empty string`);
   }
   if (manifest.directory !== "/media/robotaxi") errors.push("mediaManifest.directory must be /media/robotaxi");
-  if (manifest.reviewStatus !== "approved") errors.push("mediaManifest.reviewStatus must be approved");
-  if (manifest.publicStatus !== "public") errors.push("mediaManifest.publicStatus must be public");
+  if (!manifestReviewStatuses.has(manifest.reviewStatus)) errors.push("mediaManifest.reviewStatus is invalid");
+  if (!manifestPublicStatuses.has(manifest.publicStatus)) errors.push("mediaManifest.publicStatus is invalid");
   validateApprovalRecord(errors, manifest.approvalRecord, "mediaManifest.approvalRecord");
+  validateCurrentPublication(errors, manifest.currentPublication, "mediaManifest.currentPublication");
   if (!isObject(manifest.provenance)) {
     errors.push("mediaManifest.provenance must be an object");
   } else {
@@ -96,17 +131,22 @@ export function validatePracticeBundle(practice, manifest) {
       errors.push(`${field} must be an object`);
       continue;
     }
-    const allowed = new Set(["id", "type", "src", "altZh", "ratio", "assetSha256", "provenance"]);
+    const allowed = new Set(["id", "type", "src", "archivePath", "altZh", "ratio", "assetSha256", "reviewStatus", "publicStatus", "provenance", "reviewRecord"]);
     for (const key of Object.keys(asset)) if (!allowed.has(key)) errors.push(`${field}.${key} is not allowed`);
-    for (const key of ["id", "type", "src", "altZh", "ratio", "assetSha256"]) {
+    for (const key of ["id", "type", "altZh", "ratio", "assetSha256", "reviewStatus", "publicStatus"]) {
       if (!hasText(asset[key])) errors.push(`${field}.${key} must be a non-empty string`);
     }
     if (!slugPattern.test(asset.id || "")) errors.push(`${field}.id must be kebab-case`);
     if (assets.has(asset.id)) errors.push(`duplicate media asset id: ${asset.id}`);
-    if (!asset.src?.startsWith(`${manifest.directory}/`)) errors.push(`${field}.src must stay under ${manifest.directory}`);
+    if (asset.src !== undefined && (!hasText(asset.src) || !asset.src.startsWith(`${manifest.directory}/`))) errors.push(`${field}.src must stay under ${manifest.directory}`);
+    if (asset.archivePath !== undefined && (!hasText(asset.archivePath) || !asset.archivePath.startsWith("content/media/robotaxi/archive/"))) errors.push(`${field}.archivePath must stay under content/media/robotaxi/archive`);
+    if (isPublicMediaAsset(manifest, asset) && asset.archivePath !== undefined) errors.push(`${field}.archivePath is only for non-public media`);
+    if (!isPublicMediaAsset(manifest, asset) && !hasText(asset.archivePath)) errors.push(`${field}.archivePath must preserve non-public media`);
     if (asset.type !== "image") errors.push(`${field}.type must be image`);
     if (asset.ratio !== "16:10") errors.push(`${field}.ratio must be 16:10`);
     if (!sha256Pattern.test(asset.assetSha256 || "")) errors.push(`${field}.assetSha256 must be a SHA-256 hash`);
+    if (!assetReviewStatuses.has(asset.reviewStatus)) errors.push(`${field}.reviewStatus is invalid`);
+    if (!manifestPublicStatuses.has(asset.publicStatus)) errors.push(`${field}.publicStatus is invalid`);
     if (!isObject(asset.provenance)) {
       errors.push(`${field}.provenance must be an object`);
     } else {
@@ -114,13 +154,13 @@ export function validatePracticeBundle(practice, manifest) {
       for (const key of Object.keys(asset.provenance)) if (!provenanceAllowed.has(key)) errors.push(`${field}.provenance.${key} is not allowed`);
       for (const key of provenanceAllowed) if (!hasText(asset.provenance[key])) errors.push(`${field}.provenance.${key} must be a non-empty string`);
       if (!approvedMediaRoles.has(asset.provenance.mediaRole)) errors.push(`${field}.provenance.mediaRole is not approved`);
-      if (asset.provenance.approvalStatus !== "approved") errors.push(`${field}.provenance.approvalStatus must be approved`);
+      if (!assetApprovalStatuses.has(asset.provenance.approvalStatus)) errors.push(`${field}.provenance.approvalStatus is invalid`);
     }
+    validateReviewRecord(errors, asset.reviewRecord, `${field}.reviewRecord`);
     assets.set(asset.id, asset);
   }
 
   const moduleIds = new Set();
-  const referencedAssets = new Set();
   for (const [index, module] of (practice.modules || []).entries()) {
     const field = `practice.modules[${index}]`;
     if (!isObject(module)) {
@@ -135,11 +175,9 @@ export function validatePracticeBundle(practice, manifest) {
     if (!slugPattern.test(module.id || "")) errors.push(`${field}.id must be kebab-case`);
     if (moduleIds.has(module.id)) errors.push(`duplicate practice module id: ${module.id}`);
     moduleIds.add(module.id);
-    if (!assets.has(module.mediaId)) errors.push(`${field}.mediaId references missing public media`);
-    else referencedAssets.add(module.mediaId);
+    if (!assets.has(module.mediaId)) errors.push(`${field}.mediaId references missing media record`);
     validateAction(errors, module.action, `${field}.action`);
   }
-  for (const id of assets.keys()) if (!referencedAssets.has(id)) errors.push(`media asset ${id} is not referenced by a practice module`);
   return errors;
 }
 
@@ -150,14 +188,18 @@ export async function assertCurrentPracticeContent() {
   ]);
   const errors = validatePracticeBundle(practice, manifest);
   for (const asset of manifest.assets) {
-    const file = path.join(robotaxiPublicMediaDirectory, path.basename(asset.src));
+    const isPublic = hasText(asset.src);
+    const file = isPublic
+      ? path.join(robotaxiPublicMediaDirectory, path.basename(asset.src))
+      : path.join(robotaxiArchivedMediaDirectory, path.basename(asset.archivePath));
+    const location = isPublic ? asset.src : asset.archivePath;
     try {
       await access(file);
       const bytes = await readFile(file);
       const actualHash = createHash("sha256").update(bytes).digest("hex");
-      if (actualHash !== asset.assetSha256) errors.push(`media asset hash mismatch: public${asset.src}`);
+      if (actualHash !== asset.assetSha256) errors.push(`media asset hash mismatch: ${location}`);
     } catch {
-      errors.push(`media asset file is missing: public${asset.src}`);
+      errors.push(`media asset file is missing: ${location}`);
     }
   }
   if (errors.length) throw new Error(errors.map((error) => `- ${error}`).join("\n"));

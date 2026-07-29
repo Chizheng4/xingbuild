@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.15.2 — Robotaxi 媒体生命周期与公开投影修订
+
+日期：2026-07-29
+
+- 将 Robotaxi 媒体 manifest 从“全部公开资产”收口为生命周期与 provenance 事实记录；公开投影只消费完整的 active + approved + public 单项链路。
+- 同步 Robotaxi `v049.13.15` / `1e01d499`：总 publication 暂停、四项历史媒体转为内部追溯记录，当前公开模块为零；不删除原文件、哈希、版本、commit、历史 approvalRecord 或撤销/暂停原因。
+- 扩展 content-only 范围与发布入口，使后续单一媒体 manifest 状态更新及其必要的 archive/public 资产可独立发布；不改页面结构、展示母版或其他内容对象。
+
 ## v0.15.1 — 画布平移与节点点击责任修订
 
 日期：2026-07-29
