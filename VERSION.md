@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.15.6 — Robotaxi 页面 canonical 收口
+
+日期：2026-07-30
+
+- 将 `/products` 固定为 Robotaxi 的唯一真实页面与 canonical reader URL。
+- `/products/robotaxi` 通过 replace 兼容跳转至 `/products`，不保留独立页面、标题或额外浏览器历史层。
+- 保持 `/robotaxi`、`/works` 与 `/works/robotaxi` 的既有兼容结果不变，不修改 RobotaxiPage、内容、视觉或外部系统 action。
+
 ## v0.15.5 — 全站 SiteShell 与 Footer 几何
 
 日期：2026-07-30

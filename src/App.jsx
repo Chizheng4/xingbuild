@@ -20,7 +20,6 @@ function resolvePage(location) {
   const { pathname } = location;
   if (pathname === "/") return <HomePage />;
   if (pathname === "/products") return <ProductsPage />;
-  if (pathname === "/products/robotaxi") return <RobotaxiPage />;
   if (pathname === "/business-observations") return <BusinessObservationsPage />;
   if (pathname === FRAMEWORK_BASE) return <FrameworkPage />;
   if (pathname === "/observations") return <ObservationsPage location={location} />;
@@ -63,6 +62,7 @@ export function App() {
       "/robotaxi": "/products",
       "/works": "/products",
       "/works/robotaxi": "/products",
+      "/products/robotaxi": "/products",
       "/enterprise-operating-framework": "/business-observations",
       "/works/enterprise-operating-framework": "/business-observations",
     };
@@ -73,7 +73,6 @@ export function App() {
     const labels = {
       "/": site.name,
       "/products": "B端产品",
-      "/products/robotaxi": "Robotaxi运营平台",
       "/business-observations": "经营观察",
       [FRAMEWORK_BASE]: "企业经营体系",
       "/observations": "观察",

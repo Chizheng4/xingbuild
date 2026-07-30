@@ -37,6 +37,16 @@ test("navigation and home project the approved IA without a fourth primary item"
   assert.match(home, /home-page__positioning-shell[\s\S]*<TwoColumnLayout/);
 });
 
+test("products is the only Robotaxi reader route and legacy paths replace to it", () => {
+  assert.match(app, /"\/products\/robotaxi": "\/products"/);
+  assert.match(app, /"\/robotaxi": "\/products"/);
+  assert.match(app, /"\/works": "\/products"/);
+  assert.match(app, /"\/works\/robotaxi": "\/products"/);
+  assert.match(app, /navigate\(redirects\[pathname\], \{ replace: true \}\)/);
+  assert.doesNotMatch(app, /pathname === "\/products\/robotaxi"\) return/);
+  assert.doesNotMatch(app, /"\/products\/robotaxi": "Robotaxi运营平台"/);
+});
+
 test("showcase and observation components preserve data-driven reader anatomy", () => {
   assert.match(practice, /ShowcaseLayout/);
   assert.match(practice, /SystemStage/);
