@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { architectureById } from "../src/content/frameworkModel.js";
-import { clampGraphPan, validateGraphGeometry } from "../src/components/framework/frameworkGeometry.js";
+import { frameworkLayouts } from "../src/generated/frameworkLayouts.js";
 import { DIGITAL_IMPLEMENTATION_VIEW, FRAMEWORK_BASE_PATH, FRAMEWORK_OVERVIEW_VIEW, frameworkViewPath, resolveFrameworkView } from "../src/components/framework/frameworkView.js";
 
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 const explorer = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
+const runtime = await readFile(new URL("../src/components/framework/FrameworkGraphRuntime.jsx", import.meta.url), "utf8");
 const page = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.meta.url), "utf8");
 const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
 const presentation = await readFile(new URL("../src/components/business-observations/BusinessObservationPresentation.jsx", import.meta.url), "utf8");
@@ -16,12 +17,13 @@ const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const overview = architectureById.get("enterprise-operation");
 const digital = architectureById.get("digital-implementation");
 
-test("the enterprise framework keeps one public route with legacy compatibility", () => {
-  assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <FrameworkPage \/>/);
+test("the enterprise framework keeps one canonical route with lazy legacy compatibility", () => {
+  assert.match(app, /const BusinessObservationsPage = lazy\(\(\) => import\("\.\/pages\/BusinessObservationsPage"\)/);
+  assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <BusinessObservationsPage \/>/);
   assert.match(app, /"\/works\/enterprise-operating-framework": "\/business-observations"/);
   assert.match(page, /BusinessObservationPresentation/);
   assert.match(page, /headingLevel=\{1\}/);
-  assert.doesNotMatch(page, /WORK · ENTERPRISE SYSTEMS|如何阅读|来源与版本|career/);
+  assert.match(presentation, /const FrameworkExplorer = lazy\(\(\) => import\("\.\.\/framework\/FrameworkExplorer"\)/);
 });
 
 test("the one local view has stable URL resolution and a single source model", () => {
@@ -35,13 +37,12 @@ test("the one local view has stable URL resolution and a single source model", (
   assert.equal(digital.defaultNodeId, "b2b-product-architecture");
   assert.match(explorer, /architectureById\.get\("digital-implementation"\)/);
   assert.match(explorer, /const activeArchitecture = activeViewId === digitalImplementation\.id \? digitalImplementation : overview/);
-  assert.doesNotMatch(explorer, /architectures\.map/);
+  assert.doesNotMatch(explorer, /definition:|role:|label:/);
 });
 
-test("overview drilldown enters immediately while local nodes retain selection semantics", () => {
-  assert.match(explorer, /const isDrilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && item\.id === drilldownNodeId/);
-  assert.match(explorer, /if \(isDrilldown\) onEnterView\(\);/);
-  assert.match(explorer, /进入数字化实现/);
+test("overview drilldown, local selection, return focus and reset retain the established path", () => {
+  assert.match(explorer, /const drilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && node\.id === drilldownNodeId/);
+  assert.match(explorer, /onActivate: drilldown \? enterDigitalImplementation : \(\) => selectNode\(node\.id\)/);
   assert.match(explorer, /navigate\(frameworkViewPath\(DIGITAL_IMPLEMENTATION_VIEW\), \{ scroll: false \}\)/);
   assert.match(explorer, /replace: true/);
   assert.match(explorer, /frameworkReturnFocus: true/);
@@ -51,24 +52,39 @@ test("overview drilldown enters immediately while local nodes retain selection s
   assert.match(explorer, /复位视图/);
 });
 
-test("only the canvas background owns pan pointer sessions", () => {
-  assert.match(explorer, /event\.target\.closest\("\.graph-node, button, a, input, select, textarea"\)\) return;/);
-  assert.match(explorer, /event\.currentTarget\.setPointerCapture\(event\.pointerId\)/);
-  assert.match(explorer, /if \(start\.dragged\) \{[\s\S]*suppressClickRef\.current = true/);
-  assert.match(explorer, /if \(!suppressClickRef\.current\) \{[\s\S]*if \(isDrilldown\) onEnterView\(\);/);
+test("React Flow remains a read-only reader runtime", () => {
+  for (const contract of [
+    /<Handle type="target"/,
+    /<Handle type="source"/,
+    /nodesDraggable=\{false\}/,
+    /nodesConnectable=\{false\}/,
+    /elementsSelectable=\{false\}/,
+    /nodesFocusable=\{false\}/,
+    /edgesFocusable=\{false\}/,
+    /disableKeyboardA11y/,
+    /deleteKeyCode=\{null\}/,
+    /onNodeClick=\{\(_, node\) => node\.data\.onActivate\(\)\}/,
+    /zoomOnScroll=\{false\}/,
+    /zoomOnPinch=\{false\}/,
+    /zoomOnDoubleClick=\{false\}/,
+    /proOptions=\{\{ hideAttribution: true \}\}/,
+  ]) assert.match(runtime, contract);
+  assert.doesNotMatch(runtime, /MiniMap|Controls|onNodesChange|onEdgesChange|onConnect/);
+  assert.match(runtime, /role="region"/);
+  assert.match(runtime, /aria-label=\{ariaLabel\}/);
+  assert.match(runtime, /只读业务架构节点。节点不可移动、删除或连接。/);
 });
 
-test("hover, focus, click and keyboard maintain an active-architecture explanation", () => {
-  for (const contract of [
-    /onMouseEnter=\{\(\) => onPreview/,
-    /onFocus=\{\(\) => onPreview/,
-    /aria-pressed=\{selected\}/,
-    /event\.key === "Enter" \|\| event\.key === " "/,
-    /aria-live="polite"/,
-    /const activeNodeId = previewId \?\? selectedId/,
-    /architecture\.edges\.filter/,
-    /connectedEdgeIds\(architecture, activeNodeId\)/,
-  ]) assert.match(explorer, contract);
+test("preview and persistent selection preserve authoritative explanation and accessible feedback", () => {
+  assert.match(runtime, /onMouseEnter=\{\(\) => data\.onPreview\(data\.id\)\}/);
+  assert.match(runtime, /onFocus=\{\(\) => data\.onPreview\(data\.id\)\}/);
+  assert.match(runtime, /aria-pressed=\{data\.selected\}/);
+  assert.match(runtime, /event\.key === "Enter" \|\| event\.key === " "/);
+  assert.match(explorer, /const activeNodeId = previewId \?\? selectedNode\.id/);
+  assert.match(explorer, /architecture\.edges\.filter/);
+  assert.match(explorer, /aria-live="polite"/);
+  assert.match(explorer, /已选择\$\{node\.name\}，下方说明已更新/);
+  assert.match(explorer, /prefers-reduced-motion: reduce/);
 });
 
 test("framework projections advance the explanation hierarchy from their own root heading", () => {
@@ -76,32 +92,30 @@ test("framework projections advance the explanation hierarchy from their own roo
   assert.match(home, /BusinessObservationPresentation[\s\S]*headingLevel=\{2\}/);
   assert.match(presentation, /descriptionHeadingLevel=\{headingLevel \+ 1\}/);
   assert.match(explorer, /const Subheading = `h\$\{headingLevel \+ 1\}`/);
-  for (const label of ["定义", "作用", "直接关系"]) {
-    assert.match(explorer, new RegExp(`<Subheading>${label}</Subheading>`));
-  }
-  assert.match(styles, /\.framework-description > :is\(h2, h3\)/);
-  assert.match(styles, /\.framework-description__body :is\(h3, h4\)/);
+  for (const label of ["定义", "作用", "直接关系"]) assert.match(explorer, new RegExp(`<Subheading>${label}</Subheading>`));
 });
 
-test("overview and digital projections keep valid desktop and mobile geometry", () => {
+test("desktop and mobile use generated layouts with natural mobile page scrolling", () => {
   for (const architecture of [overview, digital]) {
-    for (const projection of ["desktop", "mobile"]) assert.deepEqual(validateGraphGeometry(architecture, projection), []);
+    for (const projection of ["desktop", "mobile"]) {
+      const layout = frameworkLayouts[architecture.id][projection];
+      assert.equal(Object.keys(layout.nodes).length, architecture.nodes.length);
+      assert.equal(Object.keys(layout.edges).length, architecture.edges.length);
+    }
   }
-  assert.match(explorer, /<GraphEdges architecture=\{activeArchitecture\}[\s\S]*projection="desktop"/);
-  assert.match(explorer, /projection="mobile"/);
-  assert.match(explorer, /architecture\.tracks\.map/);
-  assert.match(explorer, /markerEnd=\{`url/);
-  assert.match(styles, /aspect-ratio: var\(--media-ratio\)/);
-  assert.match(styles, /\.graph-canvas \{[\s\S]*overflow: hidden/);
+  assert.match(explorer, /frameworkLayouts\[activeArchitecture\.id\]\?\.\[projection\]/);
+  assert.match(runtime, /panOnDrag=\{projection === "desktop"\}/);
+  assert.match(runtime, /preventScrolling=\{false\}/);
+  assert.match(styles, /\.graph-canvas\[data-projection="mobile"\][\s\S]*touch-action: pan-y/);
+  assert.doesNotMatch(styles, /data-mobile-world|--graph-pan|overflow-y:\s*(auto|scroll)/);
 });
 
-test("digital mobile pan uses world-height bounds while overview keeps its bounded context", () => {
-  assert.deepEqual(clampGraphPan({ x: 1000, y: -1000 }, { width: 940, height: 588 }), { x: 72, y: -47 });
-  const mobileClamp = clampGraphPan({ x: 1000, y: -1000 }, { width: 335, height: 520 }, digital, "mobile");
-  assert.equal(mobileClamp.x, 0);
-  assert.ok(Math.abs(mobileClamp.y + 446.7142857142857) < 0.000001);
-  assert.match(styles, /data-mobile-world="true"/);
-  assert.match(styles, /85\.7vw \+ 11\.6rem/);
+test("missing or invalid generated geometry falls back to same-source text", () => {
+  assert.match(explorer, /function usableLayout/);
+  assert.match(explorer, /FrameworkTextFallback/);
+  assert.match(explorer, /架构图暂不可用，以下为同源节点与直接关系。/);
+  assert.match(explorer, /architecture\.nodes\.map/);
+  assert.doesNotMatch(explorer, /catch[\s\S]*return null/);
 });
 
 test("no-JavaScript fallback retains the overview explanation", () => {

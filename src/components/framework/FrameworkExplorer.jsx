@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { architectureById, connectedEdgeIds } from "../../content/frameworkModel";
+import { MarkerType } from "@xyflow/react";
+import { architectureById } from "../../content/frameworkModel";
+import { frameworkLayouts } from "../../generated/frameworkLayouts";
 import { navigate, useLocation } from "../../lib/navigation";
-import { clampGraphPan, isLabelSafe } from "./frameworkGeometry";
 import { DIGITAL_IMPLEMENTATION_VIEW, FRAMEWORK_OVERVIEW_VIEW, frameworkViewPath, resolveFrameworkView } from "./frameworkView";
+import { FrameworkGraphRuntime } from "./FrameworkGraphRuntime";
 import { ShowcaseLayout } from "../site/LayoutShell";
 import { SystemStage } from "../showcase/SystemStage";
 
@@ -10,102 +12,12 @@ const overview = architectureById.get("enterprise-operation");
 const digitalImplementation = architectureById.get("digital-implementation");
 const drilldownNodeId = "digital-implementation";
 
-function GraphNode({
-  architecture,
-  activeViewId,
-  item,
-  selectedId,
-  previewId,
-  connectedNodeIds,
-  onPreview,
-  onSelect,
-  onEnterView,
-  suppressClickRef,
-  nodeRef,
-}) {
-  const selected = selectedId === item.id;
-  const previewed = previewId === item.id;
-  const related = connectedNodeIds.has(item.id);
-  const isDrilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && item.id === drilldownNodeId;
-  const { desktop, mobile } = item.projection;
-  const activate = () => {
-    if (!suppressClickRef.current) {
-      if (isDrilldown) onEnterView();
-      else onSelect(item.id);
-    }
-  };
-  return (
-    <button
-      ref={nodeRef}
-      type="button"
-      className={[
-        "graph-node",
-        `is-${item.kind}`,
-        isDrilldown && "is-drilldown",
-        selected && "is-selected",
-        previewed && "is-previewed",
-        related && "is-related",
-      ].filter(Boolean).join(" ")}
-      style={{
-        "--graph-node-x": `${desktop.x}%`,
-        "--graph-node-y": `${(desktop.y / architecture.height.desktop) * 100}%`,
-        "--graph-node-width": `${desktop.width}%`,
-        "--graph-node-mobile-x": `${mobile.x}%`,
-        "--graph-node-mobile-y": `${(mobile.y / architecture.height.mobile) * 100}%`,
-        "--graph-node-mobile-width": `${mobile.width}%`,
-      }}
-      aria-pressed={selected}
-      aria-label={isDrilldown ? `${item.name}，进入数字化实现` : `${item.name}，点击查看解释`}
-      onMouseEnter={() => onPreview(item.id)}
-      onMouseLeave={() => onPreview(null)}
-      onFocus={() => onPreview(item.id)}
-      onBlur={() => onPreview(null)}
-      onClick={activate}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          activate();
-        }
-      }}
-    >
-      <span>{item.name}</span>
-      {isDrilldown ? <small>进入数字化实现</small> : null}
-    </button>
-  );
-}
-
-function GraphEdges({ architecture, selectedId, previewId, projection, className }) {
-  const activeNodeId = previewId ?? selectedId;
-  const activeEdgeIds = new Set(connectedEdgeIds(architecture, activeNodeId));
-  const markerId = `framework-${architecture.id}-${projection}-arrow`;
-  return (
-    <svg className={["graph-canvas__edges", className].filter(Boolean).join(" ")} viewBox={architecture.viewBox[projection]} aria-hidden="true" preserveAspectRatio="none">
-      <defs>
-        <marker id={markerId} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-          <path d="M0,0 L7,3.5 L0,7Z" />
-        </marker>
-      </defs>
-      {architecture.tracks.map((track) => <path key={track.id} className="graph-track" d={track.projection[projection].path} />)}
-      {architecture.edges.map((edge) => {
-        const active = activeEdgeIds.has(edge.id);
-        const safe = isLabelSafe(architecture, edge, projection);
-        return (
-          <g key={edge.id} className={`graph-edge${active ? " is-active" : ""}`} data-edge-id={edge.id}>
-            <path d={edge.projection[projection].path} markerEnd={`url(#${markerId})`} />
-            {safe ? <text x={edge.projection[projection].label.x} y={edge.projection[projection].label.y}>{edge.label}</text> : null}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-function FrameworkDescription({ architecture, selectedNode, headingLevel = 2 }) {
+function FrameworkDescription({ architecture, selectedNode, headingLevel = 2, descriptionRef }) {
   const Heading = `h${headingLevel}`;
   const Subheading = `h${headingLevel + 1}`;
   const directRelations = architecture.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
-    <section className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`}>
+    <section ref={descriptionRef} className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`} tabIndex="-1">
       <p className="framework-description__status">当前节点</p>
       <Heading id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</Heading>
       <div className="framework-description__body">
@@ -121,101 +33,144 @@ function FrameworkDescription({ architecture, selectedNode, headingLevel = 2 }) 
   );
 }
 
+function FrameworkTextFallback({ architecture, onSelect }) {
+  return (
+    <div className="framework-fallback" role="status">
+      <p>架构图暂不可用，以下为同源节点与直接关系。</p>
+      <ul>
+        {architecture.nodes.map((node) => (
+          <li key={node.id}>
+            <button type="button" onClick={() => onSelect(node.id)}>{node.name}</button>
+            <span>{node.role}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function usableLayout(layout, architecture) {
+  if (!layout || !Number.isFinite(layout.width) || !Number.isFinite(layout.height)) return false;
+  return architecture.nodes.every((node) => layout.nodes[node.id])
+    && architecture.edges.every((edge) => layout.edges[edge.id]?.source === edge.from && layout.edges[edge.id]?.target === edge.to);
+}
+
 export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   const location = useLocation();
   const activeViewId = resolveFrameworkView(location.search);
   const activeArchitecture = activeViewId === digitalImplementation.id ? digitalImplementation : overview;
   const [selectedId, setSelectedId] = useState(activeArchitecture.defaultNodeId);
   const [previewId, setPreviewId] = useState(null);
-  const [viewportTransform, setViewportTransform] = useState({ x: 0, y: 0 });
-  const startRef = useRef(null);
-  const suppressClickRef = useRef(false);
+  const [projection, setProjection] = useState(() => window.matchMedia("(max-width: 519px)").matches ? "mobile" : "desktop");
+  const flowRef = useRef(null);
   const liveRef = useRef(null);
   const returnNodeRef = useRef(null);
+  const descriptionRef = useRef(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 519px)");
+    const update = () => setProjection(query.matches ? "mobile" : "desktop");
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const isExplicitReturn = activeViewId === FRAMEWORK_OVERVIEW_VIEW && location.state?.frameworkReturnFocus;
+    let focusTimer;
     setSelectedId(isExplicitReturn ? drilldownNodeId : activeArchitecture.defaultNodeId);
     setPreviewId(null);
-    setViewportTransform({ x: 0, y: 0 });
-    if (isExplicitReturn) {
-      window.requestAnimationFrame(() => returnNodeRef.current?.focus());
-    }
-  }, [activeArchitecture.defaultNodeId, activeViewId, location.state]);
+    window.requestAnimationFrame(() => {
+      flowRef.current?.fitView({ padding: projection === "mobile" ? 0.02 : 0.06, duration: 0 });
+      if (isExplicitReturn) {
+        focusTimer = window.setTimeout(() => returnNodeRef.current?.focus(), 80);
+      }
+    });
+    return () => window.clearTimeout(focusTimer);
+  }, [activeArchitecture.defaultNodeId, activeViewId, location.state, projection]);
 
-  const selectedNode = activeArchitecture.nodes.find((item) => item.id === selectedId) ?? activeArchitecture.nodes.find((item) => item.id === activeArchitecture.defaultNodeId);
+  const selectedNode = activeArchitecture.nodes.find((item) => item.id === selectedId)
+    ?? activeArchitecture.nodes.find((item) => item.id === activeArchitecture.defaultNodeId);
+  const activeNodeId = previewId ?? selectedNode.id;
   const connectedNodeIds = useMemo(() => {
-    const ids = new Set([selectedNode.id]);
+    const ids = new Set([activeNodeId]);
     for (const edge of activeArchitecture.edges) {
-      if (edge.from === selectedNode.id) ids.add(edge.to);
-      if (edge.to === selectedNode.id) ids.add(edge.from);
+      if (edge.from === activeNodeId) ids.add(edge.to);
+      if (edge.to === activeNodeId) ids.add(edge.from);
     }
     return ids;
-  }, [activeArchitecture, selectedNode.id]);
+  }, [activeArchitecture, activeNodeId]);
 
-  const selectNode = (id) => {
+  const selectNode = (id, { reveal = true } = {}) => {
     const node = activeArchitecture.nodes.find((item) => item.id === id);
     if (!node) return;
     setSelectedId(id);
-    if (liveRef.current) liveRef.current.textContent = `已选择${node.name}`;
+    if (liveRef.current) liveRef.current.textContent = `已选择${node.name}，下方说明已更新`;
+    if (reveal && projection === "mobile") {
+      window.requestAnimationFrame(() => {
+        const rect = descriptionRef.current?.getBoundingClientRect();
+        if (rect && (rect.top < 0 || rect.top > window.innerHeight - 80)) {
+          descriptionRef.current.scrollIntoView({
+            block: "start",
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          });
+        }
+      });
+    }
   };
 
+  const enterDigitalImplementation = () => navigate(frameworkViewPath(DIGITAL_IMPLEMENTATION_VIEW), { scroll: false });
+  const returnToOverview = () => navigate(frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW), {
+    replace: true,
+    scroll: false,
+    state: { frameworkReturnFocus: true },
+  });
   const reset = () => {
-    setViewportTransform({ x: 0, y: 0 });
-    setSelectedId(activeArchitecture.defaultNodeId);
+    selectNode(activeArchitecture.defaultNodeId, { reveal: false });
     setPreviewId(null);
+    flowRef.current?.fitView({ padding: projection === "mobile" ? 0.02 : 0.06, duration: 0 });
     if (liveRef.current) liveRef.current.textContent = `已复位${activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}`;
   };
 
-  const enterDigitalImplementation = () => {
-    navigate(frameworkViewPath(DIGITAL_IMPLEMENTATION_VIEW), { scroll: false });
-  };
-
-  const returnToOverview = () => {
-    navigate(frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW), {
-      replace: true,
-      scroll: false,
-      state: { frameworkReturnFocus: true },
-    });
-  };
-
-  const pointerDown = (event) => {
-    if (event.target.closest(".graph-node, button, a, input, select, textarea")) return;
-    startRef.current = {
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
-      origin: viewportTransform,
-      canvas: { width: event.currentTarget.clientWidth, height: event.currentTarget.clientHeight },
-      dragged: false,
+  const layout = frameworkLayouts[activeArchitecture.id]?.[projection];
+  const ready = usableLayout(layout, activeArchitecture);
+  const graphNodes = useMemo(() => ready ? activeArchitecture.nodes.map((node) => {
+    const geometry = layout.nodes[node.id];
+    const drilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && node.id === drilldownNodeId;
+    const selected = selectedNode.id === node.id;
+    const previewed = previewId === node.id;
+    return {
+      id: node.id,
+      type: "frameworkNode",
+      position: { x: geometry.x, y: geometry.y },
+      style: { width: geometry.width, height: geometry.height },
+      data: {
+        id: node.id,
+        name: node.name,
+        kind: node.kind,
+        drilldown,
+        selected,
+        previewed,
+        related: connectedNodeIds.has(node.id),
+        dimmed: !connectedNodeIds.has(node.id),
+        onPreview: setPreviewId,
+        onActivate: drilldown ? enterDigitalImplementation : () => selectNode(node.id),
+        nodeRef: drilldown ? returnNodeRef : undefined,
+      },
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const pointerMove = (event) => {
-    const start = startRef.current;
-    if (!start || start.pointerId !== event.pointerId) return;
-    const x = event.clientX - start.x;
-    const y = event.clientY - start.y;
-    if (Math.hypot(x, y) > 4) start.dragged = true;
-    if (start.dragged) {
-      setViewportTransform(clampGraphPan(
-        { x: start.origin.x + x, y: start.origin.y + y },
-        start.canvas,
-        activeArchitecture,
-        window.matchMedia("(max-width: 519px)").matches ? "mobile" : "desktop",
-      ));
-    }
-  };
-  const pointerUp = (event) => {
-    const start = startRef.current;
-    if (!start || start.pointerId !== event.pointerId) return;
-    if (start.dragged) {
-      suppressClickRef.current = true;
-      event.preventDefault();
-      window.setTimeout(() => { suppressClickRef.current = false; }, 0);
-    }
-    startRef.current = null;
-  };
+  }) : [], [activeArchitecture, activeViewId, connectedNodeIds, layout, previewId, ready, selectedNode.id]);
+  const graphEdges = useMemo(() => ready ? activeArchitecture.edges.map((edge) => {
+    const geometry = layout.edges[edge.id];
+    const active = edge.from === activeNodeId || edge.to === activeNodeId;
+    return {
+      id: edge.id,
+      source: edge.from,
+      target: edge.to,
+      type: "frameworkEdge",
+      markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+      data: { ...geometry, text: edge.label, active },
+    };
+  }) : [], [activeArchitecture, activeNodeId, layout, ready]);
 
   const stage = (
     <SystemStage>
@@ -228,33 +183,22 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
       </div>
       <div
         className="graph-canvas"
-        data-mobile-world={activeViewId === digitalImplementation.id ? "true" : undefined}
         data-active-view={activeViewId}
-        style={{ "--graph-mobile-world-height": activeArchitecture.height.mobile }}
-        onPointerDown={pointerDown}
-        onPointerMove={pointerMove}
-        onPointerUp={pointerUp}
-        onPointerCancel={pointerUp}
+        data-projection={projection}
+        style={ready ? { "--framework-layout-ratio": `${layout.width} / ${layout.height}` } : undefined}
       >
-        <div className="graph-canvas__viewport" style={{ "--graph-pan-x": `${viewportTransform.x}px`, "--graph-pan-y": `${viewportTransform.y}px` }}>
-          {activeArchitecture.boundary ? <div className="graph-canvas__boundary" aria-hidden="true"><span>{activeArchitecture.boundary.label}</span></div> : null}
-          <GraphEdges architecture={activeArchitecture} selectedId={selectedNode.id} previewId={previewId} projection="desktop" className="graph-canvas__edges--desktop" />
-          {activeViewId === digitalImplementation.id ? <GraphEdges architecture={activeArchitecture} selectedId={selectedNode.id} previewId={previewId} projection="mobile" className="graph-canvas__edges--mobile" /> : null}
-          {activeArchitecture.nodes.map((item) => <GraphNode
-            key={item.id}
-            architecture={activeArchitecture}
-            activeViewId={activeViewId}
-            item={item}
-            selectedId={selectedNode.id}
-            previewId={previewId}
-            connectedNodeIds={connectedNodeIds}
-            onPreview={setPreviewId}
-            onSelect={selectNode}
-            onEnterView={enterDigitalImplementation}
-            suppressClickRef={suppressClickRef}
-            nodeRef={item.id === drilldownNodeId && activeViewId === FRAMEWORK_OVERVIEW_VIEW ? returnNodeRef : undefined}
-          />)}
-        </div>
+        {activeArchitecture.boundary ? <p className="graph-canvas__boundary-label">{activeArchitecture.boundary.label}</p> : null}
+        {ready ? (
+          <FrameworkGraphRuntime
+            nodes={graphNodes}
+            edges={graphEdges}
+            width={layout.width}
+            height={layout.height}
+            projection={projection}
+            ariaLabel={activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览，只读架构图" : "数字化实现，只读架构图"}
+            onInit={(instance) => { flowRef.current = instance; }}
+          />
+        ) : <FrameworkTextFallback architecture={activeArchitecture} onSelect={selectNode} />}
       </div>
     </SystemStage>
   );
@@ -262,7 +206,7 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   return (
     <section className="framework-explorer" data-active-view={activeViewId} aria-label={activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}>
       <ShowcaseLayout
-        description={<FrameworkDescription architecture={activeArchitecture} selectedNode={selectedNode} headingLevel={descriptionHeadingLevel} />}
+        description={<FrameworkDescription architecture={activeArchitecture} selectedNode={selectedNode} headingLevel={descriptionHeadingLevel} descriptionRef={descriptionRef} />}
         stage={stage}
       />
       <p className="sr-only" aria-live="polite" ref={liveRef} />

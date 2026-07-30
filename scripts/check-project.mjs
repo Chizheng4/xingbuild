@@ -29,6 +29,11 @@ const requiredFiles = [
   "src/components/site/SiteHeader.jsx",
   "src/components/reading/Article.jsx",
   "src/components/showcase/SystemStage.jsx",
+  "src/components/framework/FrameworkExplorer.jsx",
+  "src/components/framework/FrameworkGraphRuntime.jsx",
+  "src/components/framework/frameworkPresentation.js",
+  "src/generated/frameworkLayouts.js",
+  "scripts/generate-framework-layout.mjs",
   "src/components/reading/RichDocument.jsx",
   "publish-xingbuild.command",
   "publish-content.command",
@@ -48,6 +53,7 @@ const requiredFiles = [
   ".openai/hosting.json",
   "worker/index.js",
   "tests/visit-overview.test.mjs",
+  "tests/framework-layout.test.mjs",
 ];
 
 for (const file of requiredFiles) {

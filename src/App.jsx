@@ -1,14 +1,12 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { HomePage } from "./pages/HomePage";
 import { RobotaxiPage } from "./pages/RobotaxiPage";
 import { ProductsPage } from "./pages/ProductsPage";
-import { BusinessObservationsPage } from "./pages/BusinessObservationsPage";
 import { ObservationsPage } from "./pages/ObservationsPage";
 import { ObservationPage } from "./pages/ObservationPage";
 import { DraftObservationPage } from "./pages/DraftObservationPage";
 import { AboutPage } from "./pages/AboutPage";
-import { FrameworkPage } from "./pages/FrameworkPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
 import { navigate, useLocation } from "./lib/navigation";
@@ -17,12 +15,14 @@ import { findObservation } from "./content/observationRepository";
 import { FRAMEWORK_BASE } from "./content/frameworkModel";
 import { startVisitQualification } from "./lib/visitQualification";
 
+const BusinessObservationsPage = lazy(() => import("./pages/BusinessObservationsPage").then((module) => ({ default: module.BusinessObservationsPage })));
+
 function resolvePage(location) {
   const { pathname } = location;
   if (pathname === "/") return <HomePage />;
   if (pathname === "/products") return <ProductsPage />;
   if (pathname === "/business-observations") return <BusinessObservationsPage />;
-  if (pathname === FRAMEWORK_BASE) return <FrameworkPage />;
+  if (pathname === FRAMEWORK_BASE) return <BusinessObservationsPage />;
   if (pathname === "/observations") return <ObservationsPage location={location} />;
   if (pathname === "/about") return <AboutPage />;
 
@@ -41,7 +41,7 @@ function resolvePage(location) {
 
   if (pathname.startsWith("/works/")) {
     const parts = pathname.split("/").filter(Boolean);
-    if (parts[1] === "enterprise-operating-framework") return <FrameworkPage />;
+    if (parts[1] === "enterprise-operating-framework") return <BusinessObservationsPage />;
     if (parts[1] === "robotaxi") return <RobotaxiPage />;
     return <NotFoundPage />;
   }
@@ -90,7 +90,7 @@ export function App() {
   return (
     <div className="site-shell">
       <SiteHeader pathname={pathname} />
-      <main id="main-content">{resolvePage(location)}</main>
+      <main id="main-content"><Suspense fallback={<p className="route-loading" role="status">正在载入页面…</p>}>{resolvePage(location)}</Suspense></main>
       <SiteFooter />
     </div>
   );

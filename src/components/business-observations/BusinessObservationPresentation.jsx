@@ -1,4 +1,6 @@
-import { FrameworkExplorer } from "../framework/FrameworkExplorer";
+import { lazy, Suspense } from "react";
+
+const FrameworkExplorer = lazy(() => import("../framework/FrameworkExplorer").then((module) => ({ default: module.FrameworkExplorer })));
 
 export function BusinessObservationPresentation({ observation, headingLevel = 1, headingId }) {
   const Heading = `h${headingLevel}`;
@@ -8,7 +10,9 @@ export function BusinessObservationPresentation({ observation, headingLevel = 1,
         <Heading id={headingId}>{observation.title}</Heading>
         <p>{observation.summary}</p>
       </header>
-      <FrameworkExplorer descriptionHeadingLevel={headingLevel + 1} />
+      <Suspense fallback={<p className="framework-runtime-loading" role="status">正在载入企业经营体系架构图…</p>}>
+        <FrameworkExplorer descriptionHeadingLevel={headingLevel + 1} />
+      </Suspense>
     </section>
   );
 }
