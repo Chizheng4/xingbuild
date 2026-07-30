@@ -57,6 +57,29 @@ test("generated layouts preserve every business edge direction and bounded geome
   assert.ok(renderedHeight >= 620 && renderedHeight <= frameworkPresentation.mobile.maxRenderedHeight);
 });
 
+test("desktop relationship labels do not expand ELK bounds and mobile keeps them hidden", async () => {
+  const layouts = await generateFrameworkLayouts();
+  for (const architectureId of FRAMEWORK_LAYOUT_TARGETS) {
+    const architecture = architectureById.get(architectureId);
+    const labelBoxes = [];
+    for (const edge of architecture.edges) {
+      const label = layouts[architectureId].desktop.edges[edge.id].label;
+      assert.ok(label);
+      assert.equal(layouts[architectureId].mobile.edges[edge.id].label, null);
+      const box = {
+        x: label.x - Math.max(32, edge.label.length * 10 + 8) / 2,
+        y: label.y - 7,
+        width: Math.max(32, edge.label.length * 10 + 8),
+        height: 14,
+      };
+      for (const node of Object.values(layouts[architectureId].desktop.nodes)) assert.equal(overlaps(box, node), false);
+      for (const placed of labelBoxes) assert.equal(overlaps(box, placed), false);
+      labelBoxes.push(box);
+    }
+  }
+  assert.ok(layouts["enterprise-operation"].desktop.width <= 850);
+});
+
 test("presentation config carries no duplicated business wording", () => {
   const serialized = JSON.stringify(frameworkPresentation);
   for (const architectureId of FRAMEWORK_LAYOUT_TARGETS) {

@@ -70,6 +70,7 @@ test("React Flow remains a read-only reader runtime", () => {
     /proOptions=\{\{ hideAttribution: true \}\}/,
   ]) assert.match(runtime, contract);
   assert.doesNotMatch(runtime, /MiniMap|Controls|onNodesChange|onEdgesChange|onConnect/);
+  assert.match(runtime, /data\.active && data\.label/);
   assert.match(runtime, /role="region"/);
   assert.match(runtime, /aria-label=\{ariaLabel\}/);
   assert.match(runtime, /只读业务架构节点。节点不可移动、删除或连接。/);

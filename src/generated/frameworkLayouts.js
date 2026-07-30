@@ -2,48 +2,48 @@
 export const frameworkLayouts = {
   "enterprise-operation": {
     "desktop": {
-      "width": 1042,
-      "height": 351,
+      "width": 634,
+      "height": 314,
       "nodes": {
         "external-context": {
           "x": 54,
-          "y": 114,
+          "y": 77,
           "width": 118,
           "height": 78
         },
         "operation-design": {
-          "x": 326,
-          "y": 65,
+          "x": 190,
+          "y": 28,
           "width": 118,
           "height": 78
         },
         "digital-implementation": {
-          "x": 598,
-          "y": 78,
+          "x": 326,
+          "y": 41,
           "width": 118,
           "height": 78
         },
         "enterprise-reality": {
-          "x": 870,
-          "y": 78,
+          "x": 462,
+          "y": 41,
           "width": 118,
           "height": 78
         },
         "enterprise-operation": {
-          "x": 190,
-          "y": 245,
+          "x": 54,
+          "y": 208,
           "width": 118,
           "height": 78
         },
         "operating-facts-results": {
-          "x": 462,
-          "y": 245,
+          "x": 190,
+          "y": 208,
           "width": 118,
           "height": 78
         },
         "operating-decision": {
-          "x": 734,
-          "y": 245,
+          "x": 326,
+          "y": 208,
           "width": 118,
           "height": 78
         }
@@ -55,24 +55,24 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 172,
-              "y": 140
+              "y": 103
             },
             {
               "x": 180,
-              "y": 140
+              "y": 103
             },
             {
               "x": 180,
-              "y": 104
+              "y": 67
             },
             {
-              "x": 326,
-              "y": 104
+              "x": 190,
+              "y": 67
             }
           ],
           "label": {
-            "x": 249,
-            "y": 89
+            "x": 181,
+            "y": 18
           }
         },
         "op-external-reality": {
@@ -81,24 +81,24 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 172,
-              "y": 166
+              "y": 129
             },
             {
-              "x": 860,
-              "y": 166
+              "x": 452,
+              "y": 129
             },
             {
-              "x": 860,
-              "y": 137
+              "x": 452,
+              "y": 100
             },
             {
-              "x": 870,
-              "y": 137
+              "x": 462,
+              "y": 100
             }
           ],
           "label": {
-            "x": 521,
-            "y": 181
+            "x": 317,
+            "y": 165
           }
         },
         "op-design-reality": {
@@ -106,33 +106,33 @@ export const frameworkLayouts = {
           "target": "enterprise-reality",
           "points": [
             {
-              "x": 444,
-              "y": 91
+              "x": 308,
+              "y": 54
+            },
+            {
+              "x": 316,
+              "y": 54
+            },
+            {
+              "x": 316,
+              "y": 30
             },
             {
               "x": 452,
-              "y": 91
+              "y": 30
             },
             {
               "x": 452,
-              "y": 53
+              "y": 61
             },
             {
-              "x": 860,
-              "y": 53
-            },
-            {
-              "x": 860,
-              "y": 98
-            },
-            {
-              "x": 870,
-              "y": 98
+              "x": 462,
+              "y": 61
             }
           ],
           "label": {
-            "x": 657,
-            "y": 38
+            "x": 385,
+            "y": 18
           }
         },
         "op-design-digital": {
@@ -140,17 +140,17 @@ export const frameworkLayouts = {
           "target": "digital-implementation",
           "points": [
             {
-              "x": 444,
-              "y": 117
+              "x": 308,
+              "y": 80
             },
             {
-              "x": 598,
-              "y": 117
+              "x": 326,
+              "y": 80
             }
           ],
           "label": {
-            "x": 521,
-            "y": 132
+            "x": 317,
+            "y": 18
           }
         },
         "op-digital-reality": {
@@ -158,17 +158,17 @@ export const frameworkLayouts = {
           "target": "enterprise-reality",
           "points": [
             {
-              "x": 716,
-              "y": 117
+              "x": 444,
+              "y": 80
             },
             {
-              "x": 870,
-              "y": 117
+              "x": 462,
+              "y": 80
             }
           ],
           "label": {
-            "x": 793,
-            "y": 132
+            "x": 453,
+            "y": 31
           }
         },
         "op-reality-operation": {
@@ -176,33 +176,33 @@ export const frameworkLayouts = {
           "target": "enterprise-operation",
           "points": [
             {
-              "x": 988,
-              "y": 117
+              "x": 580,
+              "y": 80
             },
             {
-              "x": 1014,
-              "y": 117
+              "x": 606,
+              "y": 80
             },
             {
-              "x": 1014,
-              "y": 218
-            },
-            {
-              "x": 28,
-              "y": 218
+              "x": 606,
+              "y": 181
             },
             {
               "x": 28,
-              "y": 284
+              "y": 181
             },
             {
-              "x": 190,
-              "y": 284
+              "x": 28,
+              "y": 247
+            },
+            {
+              "x": 54,
+              "y": 247
             }
           ],
           "label": {
-            "x": 113,
-            "y": 299
+            "x": 317,
+            "y": 296
           }
         },
         "op-operation-facts": {
@@ -210,17 +210,17 @@ export const frameworkLayouts = {
           "target": "operating-facts-results",
           "points": [
             {
-              "x": 308,
-              "y": 284
+              "x": 172,
+              "y": 247
             },
             {
-              "x": 462,
-              "y": 284
+              "x": 190,
+              "y": 247
             }
           ],
           "label": {
-            "x": 385,
-            "y": 299
+            "x": 181,
+            "y": 198
           }
         },
         "op-facts-decision": {
@@ -228,17 +228,17 @@ export const frameworkLayouts = {
           "target": "operating-decision",
           "points": [
             {
-              "x": 580,
-              "y": 284
+              "x": 308,
+              "y": 247
             },
             {
-              "x": 734,
-              "y": 284
+              "x": 326,
+              "y": 247
             }
           ],
           "label": {
-            "x": 657,
-            "y": 299
+            "x": 317,
+            "y": 198
           }
         },
         "op-decision-design": {
@@ -246,33 +246,33 @@ export const frameworkLayouts = {
           "target": "operation-design",
           "points": [
             {
-              "x": 793,
-              "y": 245
-            },
-            {
-              "x": 793,
-              "y": 233
-            },
-            {
-              "x": 312,
-              "y": 233
-            },
-            {
-              "x": 312,
-              "y": 155
+              "x": 385,
+              "y": 208
             },
             {
               "x": 385,
-              "y": 155
+              "y": 196
             },
             {
-              "x": 385,
-              "y": 143
+              "x": 176,
+              "y": 196
+            },
+            {
+              "x": 176,
+              "y": 118
+            },
+            {
+              "x": 249,
+              "y": 118
+            },
+            {
+              "x": 249,
+              "y": 106
             }
           ],
           "label": {
-            "x": 320,
-            "y": 147
+            "x": 491,
+            "y": 157
           }
         },
         "op-decision-operation": {
@@ -280,25 +280,25 @@ export const frameworkLayouts = {
           "target": "enterprise-operation",
           "points": [
             {
-              "x": 734,
-              "y": 284
+              "x": 326,
+              "y": 247
             },
             {
-              "x": 164,
-              "y": 284
+              "x": 28,
+              "y": 247
             },
             {
-              "x": 164,
-              "y": 284
+              "x": 28,
+              "y": 247
             },
             {
-              "x": 308,
-              "y": 284
+              "x": 172,
+              "y": 247
             }
           ],
           "label": {
-            "x": 172,
-            "y": 276
+            "x": 249,
+            "y": 198
           }
         }
       }
@@ -532,10 +532,7 @@ export const frameworkLayouts = {
               "y": 146
             }
           ],
-          "label": {
-            "x": 14,
-            "y": 150
-          }
+          "label": null
         },
         "op-decision-operation": {
           "source": "operating-decision",
@@ -566,70 +563,67 @@ export const frameworkLayouts = {
               "y": 354
             }
           ],
-          "label": {
-            "x": 30,
-            "y": 366
-          }
+          "label": null
         }
       }
     }
   },
   "digital-implementation": {
     "desktop": {
-      "width": 850,
-      "height": 507,
+      "width": 626,
+      "height": 480,
       "nodes": {
         "enterprise-business-architecture": {
           "x": 64,
-          "y": 41,
-          "width": 118,
-          "height": 78
-        },
-        "b2b-product-architecture": {
-          "x": 298,
           "y": 28,
           "width": 118,
           "height": 78
         },
+        "b2b-product-architecture": {
+          "x": 200,
+          "y": 65,
+          "width": 118,
+          "height": 78
+        },
         "data-architecture": {
-          "x": 492,
-          "y": 78,
+          "x": 336,
+          "y": 28,
           "width": 118,
           "height": 78
         },
         "technical-architecture": {
           "x": 64,
-          "y": 220,
+          "y": 207,
           "width": 118,
           "height": 78
         },
         "engineering": {
-          "x": 298,
-          "y": 220,
+          "x": 200,
+          "y": 207,
           "width": 118,
           "height": 78
         },
         "enterprise-digital-system": {
           "x": 64,
-          "y": 364,
+          "y": 374,
           "width": 118,
           "height": 78
         },
         "enterprise-reality-operation": {
-          "x": 298,
-          "y": 351,
+          "x": 200,
+          "y": 338,
           "width": 118,
           "height": 78
         },
         "digital-facts-results": {
-          "x": 492,
-          "y": 364,
+          "x": 336,
+          "y": 374,
           "width": 118,
           "height": 78
         },
         "digital-decision": {
-          "x": 686,
-          "y": 364,
+          "x": 472,
+          "y": 374,
           "width": 118,
           "height": 78
         }
@@ -641,16 +635,24 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 182,
-              "y": 67
+              "y": 80
             },
             {
-              "x": 298,
-              "y": 67
+              "x": 190,
+              "y": 80
+            },
+            {
+              "x": 190,
+              "y": 104
+            },
+            {
+              "x": 200,
+              "y": 104
             }
           ],
           "label": {
-            "x": 240,
-            "y": 82
+            "x": 191,
+            "y": 18
           }
         },
         "di-business-data": {
@@ -659,24 +661,16 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 182,
-              "y": 93
+              "y": 54
             },
             {
-              "x": 190,
-              "y": 93
-            },
-            {
-              "x": 190,
-              "y": 130
-            },
-            {
-              "x": 492,
-              "y": 130
+              "x": 336,
+              "y": 54
             }
           ],
           "label": {
-            "x": 357,
-            "y": 145
+            "x": 501,
+            "y": 67
           }
         },
         "di-product-data": {
@@ -684,25 +678,25 @@ export const frameworkLayouts = {
           "target": "data-architecture",
           "points": [
             {
-              "x": 416,
+              "x": 318,
+              "y": 91
+            },
+            {
+              "x": 326,
+              "y": 91
+            },
+            {
+              "x": 326,
               "y": 80
             },
             {
-              "x": 482,
+              "x": 336,
               "y": 80
-            },
-            {
-              "x": 482,
-              "y": 104
-            },
-            {
-              "x": 492,
-              "y": 104
             }
           ],
           "label": {
-            "x": 454,
-            "y": 95
+            "x": 327,
+            "y": 18
           }
         },
         "di-product-tech": {
@@ -710,41 +704,33 @@ export const frameworkLayouts = {
           "target": "technical-architecture",
           "points": [
             {
-              "x": 416,
-              "y": 54
+              "x": 318,
+              "y": 117
             },
             {
-              "x": 424,
-              "y": 54
+              "x": 462,
+              "y": 117
             },
             {
-              "x": 424,
-              "y": 53
+              "x": 462,
+              "y": 169
             },
             {
-              "x": 822,
-              "y": 53
+              "x": 28,
+              "y": 169
             },
             {
-              "x": 822,
-              "y": 193
-            },
-            {
-              "x": 38,
-              "y": 193
-            },
-            {
-              "x": 38,
-              "y": 246
+              "x": 28,
+              "y": 259
             },
             {
               "x": 64,
-              "y": 246
+              "y": 259
             }
           ],
           "label": {
-            "x": 551,
-            "y": 38
+            "x": 191,
+            "y": 295
           }
         },
         "di-data-tech": {
@@ -752,33 +738,33 @@ export const frameworkLayouts = {
           "target": "technical-architecture",
           "points": [
             {
-              "x": 610,
-              "y": 117
+              "x": 454,
+              "y": 67
             },
             {
-              "x": 812,
-              "y": 117
+              "x": 598,
+              "y": 67
             },
             {
-              "x": 812,
-              "y": 182
+              "x": 598,
+              "y": 180
             },
             {
-              "x": 28,
-              "y": 182
+              "x": 38,
+              "y": 180
             },
             {
-              "x": 28,
-              "y": 272
+              "x": 38,
+              "y": 233
             },
             {
               "x": 64,
-              "y": 272
+              "y": 233
             }
           ],
           "label": {
-            "x": 648,
-            "y": 132
+            "x": 259,
+            "y": 18
           }
         },
         "di-tech-engineering": {
@@ -787,16 +773,16 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 182,
-              "y": 259
+              "y": 246
             },
             {
-              "x": 298,
-              "y": 259
+              "x": 200,
+              "y": 246
             }
           ],
           "label": {
-            "x": 240,
-            "y": 274
+            "x": 191,
+            "y": 197
           }
         },
         "di-engineering-system": {
@@ -804,33 +790,33 @@ export const frameworkLayouts = {
           "target": "enterprise-digital-system",
           "points": [
             {
-              "x": 416,
-              "y": 259
+              "x": 318,
+              "y": 246
             },
             {
-              "x": 618,
-              "y": 259
+              "x": 462,
+              "y": 246
             },
             {
-              "x": 618,
-              "y": 324
-            },
-            {
-              "x": 38,
-              "y": 324
+              "x": 462,
+              "y": 311
             },
             {
               "x": 38,
-              "y": 403
+              "y": 311
+            },
+            {
+              "x": 38,
+              "y": 413
             },
             {
               "x": 64,
-              "y": 403
+              "y": 413
             }
           ],
           "label": {
-            "x": 454,
-            "y": 274
+            "x": 191,
+            "y": 462
           }
         },
         "di-system-reality": {
@@ -839,16 +825,24 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 182,
-              "y": 390
+              "y": 400
             },
             {
-              "x": 298,
-              "y": 390
+              "x": 190,
+              "y": 400
+            },
+            {
+              "x": 190,
+              "y": 377
+            },
+            {
+              "x": 200,
+              "y": 377
             }
           ],
           "label": {
-            "x": 240,
-            "y": 405
+            "x": 191,
+            "y": 328
           }
         },
         "di-reality-facts": {
@@ -856,17 +850,25 @@ export const frameworkLayouts = {
           "target": "digital-facts-results",
           "points": [
             {
-              "x": 416,
-              "y": 390
+              "x": 318,
+              "y": 377
             },
             {
-              "x": 492,
-              "y": 390
+              "x": 326,
+              "y": 377
+            },
+            {
+              "x": 326,
+              "y": 400
+            },
+            {
+              "x": 336,
+              "y": 400
             }
           ],
           "label": {
-            "x": 454,
-            "y": 405
+            "x": 327,
+            "y": 328
           }
         },
         "di-system-facts": {
@@ -875,32 +877,16 @@ export const frameworkLayouts = {
           "points": [
             {
               "x": 182,
-              "y": 416
+              "y": 426
             },
             {
-              "x": 190,
-              "y": 416
-            },
-            {
-              "x": 190,
-              "y": 453
-            },
-            {
-              "x": 482,
-              "y": 453
-            },
-            {
-              "x": 482,
-              "y": 416
-            },
-            {
-              "x": 492,
-              "y": 416
+              "x": 336,
+              "y": 426
             }
           ],
           "label": {
-            "x": 357,
-            "y": 468
+            "x": 259,
+            "y": 462
           }
         },
         "di-facts-decision": {
@@ -908,17 +894,17 @@ export const frameworkLayouts = {
           "target": "digital-decision",
           "points": [
             {
-              "x": 610,
-              "y": 403
+              "x": 454,
+              "y": 413
             },
             {
-              "x": 686,
-              "y": 403
+              "x": 472,
+              "y": 413
             }
           ],
           "label": {
-            "x": 648,
-            "y": 418
+            "x": 463,
+            "y": 364
           }
         },
         "di-data-product": {
@@ -926,25 +912,25 @@ export const frameworkLayouts = {
           "target": "b2b-product-architecture",
           "points": [
             {
-              "x": 492,
-              "y": 117
-            },
-            {
-              "x": 284,
-              "y": 117
-            },
-            {
-              "x": 284,
+              "x": 336,
               "y": 67
             },
             {
-              "x": 416,
+              "x": 186,
               "y": 67
+            },
+            {
+              "x": 186,
+              "y": 104
+            },
+            {
+              "x": 318,
+              "y": 104
             }
           ],
           "label": {
-            "x": 292,
-            "y": 59
+            "x": 327,
+            "y": 153
           }
         },
         "di-decision-business": {
@@ -952,33 +938,33 @@ export const frameworkLayouts = {
           "target": "enterprise-business-architecture",
           "points": [
             {
-              "x": 745,
-              "y": 364
+              "x": 531,
+              "y": 374
             },
             {
-              "x": 745,
-              "y": 344
-            },
-            {
-              "x": 38,
-              "y": 344
+              "x": 531,
+              "y": 354
             },
             {
               "x": 38,
-              "y": 139
+              "y": 354
+            },
+            {
+              "x": 38,
+              "y": 126
             },
             {
               "x": 123,
-              "y": 139
+              "y": 126
             },
             {
               "x": 123,
-              "y": 119
+              "y": 106
             }
           ],
           "label": {
-            "x": 46,
-            "y": 131
+            "x": 327,
+            "y": 462
           }
         }
       }
@@ -1285,10 +1271,7 @@ export const frameworkLayouts = {
               "y": 146
             }
           ],
-          "label": {
-            "x": 14,
-            "y": 150
-          }
+          "label": null
         },
         "di-decision-business": {
           "source": "digital-decision",
@@ -1319,10 +1302,7 @@ export const frameworkLayouts = {
               "y": 74
             }
           ],
-          "label": {
-            "x": 14,
-            "y": 86
-          }
+          "label": null
         }
       }
     }

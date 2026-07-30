@@ -50,12 +50,6 @@ function graphFor(architecture, projection) {
       id: edge.id,
       sources: [edge.from],
       targets: [edge.to],
-      labels: projection === "desktop" ? [{
-        id: `${edge.id}-label`,
-        text: edge.label,
-        width: Math.max(32, edge.label.length * (projection === "desktop" ? 10 : 12)),
-        height: 20,
-      }] : [],
     })),
   };
 }
@@ -83,12 +77,11 @@ function routedFeedbackEdge(edge, nodeMap, lane) {
         { x: targetCenter.x, y: target.y + target.height + 12 + lane * 8 },
         { x: targetCenter.x, y: target.y + target.height },
       ];
-  const middle = points[Math.floor(points.length / 2)];
   return {
     source: edge.from,
     target: edge.to,
     points: points.map(({ x, y }) => ({ x: rounded(x), y: rounded(y) })),
-    label: { x: rounded(middle.x + 8), y: rounded(middle.y - 8) },
+    label: null,
   };
 }
 
@@ -106,6 +99,54 @@ function edgePoints(edge) {
   ].map(({ x, y }) => ({ x: rounded(x), y: rounded(y) }));
 }
 
+function overlaps(a, b) {
+  return a.x < b.x + b.width
+    && a.x + a.width > b.x
+    && a.y < b.y + b.height
+    && a.y + a.height > b.y;
+}
+
+function placeRelationshipLabels(architecture, generatedEdges, nodeMap, width, height) {
+  const placed = [];
+  for (const edge of architecture.edges) {
+    const source = nodeMap.get(edge.from);
+    const target = nodeMap.get(edge.to);
+    const labelWidth = Math.max(32, edge.label.length * 10 + 8);
+    const labelHeight = 14;
+    const centerX = (source.x + source.width / 2 + target.x + target.width / 2) / 2;
+    const centerY = (source.y + source.height / 2 + target.y + target.height / 2) / 2;
+    const candidates = [
+      { x: centerX, y: Math.min(source.y, target.y) - 10 },
+      { x: centerX, y: Math.max(source.y + source.height, target.y + target.height) + 10 },
+      { x: Math.max(source.x + source.width, target.x + target.width) + labelWidth / 2 + 8, y: centerY },
+      { x: Math.min(source.x, target.x) - labelWidth / 2 - 8, y: centerY },
+    ];
+    const chosen = candidates.find((candidate) => {
+      const box = {
+        x: candidate.x - labelWidth / 2,
+        y: candidate.y - labelHeight / 2,
+        width: labelWidth,
+        height: labelHeight,
+      };
+      return box.x >= 0
+        && box.y >= 0
+        && box.x + box.width <= width
+        && box.y + box.height <= height
+        && [...nodeMap.values()].every((node) => !overlaps(box, node))
+        && placed.every((label) => !overlaps(box, label));
+    });
+    if (!chosen) throw new Error(`No collision-free relationship label position: ${edge.id}`);
+    const box = {
+      x: chosen.x - labelWidth / 2,
+      y: chosen.y - labelHeight / 2,
+      width: labelWidth,
+      height: labelHeight,
+    };
+    placed.push(box);
+    generatedEdges[edge.id].label = { x: rounded(chosen.x), y: rounded(chosen.y) };
+  }
+}
+
 function normalizeLayout(architecture, projection, layout) {
   const presentation = frameworkPresentation[projection];
   const width = rounded(layout.width);
@@ -119,24 +160,25 @@ function normalizeLayout(architecture, projection, layout) {
     }
   }
   const nodeMap = new Map(layout.children.map((node) => [node.id, node]));
-  const generatedEdges = Object.fromEntries(layout.edges.map((edge) => [
-    edge.id,
-    {
-      source: edge.sources[0],
-      target: edge.targets[0],
-      points: edgePoints(edge),
-      label: edge.labels?.[0]
-        ? {
-            x: rounded(edge.labels[0].x + edge.labels[0].width / 2),
-            y: rounded(edge.labels[0].y + edge.labels[0].height / 2),
-          }
-        : null,
-    },
-  ]));
+  const generatedEdges = Object.fromEntries(layout.edges.map((edge) => {
+    const points = edgePoints(edge);
+    const source = nodeMap.get(edge.sources[0]);
+    const target = nodeMap.get(edge.targets[0]);
+    return [
+      edge.id,
+      {
+        source: edge.sources[0],
+        target: edge.targets[0],
+        points,
+        label: null,
+      },
+    ];
+  }));
   for (const [lane, edgeId] of (frameworkRouting[architecture.id]?.feedbackEdgeIds ?? []).entries()) {
     const edge = architecture.edges.find((item) => item.id === edgeId);
     generatedEdges[edgeId] = routedFeedbackEdge(edge, nodeMap, lane);
   }
+  if (projection === "desktop") placeRelationshipLabels(architecture, generatedEdges, nodeMap, width, height);
   return {
     width,
     height,

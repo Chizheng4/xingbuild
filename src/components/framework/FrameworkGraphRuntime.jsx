@@ -21,7 +21,7 @@ function FrameworkEdge({ id, data, markerEnd }) {
         markerEnd={markerEnd}
         className={data.active ? "is-active" : "is-muted"}
       />
-      {data.label ? (
+      {data.active && data.label ? (
         <EdgeLabelRenderer>
           <span
             className={`framework-flow__edge-label${data.active ? " is-active" : ""}`}
