@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { finalizeReleasedContent } from "./lib/content-finalize.mjs";
 
 export async function verifyContentReleaseOnce({
   baseUrl,
@@ -54,11 +55,21 @@ export async function verifyContentReleaseOnce({
   return { targetSlug, articleUrl: articleUrl.href };
 }
 
+export async function verifyAndFinalizeContentRelease(options) {
+  const result = await verifyContentReleaseOnce(options);
+  await finalizeReleasedContent(result.targetSlug, {
+    rootDirectory: options.rootDirectory,
+  });
+  return result;
+}
+
 async function main() {
-  const [baseUrl = "https://xingbuild.top/", expectedVersion, expectedCommit, targetPath] =
+  const [baseUrl = "https://xingbuild.top/", expectedVersion, expectedCommit, targetPath, finalizeFlag] =
     process.argv.slice(2);
-  if (!expectedVersion || !expectedCommit || !targetPath) {
-    console.error("Usage: node scripts/verify-content-release.mjs <url> <version> <commit> <article-path>");
+  if (!expectedVersion || !expectedCommit || !targetPath || finalizeFlag !== "--finalize") {
+    console.error(
+      "Usage: node scripts/verify-content-release.mjs <url> <version> <commit> <article-path> --finalize",
+    );
     process.exitCode = 1;
     return;
   }
@@ -73,7 +84,10 @@ async function main() {
         expectedCommit,
         targetPath,
       });
-      console.log(`Public content verified: /observations/${result.targetSlug} at ${expectedCommit.slice(0, 7)}`);
+      await finalizeReleasedContent(result.targetSlug);
+      console.log(
+        `Public content verified and workspace finalized: /observations/${result.targetSlug} at ${expectedCommit.slice(0, 7)}`,
+      );
       return;
     } catch (error) {
       console.log(`Public content verification ${attempt}/${attempts} pending: ${error.message}`);

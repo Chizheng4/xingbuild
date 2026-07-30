@@ -11,6 +11,7 @@ const worker = path.join(root, "worker", "index.js");
 const hosting = path.join(root, ".openai", "hosting.json");
 const edgeOneConfig = path.join(root, "edgeone.json");
 const observationsDirectory = path.join(root, "content", "observations");
+const workspaceMarker = ".content-workspace";
 
 for (const file of [index, worker, hosting, edgeOneConfig]) {
   if (!existsSync(file)) throw new Error("Missing Sites build input: " + file);
@@ -65,6 +66,17 @@ writeFileSync(
     2,
   )}\n`,
 );
+
+const inspectFiles = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+  const file = path.join(directory, entry.name);
+  return entry.isDirectory() ? inspectFiles(file) : [file];
+});
+for (const file of inspectFiles(path.join(dist, "client"))) {
+  if (!/\.(?:html|js|css|json|txt|xml|svg)$/.test(file)) continue;
+  if (readFileSync(file, "utf8").includes(workspaceMarker)) {
+    throw new Error(`Production build contains workspace path: ${path.relative(root, file)}`);
+  }
+}
 
 console.log(
   `Prepared Sites build and content manifest: ${publishedSlugs.length} published observation(s)`,

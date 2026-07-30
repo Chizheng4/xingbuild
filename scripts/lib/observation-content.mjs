@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +14,12 @@ const contentRoot = process.env.XINGBUILD_CONTENT_ROOT
   : projectRoot;
 export const publishedDirectory = path.join(contentRoot, "content", "observations");
 export const workspaceDirectory = path.join(contentRoot, ".content-workspace");
+export const candidatesDirectory = path.join(workspaceDirectory, "candidates");
+export const importsDirectory = path.join(workspaceDirectory, "imports");
 export const draftsDirectory = path.join(workspaceDirectory, "drafts");
+export const reviewsDirectory = path.join(workspaceDirectory, "reviews");
+export const recoveriesDirectory = path.join(workspaceDirectory, "recoveries");
+export const supersededDirectory = path.join(workspaceDirectory, "superseded");
 
 const schema = JSON.parse(
   await readFile(path.join(projectRoot, "content", "schema", "observation.schema.json"), "utf8"),
@@ -34,7 +40,7 @@ export const enumValues = {
 const requiredFields = schema.required;
 const allowedTopLevel = new Set(Object.keys(schema.properties));
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const idPattern = /^observation-[a-z0-9-]+$/;
 const evidenceIdPattern = /^evidence-[a-z0-9-]+$/;
 const sourceIdPattern = /^source-[a-z0-9-]+$/;
@@ -230,6 +236,21 @@ export function assertValidObservation(observation, options) {
   return observation;
 }
 
+export function assertValidSlug(slug) {
+  if (typeof slug !== "string" || !slugPattern.test(slug)) {
+    throw new Error(`Invalid slug: ${slug || "(missing)"}`);
+  }
+  return slug;
+}
+
+export function contentHash(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+export async function hashFile(file) {
+  return contentHash(await readFile(file));
+}
+
 export async function readJson(file) {
   return JSON.parse(await readFile(file, "utf8"));
 }
@@ -268,8 +289,84 @@ export async function readPublishedObservations() {
   return items.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
+export async function assertUniqueProductionIdentity(candidate, { exceptSlug } = {}) {
+  const publications = await readPublishedObservations();
+  for (const publication of publications) {
+    if (publication.slug === exceptSlug) continue;
+    if (publication.slug === candidate.slug) {
+      throw new Error(`Published observation already exists: ${candidate.slug}`);
+    }
+    if (publication.id === candidate.id) {
+      throw new Error(`Published observation id already exists: ${candidate.id}`);
+    }
+  }
+}
+
+export async function readApprovedReview(slug) {
+  assertValidSlug(slug);
+  const reviewFile = path.join(reviewsDirectory, `${slug}.json`);
+  if (!(await isFile(reviewFile))) throw new Error(`Approved review not found: ${slug}`);
+  const review = await readJson(reviewFile);
+  const allowed = new Set(["slug", "status", "reviewedAt", "authority", "contentHash"]);
+  if (!review || typeof review !== "object" || Array.isArray(review)) {
+    throw new Error(`Review must be an object: ${slug}`);
+  }
+  for (const key of Object.keys(review)) {
+    if (!allowed.has(key)) throw new Error(`Review contains unsupported field: ${key}`);
+  }
+  if (review.slug !== slug) throw new Error(`Review slug must be ${slug}`);
+  if (review.status !== "approved") throw new Error(`Review status must be approved: ${slug}`);
+  if (typeof review.reviewedAt !== "string" || Number.isNaN(Date.parse(review.reviewedAt))) {
+    throw new Error(`Review reviewedAt must be an ISO timestamp: ${slug}`);
+  }
+  if (typeof review.authority !== "string" || !review.authority.trim()) {
+    throw new Error(`Review authority is required: ${slug}`);
+  }
+  if (!/^[a-f0-9]{64}$/.test(review.contentHash || "")) {
+    throw new Error(`Review contentHash must be SHA-256: ${slug}`);
+  }
+  return review;
+}
+
+export async function assertReviewedDraft(slug) {
+  assertValidSlug(slug);
+  const draftFile = path.join(draftsDirectory, `${slug}.json`);
+  if (!(await isFile(draftFile))) throw new Error(`Draft not found: ${slug}`);
+  const draft = assertValidObservation(await readJson(draftFile), { expectedStatus: "draft" });
+  if (draft.slug !== slug) throw new Error(`Draft slug must be ${slug}`);
+  const review = await readApprovedReview(slug);
+  const actualHash = await hashFile(draftFile);
+  if (actualHash !== review.contentHash) {
+    throw new Error(`Draft hash no longer matches approved review: ${slug}`);
+  }
+  return { draft, draftFile, review, contentHash: actualHash };
+}
+
+export async function assertTargetWorkspaceReady(slug) {
+  assertValidSlug(slug);
+  for (const [kind, directory] of [
+    ["candidate", candidatesDirectory],
+    ["import", importsDirectory],
+  ]) {
+    if (await isFile(path.join(directory, `${slug}.json`))) {
+      throw new Error(`Target ${kind} conflicts with reviewed draft: ${slug}`);
+    }
+  }
+  return assertReviewedDraft(slug);
+}
+
+export async function assertPromotedTargetReady(slug) {
+  const reviewed = await assertTargetWorkspaceReady(slug);
+  const recoveryFile = path.join(recoveriesDirectory, `${slug}.json`);
+  if (!(await isFile(recoveryFile))) throw new Error(`Promotion recovery not found: ${slug}`);
+  if (await hashFile(recoveryFile) !== reviewed.review.contentHash) {
+    throw new Error(`Promotion recovery hash does not match approved review: ${slug}`);
+  }
+  return { ...reviewed, recoveryFile };
+}
+
 export async function hasWorkspaceContent() {
-  for (const name of ["candidates", "imports", "drafts"]) {
+  for (const name of ["candidates", "imports", "drafts", "reviews", "recoveries", "superseded"]) {
     const directory = path.join(workspaceDirectory, name);
     const files = await listJsonFiles(directory);
     if (files.length) return true;

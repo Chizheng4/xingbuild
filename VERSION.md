@@ -1,5 +1,14 @@
 # xingbuild 版本记录
 
+## v0.15.4 — Slug 级内容发布能力
+
+日期：2026-07-30
+
+- 将日常 Observation 准备固定为 candidate → draft → 人工审核 hash → promote，并保留目标 draft、审核记录和精确恢复副本。
+- 将生产入口收口为 `publish-content.command --slug <slug>`；只校验目标 slug 冲突，允许无关 ignored workspace 内容并存。
+- 内容提交必须保持产品版本/tag 不变、范围仅含目标 Observation 与必要 approved media，且发布前满足 `origin/main == HEAD^`；push、部署与公网验收分别报告。
+- Supersede 仅处理未发布草稿，要求显式 old/canonical、原因、决定日期和内容 hash；不包含已发布内容撤下。
+
 ## v0.15.3 — ObservationRail 从属预算与跨 task 边界修订
 
 日期：2026-07-29

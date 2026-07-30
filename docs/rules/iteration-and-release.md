@@ -40,25 +40,34 @@
 
 ### 3.3 日常观察内容发布
 
-日常内容发布不是产品版本迭代。它只允许新增或修改一个受控内容对象，并保持 `package.json` 版本不变：
+日常 Observation 发布不是产品版本迭代。内容准备与生产发布是两个阶段，保持 `package.json` 版本和既有产品 tag 不变：
 
 - 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
-- 必须经过 candidate → draft → 本地直接预览 → 人工审核 → promote；
-- 必须通过 `npm run content:check` 和 `npm run content:scope-check`；
+- 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；
+- 生产发布固定为 checks → 独立内容 commit → `publish-content.command --slug <slug>` → push → EdgeOne → 公网验收；
+- 人工审核 sidecar 至少保存 slug、`status=approved`、reviewedAt、authority 和 contentHash；draft 改动后 hash 不匹配必须失败；
+- promote 只接受目标 slug 的有效 draft 和匹配审核记录，保留原 draft、审核记录与精确恢复副本，不让后续失败形成不可解释半状态；
+- push、部署或公网验收任一步失败时，目标 draft、review 与 recovery 必须全部保留，以支持同一 HEAD 重试；
+- 只有 `verify-content-release` 公网验收成功后，才精确 finalize 目标 slug：删除该 slug 的 draft、review 与 recovery 三份临时事实，不使用通配且不触碰任何无关 workspace 文件；
+- 必须通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
-- 必须形成独立 Git 提交；范围只能是一项 `content/products|business-observations|observations|articles|profile/*.json`，或该对象必需的已批准媒体 manifest/资产；
+- 必须形成独立 Git 提交；范围只能是 `content/observations/<slug>.json` 与该对象必要的 approved media，产品版本不得变化；
+- 发布前必须满足 `origin/main == HEAD^`；push 后的部署或公网验收重试必须保持同一 HEAD，不创建替代提交；
+- 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
 - 发布仍需用户执行 `./publish-content.command` 或在当前任务明确授权；
-- Scheduled task 只能生成 candidate，不能直接写入公开内容或执行生产发布。
+- Scheduled task 只能产生可信证据候选，不能决定 Brief/Article 表达、人工审核、promote 或生产发布。
 
 `ObservationPublication → EvidenceUnit → Source` 是观察内容的固定三层模型。缺失字段必须失败或保留明确待补项，脚本不得虚构事实、来源、经营影响或证据关系。
 
 Robotaxi 作品媒体是独立于观察的受控内容入口：`media` 保存读者可见的图片或未来视频，`action` 保存可选读者互动，`provenance` 保存上游 approved manifest 的媒体角色、状态边界、版本、Git commit、SHA-256 与审批记录。Git commit 是内部来源记录，不要求转换为网页 URL；只有 `approved/public`、审批记录有效且本地文件 SHA-256 一致的媒体可以导入。draft、rejected、revoked 或哈希不一致的资产必须失败，不得以页面占位、截图或泛化链接替代。
 
-本地 candidate、import 和 draft 只允许位于被 Git 忽略的 `.content-workspace/`。生产读取层只消费 `content/observations/`，生产 bundle、静态资源和公开集合不得包含 draft。
+本地 candidate、import、draft、review、recovery 和 superseded 记录只允许位于被 Git 忽略的 `.content-workspace/`。生产读取层只消费 `content/observations/`；生产 bundle、静态资源和目标 slug 解析不得读取或暴露 workspace 路径与治理记录。
 
 `.content-workspace/imports/` 使用安全消费语义：只有候选校验通过、文件名与 slug 一致且 draft 通过排他写入成功后，导入工具才删除这一条精确输入；外部输入和任何失败输入必须保留，不允许通配清理。
 
 新观察进入人工审核前，必须分别在 1440px 与 390px 核对标题中的完整业务词组。只有真实渲染确认发生拆词时，才在该内容的必要词组中加入最小 WORD JOINER；不得以固定换行、视口专用文案或自动中文分词替代人工语义判断。
+
+Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slug、reason 和 decidedAt。原稿按精确文件名归档到 ignored `.content-workspace/superseded/`，sidecar 保存 `supersededBy/reason/decidedAt/contentHash`；canonical 不存在、hash 无法记录、old 已发布或出现通配清理时失败。已发布内容撤下不属于日常 supersede。
 
 ## 4. 当前迭代
 
@@ -163,20 +172,23 @@ npm run test:sites
 
 ### 7.1 内容专用发布
 
-日常观察使用：
+日常 Observation 使用：
 
 ```bash
-./publish-content.command
+./publish-content.command --slug <slug>
 ```
 
 该命令不创建或推送版本 tag，但必须：
 
-1. 确认 `main`、工作区干净，且 `.content-workspace/` 没有残留 JSON；
-2. 确认最新提交只包含一项受控内容对象（以及必需的已批准媒体），且相对父提交的产品版本未变化；
-3. 执行内容检查、生产构建和 Sites 测试；
-4. 只推送 `main`；
-5. 部署既有 `xingbuild-nochina` 项目；
-6. 以稳定产品版本、新提交和目标文章 URL 完成公网验证。
+1. 缺失或非法 slug 立即失败，不从 HEAD 猜测目标；
+2. 确认 `main`、工作区干净，目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；
+3. 只检查目标 slug 的 candidate/import 冲突；无关 ignored workspace 内容可以并存；
+4. 确认 HEAD 只包含目标 Observation 与必要 approved media，相对父提交产品版本不变，且首次 push 前 `origin/main == HEAD^`；
+5. 执行目标检查、全量 content check、生产构建和 Sites 测试，并拒绝任何 workspace 路径进入生产 source/bundle；
+6. 只推送已验证 HEAD；若 `origin/main == HEAD`，仅允许以同一提交重试部署与公网验收；
+7. 部署既有 `xingbuild-nochina` 项目；
+8. 以目标 slug URL、稳定产品版本和同一 commit 完成公网验证，分别报告 push、部署和公网结果；
+9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 post-push retry 成功后仍执行 finalize。
 
 脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
 

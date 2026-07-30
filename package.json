@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.15.3",
+  "version": "0.15.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,9 @@
     "content:import": "node scripts/content-import.mjs",
     "content:check": "node scripts/content-check.mjs",
     "content:preview": "node scripts/content-preview.mjs",
+    "content:review": "node scripts/content-review.mjs",
     "content:promote": "node scripts/content-promote.mjs",
+    "content:supersede": "node scripts/content-supersede.mjs",
     "content:scope-check": "node scripts/content-scope-check.mjs",
     "practice:check": "node scripts/practice-content-check.mjs",
     "release:closeout-check": "node scripts/release-closeout-check.mjs",

@@ -3,9 +3,20 @@ set -euo pipefail
 
 cd "${0:A:h}"
 
+if [[ "$#" -ne 2 || "$1" != "--slug" ]]; then
+  echo "Usage: ./publish-content.command --slug <slug>"
+  exit 1
+fi
+if [[ ! "$2" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+  echo "Usage: ./publish-content.command --slug <slug>"
+  exit 1
+fi
+
+CONTENT_SLUG="$2"
 BRANCH="$(git branch --show-current)"
 VERSION="v$(node -p "require('./package.json').version")"
 COMMIT="$(git rev-parse HEAD)"
+PARENT_COMMIT="$(git rev-parse HEAD^)"
 DEFAULT_GITHUB_PROXY="http://127.0.0.1:7897"
 GITHUB_PROXY=""
 PUBLIC_URL="${XINGBUILD_PUBLIC_URL:-https://xingbuild.top/}"
@@ -19,12 +30,6 @@ fi
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "内容发布已停止：工作区仍有未提交修改。"
-  exit 1
-fi
-
-if find .content-workspace -type f -name '*.json' -print -quit 2>/dev/null | grep -q .; then
-  echo "内容发布已停止：本地仍有 candidate、import 或 draft。"
-  echo "请完成审核、提升或清理后再发布。"
   exit 1
 fi
 
@@ -43,17 +48,8 @@ if ! "$EDGEONE_CLI" whoami >/dev/null 2>&1; then
   exit 1
 fi
 
-CONTENT_FILE="$(git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -E '^content/(products|business-observations|observations|articles|profile)/[a-z0-9-]+\.json$|^content/media/[a-z0-9-]+/manifest\.json$')"
-node scripts/content-scope-check.mjs --commit HEAD
-case "$CONTENT_FILE" in
-  content/observations/*) CONTENT_SLUG="$(node -p "require('./${CONTENT_FILE}').slug")"; TARGET_PATH="/observations/${CONTENT_SLUG}"; VERIFY_KIND="observation" ;;
-  content/products/*) TARGET_PATH="/products"; VERIFY_KIND="page" ;;
-  content/business-observations/*) TARGET_PATH="/business-observations"; VERIFY_KIND="page" ;;
-  content/profile/*) TARGET_PATH="/about"; VERIFY_KIND="page" ;;
-  content/articles/*) CONTENT_SLUG="$(node -p "require('./${CONTENT_FILE}').slug")"; TARGET_PATH="/observations/${CONTENT_SLUG}"; VERIFY_KIND="observation" ;;
-  content/media/*/manifest.json) TARGET_PATH="/products"; VERIFY_KIND="page" ;;
-  *) echo "内容发布已停止：未找到唯一内容对象。"; exit 1 ;;
-esac
+CONTENT_FILE="content/observations/${CONTENT_SLUG}.json"
+TARGET_PATH="/observations/${CONTENT_SLUG}"
 
 configure_github_network() {
   local proxy_candidate="${XINGBUILD_GITHUB_PROXY:-${HTTPS_PROXY:-${https_proxy:-$DEFAULT_GITHUB_PROXY}}}"
@@ -95,21 +91,39 @@ push_main_with_retry() {
   return 1
 }
 
+refresh_origin_main() {
+  echo "==> 刷新 GitHub main 事实"
+  if [[ -n "$GITHUB_PROXY" ]]; then
+    git -c http.version=HTTP/1.1 -c http.proxy="$GITHUB_PROXY" fetch origin main
+  else
+    git -c http.version=HTTP/1.1 fetch origin main
+  fi
+}
+
 echo ""
 echo "开始内容发布：${CONTENT_SLUG}"
 echo "稳定产品版本保持：${VERSION}"
 echo "目标页面：${PUBLIC_URL%/}${TARGET_PATH}"
 
 configure_github_network
+refresh_origin_main
 
 echo "==> 执行内容与构建检查"
 npm run content:check
-npm run practice:check
+npm run content:scope-check -- --slug "$CONTENT_SLUG" --commit HEAD
 npm run build
 npm run test:sites
 
-echo "==> 同步 GitHub main"
-push_main_with_retry
+ORIGIN_COMMIT="$(git rev-parse origin/main)"
+if [[ "$ORIGIN_COMMIT" == "$PARENT_COMMIT" ]]; then
+  echo "==> 同步 GitHub main"
+  push_main_with_retry
+elif [[ "$ORIGIN_COMMIT" == "$COMMIT" ]]; then
+  echo "==> GitHub main 已是同一提交，仅重试部署与公网验收"
+else
+  echo "内容发布已停止：origin/main 既不是 HEAD^ 也不是当前 HEAD。"
+  exit 1
+fi
 if [[ "$(git rev-parse origin/main)" != "$COMMIT" ]]; then
   echo "内容发布失败：GitHub main 与当前提交不一致。"
   exit 1
@@ -119,11 +133,7 @@ echo "==> 部署 EdgeOne 生产环境"
 "$EDGEONE_CLI" makers deploy dist/client --name "$EDGEONE_PROJECT" --env production
 
 echo "==> 验证公网内容"
-if [[ "$VERIFY_KIND" == "observation" ]]; then
-  node scripts/verify-content-release.mjs "$PUBLIC_URL" "$VERSION" "$COMMIT" "$TARGET_PATH"
-else
-  node scripts/verify-public-release.mjs "${PUBLIC_URL%/}${TARGET_PATH}" "$VERSION" "$COMMIT"
-fi
+node scripts/verify-content-release.mjs "$PUBLIC_URL" "$VERSION" "$COMMIT" "$TARGET_PATH" --finalize
 
 echo ""
 echo "==> 内容已正式上线"
