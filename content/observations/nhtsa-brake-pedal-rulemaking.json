@@ -1,0 +1,115 @@
+{
+  "id": "observation-nhtsa-brake-pedal-rulemaking",
+  "slug": "nhtsa-brake-pedal-rulemaking",
+  "status": "published",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "NHTSA启动ADS专用车辆制动控制要求修订",
+  "summary": "美国NHTSA启动FMVSS 135规则制定，拟取消纯ADS车辆的手动制动控制器要求，但保留制动距离性能要求。",
+  "companies": [
+    "NHTSA"
+  ],
+  "regions": [
+    "美国"
+  ],
+  "dimensions": [
+    "准入与政策",
+    "产品与能力"
+  ],
+  "primaryDimension": "准入与政策",
+  "eventAt": "2026-06-25",
+  "publishedAt": "2026-07-30",
+  "updatedAt": "2026-07-30",
+  "factOverview": [
+    {
+      "label": "监管机构",
+      "value": "美国国家公路交通安全管理局"
+    },
+    {
+      "label": "规则",
+      "value": "FMVSS No. 135"
+    },
+    {
+      "label": "动作",
+      "value": "启动规则制定"
+    },
+    {
+      "label": "保留要求",
+      "value": "制动距离性能标准"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "NHTSA于6月25日启动FMVSS No. 135的规则制定，拟取消仅由自动驾驶系统驾驶车辆的手动制动控制器要求；现有人工控制车辆仍适用既有规则，制动距离性能要求保留。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-nhtsa-rulemaking",
+      "evidence-nhtsa-performance-boundary"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "这涉及无人工驾驶车辆的产品与合规设计边界，但仍处于规则制定阶段，不能证明法规已经完成变更，也不构成任何企业的道路或商业运营许可。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-nhtsa-operating-boundary"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-nhtsa-rulemaking",
+      "claim": "NHTSA于2026年6月25日启动FMVSS No. 135的规则制定，拟取消仅由ADS驾驶车辆的手动制动控制器要求。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-nhtsa-brake-rulemaking"
+      ]
+    },
+    {
+      "id": "evidence-nhtsa-performance-boundary",
+      "claim": "NHTSA称，受该修订影响的车辆仍须满足相同的制动距离性能标准；保留人工驾驶控制的ADS车辆继续适用既有标准。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-nhtsa-brake-rulemaking"
+      ]
+    },
+    {
+      "id": "evidence-nhtsa-operating-boundary",
+      "claim": "规则制定处理的是车辆标准，不代表法规已完成变更，亦不构成企业道路测试、公众服务或商业运营许可。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-nhtsa-brake-rulemaking"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-nhtsa-brake-rulemaking",
+      "publisher": "美国国家公路交通安全管理局",
+      "title": "Trump’s Transportation Department Launches Commonsense Updates to Brake Pedal Requirements for AVs",
+      "url": "https://www.nhtsa.gov/press-releases/fmvss-updates-brake-pedal-requirements",
+      "publishedAt": "2026-06-25",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-30"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "来源确认的是NHTSA启动规则制定及其拟议方向。规则是否完成、最终文本、适用车型范围、豁免安排和企业运营许可均不能由该公告确认。publishedAt与updatedAt仅记录候选生成日期，不表示已公开发布。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "NHTSA制动规则制定",
+    "body": "NHTSA于6月25日启动FMVSS 135规则制定，拟取消仅由自动驾驶系统驾驶车辆的手动制动控制器要求；保留相同的制动距离性能标准。这是面向无人工驾驶车辆的规则修订，不代表法规已完成变更，也不等于任何企业获准运营。",
+    "sourceRefs": [
+      "source-nhtsa-brake-rulemaking"
+    ],
+    "isOpinion": false
+  }
+}
