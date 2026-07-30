@@ -1,0 +1,111 @@
+{
+  "id": "observation-weride-q1-2026-robotaxi-update",
+  "slug": "weride-q1-2026-robotaxi-update",
+  "status": "published",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "WeRide披露Robotaxi车队与单车订单指标",
+  "summary": "WeRide披露截至4月末约1,300辆全球Robotaxi车队及一季度单车日订单指标。",
+  "companies": [
+    "WeRide"
+  ],
+  "regions": [
+    "中国及海外"
+  ],
+  "dimensions": [
+    "运营与市场",
+    "经营与资本"
+  ],
+  "primaryDimension": "运营与市场",
+  "eventAt": "2026-05-13",
+  "publishedAt": "2026-07-30",
+  "updatedAt": "2026-07-30",
+  "factOverview": [
+    {
+      "label": "全球Robotaxi车队",
+      "value": "约1,300辆"
+    },
+    {
+      "label": "中国车队",
+      "value": "约1,000辆"
+    },
+    {
+      "label": "一季度单车日订单",
+      "value": "超过17单，峰值28单"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "WeRide披露，截至4月30日全球Robotaxi车队约1,300辆，其中中国约1,000辆；一季度平均每车日订单超过17单，峰值达到28单。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-weride-fleet",
+      "evidence-weride-orders"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "车队和订单指标有助于观察运营密度，但总收入和服务收入包含其他业务，不能写成Robotaxi收入，车队规模也不说明各车的许可或收费运营状态。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-weride-revenue-boundary"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-weride-fleet",
+      "claim": "WeRide披露截至2026年4月30日全球Robotaxi车队约1,300辆，其中中国约1,000辆。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-weride-q1-2026"
+      ]
+    },
+    {
+      "id": "evidence-weride-orders",
+      "claim": "WeRide披露2026年第一季度Robotaxi平均每车日订单超过17单，峰值达到28单。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-weride-q1-2026"
+      ]
+    },
+    {
+      "id": "evidence-weride-revenue-boundary",
+      "claim": "WeRide披露的总收入和服务收入包含Robotaxi以外业务，不能由其推断Robotaxi单独收入或利润。",
+      "claimKind": "inference",
+      "sourceRefs": [
+        "source-weride-q1-2026"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-weride-q1-2026",
+      "publisher": "WeRide Inc.",
+      "title": "WRD 3.0 Becomes China’s First Four-Time Urban Intelligent Driving Champion, WeRide Reports Record Q1 2026 Revenue, up 58% Year over Year",
+      "url": "https://ir.weride.ai/news-releases/news-release-details/wrd-30-becomes-chinas-first-four-time-urban-intelligent-driving",
+      "publishedAt": "2026-05-13",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-30"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "本条为公司未经审计披露。车队、订单与收入未获独立同口径复核；总收入和服务收入并不等于Robotaxi收入，也不能说明全部车辆的部署、许可、收费运营或盈利状态。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "WeRide车队与订单",
+    "body": "WeRide披露截至4月末全球Robotaxi车队约1,300辆，其中中国约1,000辆；一季度平均每车日订单超过17单、峰值28单。总收入与服务收入包含其他业务，不能写成Robotaxi收入；车队和订单均为公司未经审计披露。",
+    "sourceRefs": [
+      "source-weride-q1-2026"
+    ],
+    "isOpinion": false
+  }
+}
