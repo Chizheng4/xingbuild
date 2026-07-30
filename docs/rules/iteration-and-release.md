@@ -43,10 +43,11 @@
 日常 Observation 发布不是产品版本迭代。内容准备与生产发布是两个阶段，保持 `package.json` 版本和既有产品 tag 不变：
 
 - 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
-- 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；
+- 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；日常终端以 `npm run content:approve -- --slug <slug> --authority <authority>` 在共享 JS 能力层受控聚合 review + promote；
 - 生产发布固定为 checks → 独立内容 commit → `publish-content.command --slug <slug>` → push → EdgeOne → 公网验收；
 - 人工审核 sidecar 至少保存 slug、`status=approved`、reviewedAt、authority 和 contentHash；draft 改动后 hash 不匹配必须失败；
 - promote 只接受目标 slug 的有效 draft 和匹配审核记录，保留原 draft、审核记录与精确恢复副本，不让后续失败形成不可解释半状态；
+- `content:approve` 要求唯一非空 slug 与 authority；成功只新增目标 review、recovery 与 production 并保留 draft，任一步失败精确回滚本次新增文件，不覆盖既有 draft、review 或 production；
 - push、部署或公网验收任一步失败时，目标 draft、review 与 recovery 必须全部保留，以支持同一 HEAD 重试；
 - 只有 `verify-content-release` 公网验收成功后，才精确 finalize 目标 slug：删除该 slug 的 draft、review 与 recovery 三份临时事实，不使用通配且不触碰任何无关 workspace 文件；
 - 必须通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
@@ -54,6 +55,7 @@
 - 必须形成独立 Git 提交；范围只能是 `content/observations/<slug>.json` 与该对象必要的 approved media，产品版本不得变化；
 - 发布前必须满足 `origin/main == HEAD^`；push 后的部署或公网验收重试必须保持同一 HEAD，不创建替代提交；
 - 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
+- `content:approve` 不扫描、不删除也不修改无关 workspace；目标已有 review、recovery、production 或 candidate/import 冲突时硬失败，不得用该机械命令代替人工选题、写稿、事实审核、内容提交或发布授权；
 - 发布仍需用户执行 `./publish-content.command` 或在当前任务明确授权；
 - Scheduled task 只能产生可信证据候选，不能决定 Brief/Article 表达、人工审核、promote 或生产发布。
 

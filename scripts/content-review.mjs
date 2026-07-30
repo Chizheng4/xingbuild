@@ -1,15 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import {
-  assertValidObservation,
-  assertValidSlug,
-  draftsDirectory,
-  hashFile,
-  isFile,
-  readJson,
-  reviewsDirectory,
-} from "./lib/observation-content.mjs";
+import { recordApprovedReview } from "./lib/content-approval.mjs";
+import { assertValidSlug } from "./lib/observation-content.mjs";
 
 const args = process.argv.slice(2);
 const valueFor = (name) => {
@@ -30,20 +21,5 @@ if (!authority?.trim()) {
   process.exit(1);
 }
 
-const draftFile = path.join(draftsDirectory, `${slug}.json`);
-const reviewFile = path.join(reviewsDirectory, `${slug}.json`);
-if (!(await isFile(draftFile))) throw new Error(`Draft not found: ${slug}`);
-if (await isFile(reviewFile)) throw new Error(`Review already exists: ${slug}`);
-const draft = assertValidObservation(await readJson(draftFile), { expectedStatus: "draft" });
-if (draft.slug !== slug) throw new Error(`Draft slug must be ${slug}`);
-
-const review = {
-  slug,
-  status: "approved",
-  reviewedAt: new Date().toISOString(),
-  authority: authority.trim(),
-  contentHash: await hashFile(draftFile),
-};
-await mkdir(reviewsDirectory, { recursive: true });
-await writeFile(reviewFile, `${JSON.stringify(review, null, 2)}\n`, { flag: "wx" });
+const { review } = await recordApprovedReview(slug, authority);
 console.log(`Approved content review recorded: ${slug} @ ${review.contentHash}`);

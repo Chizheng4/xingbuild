@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.15.7 — Slug 级内容审核终端聚合
+
+日期：2026-07-30
+
+- 新增显式 `slug + authority` 的 `content:approve` 单命令，在共享 JS 能力层聚合既有 review 与 promote。
+- 以目标级预检和精确回滚保证成功只新增目标审核、恢复副本与 production，失败不覆盖已有事实或留下半成品。
+- 无关 ignored workspace 可并存且不被扫描、阻断或修改；命令不承担选题、写稿、发布或产品版本操作。
+
 ## v0.15.6 — Robotaxi 页面 canonical 收口
 
 日期：2026-07-30

@@ -87,6 +87,198 @@ test("valid candidate moves through isolated draft preview and promote", async (
   );
 });
 
+test("content approve atomically records and promotes only one explicit target", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-approve-"));
+  const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
+  assert.equal(imported.status, 0, imported.stderr);
+  const slug = "sanitized-candidate-preview";
+  const workspace = path.join(contentRoot, ".content-workspace");
+  const draftFile = path.join(workspace, "drafts", `${slug}.json`);
+  const draftBefore = await readFile(draftFile, "utf8");
+  const unrelated = JSON.parse(draftBefore);
+  unrelated.id = "observation-unrelated-approve";
+  unrelated.slug = "unrelated-approve";
+  const unrelatedBefore = new Map();
+  for (const directory of ["candidates", "imports", "drafts", "reviews", "recoveries"]) {
+    const file = path.join(workspace, directory, "unrelated-approve.json");
+    const value = directory === "reviews"
+      ? '{"sentinel":"unrelated-review"}\n'
+      : `${JSON.stringify(unrelated, null, 2)}\n`;
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, value);
+    unrelatedBefore.set(file, value);
+  }
+
+  const result = runScript(
+    "content-approve.mjs",
+    ["--slug", slug, "--authority", "content-owner"],
+    contentRoot,
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(await readFile(draftFile, "utf8"), draftBefore);
+  const review = JSON.parse(await readFile(path.join(workspace, "reviews", `${slug}.json`), "utf8"));
+  assert.equal(review.status, "approved");
+  assert.equal(review.authority, "content-owner");
+  assert.match(review.contentHash, /^[a-f0-9]{64}$/);
+  assert.equal(
+    await readFile(path.join(workspace, "recoveries", `${slug}.json`), "utf8"),
+    draftBefore,
+  );
+  const publication = JSON.parse(
+    await readFile(path.join(contentRoot, "content", "observations", `${slug}.json`), "utf8"),
+  );
+  assert.equal(publication.status, "published");
+  for (const [file, value] of unrelatedBefore) {
+    assert.equal(await readFile(file, "utf8"), value);
+  }
+});
+
+test("content approve strictly rejects missing, empty, duplicate, or multiple parameters", async () => {
+  const cases = [
+    [],
+    ["--slug", "sanitized-candidate-preview"],
+    ["--slug", "sanitized-candidate-preview", "--authority", ""],
+    ["--slug", "sanitized-candidate-preview", "--slug", "another-slug", "--authority", "owner"],
+    ["--slug", "sanitized-candidate-preview", "--authority", "owner", "--extra", "value"],
+  ];
+  for (const args of cases) {
+    const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-approve-args-"));
+    const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
+    assert.equal(imported.status, 0, imported.stderr);
+    const result = runScript("content-approve.mjs", args, contentRoot);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Usage: npm run content:approve/);
+    const workspace = path.join(contentRoot, ".content-workspace");
+    assert.equal(await pathExists(path.join(workspace, "reviews", "sanitized-candidate-preview.json")), false);
+    assert.equal(await pathExists(path.join(workspace, "recoveries", "sanitized-candidate-preview.json")), false);
+    assert.equal(
+      await pathExists(path.join(contentRoot, "content", "observations", "sanitized-candidate-preview.json")),
+      false,
+    );
+  }
+});
+
+test("content approve preserves target facts when review, recovery, production, or workspace conflicts exist", async () => {
+  for (const conflict of ["review", "recovery", "production", "candidate", "import"]) {
+    const contentRoot = await mkdtemp(path.join(os.tmpdir(), `xingbuild-content-approve-${conflict}-`));
+    const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
+    assert.equal(imported.status, 0, imported.stderr);
+    const slug = "sanitized-candidate-preview";
+    const workspace = path.join(contentRoot, ".content-workspace");
+    const draftFile = path.join(workspace, "drafts", `${slug}.json`);
+    const draftBefore = await readFile(draftFile, "utf8");
+    const locations = {
+      review: path.join(workspace, "reviews", `${slug}.json`),
+      recovery: path.join(workspace, "recoveries", `${slug}.json`),
+      production: path.join(contentRoot, "content", "observations", `${slug}.json`),
+      candidate: path.join(workspace, "candidates", `${slug}.json`),
+      import: path.join(workspace, "imports", `${slug}.json`),
+    };
+    const conflictFile = locations[conflict];
+    const conflictValue = conflict === "production"
+      ? `${JSON.stringify({ ...JSON.parse(draftBefore), status: "published" }, null, 2)}\n`
+      : draftBefore;
+    await mkdir(path.dirname(conflictFile), { recursive: true });
+    await writeFile(conflictFile, conflictValue);
+    const result = runScript(
+      "content-approve.mjs",
+      ["--slug", slug, "--authority", "content-owner"],
+      contentRoot,
+    );
+    assert.notEqual(result.status, 0);
+    assert.equal(await readFile(draftFile, "utf8"), draftBefore);
+    assert.equal(await readFile(conflictFile, "utf8"), conflictValue);
+    if (conflict !== "review") {
+      assert.equal(await pathExists(locations.review), false);
+    }
+    if (conflict !== "recovery") {
+      assert.equal(await pathExists(locations.recovery), false);
+    }
+    if (conflict !== "production") {
+      assert.equal(await pathExists(locations.production), false);
+    }
+  }
+});
+
+test("content approve rejects invalid source evidence without lifecycle side effects", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-approve-invalid-"));
+  const slug = "sanitized-candidate-preview";
+  const workspace = path.join(contentRoot, ".content-workspace");
+  const draftFile = path.join(workspace, "drafts", `${slug}.json`);
+  const invalid = JSON.parse(await readFile(fixturePath, "utf8"));
+  invalid.evidenceUnits[0].sourceRefs = ["source-missing"];
+  const invalidValue = `${JSON.stringify(invalid, null, 2)}\n`;
+  await mkdir(path.dirname(draftFile), { recursive: true });
+  await writeFile(draftFile, invalidValue);
+  const result = runScript(
+    "content-approve.mjs",
+    ["--slug", slug, "--authority", "content-owner"],
+    contentRoot,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /references missing source-missing/);
+  assert.equal(await readFile(draftFile, "utf8"), invalidValue);
+  assert.equal(await pathExists(path.join(workspace, "reviews", `${slug}.json`)), false);
+  assert.equal(await pathExists(path.join(workspace, "recoveries", `${slug}.json`)), false);
+  assert.equal(await pathExists(path.join(contentRoot, "content", "observations", `${slug}.json`)), false);
+});
+
+test("content approve rolls back its review and recovery when production write fails", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-approve-rollback-"));
+  const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
+  assert.equal(imported.status, 0, imported.stderr);
+  const slug = "sanitized-candidate-preview";
+  const workspace = path.join(contentRoot, ".content-workspace");
+  const draftFile = path.join(workspace, "drafts", `${slug}.json`);
+  const draftBefore = await readFile(draftFile, "utf8");
+  const blockedProduction = path.join(contentRoot, "content", "observations", `${slug}.json`);
+  await mkdir(blockedProduction, { recursive: true });
+
+  const result = runScript(
+    "content-approve.mjs",
+    ["--slug", slug, "--authority", "content-owner"],
+    contentRoot,
+  );
+  assert.notEqual(result.status, 0);
+  assert.equal(await readFile(draftFile, "utf8"), draftBefore);
+  assert.equal(await pathExists(path.join(workspace, "reviews", `${slug}.json`)), false);
+  assert.equal(await pathExists(path.join(workspace, "recoveries", `${slug}.json`)), false);
+  assert.deepEqual(await readdir(blockedProduction), []);
+  assert.deepEqual(await readdir(path.dirname(blockedProduction)), [`${slug}.json`]);
+});
+
+test("legacy content promote preserves recovery when atomic production placement fails", async () => {
+  const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-promote-recovery-"));
+  const imported = runScript("content-import.mjs", ["--input", fixturePath], contentRoot);
+  assert.equal(imported.status, 0, imported.stderr);
+  const slug = "sanitized-candidate-preview";
+  const workspace = path.join(contentRoot, ".content-workspace");
+  const draftFile = path.join(workspace, "drafts", `${slug}.json`);
+  const reviewed = runScript(
+    "content-review.mjs",
+    ["--slug", slug, "--authority", "content-owner"],
+    contentRoot,
+  );
+  assert.equal(reviewed.status, 0, reviewed.stderr);
+  const draftBefore = await readFile(draftFile, "utf8");
+  const reviewFile = path.join(workspace, "reviews", `${slug}.json`);
+  const reviewBefore = await readFile(reviewFile, "utf8");
+  const blockedProduction = path.join(contentRoot, "content", "observations", `${slug}.json`);
+  await mkdir(blockedProduction, { recursive: true });
+
+  const result = runScript("content-promote.mjs", ["--slug", slug], contentRoot);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Promotion failed after recovery was preserved/);
+  assert.equal(await readFile(draftFile, "utf8"), draftBefore);
+  assert.equal(await readFile(reviewFile, "utf8"), reviewBefore);
+  assert.equal(
+    await readFile(path.join(workspace, "recoveries", `${slug}.json`), "utf8"),
+    draftBefore,
+  );
+  assert.deepEqual(await readdir(blockedProduction), []);
+  assert.deepEqual(await readdir(path.dirname(blockedProduction)), [`${slug}.json`]);
+});
+
 test("workspace import is consumed only after a valid draft is written", async () => {
   const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-consume-"));
   const importsDirectory = path.join(contentRoot, ".content-workspace", "imports");

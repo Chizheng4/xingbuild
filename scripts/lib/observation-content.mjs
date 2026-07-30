@@ -343,6 +343,11 @@ export async function assertReviewedDraft(slug) {
 }
 
 export async function assertTargetWorkspaceReady(slug) {
+  await assertNoTargetWorkspaceConflicts(slug);
+  return assertReviewedDraft(slug);
+}
+
+export async function assertNoTargetWorkspaceConflicts(slug) {
   assertValidSlug(slug);
   for (const [kind, directory] of [
     ["candidate", candidatesDirectory],
@@ -352,7 +357,6 @@ export async function assertTargetWorkspaceReady(slug) {
       throw new Error(`Target ${kind} conflicts with reviewed draft: ${slug}`);
     }
   }
-  return assertReviewedDraft(slug);
 }
 
 export async function assertPromotedTargetReady(slug) {
