@@ -1,5 +1,13 @@
 # xingbuild 版本记录
 
+## v0.15.5 — 全站 SiteShell 与 Footer 几何
+
+日期：2026-07-30
+
+- 将全站 SiteShell 收口为纵向页面框架：Header 与 Footer 保持普通流，main 统一吸收短页剩余高度。
+- 短页 Footer 落在动态视口底部，长页 Footer 跟随全部内容；保留既有全局关系间距、最大宽度、gutter 与 sticky Header。
+- 使用 `100vh` fallback、`100dvh` 和手机底部 safe area，不通过页面补丁或 Footer 定位覆盖制造几何假象。
+
 ## v0.15.4 — Slug 级内容发布能力
 
 日期：2026-07-30

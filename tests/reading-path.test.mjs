@@ -34,6 +34,16 @@ test("global chrome stays minimal and mobile navigation is a full viewport layer
   assert.match(components, /position: fixed;\s+inset: 0;/);
 });
 
+test("one global shell keeps a normal-flow footer at the viewport or content end", () => {
+  assert.match(layout, /\.site-shell\s*\{[\s\S]*?display: flex;[\s\S]*?flex-direction: column;/);
+  assert.match(layout, /min-height: 100vh;[\s\S]*?min-height: 100dvh;/);
+  assert.match(layout, /main\s*\{[^}]*flex: 1 0 auto;/);
+  assert.match(layout, /\.site-footer\s*\{[\s\S]*?margin-top: var\(--rhythm-section\);/);
+  assert.match(layout, /env\(safe-area-inset-bottom\)/);
+  const footerRule = layout.match(/\.site-footer\s*\{([^}]*)\}/)?.[1] ?? "";
+  assert.doesNotMatch(footerRule, /position:\s*(?:fixed|absolute|sticky)/);
+});
+
 test("observation return context is safe, refreshable, and labelled from its real destination", async () => {
   const navigation = await readFile(new URL("../src/lib/navigation.jsx", import.meta.url), "utf8");
   const briefs = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
