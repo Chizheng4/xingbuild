@@ -1,0 +1,103 @@
+{
+  "id": "observation-uk-aps-permit-applications",
+  "slug": "uk-aps-permit-applications",
+  "status": "published",
+  "level": "standard",
+  "nature": "evidence-led",
+  "title": "英国开放自动驾驶载客服务试点运营商申请",
+  "summary": "英国开放自动驾驶载客服务试点的运营商申请，服务仍须经过政府安全审查与地方同意。",
+  "companies": [
+    "英国交通部",
+    "联网及自动驾驶车辆中心"
+  ],
+  "regions": [
+    "英国"
+  ],
+  "dimensions": [
+    "准入与政策",
+    "运营与市场"
+  ],
+  "primaryDimension": "准入与政策",
+  "eventAt": "2026-05-22",
+  "publishedAt": "2026-07-30",
+  "updatedAt": "2026-07-30",
+  "factOverview": [
+    {
+      "label": "监管动作",
+      "value": "开放试点运营商申请"
+    },
+    {
+      "label": "服务范围",
+      "value": "出租车、私人租赁车与公交式载客服务"
+    },
+    {
+      "label": "当前阶段",
+      "value": "申请开放，尚未授予许可"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "英国交通部与联网及自动驾驶车辆中心于5月22日开放自动驾驶出租车、私人租赁车和公交式载客服务试点的运营商申请。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-uk-applications-open"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "这把载客自动驾驶服务从政策准备推进到运营商申请环节；服务仍须通过政府安全审查并取得地方交通主管部门同意。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-uk-approval-boundary"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-uk-applications-open",
+      "claim": "英国政府于2026年5月22日开放运营商申请自动驾驶出租车、私人租赁车和公交式载客服务试点。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-uk-dft-aps"
+      ]
+    },
+    {
+      "id": "evidence-uk-approval-boundary",
+      "claim": "申请开放不代表任一企业已经获批或上线服务；政府仍将进行安全审查，地方交通主管部门也须提供同意。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-uk-dft-aps"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-uk-dft-aps",
+      "publisher": "英国交通部与联网及自动驾驶车辆中心",
+      "title": "Passengers one step closer to booking taxi and bus-style self-driving vehicles",
+      "url": "https://www.gov.uk/government/news/passengers-one-step-closer-to-booking-taxi-and-bus-style-self-driving-vehicles",
+      "publishedAt": "2026-05-22",
+      "sourceTier": "primary",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-07-30"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "来源确认试点运营商申请已开放及其审批边界；不确认任何企业已经获批、开始无人商业运营或已实现政府预测。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "英国自动驾驶载客试点",
+    "body": "英国政府5月22日开放自动驾驶出租车、私人租赁车和公交式载客服务试点的运营商申请。获批运营商最快可于年内让乘客预约行程，但仍须通过政府安全审查并取得地方同意。申请开放不等于任何企业已获批或已经上线服务。",
+    "sourceRefs": [
+      "source-uk-dft-aps"
+    ],
+    "isOpinion": false
+  }
+}
