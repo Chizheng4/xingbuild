@@ -15,6 +15,7 @@ import { navigate, useLocation } from "./lib/navigation";
 import { site } from "./content/siteContent";
 import { findObservation } from "./content/observationRepository";
 import { FRAMEWORK_BASE } from "./content/frameworkModel";
+import { startVisitQualification } from "./lib/visitQualification";
 
 function resolvePage(location) {
   const { pathname } = location;
@@ -56,6 +57,8 @@ function BriefRedirect() {
 export function App() {
   const location = useLocation();
   const { pathname } = location;
+
+  useEffect(() => startVisitQualification(), []);
 
   useEffect(() => {
     const redirects = {

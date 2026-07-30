@@ -75,6 +75,7 @@
 - 富文本母版：Article 与 About 共用 RichDocument，只允许 lead、H2/H3、paragraph、list、definitionList、figure、callout、sources 等受控 block；页面不得直接写业务正文 JSX、私有字号或任意 margin。内容块、类型令牌和相邻关系一旦验收，后续只增改内容而不改页面组件。
 - 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察内容只通过 ObservationPublication 中人工写入的显式 `presentation` 产生。二者都不得再通过页面、组件或视觉特例填充。
 - Robotaxi 作品媒体分为三个责任：`media` 是读者可见的图片或未来视频内容；`action` 是可选读者互动，当前全框链接到经批准的 Robotaxi 独立系统；`provenance` 保存审批状态、媒体角色、状态边界、版本、Git commit 与哈希，不默认投影为读者界面。manifest 是生命周期与 provenance 事实记录，不等于公开集合；只有总 publication active、manifest/资产逐项 review 与 approval 为 approved、资产 publicStatus 为 public，且文件/hash/version/provenance 校验通过时才能投影。suspended、superseded、paused、pending_review、revoked、internal 或哈希不一致的记录必须保留追溯但不得进入读者界面。
+- 轻量访问概览只在 `xingbuild.top`（及正式支持的同站 `www` 别名）页面 visible 累计 15 秒后记录一次 `XINGBUILD` 有效访问；隐藏时间不累计，不建立会话、心跳、结束事件或精确时长。身份仅使用本站 origin 的独立 `visitor_seed`，父域排除 Cookie、localhost、preview、webdriver/自动 QA 和非正式域名不得调用。KV 只保存共享合同的七字段，不记录 IP、地区、路径、点击、来源、输入或业务数据；本站不提供访问管理页面。
 
 ## 迭代与发布工作流
 

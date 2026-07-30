@@ -2,41 +2,41 @@
 
 ## 当前目标版本
 
-`v0.15.7`
+`v0.15.8`
 
-## 要解决的问题
+## 已批准问题
 
-交付 Slug 级内容审核终端聚合能力，让已经完成人工事实审核和公开表达判断的单个 Observation 以一条显式命令完成既有 review + promote，同时保持内容生命周期事实可恢复、失败无半状态。
+轻量访问概览接入：在不建立网站分析系统、不关联两站匿名身份的前提下，为 Robotaxi 管理端提供 xingbuild 正式站的大致有效访问事实。
 
 ## 本轮范围
 
-- 新增 `npm run content:approve -- --slug <slug> --authority <authority>`。
-- 在共享 JS 能力层复用既有 review、promote、schema、来源、证据、hash、目标冲突与 production 唯一性校验，不以子进程串接 npm，也不复制判断规则。
-- 成功只新增目标 review、recovery、production 并保留 draft；失败精确回滚本次新增文件，不覆盖既有目标事实。
-- 更新命令入口、项目检查、中文规则、AGENTS 交付态和自动化测试。
+- `xingbuild.top` 正式页面 visible 累计 15 秒后触发一次同源 `POST /api/visits/qualify`；隐藏期间暂停累计。
+- 使用本站 origin 的独立 `visitor_seed` 和 `site_code=XINGBUILD`；父域排除 Cookie、本地、preview、webdriver/自动 QA、非正式域名不调用。
+- Worker 实现正式域名校验、HMAC-SHA-256 匿名标识、Asia/Shanghai 自然日幂等、七字段白名单和 30 天有界清理。
+- 复用 EdgeOne 绑定名 `visitKv` 与 Secret `visitHashSecret`；补齐项目规则、版本记录、自动化测试、构建和真实加载验证。
 
 ## 明确不做
 
-- 不选题、写稿、自动审核、自动提交或自动发布。
-- 不改读者 UI、视觉、Footer、Observation 内容对象结构或公开内容。
-- 不夹带其他 backlog；本轮产品独立验收前不 stage、commit、tag、push、部署或公网验收。
+- 不修改 Robotaxi 工程、业务数据或管理页面，不新增 xingbuild 访问管理页面。
+- 不记录 IP、地区、路径、点击、来源、输入、业务数据、精确时长、会话心跳或结束事件。
+- 不关联 xingbuild 与 Robotaxi 匿名身份；不夹带内容发布、页面视觉或其他 backlog。
+- 外部 KV/Secret 未配置，本轮不 stage、commit、tag、push、deploy 或声称公网能力可用。
 
 ## 验收标准
 
-- slug 与 authority 必填且非空；重复参数、多 slug、非法 slug 或未知参数硬失败。
-- 目标已有 review、recovery、production、candidate/import 冲突，或 draft 的 schema、来源、证据不完整时硬失败。
-- 正常目标一次产生匹配 hash 的 review、原 draft recovery 和 published production，draft 保持逐字不变。
-- 任一步失败不覆盖已有 production/review/draft，不留下本次 review、recovery 或半成品 production。
-- 无关 ignored candidate/import/draft/review/recovery 并存时不阻断且前后逐字不变。
-- 内容专项测试、`npm run release:check` 与精确 diff 核对通过后，停在未提交、未暂存状态交产品独立验收。
+- 桌面与手机正式域模拟加载均在 visible 累计 15 秒后只请求一次；hidden 时间不累计。
+- localhost、preview、webdriver/自动 QA、非正式域名和排除 Cookie 均不调用。
+- 同一 visitor、站点、Asia/Shanghai 自然日只保留一个 key；重复调用保持 first 并更新 last。
+- KV key、HMAC 截断、`qualified_date=YYYYMMDD`、`device_type=MOBILE|DESKTOP`、七字段白名单与 30 天有界清理均须与共享合同一致；缺少绑定或 Secret 时硬失败。
+- 现有页面、移动导航、构建和 Worker fallback 不回退；专项测试与 `npm run release:check` 通过。
+- 完成后停在未暂存、未提交状态，等待产品独立验收和外部配置。
 
 ## 当前状态
 
-v0.15.7 Engineering 实现与兼容性修正已完成：内容专项 29/29、完整 `npm run release:check` 69/69、生产构建 14 条既有 published Observation、精确 diff 与未暂存状态均通过；`content:approve` 失败全回滚，独立 `content:promote` 在 production 写入失败时保留 recovery。等待产品独立验收；内容侧在正式验收前暂停使用 `content:approve`，仅继续候选审核。
+v0.15.8 Engineering 实现、本地验证与产品验收已完成：访问/Worker 专项 11/11、完整 `npm run release:check` 76/76、生产构建 19 条既有 published Observation；1440×900 首页与 390×844 B端产品页真实加载、visible 15 秒、横向溢出和 console 均通过。用户已确认 EdgeOne 外部配置完成，进入正式收口与发布。
 
-## 明确 backlog
+## 外部配置状态
 
-- 已发布 Observation 撤下或 canonical 替换；
-- legacy Article 与 ArticlePreview 闭环；
-- About 真实事实内容补齐；
-- controlled-system/video 内容入口；
+- EdgeOne 生产项目 `xingbuild-nochina` 已绑定共享 KV，变量名为 `visitKv`。
+- EdgeOne 生产项目已配置与 Robotaxi 相同的 `visitHashSecret`；Secret 不进入仓库、日志或交接。
+- 真实 XINGBUILD 写入与 Robotaxi 管理页联查保留为用户人工验收，自动化 QA 不制造访问记录。

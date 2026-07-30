@@ -14,6 +14,7 @@ const requiredFiles = [
   "src/content/practiceRepository.js",
   "src/content/observationRepository.js",
   "src/content/sourceUrls.js",
+  "src/lib/visitQualification.js",
   "content/schema/observation.schema.json",
   "content/products/robotaxi.json",
   "content/business-observations/enterprise-operating-framework.json",
@@ -46,6 +47,7 @@ const requiredFiles = [
   "edgeone.json",
   ".openai/hosting.json",
   "worker/index.js",
+  "tests/visit-overview.test.mjs",
 ];
 
 for (const file of requiredFiles) {
@@ -75,6 +77,10 @@ const practiceRepository = await readFile(
 );
 const app = await readFile(
   new URL("../src/App.jsx", import.meta.url),
+  "utf8",
+);
+const worker = await readFile(
+  new URL("../worker/index.js", import.meta.url),
   "utf8",
 );
 const edgeOneConfig = JSON.parse(
@@ -109,5 +115,15 @@ assert.deepEqual(edgeOneConfig.redirects, [
     statusCode: 301,
   },
 ]);
+assert(app.includes("startVisitQualification"), "app must start the formal-site visit qualifier");
+for (const contract of [
+  "visitKv",
+  "visitHashSecret",
+  "XINGBUILD",
+  "/api/visits/qualify",
+  "Asia/Shanghai",
+]) {
+  assert(worker.includes(contract), `worker must retain visit contract: ${contract}`);
+}
 
 console.log(`xingbuild project check passed for v${packageJson.version}`);

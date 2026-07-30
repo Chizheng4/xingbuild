@@ -202,6 +202,15 @@ npm run test:sites
 
 脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
 
+### 7.2 轻量访问概览
+
+- xingbuild 只在 `https://xingbuild.top/`（以及正式支持并重定向到同站的 `www` 别名）页面 visible 累计 15 秒后，以 `site_code=XINGBUILD` 调用同源 `POST /api/visits/qualify`；隐藏时间暂停累计，每次页面加载最多触发一次。
+- 本站 origin 的 localStorage 独立保存 `visitor_seed`，不得使用父域 Cookie、共享种子或服务端网络信息关联 Robotaxi 匿名身份。父域 `xingbuild_visit_excluded=1` 只表达本设备排除。
+- localhost、127.0.0.1、preview、webdriver、自动 QA 和非正式域名不调用；本站不新增访问管理页面。
+- Worker 使用 `visitHashSecret` 对 `site_code|visitor_seed` 执行 HMAC-SHA-256，截取前 24 位小写十六进制；以 `visit_<SITE_CODE>_<YYYYMMDD>_<visitor_identifier>` 在 `visitKv` 中按 Asia/Shanghai 自然日幂等。
+- KV 对象只允许 `site_code/qualified_date/visitor_identifier/first_qualified_at/last_qualified_at/device_type/website_version` 七字段；`qualified_date` 固定为 `YYYYMMDD`，`device_type` 只允许 `MOBILE/DESKTOP`。不得记录或推导 IP、地区、路径、点击、来源、输入、业务数据、精确时长、会话心跳或结束事件。
+- 每次合格写入执行有界 30 天旧 key 清理。`visitKv` 和至少 24 位的 `visitHashSecret` 属于 EdgeOne 外部配置门禁；未绑定时接口必须失败，本地实现不得声称公网能力可用。
+
 首次发布前需要一次性完成：
 
 1. 执行 `npm ci` 安装项目锁定的 EdgeOne CLI；
