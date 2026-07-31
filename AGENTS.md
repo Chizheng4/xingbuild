@@ -66,9 +66,12 @@
 - 规则和解释以中文为主要叙述语言；命令、文件名、字段、枚举、API、skill 和必要技术名称保留英文。
 - 英文技术词第一次出现时尽量提供紧邻的中文含义，例如“候选（candidate）”“草稿（draft）”；不得为了双语形式复制整段规则，以免增加读取成本并造成中英文漂移。
 - 如果外部工具强制要求英文指令，同一位置必须提供简洁中文等义说明；中文和英文发生冲突时，以项目已确认的中文产品决策和可验证工程合同为准。
-- 展示母版：B端产品与经营观察共用 ShowcaseLayout。桌面主展示区内部固定为208px说明列 + 20px关系间距 + 占余宽的SystemStage；说明垂直居中，媒体/视频/受控系统页面/GraphCanvas是视觉主角。Robotaxi 使用批准媒体或上游提供的稳定公开场景；企业经营体系的固定概念说明位于左列并只读取 career 同步快照/frameworkModel，网站或 AI 不得改写、概括或补造，图下不再设置 ExplanationPanel。
-- 企业经营体系首个且当前唯一的局部入口是总览节点 `digital-implementation`。局部视图使用同一路径 `?view=digital-implementation` 并直接投影 `frameworkModel` 已有的 9 节点、13 边和权威说明；不得复制或改写概念与关系。刷新保留局部视图，局部默认选择 `b2b-product-architecture`；返回总览移除 `view` 并把 `digital-implementation` 作为返回焦点。首版不增加 node URL、第二个局部入口或二次下钻。
-- 展示母版在手机端必须强化对象归属：同一对象内部 `SystemStage → explanation` 的间距为 12–16px，不同对象之间为 40–48px，至少形成约 3:1 的关系差。Framework 的选中节点解释紧随 GraphCanvas，以轻暖状态面和“当前节点”状态标识说明它属于上方图；定义、作用和直接关系仍只读取 frameworkModel，不得改写。桌面 208px + 20px + SystemStage 合同不变。
+- 展示母版：B端产品与经营观察共用 ShowcaseLayout。桌面主展示区内部固定为208px说明列 + 20px关系间距 + 占余宽的SystemStage；说明垂直居中，媒体/视频/受控系统页面/GraphCanvas是视觉主角。Robotaxi 使用批准媒体或上游提供的稳定公开场景；企业经营体系的固定概念说明位于左列并只读取 career 同步快照和批准后的唯一网站架构模型，网站或 AI 不得改写、概括或补造，图下不再设置 ExplanationPanel。
+- 企业经营体系首个且当前唯一的局部入口是总览节点 `digital-implementation`。局部视图使用同一路径 `?view=digital-implementation` 并投影批准网站快照已有的 9 节点、13 边和权威说明；不得复制或改写概念与关系。`v0.18.0` 将该局部结构迁移为单一 LikeC4 模型，迁移完成后旧 `frameworkModel` 局部边集不得继续双写。刷新保留局部视图，局部默认选择 `b2b-product-architecture`；返回总览移除 `view` 并把 `digital-implementation` 作为返回焦点。当前不增加 node URL、第二个局部入口或二次下钻。
+- 展示母版在手机端必须强化对象归属：同一对象内部 `SystemStage → explanation` 的间距为 12–16px，不同对象之间为 40–48px，至少形成约 3:1 的关系差。Framework 的选中节点解释紧随 GraphCanvas，以轻暖状态面和“当前节点”状态标识说明它属于上方图；定义、作用和直接关系仍只读取批准后的唯一架构模型，不得改写。桌面 208px + 20px + SystemStage 合同不变。
+- 企业经营体系局部视图的正式视觉方向是 LikeC4 风格的多层架构浏览器：业务设计层、工程实现层、经营运行与反馈层共同表达现有 9 节点、13 关系和反馈闭环；这是架构图内部重构，不是网站结构改版。桌面 selected、桌面 Hover 和手机 selected 的唯一视觉事实源位于 `docs/design/assets/v0.18.0-architecture-explorer-*.png`，完整合同位于 `docs/design/v0.18.0 企业经营体系多层架构浏览器重构方案.md`。
+- 架构关系线不得与 GraphCanvas 外框、系统层边界、布局 divider 或节点边框共线、重合或借用同一条视觉边。必须使用独立内部布线槽和明确穿越端口；外部反馈闭环与组件边缘保持可见间距。几何验收必须检测线段共线重叠，不能只检查节点、标签碰撞。
+- 桌面 Hover/Focus 只预览直接关系，不更新已锁定说明；Click、Enter、Space 才锁定节点并更新说明。任何状态不得移动、缩放或重新布局节点和关系。手机使用同源纵向三层阅读，tap 选择，图后紧接当前节点说明，不缩小桌面图、不建立内部滚动。
 - 布局母版：桌面唯一 shell 最大1280px、外边距至少32px；完整双栏为952px主展示区 + 24px + 固定304px rail，只有SystemStage仍可保持至少640px有效宽时成立。集中观察页、Article 与 About 共用居中736px ReadingShell；移动20px gutter、窄屏16px。无有效 Brief 时不保留空 rail。
 - ObservationBlock：identity 固定为单行 `subject · eventAt`，subject 最大16个全角等价字符；dimension 独占一行且当前不可点击；body 为80–160个中文等价字符、建议2–3句和一个段落；source 为最后一行且默认与辅助信息同色。有长文时在同一块内增加 ArticlePreview，普通 Brief 不创建详情页。
 - 观察层级与返回：第一层首页/B端产品/经营观察可直接进入长文，或先经“更多观察”进入集中观察页再进入长文；长文逐层返回真实上层，并提供经营观察栏目入口。返回上下文必须使用安全站内 origin/returnTo 并在刷新后成立，不能只依赖 history.back。

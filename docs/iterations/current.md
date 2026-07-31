@@ -2,41 +2,61 @@
 
 ## 当前目标版本
 
-`v0.17.0`
+`v0.18.0`
 
 ## 主题
 
-企业经营体系固定架构图与全站返回统一
+企业经营体系多层架构浏览器重构
 
 ## 事实源
 
-- `docs/design/v0.17.0 企业经营体系固定架构图与全站返回统一方案.md`
+- `docs/design/v0.18.0 企业经营体系多层架构浏览器重构方案.md`
+- `docs/design/assets/v0.18.0-architecture-explorer-desktop-selected.png`
+- `docs/design/assets/v0.18.0-architecture-explorer-desktop-hover.png`
+- `docs/design/assets/v0.18.0-architecture-explorer-mobile-selected.png`
 - `docs/design/xingbuild Visual System v1.md`
-- `src/content/frameworkModel.js`
+- career 同步的企业经营概念与批准网站快照
 - `docs/rules/iteration-and-release.md`
 
 ## 目标
 
-- 采用已选择的“Architecture Spine”方向，只优化 `digital-implementation` GraphCanvas 内部的节点布局、关系线、标签、强调和稳定性。
-- 默认完整呈现现有 9 个节点、13 条关系及闭环；选择节点只更新强调和说明，不移动或缩放画布。
-- 移除平移、缩放、pointer capture、“复位视图”及 SystemStage 上方的局部标题/私有工具栏。
-- 建立共享 `ReturnNavigation（返回导航）`，统一 Article、观察集合和 Framework 的结构、文案、视觉、上下文及焦点恢复。
+- 将 `digital-implementation` 从 React Flow 平面节点图重构为 LikeC4 风格的
+  多层架构浏览器；
+- 使用业务设计层、工程实现层、经营运行与反馈层表达现有 9 节点和 13 关系；
+- 关系线、箭头和标签默认可见，反馈闭环可以连续追踪；
+- 建立真实 Hover 预览、Click 锁定、键盘和手机 tap 状态；
+- 桌面、手机和文本降级只读取一个架构模型；
+- 把关系线不得与网站组件边缘共线写成几何和视觉硬门槛。
 
 ## 明确不做
 
-- 不修改 `frameworkModel` 的概念、定义、作用、节点、边、方向或关系文案。
-- 不修改网站一级信息架构、Header、页面标题、ShowcaseLayout、Observation rail、Robotaxi、Observation 内容、About、Footer 或发布能力。
-- 不新增第二个局部入口、节点 URL、详情页、二次下钻或第二图模型。
-- 不夹带其他 backlog。
+- 不修改网站一级信息架构、ShowcaseLayout、Header、Observation rail、
+  ReturnNavigation、内容对象或发布能力；
+- 不修改或补造企业经营概念、节点、关系、方向、定义和作用；
+- 不增加第二公开局部入口、节点 URL、详情页或二次下钻；
+- 不夹带 Robotaxi、Observation、Article、About、Footer 或其他 backlog；
+- 不以效果图代替可编辑模型，不维护第二份手工边集。
+
+## Engineering 范围
+
+- 引入并固定开源 LikeC4 构建与 React 展示能力；
+- 将 `digital-implementation` 迁移为单一 LikeC4 模型；
+- 删除该视图对 React Flow / ELK 运行时和手工布局的依赖；
+- 实现三张视觉事实源对应的桌面 selected、桌面 Hover 和手机 selected 状态；
+- 生成同源文本降级、关系清单及全部几何、交互和响应式测试。
 
 ## 验收
 
-- 自动验证覆盖 9 节点/13 边、默认关系完整性、几何稳定、禁用画布移动、ReturnNavigation、安全上下文、焦点恢复、键盘和文本降级。
-- 1440、1024、768、557、390、320 六档真实页面串行验证；无横向溢出、嵌套纵滚、节点/标签碰撞、裁切、布局晃动或 console error/warning。
-- 不存在“数字化实现 + 返回总览 + 复位视图”额外工具栏；Framework 只显示一个 `← 返回企业经营体系`。
-- Article、观察集合和 Framework 使用同一 ReturnNavigation 结构和视觉 token。
-- `npm run release:check`、closeout-check 与 preflight 按阶段通过。
+- 模型逐项保持 9 节点、13 关系和权威说明；
+- 关系线与 GraphCanvas、层边界、divider、节点边框共线重叠为 `0`；
+- 默认状态无需 Hover 即可看清完整主路径和反馈闭环；
+- 实际 Hover、click、Enter、Space、手机 tap 可用且不改变任何几何；
+- 1440、1024、768、557、390、320 和代表性 100%–200% 缩放通过；
+- Product/Visual 使用真实页面与视觉目标同屏对照；
+- 用户实际浏览器环境在发布前完成人工检查；
+- `release:check`、closeout、preflight、push、部署和公网验收分别报告。
 
 ## 当前状态
 
-Engineering 实现与本地验证已完成：专项自动测试通过，六档本地页面验证确认固定 9 节点/13 关系、无横向溢出、无标签碰撞或裁切、手机自然滚动与 console error/warning=0；返回链接通过 replace 回到总览并恢复 `digital-implementation` 焦点。下一步为按范围暂存、closeout-check、本地 commit/tag 与 preflight；尚未 push、部署或公网验收，完成本地收口后按事件驱动合同主动回传产品与视觉 task。
+产品结构、桌面选中、桌面 Hover、手机纵向分层和验收合同已形成；尚未开始
+Engineering 实现，未修改代码、依赖、产品版本、tag 或生产环境。
