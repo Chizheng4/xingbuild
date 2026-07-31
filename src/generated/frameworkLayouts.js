@@ -969,6 +969,354 @@ export const frameworkLayouts = {
         }
       }
     },
+    "compact": {
+      "width": 561.6,
+      "height": 316.8,
+      "nodes": {
+        "enterprise-business-architecture": {
+          "x": 28.8,
+          "y": 46.8,
+          "width": 108,
+          "height": 51.84
+        },
+        "b2b-product-architecture": {
+          "x": 208.8,
+          "y": 72,
+          "width": 108,
+          "height": 51.84
+        },
+        "data-architecture": {
+          "x": 424.8,
+          "y": 72,
+          "width": 108,
+          "height": 51.84
+        },
+        "technical-architecture": {
+          "x": 28.8,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        },
+        "engineering": {
+          "x": 118.08,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        },
+        "enterprise-digital-system": {
+          "x": 207.36,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        },
+        "enterprise-reality-operation": {
+          "x": 296.64,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        },
+        "digital-facts-results": {
+          "x": 385.92,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        },
+        "digital-decision": {
+          "x": 475.2,
+          "y": 223.2,
+          "width": 72,
+          "height": 46.08
+        }
+      },
+      "edges": {
+        "di-business-product": {
+          "source": "enterprise-business-architecture",
+          "target": "b2b-product-architecture",
+          "points": [
+            {
+              "x": 136.8,
+              "y": 72.72
+            },
+            {
+              "x": 172.8,
+              "y": 72.72
+            },
+            {
+              "x": 172.8,
+              "y": 97.92
+            },
+            {
+              "x": 208.8,
+              "y": 97.92
+            }
+          ],
+          "label": {
+            "x": 172.8,
+            "y": 62.64
+          }
+        },
+        "di-business-data": {
+          "source": "enterprise-business-architecture",
+          "target": "data-architecture",
+          "points": [
+            {
+              "x": 82.8,
+              "y": 46.8
+            },
+            {
+              "x": 82.8,
+              "y": 18.72
+            },
+            {
+              "x": 478.8,
+              "y": 18.72
+            },
+            {
+              "x": 478.8,
+              "y": 72
+            }
+          ],
+          "label": {
+            "x": 280.8,
+            "y": 11.52
+          }
+        },
+        "di-product-data": {
+          "source": "b2b-product-architecture",
+          "target": "data-architecture",
+          "points": [
+            {
+              "x": 316.8,
+              "y": 90.72
+            },
+            {
+              "x": 424.8,
+              "y": 90.72
+            }
+          ],
+          "label": {
+            "x": 370.8,
+            "y": 82.08
+          }
+        },
+        "di-data-product": {
+          "source": "data-architecture",
+          "target": "b2b-product-architecture",
+          "points": [
+            {
+              "x": 424.8,
+              "y": 106.56
+            },
+            {
+              "x": 316.8,
+              "y": 106.56
+            }
+          ],
+          "label": {
+            "x": 370.8,
+            "y": 115.92
+          }
+        },
+        "di-product-tech": {
+          "source": "b2b-product-architecture",
+          "target": "technical-architecture",
+          "points": [
+            {
+              "x": 262.8,
+              "y": 123.84
+            },
+            {
+              "x": 262.8,
+              "y": 183.6
+            },
+            {
+              "x": 64.8,
+              "y": 183.6
+            },
+            {
+              "x": 64.8,
+              "y": 223.2
+            }
+          ],
+          "label": {
+            "x": 169.2,
+            "y": 174.96
+          }
+        },
+        "di-data-tech": {
+          "source": "data-architecture",
+          "target": "technical-architecture",
+          "points": [
+            {
+              "x": 478.8,
+              "y": 123.84
+            },
+            {
+              "x": 478.8,
+              "y": 198
+            },
+            {
+              "x": 64.8,
+              "y": 198
+            },
+            {
+              "x": 64.8,
+              "y": 223.2
+            }
+          ],
+          "label": {
+            "x": 288,
+            "y": 194.4
+          }
+        },
+        "di-tech-engineering": {
+          "source": "technical-architecture",
+          "target": "engineering",
+          "points": [
+            {
+              "x": 100.8,
+              "y": 246.24
+            },
+            {
+              "x": 118.08,
+              "y": 246.24
+            }
+          ],
+          "label": {
+            "x": 109.44,
+            "y": 214.56
+          }
+        },
+        "di-engineering-system": {
+          "source": "engineering",
+          "target": "enterprise-digital-system",
+          "points": [
+            {
+              "x": 190.08,
+              "y": 246.24
+            },
+            {
+              "x": 207.36,
+              "y": 246.24
+            }
+          ],
+          "label": {
+            "x": 198.72,
+            "y": 214.56
+          }
+        },
+        "di-system-reality": {
+          "source": "enterprise-digital-system",
+          "target": "enterprise-reality-operation",
+          "points": [
+            {
+              "x": 279.36,
+              "y": 246.24
+            },
+            {
+              "x": 296.64,
+              "y": 246.24
+            }
+          ],
+          "label": {
+            "x": 288,
+            "y": 214.56
+          }
+        },
+        "di-reality-facts": {
+          "source": "enterprise-reality-operation",
+          "target": "digital-facts-results",
+          "points": [
+            {
+              "x": 368.64,
+              "y": 246.24
+            },
+            {
+              "x": 385.92,
+              "y": 246.24
+            }
+          ],
+          "label": {
+            "x": 377.28,
+            "y": 214.56
+          }
+        },
+        "di-system-facts": {
+          "source": "enterprise-digital-system",
+          "target": "digital-facts-results",
+          "points": [
+            {
+              "x": 243.36,
+              "y": 269.28
+            },
+            {
+              "x": 243.36,
+              "y": 286.56
+            },
+            {
+              "x": 421.92,
+              "y": 286.56
+            },
+            {
+              "x": 421.92,
+              "y": 269.28
+            }
+          ],
+          "label": {
+            "x": 332.64,
+            "y": 295.2
+          }
+        },
+        "di-facts-decision": {
+          "source": "digital-facts-results",
+          "target": "digital-decision",
+          "points": [
+            {
+              "x": 457.92,
+              "y": 246.24
+            },
+            {
+              "x": 475.2,
+              "y": 246.24
+            }
+          ],
+          "label": {
+            "x": 466.56,
+            "y": 214.56
+          }
+        },
+        "di-decision-business": {
+          "source": "digital-decision",
+          "target": "enterprise-business-architecture",
+          "points": [
+            {
+              "x": 511.2,
+              "y": 269.28
+            },
+            {
+              "x": 511.2,
+              "y": 299.52
+            },
+            {
+              "x": 11.52,
+              "y": 299.52
+            },
+            {
+              "x": 11.52,
+              "y": 72.72
+            },
+            {
+              "x": 28.8,
+              "y": 72.72
+            }
+          ],
+          "label": {
+            "x": 230.4,
+            "y": 308.16
+          }
+        }
+      }
+    },
     "mobile": {
       "width": 287,
       "height": 644,

@@ -38,6 +38,7 @@
     --type-ui: 0.875rem;
     --type-meta: 0.8125rem;
     --type-caption: 0.75rem;
+    --type-return-navigation: var(--type-meta);
 
     --leading-positioning: 1.45;
     --leading-title: 1.35;

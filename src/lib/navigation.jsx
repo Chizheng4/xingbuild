@@ -35,11 +35,15 @@ export function safeReturnTo(value, fallback = "/observations") {
 }
 
 export function returnLabelFor(href) {
+  return `返回${returnDestinationFor(href)}`;
+}
+
+export function returnDestinationFor(href) {
   const pathname = new URL(href, "https://xingbuild.top").pathname;
-  if (pathname === "/") return "返回首页";
-  if (pathname === "/products" || pathname.startsWith("/products/")) return "返回 B端产品";
-  if (pathname === "/business-observations" || pathname.startsWith("/business-observations/")) return "返回经营观察";
-  return "返回观察";
+  if (pathname === "/") return "首页";
+  if (pathname === "/products" || pathname.startsWith("/products/")) return "B端产品";
+  if (pathname === "/business-observations" || pathname.startsWith("/business-observations/")) return "经营观察";
+  return "观察";
 }
 
 export function observationCollectionHref(origin) {

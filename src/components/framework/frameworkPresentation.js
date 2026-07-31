@@ -11,6 +11,16 @@ export const frameworkPresentation = {
     maxWidth: 2600,
     maxHeight: 1800,
   },
+  compact: {
+    direction: "RIGHT",
+    padding: 18,
+    spacing: 16,
+    layerSpacing: 12,
+    nodeWidth: 72,
+    nodeHeight: 52,
+    maxWidth: 2600,
+    maxHeight: 1800,
+  },
   mobile: {
     direction: "DOWN",
     padding: 18,

@@ -40,16 +40,17 @@ test("the one local view has stable URL resolution and a single source model", (
   assert.doesNotMatch(explorer, /definition:|role:|label:/);
 });
 
-test("overview drilldown, local selection, return focus and reset retain the established path", () => {
+test("overview drilldown, local selection and shared return focus retain the established path", () => {
   assert.match(explorer, /const drilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && node\.id === drilldownNodeId/);
   assert.match(explorer, /onActivate: drilldown \? enterDigitalImplementation : \(\) => selectNode\(node\.id\)/);
   assert.match(explorer, /navigate\(frameworkViewPath\(DIGITAL_IMPLEMENTATION_VIEW\), \{ scroll: false \}\)/);
-  assert.match(explorer, /replace: true/);
+  assert.match(explorer, /<ReturnNavigation/);
+  assert.match(explorer, /destination="企业经营体系"/);
+  assert.match(explorer, /replace/);
   assert.match(explorer, /frameworkReturnFocus: true/);
   assert.match(explorer, /setSelectedId\(isExplicitReturn \? drilldownNodeId : activeArchitecture\.defaultNodeId\)/);
   assert.match(explorer, /returnNodeRef\.current\?\.focus\(\)/);
-  assert.match(explorer, /返回总览/);
-  assert.match(explorer, /复位视图/);
+  assert.doesNotMatch(explorer, /framework-explorer__tools|返回总览|复位视图/);
 });
 
 test("React Flow remains a read-only reader runtime", () => {
@@ -63,14 +64,15 @@ test("React Flow remains a read-only reader runtime", () => {
     /edgesFocusable=\{false\}/,
     /disableKeyboardA11y/,
     /deleteKeyCode=\{null\}/,
-    /onNodeClick=\{\(_, node\) => node\.data\.onActivate\(\)\}/,
+    /panOnDrag=\{false\}/,
     /zoomOnScroll=\{false\}/,
     /zoomOnPinch=\{false\}/,
     /zoomOnDoubleClick=\{false\}/,
     /proOptions=\{\{ hideAttribution: true \}\}/,
   ]) assert.match(runtime, contract);
   assert.doesNotMatch(runtime, /MiniMap|Controls|onNodesChange|onEdgesChange|onConnect/);
-  assert.match(runtime, /data\.active && data\.label/);
+  assert.match(runtime, /data\.showLabel && data\.label/);
+  assert.doesNotMatch(runtime, /onNodeClick/);
   assert.match(runtime, /role="region"/);
   assert.match(runtime, /aria-label=\{ariaLabel\}/);
   assert.match(runtime, /只读业务架构节点。节点不可移动、删除或连接。/);
@@ -96,19 +98,27 @@ test("framework projections advance the explanation hierarchy from their own roo
   for (const label of ["定义", "作用", "直接关系"]) assert.match(explorer, new RegExp(`<Subheading>${label}</Subheading>`));
 });
 
-test("desktop and mobile use generated layouts with natural mobile page scrolling", () => {
+test("digital implementation adds a compact fixed layout while all views retain natural mobile scrolling", () => {
   for (const architecture of [overview, digital]) {
-    for (const projection of ["desktop", "mobile"]) {
+    for (const projection of architecture.id === digital.id ? ["desktop", "compact", "mobile"] : ["desktop", "mobile"]) {
       const layout = frameworkLayouts[architecture.id][projection];
       assert.equal(Object.keys(layout.nodes).length, architecture.nodes.length);
       assert.equal(Object.keys(layout.edges).length, architecture.edges.length);
     }
   }
-  assert.match(explorer, /frameworkLayouts\[activeArchitecture\.id\]\?\.\[projection\]/);
-  assert.match(runtime, /panOnDrag=\{projection === "desktop"\}/);
+  assert.match(explorer, /const layoutProjection = activeArchitecture\.id === digitalImplementation\.id \|\| projection !== "compact" \? projection : "desktop"/);
+  assert.match(runtime, /panOnDrag=\{false\}/);
   assert.match(runtime, /preventScrolling=\{false\}/);
   assert.match(styles, /\.graph-canvas\[data-projection="mobile"\][\s\S]*touch-action: pan-y/);
   assert.doesNotMatch(styles, /data-mobile-world|--graph-pan|overflow-y:\s*(auto|scroll)/);
+});
+
+test("digital implementation keeps all relationships visible while mobile provides the same-source list", () => {
+  assert.match(explorer, /showLabel: activeViewId === DIGITAL_IMPLEMENTATION_VIEW \|\| active/);
+  assert.match(explorer, /architecture\.edges\.map/);
+  assert.match(explorer, /完整关系/);
+  assert.match(styles, /\.framework-description__all-relations \{ display: none; \}/);
+  assert.match(styles, /\.framework-description__all-relations \{ display: grid; gap: var\(--rhythm-bind\); \}/);
 });
 
 test("missing or invalid generated geometry falls back to same-source text", () => {

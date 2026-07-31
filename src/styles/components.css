@@ -45,6 +45,20 @@
     color: var(--color-text-muted);
     font: 400 var(--type-meta)/var(--leading-meta) var(--font-ui);
   }
+  .return-navigation {
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0;
+    color: var(--color-text-muted);
+    font: 500 var(--type-return-navigation)/var(--leading-meta) var(--font-meta);
+  }
+  .return-navigation a { min-height: var(--touch-target); display: inline-flex; align-items: center; }
+  .return-navigation__primary { color: var(--color-accent-strong); }
+  .return-navigation__secondary { color: var(--color-text-muted); }
+  .return-navigation a:hover { color: var(--color-accent-strong); text-decoration: underline; text-underline-offset: 0.18em; }
   .eyebrow {
     margin: 0;
     color: var(--color-accent);

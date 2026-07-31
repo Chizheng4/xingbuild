@@ -2,7 +2,8 @@ import { ObservationEmptyState, ObservationStream } from "../components/observat
 import { CollectionLayout, LayoutShell } from "../components/site/LayoutShell";
 import { selectObservationBriefs } from "../content/observationRepository";
 import { site } from "../content/siteContent";
-import { Link, observationCollectionHref, returnLabelFor, safeReturnTo } from "../lib/navigation";
+import { observationCollectionHref, returnDestinationFor, safeReturnTo } from "../lib/navigation";
+import { ReturnNavigation } from "../components/navigation/ReturnNavigation";
 
 export function ObservationsPage({ location }) {
   const briefs = selectObservationBriefs();
@@ -11,13 +12,15 @@ export function ObservationsPage({ location }) {
   return (
     <LayoutShell className="observations-page">
       <CollectionLayout>
+        <ReturnNavigation
+          href={origin || "/business-observations"}
+          destination={returnDestinationFor(origin || "/business-observations")}
+          origin={origin}
+          returnTo={returnTo}
+          secondary={origin && origin !== "/business-observations" ? { href: "/business-observations", label: "经营观察" } : null}
+        />
         <header className="observation-stream-header">
           <h1>观察</h1>
-          <p className="observation-stream-header__navigation">
-            {origin ? <Link href={origin}>{returnLabelFor(origin)}</Link> : null}
-            {origin && origin !== "/business-observations" ? <span aria-hidden="true"> · </span> : null}
-            {origin !== "/business-observations" ? <Link href="/business-observations">经营观察</Link> : null}
-          </p>
         </header>
         {briefs.length ? <ObservationStream items={briefs} returnTo={returnTo} /> : <ObservationEmptyState {...site.emptyStates.observations} />}
       </CollectionLayout>

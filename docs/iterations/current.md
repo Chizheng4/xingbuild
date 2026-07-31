@@ -2,49 +2,41 @@
 
 ## 当前目标版本
 
-`v0.16.0`
+`v0.17.0`
 
 ## 主题
 
-企业经营体系可读架构图运行时升级
+企业经营体系固定架构图与全站返回统一
 
 ## 事实源
 
-- `docs/design/v0.16.0 企业经营体系可读架构图运行时升级方案.md`
+- `docs/design/v0.17.0 企业经营体系固定架构图与全站返回统一方案.md`
+- `docs/design/xingbuild Visual System v1.md`
 - `src/content/frameworkModel.js`
 - `docs/rules/iteration-and-release.md`
 
 ## 目标
 
-- 使用 `@xyflow/react` 建立只读架构图运行时，保持总览 → 数字化实现 → 节点聚焦的唯一阅读路径。
-- 使用 `elkjs` 在构建阶段生成 desktop/mobile 确定性布局，浏览器不执行异步自动排版。
-- 手机让完整纵向架构图参与自然页面滚动，不建立内外双重纵向滚动世界。
-- 保持节点选择、直接关系、返回/复位、键盘、中文无障碍、reduced-motion 与文本降级合同。
-- 企业经营体系模块按路由懒加载，其他页面不进入 React Flow 运行时主路径。
+- 采用已选择的“Architecture Spine”方向，只优化 `digital-implementation` GraphCanvas 内部的节点布局、关系线、标签、强调和稳定性。
+- 默认完整呈现现有 9 个节点、13 条关系及闭环；选择节点只更新强调和说明，不移动或缩放画布。
+- 移除平移、缩放、pointer capture、“复位视图”及 SystemStage 上方的局部标题/私有工具栏。
+- 建立共享 `ReturnNavigation（返回导航）`，统一 Article、观察集合和 Framework 的结构、文案、视觉、上下文及焦点恢复。
 
 ## 明确不做
 
 - 不修改 `frameworkModel` 的概念、定义、作用、节点、边、方向或关系文案。
-- 不新增第二个局部入口、节点 URL、详情页、编辑、拖动节点、连线、删除、保存、MiniMap 或通用工具栏。
-- 不修改 Robotaxi 内容/媒体、Observation、About、导航、发布脚本或其他 backlog。
+- 不修改网站一级信息架构、Header、页面标题、ShowcaseLayout、Observation rail、Robotaxi、Observation 内容、About、Footer 或发布能力。
+- 不新增第二个局部入口、节点 URL、详情页、二次下钻或第二图模型。
+- 不夹带其他 backlog。
 
 ## 验收
 
-- 自动验证覆盖模型边集、9 节点/13 边、布局确定性与几何预算、只读运行时、URL/返回/聚焦/键盘/降级和路由懒加载。
-- `npm run release:check` 通过。
-- 1440×900、1024×768、768×1024、557×900、390×844、320×568 真实页面串行验证通过；手机补充总览与数字化实现关键状态。
-- console error/warning 为 0，无横向溢出、嵌套纵向滚动或遗留浏览器资源。
+- 自动验证覆盖 9 节点/13 边、默认关系完整性、几何稳定、禁用画布移动、ReturnNavigation、安全上下文、焦点恢复、键盘和文本降级。
+- 1440、1024、768、557、390、320 六档真实页面串行验证；无横向溢出、嵌套纵滚、节点/标签碰撞、裁切、布局晃动或 console error/warning。
+- 不存在“数字化实现 + 返回总览 + 复位视图”额外工具栏；Framework 只显示一个 `← 返回企业经营体系`。
+- Article、观察集合和 Framework 使用同一 ReturnNavigation 结构和视觉 token。
+- `npm run release:check`、closeout-check 与 preflight 按阶段通过。
 
 ## 当前状态
 
-v0.16.0 Engineering 实现与本地验证已完成：
-
-- ELK 构建阶段为总览与数字化实现生成 desktop/mobile 确定性布局；数字化实现手机投影高度约 752px，符合 620–760px 预算。
-- React Flow 只读运行时关闭拖动、连线、删除、选择与缩放编辑语义；主 bundle 与约 197KB 的架构图懒加载 chunk 分离，ELK 不进入浏览器 bundle。
-- 专项测试覆盖模型边方向、9 节点/13 边、布局确定性、几何预算、三级阅读状态、键盘、中文无障碍、降级与懒加载。
-- `npm run release:check` 已通过，完整测试 79/79。
-- 1440×900、1024×768、768×1024、557×900、390×844、320×568 真实页面验证通过：无横向溢出、无嵌套纵向滚动，console error/warning 为 0；手机节点触控高度 53–56px。
-- 产品复验后的桌面根因修订将关系标签移出 ELK 布局占位，只投影当前选中/preview 节点的直接关系；总览 desktop bounds 从 1042×351 收紧为 634×314，1440 与 1024 节点均保持 118×78px，当前标签与节点及彼此无重叠。
-- 390×844 复验保持手机自然页面滚动、56px 节点、当前节点说明与零关系标签投影，无横向溢出或 console error/warning。
-
-当前进入本地稳定版本收口；尚未 push、部署或公网验收。
+Engineering 实现与本地验证已完成：专项自动测试通过，六档本地页面验证确认固定 9 节点/13 关系、无横向溢出、无标签碰撞或裁切、手机自然滚动与 console error/warning=0；返回链接通过 replace 回到总览并恢复 `digital-implementation` 焦点。下一步为按范围暂存、closeout-check、本地 commit/tag 与 preflight；尚未 push、部署或公网验收，完成本地收口后按事件驱动合同主动回传产品与视觉 task。

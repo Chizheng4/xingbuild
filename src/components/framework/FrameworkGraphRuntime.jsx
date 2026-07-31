@@ -21,7 +21,7 @@ function FrameworkEdge({ id, data, markerEnd }) {
         markerEnd={markerEnd}
         className={data.active ? "is-active" : "is-muted"}
       />
-      {data.active && data.label ? (
+      {data.showLabel && data.label ? (
         <EdgeLabelRenderer>
           <span
             className={`framework-flow__edge-label${data.active ? " is-active" : ""}`}
@@ -87,7 +87,6 @@ export function FrameworkGraphRuntime({
   height,
   projection,
   ariaLabel,
-  onInit,
 }) {
   return (
     <div
@@ -111,18 +110,16 @@ export function FrameworkGraphRuntime({
         deleteKeyCode={null}
         selectionKeyCode={null}
         multiSelectionKeyCode={null}
-        onNodeClick={(_, node) => node.data.onActivate()}
-        panOnDrag={projection === "desktop"}
+        panOnDrag={false}
         panOnScroll={false}
         zoomOnScroll={false}
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
         fitView
-        fitViewOptions={{ padding: projection === "mobile" ? 0.02 : 0.06, minZoom: 0.1, maxZoom: 1 }}
+        fitViewOptions={{ padding: projection === "mobile" ? 0.02 : 0.03, minZoom: 0.1, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={1}
-        onInit={onInit}
         proOptions={{ hideAttribution: true }}
         ariaLabelConfig={{
           "node.a11yDescription.default": "只读业务架构节点。使用 Tab 移动到节点按钮，按 Enter 或空格查看权威解释。",

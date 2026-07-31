@@ -1,29 +1,6 @@
 @layer pages {
   .framework-page .positioning-strip { margin-bottom: var(--rhythm-section-entry); }
   .framework-explorer { display: grid; gap: var(--rhythm-relate); }
-  .framework-explorer__tools {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-3);
-  }
-  .framework-explorer__tools p { margin: 0; font: 500 var(--type-section-title)/var(--leading-title) var(--font-display); }
-  .framework-explorer__tools > div { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
-  .framework-explorer__tools button {
-    min-height: var(--touch-target);
-    padding: 0 var(--space-3);
-    color: var(--color-accent-strong);
-    background: transparent;
-    border: var(--line-thin) solid var(--color-border);
-    font: 500 var(--type-meta)/var(--leading-meta) var(--font-meta);
-    cursor: pointer;
-  }
-  .framework-explorer__tools button:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 3px;
-  }
-
   .graph-canvas {
     position: relative;
     width: 100%;
@@ -45,8 +22,7 @@
     pointer-events: none;
   }
   .framework-flow { width: 100%; height: 100%; }
-  .framework-flow .react-flow__pane { cursor: grab; }
-  .framework-flow .react-flow__pane:active { cursor: grabbing; }
+  .framework-flow .react-flow__pane { cursor: default; }
   .framework-flow .react-flow__node {
     padding: 0;
     border: 0;
@@ -80,7 +56,7 @@
   .framework-flow__node.is-drilldown { border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-architecture-line)); }
   .framework-flow__node.is-selected { background: var(--color-architecture-selected); border: 2px solid var(--color-accent-strong); }
   .framework-flow__node.is-related:not(.is-selected) { border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-architecture-line)); }
-  .framework-flow__node.is-dimmed { opacity: 0.48; }
+  .framework-flow__node.is-dimmed { opacity: 0.72; }
   .framework-flow__node:hover,
   .framework-flow__node:focus-visible,
   .framework-flow__node.is-previewed { border-color: var(--color-accent-strong); opacity: 1; }
@@ -89,21 +65,22 @@
   .framework-flow .react-flow__edge-path {
     fill: none;
     stroke: var(--color-architecture-line);
-    stroke-width: 1.2;
+    stroke-width: 1.35;
     vector-effect: non-scaling-stroke;
   }
   .framework-flow .react-flow__edge-path.is-active { stroke: var(--color-accent-strong); stroke-width: 1.9; }
-  .framework-flow .react-flow__edge-path.is-muted { opacity: 0.42; }
+  .framework-flow .react-flow__edge-path.is-muted { opacity: 0.72; }
   .framework-flow__edge-label {
     position: absolute;
     padding: 1px var(--space-1);
     color: var(--color-text-muted);
     background: color-mix(in srgb, var(--color-graph-label-bg) 88%, transparent);
-    font: 500 0.625rem/1.2 var(--font-meta);
+    font: 500 0.6875rem/1.2 var(--font-meta);
     white-space: nowrap;
     pointer-events: none;
   }
   .framework-flow__edge-label.is-active { color: var(--color-accent-strong); font-weight: 600; }
+  .framework-flow[data-projection="compact"] .framework-flow__edge-label { padding-inline: 1px; font-size: 0.5rem; }
   .framework-flow .react-flow__attribution,
   .framework-flow .react-flow__controls,
   .framework-flow .react-flow__minimap { display: none; }
@@ -118,6 +95,7 @@
   .framework-description p, .framework-description li { margin: 0; font: 400 var(--type-ui)/var(--leading-ui) var(--font-reading); }
   .framework-description ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
   .framework-description strong { color: var(--color-accent-strong); font-weight: 600; }
+  .framework-description__all-relations { display: none; }
 
   .framework-fallback { display: grid; gap: var(--space-3); padding: var(--space-4); }
   .framework-fallback > p { margin: 0; color: var(--color-text-muted); }
@@ -150,8 +128,6 @@
     }
   }
   @media (max-width: 32.4375rem) {
-    .framework-explorer__tools { align-items: flex-start; }
-    .framework-explorer__tools > div { justify-content: flex-start; }
     .graph-canvas[data-projection="mobile"] {
       height: auto;
       aspect-ratio: var(--framework-layout-ratio, 1 / 2);
@@ -165,6 +141,8 @@
     .framework-flow__edge-label { display: none; }
     .framework-flow__node { font-size: var(--type-caption); }
     .framework-flow__node small { display: none; }
+    .framework-description__all-relations { display: grid; gap: var(--rhythm-bind); }
+    .framework-description__all-relations :is(h3, h4) { margin: 0; color: var(--color-text-muted); font: 600 var(--type-caption)/var(--leading-meta) var(--font-meta); }
   }
   @media (prefers-reduced-motion: reduce) {
     .framework-flow__node { transition: none; }

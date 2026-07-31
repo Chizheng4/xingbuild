@@ -1,10 +1,16 @@
-import { Link, returnLabelFor } from "../../lib/navigation";
+import { returnDestinationFor } from "../../lib/navigation";
+import { ReturnNavigation } from "../navigation/ReturnNavigation";
 import { RichDocument, SourceLinks } from "./RichDocument";
 
 export function ArticleHeader({ observation, returnTo = "/observations" }) {
   return (
     <header className="article-header">
-      <p className="article-header__navigation"><Link className="article-header__return" href={returnTo}>{returnLabelFor(returnTo)}</Link>{returnTo !== "/business-observations" ? <><span aria-hidden="true"> · </span><Link href="/business-observations">经营观察</Link></> : null}</p>
+      <ReturnNavigation
+        href={returnTo}
+        destination={returnDestinationFor(returnTo)}
+        returnTo={returnTo}
+        secondary={returnTo !== "/business-observations" ? { href: "/business-observations", label: "经营观察" } : null}
+      />
       <h1>{observation.title}</h1>
       <p className="article-dimensions">{observation.dimensions.map((dimension) => `#${dimension}`).join(" ")}</p>
       <p className="article-summary">{observation.summary}</p>

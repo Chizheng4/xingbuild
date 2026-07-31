@@ -72,6 +72,7 @@
 - 布局母版：桌面唯一 shell 最大1280px、外边距至少32px；完整双栏为952px主展示区 + 24px + 固定304px rail，只有SystemStage仍可保持至少640px有效宽时成立。集中观察页、Article 与 About 共用居中736px ReadingShell；移动20px gutter、窄屏16px。无有效 Brief 时不保留空 rail。
 - ObservationBlock：identity 固定为单行 `subject · eventAt`，subject 最大16个全角等价字符；dimension 独占一行且当前不可点击；body 为80–160个中文等价字符、建议2–3句和一个段落；source 为最后一行且默认与辅助信息同色。有长文时在同一块内增加 ArticlePreview，普通 Brief 不创建详情页。
 - 观察层级与返回：第一层首页/B端产品/经营观察可直接进入长文，或先经“更多观察”进入集中观察页再进入长文；长文逐层返回真实上层，并提供经营观察栏目入口。返回上下文必须使用安全站内 origin/returnTo 并在刷新后成立，不能只依赖 history.back。
+- 全站返回统一为结构化 `ReturnNavigation（返回导航）`：固定接收真实目标、目的地名称、安全 `origin/returnTo` 与可选返回焦点，主文案为 `← 返回{真实目的地名称}`。它是辅助文字链接，不是描边/填充按钮、浮动工具条或页面私有样式；ReadingShell 位于对象标题之前，ShowcaseLayout 局部视图位于说明列当前对象标题之前。同页至多一个主返回和一个不重复目标的次级栏目入口；刷新、直接访问、浏览器历史、焦点与必要滚动现场必须成立，不得只依赖 `history.back`。
 - 富文本母版：Article 与 About 共用 RichDocument，只允许 lead、H2/H3、paragraph、list、definitionList、figure、callout、sources 等受控 block；页面不得直接写业务正文 JSX、私有字号或任意 margin。内容块、类型令牌和相邻关系一旦验收，后续只增改内容而不改页面组件。
 - 内容入口收口后，Robotaxi 模块只通过受控 Practice 内容与已批准媒体 manifest 增加；观察内容只通过 ObservationPublication 中人工写入的显式 `presentation` 产生。二者都不得再通过页面、组件或视觉特例填充。
 - Robotaxi 作品媒体分为三个责任：`media` 是读者可见的图片或未来视频内容；`action` 是可选读者互动，当前全框链接到经批准的 Robotaxi 独立系统；`provenance` 保存审批状态、媒体角色、状态边界、版本、Git commit 与哈希，不默认投影为读者界面。manifest 是生命周期与 provenance 事实记录，不等于公开集合；只有总 publication active、manifest/资产逐项 review 与 approval 为 approved、资产 publicStatus 为 public，且文件/hash/version/provenance 校验通过时才能投影。suspended、superseded、paused、pending_review、revoked、internal 或哈希不一致的记录必须保留追溯但不得进入读者界面。
@@ -88,6 +89,8 @@
 - 内容运营问题统一登记在 `docs/operations/内容运营与发布问题清单.md`。只有需要改变公开内容对象、信息架构、页面投影、视觉/响应式或发布能力合同的问题，才由产品与视觉 task 批准后转入 `docs/iterations/current.md`；Engineering 不顺手处理未进入当前迭代的问题。
 - Engineering 不为“复盘历史”读取其他 task 全历史或媒体。复盘默认只读当前项目事实源与明确列出的决策；信息不足时列出缺口，不扩展取证。
 - 实现、验证、提交/标签、推送与发布必须分别报告；正式版本 tag 只由当前主线发布责任任务创建。
+- 跨 task 使用事件驱动交接，不使用同步阻塞轮询：交接必须包含目标 task、回传 task、事实源、范围、里程碑、阻断条件与下一授权；交接成功后源 task 结束当前回合，目标 task 独立连续执行并在里程碑主动回传不超过 20 行检查点。只有用户明确要求监控或同一 task 内不可拆分的短时命令才允许有界等待；状态查询只取一次即时快照，`等待上游输入/blocked` 表示报告后结束回合，不表示调用等待工具。
+- 多项目继续各自维护根 `AGENTS.md` 和项目事实源；跨项目标准由发起 task 提出有界合同，实际规则、代码、版本和发布修改只能由目标项目对应责任 task 执行。同一修改只有一个执行 owner，其他 task 不得跨仓库或跨责任域双写。
 - 浏览器验证必须串行且结束即释放资源。发现单个浏览器工作进程超过 2GB、Codex 合计超过 6GB、swap 持续增长或重复 worker 时，立即停止验证并请求用户决定；不得自行终止或清理用户进程。
 
 - 修改产品内容、结构、视觉语言、部署行为或域名配置前，先阅读 `docs/rules/iteration-and-release.md`。

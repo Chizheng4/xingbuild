@@ -7,17 +7,19 @@ import { DIGITAL_IMPLEMENTATION_VIEW, FRAMEWORK_OVERVIEW_VIEW, frameworkViewPath
 import { FrameworkGraphRuntime } from "./FrameworkGraphRuntime";
 import { ShowcaseLayout } from "../site/LayoutShell";
 import { SystemStage } from "../showcase/SystemStage";
+import { ReturnNavigation } from "../navigation/ReturnNavigation";
 
 const overview = architectureById.get("enterprise-operation");
 const digitalImplementation = architectureById.get("digital-implementation");
 const drilldownNodeId = "digital-implementation";
 
-function FrameworkDescription({ architecture, selectedNode, headingLevel = 2, descriptionRef }) {
+function FrameworkDescription({ architecture, selectedNode, headingLevel = 2, descriptionRef, returnNavigation }) {
   const Heading = `h${headingLevel}`;
   const Subheading = `h${headingLevel + 1}`;
   const directRelations = architecture.edges.filter((edge) => edge.from === selectedNode.id || edge.to === selectedNode.id);
   return (
     <section ref={descriptionRef} className="framework-description" aria-labelledby={`framework-node-${selectedNode.id}`} tabIndex="-1">
+      {returnNavigation}
       <p className="framework-description__status">当前节点</p>
       <Heading id={`framework-node-${selectedNode.id}`}>{selectedNode.name}</Heading>
       <div className="framework-description__body">
@@ -28,6 +30,14 @@ function FrameworkDescription({ architecture, selectedNode, headingLevel = 2, de
           const to = architecture.nodes.find((node) => node.id === edge.to);
           return <li key={edge.id}>{from.name} <strong>{edge.label}</strong> {to.name}</li>;
         })}</ul></div>
+      </div>
+      <div className="framework-description__all-relations">
+        <Subheading>完整关系</Subheading>
+        <ul>{architecture.edges.map((edge) => {
+          const from = architecture.nodes.find((node) => node.id === edge.from);
+          const to = architecture.nodes.find((node) => node.id === edge.to);
+          return <li key={edge.id}>{from.name} <strong>{edge.label}</strong> {to.name}</li>;
+        })}</ul>
       </div>
     </section>
   );
@@ -61,18 +71,22 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   const activeArchitecture = activeViewId === digitalImplementation.id ? digitalImplementation : overview;
   const [selectedId, setSelectedId] = useState(activeArchitecture.defaultNodeId);
   const [previewId, setPreviewId] = useState(null);
-  const [projection, setProjection] = useState(() => window.matchMedia("(max-width: 519px)").matches ? "mobile" : "desktop");
-  const flowRef = useRef(null);
+  const [projection, setProjection] = useState(() => window.matchMedia("(max-width: 519px)").matches ? "mobile" : window.matchMedia("(max-width: 639px)").matches ? "compact" : "desktop");
   const liveRef = useRef(null);
   const returnNodeRef = useRef(null);
   const descriptionRef = useRef(null);
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 519px)");
-    const update = () => setProjection(query.matches ? "mobile" : "desktop");
+    const mobileQuery = window.matchMedia("(max-width: 519px)");
+    const compactQuery = window.matchMedia("(max-width: 639px)");
+    const update = () => setProjection(mobileQuery.matches ? "mobile" : compactQuery.matches ? "compact" : "desktop");
     update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    mobileQuery.addEventListener("change", update);
+    compactQuery.addEventListener("change", update);
+    return () => {
+      mobileQuery.removeEventListener("change", update);
+      compactQuery.removeEventListener("change", update);
+    };
   }, []);
 
   useEffect(() => {
@@ -80,12 +94,7 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
     let focusTimer;
     setSelectedId(isExplicitReturn ? drilldownNodeId : activeArchitecture.defaultNodeId);
     setPreviewId(null);
-    window.requestAnimationFrame(() => {
-      flowRef.current?.fitView({ padding: projection === "mobile" ? 0.02 : 0.06, duration: 0 });
-      if (isExplicitReturn) {
-        focusTimer = window.setTimeout(() => returnNodeRef.current?.focus(), 80);
-      }
-    });
+    if (isExplicitReturn) focusTimer = window.setTimeout(() => returnNodeRef.current?.focus(), 80);
     return () => window.clearTimeout(focusTimer);
   }, [activeArchitecture.defaultNodeId, activeViewId, location.state, projection]);
 
@@ -120,19 +129,8 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   };
 
   const enterDigitalImplementation = () => navigate(frameworkViewPath(DIGITAL_IMPLEMENTATION_VIEW), { scroll: false });
-  const returnToOverview = () => navigate(frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW), {
-    replace: true,
-    scroll: false,
-    state: { frameworkReturnFocus: true },
-  });
-  const reset = () => {
-    selectNode(activeArchitecture.defaultNodeId, { reveal: false });
-    setPreviewId(null);
-    flowRef.current?.fitView({ padding: projection === "mobile" ? 0.02 : 0.06, duration: 0 });
-    if (liveRef.current) liveRef.current.textContent = `已复位${activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}`;
-  };
-
-  const layout = frameworkLayouts[activeArchitecture.id]?.[projection];
+  const layoutProjection = activeArchitecture.id === digitalImplementation.id || projection !== "compact" ? projection : "desktop";
+  const layout = frameworkLayouts[activeArchitecture.id]?.[layoutProjection];
   const ready = usableLayout(layout, activeArchitecture);
   const graphNodes = useMemo(() => ready ? activeArchitecture.nodes.map((node) => {
     const geometry = layout.nodes[node.id];
@@ -168,19 +166,12 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
       target: edge.to,
       type: "frameworkEdge",
       markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
-      data: { ...geometry, text: edge.label, active },
+      data: { ...geometry, text: edge.label, active, showLabel: activeViewId === DIGITAL_IMPLEMENTATION_VIEW || active },
     };
   }) : [], [activeArchitecture, activeNodeId, layout, ready]);
 
   const stage = (
     <SystemStage>
-      <div className="framework-explorer__tools">
-        <p>{activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}</p>
-        <div>
-          {activeViewId !== FRAMEWORK_OVERVIEW_VIEW ? <button type="button" onClick={returnToOverview}>返回总览</button> : null}
-          <button type="button" onClick={reset}>复位视图</button>
-        </div>
-      </div>
       <div
         className="graph-canvas"
         data-active-view={activeViewId}
@@ -196,7 +187,6 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
             height={layout.height}
             projection={projection}
             ariaLabel={activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览，只读架构图" : "数字化实现，只读架构图"}
-            onInit={(instance) => { flowRef.current = instance; }}
           />
         ) : <FrameworkTextFallback architecture={activeArchitecture} onSelect={selectNode} />}
       </div>
@@ -206,7 +196,22 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   return (
     <section className="framework-explorer" data-active-view={activeViewId} aria-label={activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}>
       <ShowcaseLayout
-        description={<FrameworkDescription architecture={activeArchitecture} selectedNode={selectedNode} headingLevel={descriptionHeadingLevel} descriptionRef={descriptionRef} />}
+        description={<FrameworkDescription
+          architecture={activeArchitecture}
+          selectedNode={selectedNode}
+          headingLevel={descriptionHeadingLevel}
+          descriptionRef={descriptionRef}
+          returnNavigation={activeViewId === DIGITAL_IMPLEMENTATION_VIEW ? (
+            <ReturnNavigation
+              href={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
+              destination="企业经营体系"
+              returnTo={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
+              focusTarget={drilldownNodeId}
+              state={{ frameworkReturnFocus: true }}
+              replace
+            />
+          ) : null}
+        />}
         stage={stage}
       />
       <p className="sr-only" aria-live="polite" ref={liveRef} />

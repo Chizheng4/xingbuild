@@ -201,7 +201,6 @@
   .article-header__return { color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta); }
   .observation-stream-header { display: grid; gap: var(--rhythm-bind); margin: 0 0 var(--rhythm-object); }
   .observation-stream-header__navigation { margin: 0; color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta); }
-  .observation-stream-header__navigation a:hover, .article-header__navigation a:hover { color: var(--color-accent); }
   .observation-empty-state { padding: 0; }
 
   @media (max-width: 58.25rem) {
