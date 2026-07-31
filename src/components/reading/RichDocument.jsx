@@ -1,5 +1,6 @@
 import { Link } from "../../lib/navigation";
 import { classifySourceUrl } from "../../content/sourceUrls";
+import { diagramFigureAssets } from "../../content/diagramFigureAssets";
 
 function SourceLinks({ sources = [], prefix = "来源：" }) {
   return <p className="rich-document__sources">{prefix}{sources.map((source, index) => {
@@ -19,7 +20,10 @@ export function RichDocument({ blocks = [], sources }) {
         if (block.type === "list") return <ul key={index}>{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;
         if (block.type === "definitionList") return <dl key={index}>{block.items.map((item) => <div key={item.term}><dt>{item.term}</dt><dd>{item.description}</dd></div>)}</dl>;
         if (block.type === "callout") return <aside className="rich-document__callout" key={index}>{block.text}</aside>;
-        if (block.type === "figure") return <figure key={index}><img src={block.src} alt={block.alt} /><figcaption>{block.caption}</figcaption></figure>;
+        if (block.type === "figure") { const assets = diagramFigureAssets(block.sourcePath); return <figure className="rich-document__figure" key={index}>
+          <picture>{assets ? <source media="(max-width: 32.4375rem)" srcSet={assets.mobile} /> : null}<img src={assets?.desktop} alt={block.alt} /></picture>
+          <figcaption>{block.caption}</figcaption>
+        </figure>; }
         if (block.type === "link") return <p key={index}><Link href={block.href}>{block.text}</Link></p>;
         return null;
       })}

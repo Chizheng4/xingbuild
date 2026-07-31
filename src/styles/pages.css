@@ -194,6 +194,7 @@
   .business-observation-presentation__header { display: grid; gap: var(--rhythm-bind); max-width: var(--measure-summary); }
   .business-observation-presentation__header :is(h1, h2) { margin: 0; font: 500 var(--type-page-title)/var(--leading-title) var(--font-display); }
   .business-observation-presentation__header p { margin: 0; color: var(--color-text-muted); font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui); }
+  .business-observation-presentation__link { width: fit-content; min-height: var(--touch-target); display: inline-flex; align-items: center; color: var(--color-accent-strong); font: 500 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .reading-shell__header { display: grid; gap: 0.75rem; }
   .reading-shell__header h1 { margin: 0; font: 500 var(--type-page-title)/var(--leading-title) var(--font-display); }
   .reading-shell__header p { margin: 0; color: var(--color-text-muted); font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui); }

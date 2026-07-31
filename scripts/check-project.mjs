@@ -18,6 +18,7 @@ const requiredFiles = [
   "content/schema/observation.schema.json",
   "content/products/robotaxi.json",
   "content/business-observations/enterprise-operating-framework.json",
+  "content/articles/enterprise-operating-system.json",
   "content/profile/about.json",
   "content/media/robotaxi/manifest.json",
   "src/styles.css",
@@ -28,15 +29,18 @@ const requiredFiles = [
   "src/styles/pages.css",
   "src/components/site/SiteHeader.jsx",
   "src/components/reading/Article.jsx",
-  "src/components/showcase/SystemStage.jsx",
-  "src/components/framework/FrameworkExplorer.jsx",
-  "src/components/framework/FrameworkGraphRuntime.jsx",
-  "src/components/framework/frameworkPresentation.js",
-  "src/generated/frameworkLayouts.js",
-  "scripts/generate-framework-layout.mjs",
+  "src/components/reading/EvergreenArticle.jsx",
+  "src/components/reading/ReadingTOC.jsx",
   "src/components/reading/RichDocument.jsx",
+  "src/content/evergreenArticleRepository.js",
+  "src/content/diagramFigureAssets.js",
+  "scripts/generate-evergreen-figures.mjs",
+  "scripts/article-content-check.mjs",
+  "scripts/article-scope-check.mjs",
+  "scripts/verify-article-release.mjs",
   "publish-xingbuild.command",
   "publish-content.command",
+  "publish-article.command",
   "scripts/release-preflight.mjs",
   "scripts/release-closeout-check.mjs",
   "scripts/lib/release-readiness.mjs",
@@ -54,6 +58,7 @@ const requiredFiles = [
   "worker/index.js",
   "tests/visit-overview.test.mjs",
   "tests/framework-layout.test.mjs",
+  "tests/framework-experience.test.mjs",
 ];
 
 for (const file of requiredFiles) {
@@ -111,6 +116,8 @@ assert(!siteContent.includes("export const observations"), "observations must no
 assert(!siteContent.includes("export const practices"), "practices must use the controlled content repository");
 assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
 assert(practiceRepository.includes("content/products/robotaxi.json"), "practice content must use the repository");
+const evergreenRepository = await readFile(new URL("../src/content/evergreenArticleRepository.js", import.meta.url), "utf8");
+assert(evergreenRepository.includes("content/articles/enterprise-operating-system.json"), "framework article must use the evergreen content source");
 for (const route of ["/products", "/business-observations", "/observations", "/about"]) {
   assert(app.includes(route), `app must include the ${route} route`);
 }
@@ -122,6 +129,7 @@ assert.deepEqual(edgeOneConfig.redirects, [
   },
 ]);
 assert(app.includes("startVisitQualification"), "app must start the formal-site visit qualifier");
+assert(app.includes("/business-observations#digital-implementation"), "legacy digital view must replace to its evergreen anchor");
 for (const contract of [
   "visitKv",
   "visitHashSecret",

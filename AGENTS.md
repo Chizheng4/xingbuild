@@ -68,7 +68,7 @@
 - 如果外部工具强制要求英文指令，同一位置必须提供简洁中文等义说明；中文和英文发生冲突时，以项目已确认的中文产品决策和可验证工程合同为准。
 - 展示母版：Robotaxi 继续使用 ShowcaseLayout 展示批准媒体或上游稳定公开场景；企业经营体系从 `v0.19.0` 起改为经营观察中的常青长文，不再使用 GraphCanvas、节点选择或页面专用架构浏览器。career 同步快照和批准网站内容仍是唯一事实源，网站或 AI 不得改写、概括或补造。
 - 企业经营体系在 `/business-observations` 左侧主内容区使用统一文章阅读结构：桌面为约160px sticky目录 + 24px间距 + 约768px正文，外侧304px最新观察rail保持不变；紧凑宽度取消双栏目录，手机在正文前使用可展开目录。目录只从受控H2/H3及稳定id生成，点击、刷新、直接锚点访问和sticky Header偏移必须成立。
-- 企业经营体系的架构、流程、状态和关系图全部作为 RichDocument 的标准 figure 内容出现；网站只读取响应式SVG、alt、caption、可选mobileSrc和源文件记录，不在公开运行时解释或绘制 Mermaid、D2、LikeC4。可编辑 `.mmd`、`.d2` 或 `.c4` 由相应开源CLI在内容准备阶段生成SVG，失败不得复用旧产物。
+- 企业经营体系的架构、流程、状态和关系图全部作为 RichDocument 的标准 figure 内容出现；网站只读取由单一图源自动生成的响应式SVG、alt、caption和源文件记录，不在公开运行时解释或绘制 Mermaid、LikeC4。当前锁定支持 `.mmd`、`.c4` 的相应开源CLI；D2是未来可选adapter，未锁定前不得在内容对象中声明。失败必须移除目标旧产物，不得复用。
 - 企业经营体系使用独立常青文章对象 `EvergreenArticlePublication`。后续增加章节、十张图、子主题、定义或来源属于内容更新：通过schema、锚点、图形源/产物一致性、可读性和独立内容发布门槛后直接发布，不改变产品版本/tag，也不修改页面组件。只有新增block类型、改变阅读结构或发布能力时才进入Engineering版本。
 - `?view=digital-implementation` 作为已发布旧链接兼容至正文稳定锚点 `#digital-implementation`，不得继续维护第二套局部页面。`v0.18.0` 的LikeC4模型和视觉资产可作为迁移输入与历史证据，但受控React/SVG投影、手工节点坐标、关系控制点和逐节点交互不再是当前产品合同。
 - 布局母版：桌面唯一 shell 最大1280px、外边距至少32px；完整双栏为952px主展示区 + 24px + 固定304px rail，只有SystemStage仍可保持至少640px有效宽时成立。集中观察页、Article 与 About 共用居中736px ReadingShell；移动20px gutter、窄屏16px。无有效 Brief 时不保留空 rail。

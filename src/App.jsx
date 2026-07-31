@@ -12,10 +12,10 @@ import { SiteHeader } from "./components/site/SiteHeader";
 import { navigate, useLocation } from "./lib/navigation";
 import { site } from "./content/siteContent";
 import { findObservation } from "./content/observationRepository";
-import { FRAMEWORK_BASE } from "./content/frameworkModel";
 import { startVisitQualification } from "./lib/visitQualification";
 
 const BusinessObservationsPage = lazy(() => import("./pages/BusinessObservationsPage").then((module) => ({ default: module.BusinessObservationsPage })));
+const FRAMEWORK_BASE = "/enterprise-operating-framework";
 
 function resolvePage(location) {
   const { pathname } = location;
@@ -61,6 +61,10 @@ export function App() {
   useEffect(() => startVisitQualification(), []);
 
   useEffect(() => {
+    if (pathname === "/business-observations" && new URLSearchParams(location.search).get("view") === "digital-implementation") {
+      navigate("/business-observations#digital-implementation", { replace: true, scroll: false });
+      return;
+    }
     const redirects = {
       "/robotaxi": "/products",
       "/works": "/products",
@@ -85,7 +89,7 @@ export function App() {
       labels[pathname] ??
       (pathname.startsWith("/observations/") ? "观察" : site.name);
     document.title = title === site.name ? title : `${title} · ${site.name}`;
-  }, [pathname]);
+  }, [pathname, location.search]);
 
   return (
     <div className="site-shell">

@@ -111,6 +111,10 @@ Robotaxi 作品媒体是独立于观察的受控内容入口：`media` 保存读
 
 Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slug、reason 和 decidedAt。原稿按精确文件名归档到 ignored `.content-workspace/superseded/`，sidecar 保存 `supersededBy/reason/decidedAt/contentHash`；canonical 不存在、hash 无法记录、old 已发布或出现通配清理时失败。已发布内容撤下不属于日常 supersede。
 
+### 3.4 常青文章内容发布
+
+`EvergreenArticlePublication` 的日常更新同样不改变产品版本或 tag。提交必须显式指定一个文章 slug，且范围只能包含 `content/articles/<slug>.json`、该文章引用的可编辑图形源和生成 SVG；必须通过 `article:check`、`article:scope-check`、build、Sites 和目标 URL/manifest 验证。当前图形适配器锁定 Mermaid CLI 11.16.0 与 LikeC4；D2 是未来可选 adapter，未锁定并通过专项验收前不得在内容对象中声明。`publish-article.command --slug <slug>` 只允许推送已验证 HEAD 并部署既有项目；它不接受页面、规则、版本或无关内容混入。
+
 ## 4. 当前迭代
 
 唯一当前指针：`docs/iterations/current.md`。

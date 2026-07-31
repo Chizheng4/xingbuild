@@ -1,0 +1,15 @@
+{
+  "id": "mermaid-reader-fixture",
+  "slug": "mermaid-reader-fixture",
+  "status": "published",
+  "blocks": [
+    {
+      "type": "figure",
+      "sourcePath": "src/architecture/fixtures/mermaid-reader.mmd",
+      "renderer": "mermaid",
+      "layoutPreset": "reader",
+      "alt": "从经营目标到反馈的闭环示例图。",
+      "caption": "测试用 Mermaid 图源。"
+    }
+  ]
+}

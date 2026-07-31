@@ -1,5 +1,11 @@
 # xingbuild 版本记录
 
+## v0.19.0 — 企业经营体系常青长文与图形内容能力
+
+- 当前状态：Engineering 实现与本地验证中；尚未提交、tag、推送、部署或公网验收。
+- 范围仅将企业经营体系迁移为内容驱动的常青文章、共享目录与构建期静态 SVG figure，并建立后续单 slug 文章内容发布边界。
+- 不修改上游企业经营事实、网站结构、Robotaxi、Observation Brief、Header、Footer 或其他 backlog。
+
 ## v0.18.0 — 企业经营体系多层架构浏览器重构
 
 - 当前状态：已发布并完成公网验收；发布commit/tag为`ec747f5337f044b4679d3796f3ee3322e98bf945` / `v0.18.0`，EdgeOne deployment为`dp9h2l7g0lep`。

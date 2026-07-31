@@ -20,7 +20,7 @@
 
 - 将企业经营体系从页面专用交互架构图迁移为常青长文；
 - 复用RichDocument和既有figure，新增共享桌面/手机目录；
-- 图形由Mermaid、D2或LikeC4开源CLI在内容准备阶段生成响应式SVG；
+- 图形由锁定版本的 Mermaid 或 LikeC4 开源CLI在内容准备阶段生成响应式SVG；D2 是未来可选 adapter，未纳入当前版本；
 - 建立常青文章单slug内容更新与独立发布边界；
 - 后续增加章节和图形不修改页面代码、产品版本或tag。
 
@@ -46,12 +46,11 @@
 
 - 1440/768/390真实页面通过；
 - 目录sticky、手机details、锚点刷新与直接访问成立；
-- SVG源/产物、alt、caption、响应式与安全检查通过；
-- 新增一张测试图和一个H2不修改React/CSS即可显示；
+- 单一图源生成两档SVG产物、alt、caption、响应式与安全检查通过；
+- 新增一张测试图只改source与内容对象、再增加一个H2，不修改React/CSS即可生成两档并显示；
 - 企业经营事实逐项无改写；
 - release:check、closeout、preflight、push、部署和公网验收分别报告。
 
 ## 当前状态
 
-产品与视觉合同已确认并正式进入current；尚未开始Engineering实现，未修改
-代码、依赖、产品版本、tag或生产环境。
+Engineering 已开始实现与本地验证；尚未暂存、提交、tag、推送、部署或修改生产环境。

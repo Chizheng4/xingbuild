@@ -1,0 +1,11 @@
+{
+  "figures": {
+    "src/architecture/digital-implementation/model.c4": {
+      "renderer": "likec4",
+      "layoutPreset": "reader",
+      "sourceHash": "5af1f22167eea9e6184f8cde8cc8d3e95113c53ccdcef8e753f1eaf9f65f7c46",
+      "desktop": "/figures/digital-implementation/model.svg",
+      "mobile": "/figures/digital-implementation/model-mobile.svg"
+    }
+  }
+}

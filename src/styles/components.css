@@ -233,6 +233,8 @@
     color: var(--color-text-muted);
     font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta);
   }
+  .reading-toc a[data-level="3"] { padding-left: var(--space-3); }
+  .reading-toc a[aria-current="location"] { color: var(--color-accent-strong); font-weight: 600; }
   .mobile-toc {
     margin-bottom: var(--rhythm-object);
     background: var(--color-surface-subtle);
@@ -422,4 +424,12 @@
   .rich-document__callout { margin: 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .rich-document__sources { color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta) !important; }
   .rich-document__sources a { color: inherit; text-decoration: underline; text-underline-offset: 0.18em; }
+  .rich-document__figure { display: grid; gap: var(--rhythm-bind); margin-inline: 0; }
+  .rich-document__figure picture, .rich-document__figure img { display: block; width: 100%; max-width: 100%; }
+  .rich-document__figure img { height: auto; border: var(--line-thin) solid var(--color-border); background: var(--color-surface-subtle); }
+  .rich-document__figure figcaption { color: var(--color-text-muted); font: 400 var(--type-meta)/var(--leading-meta) var(--font-meta); }
+  .evergreen-article__header { display: grid; gap: var(--rhythm-relate); max-width: var(--measure-summary); margin-bottom: var(--rhythm-section); }
+  .evergreen-article__header h1 { margin: 0; font: 500 var(--type-page-title)/var(--leading-title) var(--font-display); letter-spacing: -0.025em; }
+  .evergreen-article__header p { margin: 0; color: var(--color-text-muted); font: 400 var(--type-summary)/var(--leading-summary) var(--font-ui); }
+  .rich-document > :is(h2, h3) { scroll-margin-top: calc(var(--header-height) + var(--space-5)); }
 }

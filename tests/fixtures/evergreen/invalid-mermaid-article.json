@@ -1,0 +1,15 @@
+{
+  "id": "invalid-mermaid-reader-fixture",
+  "slug": "invalid-mermaid-reader-fixture",
+  "status": "published",
+  "blocks": [
+    {
+      "type": "figure",
+      "sourcePath": "src/architecture/fixtures/invalid-mermaid.mmd",
+      "renderer": "mermaid",
+      "layoutPreset": "reader",
+      "alt": "无效图。",
+      "caption": "无效 Mermaid 图源。"
+    }
+  ]
+}

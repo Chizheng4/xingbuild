@@ -1,13 +1,16 @@
 {
   "name": "xingbuild",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "framework:data": "node scripts/generate-digital-architecture.mjs",
+    "article:figures": "node scripts/generate-evergreen-figures.mjs",
+    "article:check": "node scripts/article-content-check.mjs",
+    "article:scope-check": "node scripts/article-scope-check.mjs",
     "framework:layout": "node scripts/generate-framework-layout.mjs",
-    "build": "npm run framework:data && npm run framework:layout && vite build && node scripts/prepare-sites-build.mjs",
+    "build": "npm run article:figures && vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/*.test.mjs",
     "check": "node scripts/check-project.mjs",
@@ -23,7 +26,7 @@
     "release:closeout-check": "node scripts/release-closeout-check.mjs",
     "release:preflight": "node scripts/release-preflight.mjs",
     "release:verify": "node scripts/verify-public-release.mjs",
-    "release:check": "npm run check && npm run content:check && npm run practice:check && npm run build && npm run test:sites"
+    "release:check": "npm run check && npm run content:check && npm run article:check && npm run practice:check && npm run build && npm run test:sites"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-sc": "5.3.0",
@@ -37,6 +40,7 @@
     "vite": "6.4.2"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "11.16.0",
     "edgeone": "1.6.17",
     "likec4": "1.59.2"
   }

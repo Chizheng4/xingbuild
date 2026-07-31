@@ -11,6 +11,7 @@ const worker = path.join(root, "worker", "index.js");
 const hosting = path.join(root, ".openai", "hosting.json");
 const edgeOneConfig = path.join(root, "edgeone.json");
 const observationsDirectory = path.join(root, "content", "observations");
+const articlesDirectory = path.join(root, "content", "articles");
 const workspaceMarker = ".content-workspace";
 
 for (const file of [index, worker, hosting, edgeOneConfig]) {
@@ -41,6 +42,15 @@ const publishedSlugs = readdirSync(observationsDirectory)
     return observation.slug;
   })
   .sort();
+const publishedArticleSlugs = readdirSync(articlesDirectory)
+  .filter((name) => name.endsWith(".json"))
+  .map((name) => {
+    const article = JSON.parse(readFileSync(path.join(articlesDirectory, name), "utf8"));
+    if (article.status !== "published") throw new Error(`Production article must be published: ${name}`);
+    if (name !== `${article.slug}.json`) throw new Error(`Article filename must match slug: ${name}`);
+    return article.slug;
+  })
+  .sort();
 
 writeFileSync(
   path.join(dist, "client", "release.json"),
@@ -61,6 +71,7 @@ writeFileSync(
       version: `v${packageJson.version}`,
       commit,
       publishedSlugs,
+      publishedArticleSlugs,
     },
     null,
     2,
@@ -79,5 +90,5 @@ for (const file of inspectFiles(path.join(dist, "client"))) {
 }
 
 console.log(
-  `Prepared Sites build and content manifest: ${publishedSlugs.length} published observation(s)`,
+  `Prepared Sites build and content manifest: ${publishedSlugs.length} published observation(s), ${publishedArticleSlugs.length} evergreen article(s)`,
 );

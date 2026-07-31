@@ -1,159 +1,96 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
-import { architectureById } from "../src/content/frameworkModel.js";
-import { frameworkLayouts } from "../src/generated/frameworkLayouts.js";
-import { DIGITAL_IMPLEMENTATION_VIEW, FRAMEWORK_BASE_PATH, FRAMEWORK_OVERVIEW_VIEW, frameworkViewPath, resolveFrameworkView } from "../src/components/framework/frameworkView.js";
+import { readPublishedArticles, validateEvergreenArticle } from "../scripts/lib/evergreen-article.mjs";
 
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
-const explorer = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
-const runtime = await readFile(new URL("../src/components/framework/FrameworkGraphRuntime.jsx", import.meta.url), "utf8");
-const architectureExplorer = await readFile(new URL("../src/components/framework/ArchitectureExplorer.jsx", import.meta.url), "utf8");
-const projection = await readFile(new URL("../src/components/framework/architectureExplorerProjection.js", import.meta.url), "utf8");
 const page = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.meta.url), "utf8");
-const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
-const presentation = await readFile(new URL("../src/components/business-observations/BusinessObservationPresentation.jsx", import.meta.url), "utf8");
-const styles = await readFile(new URL("../src/styles/framework.css", import.meta.url), "utf8");
-const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const articleComponent = await readFile(new URL("../src/components/reading/EvergreenArticle.jsx", import.meta.url), "utf8");
+const toc = await readFile(new URL("../src/components/reading/ReadingTOC.jsx", import.meta.url), "utf8");
+const richDocument = await readFile(new URL("../src/components/reading/RichDocument.jsx", import.meta.url), "utf8");
+const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
+const styles = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
+const articleScope = await readFile(new URL("../scripts/article-scope-check.mjs", import.meta.url), "utf8");
 
-const overview = architectureById.get("enterprise-operation");
-const digital = architectureById.get("digital-implementation");
-
-test("the enterprise framework keeps one canonical route with lazy legacy compatibility", () => {
-  assert.match(app, /const BusinessObservationsPage = lazy\(\(\) => import\("\.\/pages\/BusinessObservationsPage"\)/);
-  assert.match(app, /if \(pathname === FRAMEWORK_BASE\) return <BusinessObservationsPage \/>/);
-  assert.match(app, /"\/works\/enterprise-operating-framework": "\/business-observations"/);
-  assert.match(page, /BusinessObservationPresentation/);
-  assert.match(page, /headingLevel=\{1\}/);
-  assert.match(presentation, /const FrameworkExplorer = lazy\(\(\) => import\("\.\.\/framework\/FrameworkExplorer"\)/);
+test("enterprise operating system is a content-driven evergreen article", async () => {
+  const [article] = await readPublishedArticles();
+  assert.equal(article.slug, "enterprise-operating-system");
+  assert.deepEqual(await validateEvergreenArticle(article), []);
+  assert.deepEqual(article.blocks.filter((block) => block.type === "heading" && block.level === 2).map((block) => block.id), [
+    "enterprise-operating-system", "system-boundary", "operating-and-architecture-design", "digital-implementation", "operations-facts-results", "analysis-and-feedback", "sources-and-fact-boundary",
+  ]);
+  assert.ok(article.blocks.some((block) => block.type === "figure" && block.renderer === "likec4" && block.layoutPreset === "reader" && block.sourcePath.endsWith(".c4") && !block.src && !block.mobileSrc));
+  assert.match(page, /<EvergreenArticle article=\{article\}/);
+  assert.match(articleComponent, /<ReadingTOC blocks=\{article\.blocks\}/);
+  assert.match(articleComponent, /<RichDocument blocks=\{article\.blocks\}/);
 });
 
-test("the one local view has stable URL resolution and a single source model", () => {
-  assert.equal(resolveFrameworkView(""), FRAMEWORK_OVERVIEW_VIEW);
-  assert.equal(resolveFrameworkView("?view=digital-implementation"), DIGITAL_IMPLEMENTATION_VIEW);
-  assert.equal(resolveFrameworkView("?view=unknown"), FRAMEWORK_OVERVIEW_VIEW);
-  assert.equal(frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW), FRAMEWORK_BASE_PATH);
-  assert.equal(frameworkViewPath(DIGITAL_IMPLEMENTATION_VIEW), "/business-observations?view=digital-implementation");
-  assert.equal(digital.nodes.length, 9);
-  assert.equal(digital.edges.length, 13);
-  assert.equal(digital.defaultNodeId, "b2b-product-architecture");
-  assert.match(explorer, /architectureById\.get\("digital-implementation"\)/);
-  assert.match(explorer, /const activeArchitecture = activeViewId === digitalImplementation\.id \? digitalImplementation : overview/);
-  assert.doesNotMatch(explorer, /definition:|role:|label:/);
+test("public framework route no longer reads an architecture graph runtime", () => {
+  assert.doesNotMatch(page, /FrameworkExplorer|ArchitectureExplorer|FrameworkGraphRuntime|frameworkModel/);
+  assert.doesNotMatch(app, /frameworkModel|FrameworkExplorer|ArchitectureExplorer/);
+  assert.match(app, /navigate\("\/business-observations#digital-implementation", \{ replace: true, scroll: false \}\)/);
 });
 
-test("overview drilldown, local selection and shared return focus retain the established path", () => {
-  assert.match(explorer, /const drilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && node\.id === drilldownNodeId/);
-  assert.match(explorer, /onActivate: drilldown \? enterDigitalImplementation : \(\) => selectNode\(node\.id\)/);
-  assert.match(explorer, /navigate\(frameworkViewPath\(DIGITAL_IMPLEMENTATION_VIEW\), \{ scroll: false \}\)/);
-  assert.match(explorer, /<ReturnNavigation/);
-  assert.match(explorer, /destination="企业经营体系"/);
-  assert.match(explorer, /replace/);
-  assert.match(explorer, /frameworkReturnFocus: true/);
-  assert.match(explorer, /setSelectedId\(isExplicitReturn \? drilldownNodeId : activeArchitecture\.defaultNodeId\)/);
-  assert.match(explorer, /returnNodeRef\.current\?\.focus\(\)/);
-  assert.doesNotMatch(explorer, /framework-explorer__tools|返回总览|复位视图/);
+test("the shared TOC uses anchors, desktop sticky navigation and native mobile details", () => {
+  assert.match(toc, /IntersectionObserver/);
+  assert.match(toc, /<details/);
+  assert.match(toc, /detailsRef\.current\.open = false/);
+  assert.match(toc, /href=\{`#\$\{heading\.id\}`\}/);
+  assert.match(layout, /\.evergreen-article__reading \{ display: grid; grid-template-columns/);
+  assert.match(layout, /\.evergreen-article__reading > \.reading-toc \{ position: sticky/);
+  assert.match(layout, /\.evergreen-article__reading > \.mobile-toc \{ display: block;/);
+  assert.match(styles, /scroll-margin-top: calc\(var\(--header-height\)/);
 });
 
-test("React Flow remains a read-only overview runtime and is absent from the digital browser", () => {
-  for (const contract of [
-    /<Handle type="target"/,
-    /<Handle type="source"/,
-    /nodesDraggable=\{false\}/,
-    /nodesConnectable=\{false\}/,
-    /elementsSelectable=\{false\}/,
-    /nodesFocusable=\{false\}/,
-    /edgesFocusable=\{false\}/,
-    /disableKeyboardA11y/,
-    /deleteKeyCode=\{null\}/,
-    /panOnDrag=\{false\}/,
-    /zoomOnScroll=\{false\}/,
-    /zoomOnPinch=\{false\}/,
-    /zoomOnDoubleClick=\{false\}/,
-    /proOptions=\{\{ hideAttribution: true \}\}/,
-  ]) assert.match(runtime, contract);
-  assert.doesNotMatch(runtime, /MiniMap|Controls|onNodesChange|onEdgesChange|onConnect/);
-  assert.match(runtime, /data\.showLabel && data\.label/);
-  assert.doesNotMatch(runtime, /onNodeClick/);
-  assert.match(runtime, /role="region"/);
-  assert.match(runtime, /aria-label=\{ariaLabel\}/);
-  assert.match(runtime, /只读业务架构节点。节点不可移动、删除或连接。/);
-  assert.match(explorer, /const layout = isDigitalImplementation \? null/);
-  assert.match(explorer, /<ArchitectureExplorer/);
-  assert.doesNotMatch(architectureExplorer, /@xyflow|ReactFlow|elk/i);
+test("responsive figures project only approved static SVG sources", () => {
+  assert.match(richDocument, /<picture>/);
+  assert.match(richDocument, /diagramFigureAssets\(block\.sourcePath\)/);
+  assert.match(richDocument, /assets\.mobile/);
+  assert.match(styles, /\.rich-document__figure picture, \.rich-document__figure img/);
 });
 
-test("preview and persistent selection preserve authoritative explanation and accessible feedback", () => {
-  assert.match(architectureExplorer, /onMouseEnter=\{\(\)=>!mobile&&onPreview\(node\.id\)\}/);
-  assert.match(architectureExplorer, /onFocus=\{\(\)=>onPreview\(node\.id\)\}/);
-  assert.match(architectureExplorer, /aria-pressed=\{selected\}/);
-  assert.match(architectureExplorer, /onClick=\{\(\)=>onSelect\(node\.id\)\}/);
-  assert.match(explorer, /const activeNodeId = previewId \?\? selectedNode\.id/);
-  assert.match(explorer, /architecture\.edges\.filter/);
-  assert.match(explorer, /aria-live="polite"/);
-  assert.match(explorer, /已选择\$\{node\.name\}，下方说明已更新/);
-  assert.match(explorer, /prefers-reduced-motion: reduce/);
+test("a declared figure needs only a source and semantic metadata for both responsive outputs", async () => {
+  const generator = await readFile(new URL("../scripts/generate-evergreen-figures.mjs", import.meta.url), "utf8");
+  assert.match(generator, /const adapters = \{ likec4: renderLikeC4, mermaid: renderMermaid \}/);
+  assert.match(generator, /diagramFigureAssets\(figure\.sourcePath\)/);
+  assert.doesNotMatch(generator, /figure\.mobileSrc|figure\.src/);
+  assert.doesNotMatch(generator, /d2:\s*render/);
+  assert.doesNotMatch(generator, /Google Chrome\.app|executablePath: browser, args/);
+  assert.match(generator, /if \(browser\) \{/);
 });
 
-test("framework projections advance the explanation hierarchy from their own root heading", () => {
-  assert.match(page, /BusinessObservationPresentation[\s\S]*headingLevel=\{1\}/);
-  assert.match(home, /BusinessObservationPresentation[\s\S]*headingLevel=\{2\}/);
-  assert.match(presentation, /descriptionHeadingLevel=\{headingLevel \+ 1\}/);
-  assert.match(explorer, /const Subheading = `h\$\{headingLevel \+ 1\}`/);
-  for (const label of ["定义", "作用", "直接关系"]) assert.match(explorer, new RegExp(`<Subheading>${label}</Subheading>`));
-});
-
-test("digital implementation uses a fixed projection while the overview retains generated ELK geometry", () => {
-  for (const projectionName of ["desktop", "mobile"]) {
-    const layout = frameworkLayouts[overview.id][projectionName];
-    assert.equal(Object.keys(layout.nodes).length, overview.nodes.length);
-    assert.equal(Object.keys(layout.edges).length, overview.edges.length);
+test("a Mermaid source alone generates both responsive SVG outputs and removes stale output on failure", async () => {
+  const output = await mkdtemp(path.join(tmpdir(), "xingbuild-mermaid-fixture-"));
+  const run = (article) => execFileSync("node", ["scripts/generate-evergreen-figures.mjs", "--article", article, "--output", output], { cwd: new URL("..", import.meta.url), encoding: "utf8", stdio: "pipe" });
+  try {
+    const success = run("tests/fixtures/evergreen/mermaid-reader-article.json");
+    assert.match(success, /Generated 1 responsive evergreen diagram/);
+    const manifest = JSON.parse(await readFile(path.join(output, "figures/diagram-manifest.json"), "utf8"));
+    const record = manifest.figures["src/architecture/fixtures/mermaid-reader.mmd"];
+    assert.equal(record.renderer, "mermaid");
+    await access(path.join(output, record.desktop));
+    await access(path.join(output, record.mobile));
+    const stale = path.join(output, "figures/fixtures/invalid-mermaid.svg");
+    await writeFile(stale, "stale");
+    assert.throws(() => run("tests/fixtures/evergreen/invalid-mermaid-article.json"));
+    await assert.rejects(access(stale));
+  } finally {
+    await rm(output, { recursive: true, force: true });
   }
-  assert.equal(frameworkLayouts[digital.id], undefined);
-  assert.match(explorer, /window\.matchMedia\("\(max-width: 767px\)"\)/);
-  assert.match(explorer, /const explorerProjection = isDigitalImplementation && digitalNarrow \? "mobile" : projection/);
-  assert.match(projection, /Geometry-only projection/);
-  assert.match(runtime, /panOnDrag=\{false\}/);
-  assert.match(runtime, /preventScrolling=\{false\}/);
-  assert.match(styles, /\.graph-canvas\[data-projection="mobile"\][\s\S]*touch-action: pan-y/);
-  assert.doesNotMatch(styles, /data-mobile-world|--graph-pan|overflow-y:\s*(auto|scroll)/);
 });
 
-test("digital implementation keeps all relationships visible while mobile provides the same-source list", () => {
-  assert.match(architectureExplorer, /architecture\.edges\.map/);
-  assert.match(architectureExplorer, /<text x=\{route\.label\[0\]\}/);
-  assert.match(explorer, /完整关系/);
-  assert.match(styles, /\.framework-description__all-relations \{ display: none; \}/);
-  assert.match(styles, /\.framework-description__all-relations \{ display: grid; gap: var\(--rhythm-bind\); \}/);
+test("build manifest keeps evergreen articles separate from Observation publication", async () => {
+  const manifest = JSON.parse(await readFile(new URL("../dist/client/content-manifest.json", import.meta.url), "utf8"));
+  assert.ok(Array.isArray(manifest.publishedSlugs));
+  assert.deepEqual(manifest.publishedArticleSlugs, ["enterprise-operating-system"]);
 });
 
-test("mobile ArchitectureExplorer owns its full flow height before the selected-node description", () => {
-  assert.match(styles, /\.graph-canvas\[data-projection="mobile"\]:has\(\.architecture-explorer\) \{[\s\S]*aspect-ratio: auto;[\s\S]*min-height: 0;[\s\S]*max-height: none;/);
-  assert.doesNotMatch(styles, /\.architecture-explorer\s*\{[^}]*position:\s*absolute/);
-  assert.doesNotMatch(styles, /\.framework-description\s*\{[^}]*position:\s*absolute/);
-});
-
-test("the shared return navigation becomes the mobile digital view's own flow item before the canvas", () => {
-  assert.match(explorer, /const mobileDigitalReturn = isDigitalImplementation && explorerProjection === "mobile"/);
-  assert.match(explorer, /framework-explorer__mobile-return/);
-  assert.match(explorer, /returnNavigation=\{mobileDigitalReturn \? null : returnNavigation\}/);
-  assert.match(styles, /\.architecture-explorer__layer span \{ top:10px; left:12px; font-size:18px; \}/);
-  assert.match(styles, /\.architecture-explorer__lines text \{ font-size: 12px; stroke-width: 5px; \}/);
-  assert.match(styles, /\.architecture-explorer__node \{ font-size:16px; \}/);
-  assert.match(styles, /\.architecture-explorer__lines text \{ font-size: 12px; stroke-width: 4px; \}/);
-  assert.doesNotMatch(styles, /\.architecture-explorer__lines text \{ display:none/);
-});
-
-test("missing or invalid generated geometry falls back to same-source text", () => {
-  assert.match(explorer, /function usableLayout/);
-  assert.match(explorer, /FrameworkTextFallback/);
-  assert.match(explorer, /架构图暂不可用，以下为同源节点与直接关系。/);
-  assert.match(explorer, /architecture\.nodes\.map/);
-  assert.doesNotMatch(explorer, /catch[\s\S]*return null/);
-});
-
-test("no-JavaScript fallback retains the overview explanation", () => {
-  assert.match(html, /<html lang="zh-CN">/);
-  assert.match(html, /一家企业如何持续创造价值、形成经营结果并调整自身？/);
-  assert.doesNotMatch(html, /如何把战略和经营目标转化为可执行、可度量的业务设计？/);
+test("future article publication is explicit and remains a content-only boundary", () => {
+  assert.match(articleScope, /Usage: npm run article:scope-check -- --slug <slug>/);
+  assert.match(articleScope, /content\/articles\/\$\{slug\}\.json/);
+  assert.match(articleScope, /article publication must not change product version/);
+  assert.match(articleScope, /article publication must not create a product tag/);
 });
