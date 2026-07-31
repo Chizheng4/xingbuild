@@ -39,15 +39,19 @@
 
 ## Engineering 范围
 
-- 引入并固定开源 LikeC4 构建与 React 展示能力；
-- 将 `digital-implementation` 迁移为单一 LikeC4 模型；
-- 删除该视图对 React Flow / ELK 运行时和手工布局的依赖；
+- 引入并固定开源 LikeC4 CLI 校验与 typed data 生成能力；
+- 将 `digital-implementation` 迁移为唯一 LikeC4 语义模型；
+- 使用只含位置、端口、路径控制点和安全区的
+  `ArchitectureExplorerProjection` 承担桌面/手机几何，不得重复业务语义；
+- 使用受控 React DOM + SVG 投影，删除该视图对 LikeC4 React runtime、
+  React Flow / ELK 运行时和手工业务关系表的依赖；
 - 实现三张视觉事实源对应的桌面 selected、桌面 Hover 和手机 selected 状态；
 - 生成同源文本降级、关系清单及全部几何、交互和响应式测试。
 
 ## 验收
 
 - 模型逐项保持 9 节点、13 关系和权威说明；
+- Projection 不包含名称、关系标签、方向、定义或作用，模型/投影 ID 一致；
 - 关系线与 GraphCanvas、层边界、divider、节点边框共线重叠为 `0`；
 - 默认状态无需 Hover 即可看清完整主路径和反馈闭环；
 - 实际 Hover、click、Enter、Space、手机 tap 可用且不改变任何几何；
