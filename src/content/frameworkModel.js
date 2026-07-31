@@ -61,7 +61,9 @@ const edge = (id, from, to, label, kind, desktop, mobile) => ({
 const line = (path, x, y) => ({ path, label: { x, y } });
 const position = (x, y, width) => ({ x, y, width });
 
-export const architectures = [
+import { digitalImplementationArchitecture } from "../generated/digitalImplementationArchitecture.js";
+
+const legacyArchitectures = [
   {
     id: "enterprise-operation",
     kicker: "企业经营",
@@ -203,52 +205,6 @@ export const architectures = [
     ],
   },
   {
-    id: "digital-implementation",
-    kicker: "数字化实现",
-    question: "如何把业务设计转化为真正进入企业运作的产品、数据和系统？",
-    intro:
-      "产品与数据在设计层并行汇合，再经技术架构和工程实现形成进入企业现实的数字化系统。",
-    defaultNodeId: "b2b-product-architecture",
-    height: { desktop: 570, mobile: 1010 },
-    viewBox: { desktop: "0 0 900 570", mobile: "0 0 350 1010" },
-    nodes: [
-      node("enterprise-business-architecture", "企业业务架构", "core", "围绕企业经营目标，对业务领域、企业能力、价值流、企业职能、组织责任、业务流程、业务对象、业务事件、业务规则和指标进行整体设计。", "它提出数字化需求，同时驱动 B 端产品架构和数据架构。", position(34, 24, 32), position(15, 38, 70)),
-      node("b2b-product-architecture", "B 端产品架构", "standard", "根据企业业务架构和企业用户场景，对 B 端产品、用户角色、业务场景、功能边界及产品关系进行整体设计。", "它与数据架构协同设计、相互约束，并共同驱动技术架构。", position(14, 145, 29), position(5, 159, 43)),
-      node("data-architecture", "数据架构", "standard", "对业务对象、业务事件、对象关系、数据标准、事实来源、指标口径和数据流动方式进行整体设计。", "它与 B 端产品架构协同设计、相互约束，并共同驱动技术架构。", position(57, 145, 29), position(52, 159, 43)),
-      node("technical-architecture", "技术架构", "standard", "对软件组件、服务边界、数据存储、系统集成、运行环境、安全和非功能能力进行整体设计。", "它由产品与数据共同驱动，并指导工程实现。", position(35, 247, 30), position(19, 290, 62)),
-      node("engineering", "工程实现", "standard", "通过代码、配置、测试、部署、监控和维护，将产品、数据和技术架构转化为真实运行的软件。", "它执行技术架构要求，形成企业数字化系统。", position(35, 330, 30), position(19, 390, 62)),
-      node("enterprise-digital-system", "企业数字化系统", "result", "企业在实际运作中使用的软件、数据和自动化系统；它记录数据、支持协作，并在授权和规则范围内执行业务活动。", "它进入企业现实、支持或执行企业运作，并记录其中可数字化的事实。", position(35, 413, 30), position(19, 490, 62)),
-      node("enterprise-reality-operation", "企业现实中的企业运作", "standard", "组织、人员、伙伴、资源、规则和数字化系统共同参与企业中业务活动与支撑活动的实际执行。", "它接受数字化系统支持或执行，并产生事实与经营结果。", position(6, 501, 27), position(19, 590, 62)),
-      node("digital-facts-results", "事实与经营结果", "result", "企业运作产生的可验证事实和明确期间结果；数字化系统记录其中可以数字化的部分。", "它既由企业运作产生，也被系统记录，并支持经营分析与决策。", position(38, 501, 27), position(19, 690, 62)),
-      node("digital-decision", "经营分析与决策", "measure", "使用事实、指标和目标差距识别驱动因素并作出调整选择。", "它由事实与经营结果支持，并反馈调整企业业务架构。", position(70, 501, 25), position(19, 790, 62)),
-    ],
-    edges: [
-      edge("di-business-product", "enterprise-business-architecture", "b2b-product-architecture", "提出数字化需求", "standard", line("M420 75 V115 H256 V145", 300, 105), line("M140 88 V135 H92 V159", 88, 126)),
-      edge("di-business-data", "enterprise-business-architecture", "data-architecture", "提出数字化需求", "standard", line("M480 75 V115 H644 V145", 500, 105), line("M210 88 V135 H257 V159", 184, 126)),
-      edge("di-product-data", "b2b-product-architecture", "data-architecture", "协同设计", "standard", line("M387 168 H513", 412, 158), line("M168 180 H182", 101, 170)),
-      edge("di-data-product", "data-architecture", "b2b-product-architecture", "相互约束", "standard", line("M513 182 H387", 412, 198), line("M182 196 H168", 184, 220)),
-      edge("di-product-tech", "b2b-product-architecture", "technical-architecture", "共同驱动", "standard", line("M256 198 V225 H390 V247", 300, 238), line("M92 210 V260 H130 V290", 65, 278)),
-      edge("di-data-tech", "data-architecture", "technical-architecture", "共同驱动", "standard", line("M644 198 V225 H510 V247", 500, 238), line("M257 210 V260 H220 V290", 184, 278)),
-      edge("di-tech-engineering", "technical-architecture", "engineering", "指导实现", "standard", line("M450 297 V330", 460, 321), line("M175 340 V390", 184, 370)),
-      edge("di-engineering-system", "engineering", "enterprise-digital-system", "形成", "standard", line("M450 380 V413", 460, 405), line("M175 440 V490", 184, 470)),
-      edge("di-system-reality", "enterprise-digital-system", "enterprise-reality-operation", "进入并支持或执行", "standard", line("M420 463 V480 H175 V501", 260, 471), line("M175 540 V590", 184, 570)),
-      edge("di-reality-facts", "enterprise-reality-operation", "digital-facts-results", "产生", "standard", line("M297 526 H342", 300, 516), line("M175 640 V690", 184, 670)),
-      edge("di-system-facts", "enterprise-digital-system", "digital-facts-results", "记录", "standard", line("M315 463 V480 H342 V501", 320, 471), line("M67 515 H20 V715 H67", 28, 625)),
-      edge("di-facts-decision", "digital-facts-results", "digital-decision", "支持", "standard", line("M585 526 H630", 589, 516), line("M175 740 V790", 184, 770)),
-      edge("di-decision-business", "digital-decision", "enterprise-business-architecture", "调整业务架构", "feedback", line("M885 50 H594", 720, 42), line("M340 63 H298", 228, 882)),
-    ],
-    tracks: [
-      {
-        id: "di-feedback-track",
-        relatedEdgeIds: ["di-decision-business"],
-        projection: {
-          desktop: { path: "M855 526 H885 V50" },
-          mobile: { path: "M283 815 H340 V63" },
-        },
-      },
-    ],
-  },
-  {
     id: "concept-grammar",
     kicker: "概念语法",
     question: "如何避免同一个业务词在不同讨论中混用，失去明确边界？",
@@ -295,6 +251,11 @@ export const architectures = [
   },
 ];
 
+export const architectures = [
+  ...legacyArchitectures,
+  digitalImplementationArchitecture,
+];
+
 export const architectureById = new Map(architectures.map((item) => [item.id, item]));
 
 export function connectedEdgeIds(architecture, nodeId) {
@@ -314,7 +275,7 @@ export function validateFrameworkModel() {
       if (nodeIds.has(item.id)) errors.push(`duplicate node in ${architecture.id}: ${item.id}`);
       nodeIds.add(item.id);
       if (!item.definition || !item.role) errors.push(`incomplete node: ${architecture.id}/${item.id}`);
-      if (!item.projection.desktop || !item.projection.mobile) {
+      if (architecture.id !== "digital-implementation" && (!item.projection.desktop || !item.projection.mobile)) {
         errors.push(`missing node projection: ${architecture.id}/${item.id}`);
       }
     }
@@ -329,7 +290,7 @@ export function validateFrameworkModel() {
         errors.push(`missing edge endpoint: ${architecture.id}/${item.id}`);
       }
       if (!item.label) errors.push(`missing relation label: ${architecture.id}/${item.id}`);
-      if (!item.projection.desktop?.path || !item.projection.mobile?.path) {
+      if (architecture.id !== "digital-implementation" && (!item.projection.desktop?.path || !item.projection.mobile?.path)) {
         errors.push(`missing edge projection: ${architecture.id}/${item.id}`);
       }
     }

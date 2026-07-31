@@ -5,6 +5,7 @@ import { frameworkLayouts } from "../../generated/frameworkLayouts";
 import { navigate, useLocation } from "../../lib/navigation";
 import { DIGITAL_IMPLEMENTATION_VIEW, FRAMEWORK_OVERVIEW_VIEW, frameworkViewPath, resolveFrameworkView } from "./frameworkView";
 import { FrameworkGraphRuntime } from "./FrameworkGraphRuntime";
+import { ArchitectureExplorer } from "./ArchitectureExplorer";
 import { ShowcaseLayout } from "../site/LayoutShell";
 import { SystemStage } from "../showcase/SystemStage";
 import { ReturnNavigation } from "../navigation/ReturnNavigation";
@@ -72,6 +73,7 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   const [selectedId, setSelectedId] = useState(activeArchitecture.defaultNodeId);
   const [previewId, setPreviewId] = useState(null);
   const [projection, setProjection] = useState(() => window.matchMedia("(max-width: 519px)").matches ? "mobile" : window.matchMedia("(max-width: 639px)").matches ? "compact" : "desktop");
+  const [digitalNarrow, setDigitalNarrow] = useState(() => window.matchMedia("(max-width: 767px)").matches);
   const liveRef = useRef(null);
   const returnNodeRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -90,6 +92,14 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   }, []);
 
   useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const update = () => setDigitalNarrow(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     const isExplicitReturn = activeViewId === FRAMEWORK_OVERVIEW_VIEW && location.state?.frameworkReturnFocus;
     let focusTimer;
     setSelectedId(isExplicitReturn ? drilldownNodeId : activeArchitecture.defaultNodeId);
@@ -101,6 +111,8 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   const selectedNode = activeArchitecture.nodes.find((item) => item.id === selectedId)
     ?? activeArchitecture.nodes.find((item) => item.id === activeArchitecture.defaultNodeId);
   const activeNodeId = previewId ?? selectedNode.id;
+  const isDigitalImplementation = activeViewId === DIGITAL_IMPLEMENTATION_VIEW;
+  const explorerProjection = isDigitalImplementation && digitalNarrow ? "mobile" : projection;
   const connectedNodeIds = useMemo(() => {
     const ids = new Set([activeNodeId]);
     for (const edge of activeArchitecture.edges) {
@@ -115,7 +127,7 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
     if (!node) return;
     setSelectedId(id);
     if (liveRef.current) liveRef.current.textContent = `已选择${node.name}，下方说明已更新`;
-    if (reveal && projection === "mobile") {
+    if (reveal && explorerProjection === "mobile") {
       window.requestAnimationFrame(() => {
         const rect = descriptionRef.current?.getBoundingClientRect();
         if (rect && (rect.top < 0 || rect.top > window.innerHeight - 80)) {
@@ -129,9 +141,9 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
   };
 
   const enterDigitalImplementation = () => navigate(frameworkViewPath(DIGITAL_IMPLEMENTATION_VIEW), { scroll: false });
-  const layoutProjection = activeArchitecture.id === digitalImplementation.id || projection !== "compact" ? projection : "desktop";
-  const layout = frameworkLayouts[activeArchitecture.id]?.[layoutProjection];
-  const ready = usableLayout(layout, activeArchitecture);
+  const layoutProjection = projection === "compact" ? "desktop" : projection;
+  const layout = isDigitalImplementation ? null : frameworkLayouts[activeArchitecture.id]?.[layoutProjection];
+  const ready = !isDigitalImplementation && usableLayout(layout, activeArchitecture);
   const graphNodes = useMemo(() => ready ? activeArchitecture.nodes.map((node) => {
     const geometry = layout.nodes[node.id];
     const drilldown = activeViewId === FRAMEWORK_OVERVIEW_VIEW && node.id === drilldownNodeId;
@@ -180,11 +192,13 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
       <div
         className="graph-canvas"
         data-active-view={activeViewId}
-        data-projection={projection}
+        data-projection={isDigitalImplementation ? explorerProjection : projection}
         style={ready ? { "--framework-layout-ratio": `${layout.width} / ${layout.height}` } : undefined}
       >
         {activeArchitecture.boundary ? <p className="graph-canvas__boundary-label">{activeArchitecture.boundary.label}</p> : null}
-        {ready ? (
+        {activeViewId === DIGITAL_IMPLEMENTATION_VIEW ? (
+          <ArchitectureExplorer architecture={activeArchitecture} projection={explorerProjection} selectedId={selectedNode.id} previewId={previewId} onPreview={setPreviewId} onSelect={selectNode} />
+        ) : ready ? (
           <FrameworkGraphRuntime
             nodes={graphNodes}
             edges={graphEdges}
@@ -198,27 +212,29 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
     </SystemStage>
   );
 
+  const returnNavigation = activeViewId === DIGITAL_IMPLEMENTATION_VIEW ? (
+    <ReturnNavigation
+      href={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
+      destination="企业经营体系"
+      returnTo={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
+      focusTarget={drilldownNodeId}
+      state={{ frameworkReturnFocus: true }}
+      replace
+    />
+  ) : null;
+  const mobileDigitalReturn = isDigitalImplementation && explorerProjection === "mobile";
+  const description = <FrameworkDescription
+    architecture={activeArchitecture}
+    selectedNode={selectedNode}
+    headingLevel={descriptionHeadingLevel}
+    descriptionRef={descriptionRef}
+    returnNavigation={mobileDigitalReturn ? null : returnNavigation}
+  />;
+
   return (
     <section className="framework-explorer" data-active-view={activeViewId} aria-label={activeViewId === FRAMEWORK_OVERVIEW_VIEW ? "企业经营体系总览" : "数字化实现"}>
-      <ShowcaseLayout
-        description={<FrameworkDescription
-          architecture={activeArchitecture}
-          selectedNode={selectedNode}
-          headingLevel={descriptionHeadingLevel}
-          descriptionRef={descriptionRef}
-          returnNavigation={activeViewId === DIGITAL_IMPLEMENTATION_VIEW ? (
-            <ReturnNavigation
-              href={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
-              destination="企业经营体系"
-              returnTo={frameworkViewPath(FRAMEWORK_OVERVIEW_VIEW)}
-              focusTarget={drilldownNodeId}
-              state={{ frameworkReturnFocus: true }}
-              replace
-            />
-          ) : null}
-        />}
-        stage={stage}
-      />
+      {mobileDigitalReturn ? <div className="framework-explorer__mobile-return">{returnNavigation}</div> : null}
+      <ShowcaseLayout description={description} stage={stage} />
       <p className="sr-only" aria-live="polite" ref={liveRef} />
     </section>
   );

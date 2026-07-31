@@ -1,12 +1,13 @@
 {
   "name": "xingbuild",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "framework:data": "node scripts/generate-digital-architecture.mjs",
     "framework:layout": "node scripts/generate-framework-layout.mjs",
-    "build": "npm run framework:layout && vite build && node scripts/prepare-sites-build.mjs",
+    "build": "npm run framework:data && npm run framework:layout && vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/*.test.mjs",
     "check": "node scripts/check-project.mjs",
@@ -36,6 +37,7 @@
     "vite": "6.4.2"
   },
   "devDependencies": {
-    "edgeone": "1.6.17"
+    "edgeone": "1.6.17",
+    "likec4": "1.59.2"
   }
 }

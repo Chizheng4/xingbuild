@@ -1,4 +1,6 @@
-export const FRAMEWORK_LAYOUT_TARGETS = ["enterprise-operation", "digital-implementation"];
+// The digital implementation view owns fixed geometry in ArchitectureExplorerProjection.
+// ELK remains only for the enterprise-operation overview.
+export const FRAMEWORK_LAYOUT_TARGETS = ["enterprise-operation"];
 
 export const frameworkPresentation = {
   desktop: {
@@ -38,9 +40,6 @@ export const frameworkPresentation = {
 export const frameworkRouting = {
   "enterprise-operation": {
     feedbackEdgeIds: ["op-decision-design", "op-decision-operation"],
-  },
-  "digital-implementation": {
-    feedbackEdgeIds: ["di-data-product", "di-decision-business"],
   },
 };
 

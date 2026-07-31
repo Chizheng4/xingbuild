@@ -1,0 +1,9 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "xingbuild-digital-implementation",
+  "inferTechnologyFromIcon": false,
+  "metadata": {
+    "architectureId": "digital-implementation",
+    "defaultNodeId": "b2b-product-architecture"
+  }
+}

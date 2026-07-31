@@ -1,0 +1,62 @@
+specification {
+  element business_design
+  element engineering_implementation
+  element operating_feedback
+}
+
+model {
+  enterprise-business-architecture = business_design '企业业务架构' {
+    description '围绕企业经营目标，对业务领域、企业能力、价值流、企业职能、组织责任、业务流程、业务对象、业务事件、业务规则和指标进行整体设计。'
+    metadata { role '它提出数字化需求，同时驱动 B 端产品架构和数据架构。' layer 'business-design' layerLabel '业务设计层' }
+  }
+  b2b-product-architecture = business_design 'B 端产品架构' {
+    description '根据企业业务架构和企业用户场景，对 B 端产品、用户角色、业务场景、功能边界及产品关系进行整体设计。'
+    metadata { role '它与数据架构协同设计、相互约束，并共同驱动技术架构。' layer 'business-design' layerLabel '业务设计层' }
+  }
+  data-architecture = business_design '数据架构' {
+    description '对业务对象、业务事件、对象关系、数据标准、事实来源、指标口径和数据流动方式进行整体设计。'
+    metadata { role '它与 B 端产品架构协同设计、相互约束，并共同驱动技术架构。' layer 'business-design' layerLabel '业务设计层' }
+  }
+  technical-architecture = engineering_implementation '技术架构' {
+    description '对软件组件、服务边界、数据存储、系统集成、运行环境、安全和非功能能力进行整体设计。'
+    metadata { role '它由产品与数据共同驱动，并指导工程实现。' layer 'engineering-implementation' layerLabel '工程实现层' }
+  }
+  engineering = engineering_implementation '工程实现' {
+    description '通过代码、配置、测试、部署、监控和维护，将产品、数据和技术架构转化为真实运行的软件。'
+    metadata { role '它执行技术架构要求，形成企业数字化系统。' layer 'engineering-implementation' layerLabel '工程实现层' }
+  }
+  enterprise-digital-system = engineering_implementation '企业数字化系统' {
+    description '企业在实际运作中使用的软件、数据和自动化系统；它记录数据、支持协作，并在授权和规则范围内执行业务活动。'
+    metadata { role '它进入企业现实、支持或执行企业运作，并记录其中可数字化的事实。' layer 'engineering-implementation' layerLabel '工程实现层' }
+  }
+  enterprise-reality-operation = operating_feedback '企业现实中的企业运作' {
+    description '组织、人员、伙伴、资源、规则和数字化系统共同参与企业中业务活动与支撑活动的实际执行。'
+    metadata { role '它接受数字化系统支持或执行，并产生事实与经营结果。' layer 'operating-feedback' layerLabel '经营运行与反馈层' }
+  }
+  digital-facts-results = operating_feedback '事实与经营结果' {
+    description '企业运作产生的可验证事实和明确期间结果；数字化系统记录其中可以数字化的部分。'
+    metadata { role '它既由企业运作产生，也被系统记录，并支持经营分析与决策。' layer 'operating-feedback' layerLabel '经营运行与反馈层' }
+  }
+  digital-decision = operating_feedback '经营分析与决策' {
+    description '使用事实、指标和目标差距识别驱动因素并作出调整选择。'
+    metadata { role '它由事实与经营结果支持，并反馈调整企业业务架构。' layer 'operating-feedback' layerLabel '经营运行与反馈层' }
+  }
+
+  enterprise-business-architecture -> b2b-product-architecture '提出数字化需求' { metadata { id 'di-business-product' } }
+  enterprise-business-architecture -> data-architecture '提出数字化需求' { metadata { id 'di-business-data' } }
+  b2b-product-architecture -> data-architecture '协同设计' { metadata { id 'di-product-data' } }
+  data-architecture -> b2b-product-architecture '相互约束' { metadata { id 'di-data-product' } }
+  b2b-product-architecture -> technical-architecture '共同驱动' { metadata { id 'di-product-tech' } }
+  data-architecture -> technical-architecture '共同驱动' { metadata { id 'di-data-tech' } }
+  technical-architecture -> engineering '指导实现' { metadata { id 'di-tech-engineering' } }
+  engineering -> enterprise-digital-system '形成' { metadata { id 'di-engineering-system' } }
+  enterprise-digital-system -> enterprise-reality-operation '进入并支持或执行' { metadata { id 'di-system-reality' } }
+  enterprise-reality-operation -> digital-facts-results '产生' { metadata { id 'di-reality-facts' } }
+  enterprise-digital-system -> digital-facts-results '记录' { metadata { id 'di-system-facts' } }
+  digital-facts-results -> digital-decision '支持' { metadata { id 'di-facts-decision' } }
+  digital-decision -> enterprise-business-architecture '调整业务架构' { metadata { id 'di-decision-business' } }
+}
+
+views {
+  view digital-implementation { include * autoLayout TopBottom }
+}

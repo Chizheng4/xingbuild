@@ -11,7 +11,7 @@ const edgeKey = (item) => `${item.from}>${item.label}>${item.to}`;
 test("four architectures share one valid node and edge model", () => {
   assert.deepEqual(
     architectures.map((item) => item.id),
-    ["enterprise-operation", "business-design", "digital-implementation", "concept-grammar"],
+    ["enterprise-operation", "business-design", "concept-grammar", "digital-implementation"],
   );
   assert.deepEqual(validateFrameworkModel(), []);
   for (const architecture of architectures) {
@@ -21,16 +21,20 @@ test("four architectures share one valid node and edge model", () => {
     for (const item of architecture.nodes) {
       assert.ok(item.definition);
       assert.ok(item.role);
-      assert.ok(item.caption);
-      assert.ok(item.projection.desktop);
-      assert.ok(item.projection.mobile);
+      if (architecture.id !== "digital-implementation") assert.ok(item.caption);
+      if (architecture.id !== "digital-implementation") {
+        assert.ok(item.projection.desktop);
+        assert.ok(item.projection.mobile);
+      }
     }
     for (const item of architecture.edges) {
       assert.ok(item.label);
-      assert.ok(item.projection.desktop.path);
-      assert.ok(item.projection.mobile.path);
-      assert.ok(item.projection.desktop.label);
-      assert.ok(item.projection.mobile.label);
+      if (architecture.id !== "digital-implementation") {
+        assert.ok(item.projection.desktop.path);
+        assert.ok(item.projection.mobile.path);
+        assert.ok(item.projection.desktop.label);
+        assert.ok(item.projection.mobile.label);
+      }
     }
   }
 });

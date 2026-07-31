@@ -22,6 +22,20 @@
     pointer-events: none;
   }
   .framework-flow { width: 100%; height: 100%; }
+  .graph-canvas:has(.architecture-explorer) { height: auto; min-height: 0; overflow: visible; }
+  .architecture-explorer { position: relative; width: 100%; aspect-ratio: var(--architecture-ratio); overflow: hidden; font-family: var(--font-ui); }
+  .architecture-explorer__layer { position: absolute; border: 1px dashed color-mix(in srgb, var(--color-architecture-line) 35%, transparent); pointer-events: none; }
+  .architecture-explorer__layer span { position: absolute; top: 12px; left: 16px; color: var(--color-accent-strong); font: 600 var(--type-caption)/1 var(--font-ui); }
+  .architecture-explorer__lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .architecture-explorer__lines polyline { fill:none; stroke:#4f4941; stroke-width:1.7; vector-effect:non-scaling-stroke; }
+.architecture-explorer__lines marker path { fill:#4f4941; }
+.architecture-explorer__lines marker#architecture-arrow-active path { fill:var(--color-accent-strong); }
+.architecture-explorer__lines g.is-active polyline { stroke:var(--color-accent-strong); stroke-width:2.15; }
+  .architecture-explorer__lines text { fill:var(--color-text-muted); font:500 11px/1 var(--font-ui); text-anchor:middle; paint-order:stroke; stroke:var(--color-canvas); stroke-width:5px; }
+  .architecture-explorer__lines g.is-active text { fill:var(--color-accent-strong); font-weight:600; }
+  .architecture-explorer__node { position:absolute; z-index:2; padding:8px; color:var(--color-text); background:var(--color-canvas); border:1px solid var(--color-architecture-line); font:600 var(--type-caption)/1.25 var(--font-ui); cursor:pointer; transition: border-color 120ms ease, background-color 120ms ease, opacity 120ms ease; }
+  .architecture-explorer__node.is-selected, .architecture-explorer__node.is-previewed { border:2px solid var(--color-accent-strong); background:var(--color-architecture-selected); }
+  .architecture-explorer__node:focus-visible { outline:2px solid var(--color-focus); outline-offset:3px; }
   .framework-flow .react-flow__pane { cursor: default; }
   .framework-flow .react-flow__node {
     padding: 0;
@@ -127,7 +141,10 @@
       font: 500 var(--type-caption)/var(--leading-meta) var(--font-meta);
     }
   }
-  @media (max-width: 32.4375rem) {
+  @media (max-width: 47.9375rem) {
+    .architecture-explorer__layer span { top:10px; left:12px; font-size:18px; }
+    .architecture-explorer__lines text { font-size: 12px; stroke-width: 5px; }
+    .architecture-explorer__node { font-size:16px; }
     .graph-canvas[data-projection="mobile"] {
       height: auto;
       aspect-ratio: var(--framework-layout-ratio, 1 / 2);
@@ -136,6 +153,16 @@
       overflow: visible;
       touch-action: pan-y;
     }
+    .graph-canvas[data-projection="mobile"]:has(.architecture-explorer) {
+      aspect-ratio: auto;
+      min-height: 0;
+      max-height: none;
+    }
+  }
+  @media (max-width: 21.25rem) {
+    .architecture-explorer__layer span { font-size:16px; }
+    .architecture-explorer__lines text { font-size: 12px; stroke-width: 4px; }
+    .architecture-explorer__node { font-size:14px; }
     .framework-flow[data-projection="mobile"] { aspect-ratio: var(--framework-layout-ratio); }
     .framework-flow[data-projection="mobile"] .react-flow__pane { cursor: default; touch-action: pan-y; }
     .framework-flow__edge-label { display: none; }

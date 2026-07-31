@@ -52,12 +52,9 @@ test("generated layouts preserve every business edge direction and bounded geome
       assert.ok(layout.height <= frameworkPresentation[projection].maxHeight);
     }
   }
-  const mobile = frameworkLayouts["digital-implementation"].mobile;
-  const renderedHeight = mobile.height * Math.min(1, frameworkPresentation.mobile.viewportWidth / mobile.width);
-  assert.ok(renderedHeight >= 620 && renderedHeight <= frameworkPresentation.mobile.maxRenderedHeight);
 });
 
-test("desktop relationship labels do not expand ELK bounds and mobile keeps them hidden", async () => {
+test("generated overview labels do not expand ELK bounds and its mobile projection keeps them hidden", async () => {
   const layouts = await generateFrameworkLayouts();
   for (const architectureId of FRAMEWORK_LAYOUT_TARGETS) {
     const architecture = architectureById.get(architectureId);

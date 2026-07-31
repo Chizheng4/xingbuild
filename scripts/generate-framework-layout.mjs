@@ -153,12 +153,6 @@ function normalizeLayout(architecture, projection, layout) {
   const height = rounded(layout.height);
   if (width > presentation.maxWidth) throw new Error(`${architecture.id}/${projection} width ${width} exceeds ${presentation.maxWidth}`);
   if (height > presentation.maxHeight) throw new Error(`${architecture.id}/${projection} height ${height} exceeds ${presentation.maxHeight}`);
-  if (projection === "mobile") {
-    const renderedHeight = height * Math.min(1, presentation.viewportWidth / width);
-    if (architecture.id === "digital-implementation" && renderedHeight > presentation.maxRenderedHeight) {
-      throw new Error(`${architecture.id}/${projection} rendered height ${rounded(renderedHeight)} exceeds ${presentation.maxRenderedHeight}`);
-    }
-  }
   const nodeMap = new Map(layout.children.map((node) => [node.id, node]));
   const generatedEdges = Object.fromEntries(layout.edges.map((edge) => {
     const points = edgePoints(edge);
@@ -195,67 +189,13 @@ function normalizeLayout(architecture, projection, layout) {
   };
 }
 
-const DIGITAL_SPINE = {
-  width: 780,
-  height: 440,
-  nodes: {
-    "enterprise-business-architecture": [40, 65, 150, 72],
-    "b2b-product-architecture": [290, 100, 150, 72],
-    "data-architecture": [590, 100, 150, 72],
-    "technical-architecture": [40, 310, 100, 64],
-    engineering: [164, 310, 100, 64],
-    "enterprise-digital-system": [288, 310, 100, 64],
-    "enterprise-reality-operation": [412, 310, 100, 64],
-    "digital-facts-results": [536, 310, 100, 64],
-    "digital-decision": [660, 310, 100, 64],
-  },
-  edges: {
-    "di-business-product": [[190, 101], [240, 101], [240, 136], [290, 136], [240, 87]],
-    "di-business-data": [[115, 65], [115, 26], [665, 26], [665, 100], [390, 16]],
-    "di-product-data": [[440, 126], [590, 126], [515, 114]],
-    "di-data-product": [[590, 148], [440, 148], [515, 161]],
-    "di-product-tech": [[365, 172], [365, 255], [90, 255], [90, 310], [235, 243]],
-    "di-data-tech": [[665, 172], [665, 275], [90, 275], [90, 310], [400, 270]],
-    "di-tech-engineering": [[140, 342], [164, 342], [152, 298]],
-    "di-engineering-system": [[264, 342], [288, 342], [276, 298]],
-    "di-system-reality": [[388, 342], [412, 342], [400, 298]],
-    "di-reality-facts": [[512, 342], [536, 342], [524, 298]],
-    "di-system-facts": [[338, 374], [338, 398], [586, 398], [586, 374], [462, 410]],
-    "di-facts-decision": [[636, 342], [660, 342], [648, 298]],
-    "di-decision-business": [[710, 374], [710, 416], [16, 416], [16, 101], [40, 101], [320, 428]],
-  },
-};
-
-function digitalSpineLayout(architecture, projection) {
-  const scale = projection === "compact" ? 0.72 : 1;
-  const scalePoint = ([x, y]) => ({ x: rounded(x * scale), y: rounded(y * scale) });
-  const nodes = Object.fromEntries(architecture.nodes.map((node) => {
-    const values = DIGITAL_SPINE.nodes[node.id];
-    if (!values) throw new Error(`Missing spine node: ${node.id}`);
-    const [x, y, width, height] = values;
-    return [node.id, { x: rounded(x * scale), y: rounded(y * scale), width: rounded(width * scale), height: rounded(height * scale) }];
-  }));
-  const edges = Object.fromEntries(architecture.edges.map((edge) => {
-    const route = DIGITAL_SPINE.edges[edge.id];
-    if (!route) throw new Error(`Missing spine edge: ${edge.id}`);
-    const points = route.slice(0, -1).map(scalePoint);
-    const label = scalePoint(route.at(-1));
-    return [edge.id, { source: edge.from, target: edge.to, points, label }];
-  }));
-  return { width: rounded(DIGITAL_SPINE.width * scale), height: rounded(DIGITAL_SPINE.height * scale), nodes, edges };
-}
-
 export async function generateFrameworkLayouts() {
   const generated = {};
   for (const architectureId of FRAMEWORK_LAYOUT_TARGETS) {
     const architecture = architectureById.get(architectureId);
     if (!architecture) throw new Error(`Missing architecture: ${architectureId}`);
     generated[architectureId] = {};
-    for (const projection of architectureId === "digital-implementation" ? ["desktop", "compact", "mobile"] : ["desktop", "mobile"]) {
-      if (projection === "compact") {
-        generated[architectureId][projection] = digitalSpineLayout(architecture, projection);
-        continue;
-      }
+    for (const projection of ["desktop", "mobile"]) {
       const layout = await elk.layout(graphFor(architecture, projection));
       generated[architectureId][projection] = normalizeLayout(architecture, projection, layout);
     }

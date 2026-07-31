@@ -1,5 +1,11 @@
 # xingbuild 版本记录
 
+## v0.18.0 — 企业经营体系多层架构浏览器重构
+
+- 当前状态：Engineering 实现与本地验证中；尚未提交、打 tag、推送、部署或公网验收。
+- 范围仅限数字化实现架构浏览器：LikeC4 语义模型与生成数据、受控 React DOM + SVG 投影、三层关系浏览与无障碍交互。
+- 不修改网站结构、frameworkModel 权威事实、Robotaxi、Observation、Article、About、Header/Footer、内容或发布能力。
+
 ## v0.17.0 — 企业经营体系固定架构图与全站返回统一
 
 - 数字化实现固定为可读的 Architecture Spine：完整 9 节点、13 条关系和闭环在稳定几何中默认呈现；选择只更新强调与权威说明。
