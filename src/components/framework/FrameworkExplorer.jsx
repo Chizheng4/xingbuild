@@ -165,7 +165,12 @@ export function FrameworkExplorer({ descriptionHeadingLevel = 2 }) {
       source: edge.from,
       target: edge.to,
       type: "frameworkEdge",
-      markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 16,
+        height: 16,
+        color: active ? "var(--color-accent-strong)" : "var(--color-architecture-edge)",
+      },
       data: { ...geometry, text: edge.label, active, showLabel: activeViewId === DIGITAL_IMPLEMENTATION_VIEW || active },
     };
   }) : [], [activeArchitecture, activeNodeId, layout, ready]);

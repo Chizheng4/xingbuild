@@ -13,12 +13,18 @@ function pointsPath(points) {
 }
 
 function FrameworkEdge({ id, data, markerEnd }) {
+  const edgeStyle = {
+    stroke: data.active ? "var(--color-accent-strong)" : "var(--color-architecture-edge)",
+    strokeWidth: data.active ? 2.15 : 1.7,
+    opacity: data.active ? 1 : 0.96,
+  };
   return (
     <>
       <BaseEdge
         id={id}
         path={pointsPath(data.points)}
         markerEnd={markerEnd}
+        style={edgeStyle}
         className={data.active ? "is-active" : "is-muted"}
       />
       {data.showLabel && data.label ? (

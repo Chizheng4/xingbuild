@@ -5,7 +5,7 @@
     position: relative;
     width: 100%;
     min-width: 0;
-    height: clamp(25rem, 43vw, 34rem);
+    height: clamp(27.5rem, 46vw, 34rem);
     overflow: hidden;
     background: color-mix(in srgb, var(--color-architecture-surface) 38%, transparent);
     border: var(--line-thin) solid color-mix(in srgb, var(--color-architecture-line) 38%, transparent);
@@ -64,18 +64,18 @@
 
   .framework-flow .react-flow__edge-path {
     fill: none;
-    stroke: var(--color-architecture-line);
-    stroke-width: 1.35;
+    stroke: var(--color-architecture-edge);
+    stroke-width: 1.7;
     vector-effect: non-scaling-stroke;
   }
-  .framework-flow .react-flow__edge-path.is-active { stroke: var(--color-accent-strong); stroke-width: 1.9; }
-  .framework-flow .react-flow__edge-path.is-muted { opacity: 0.72; }
+  .framework-flow .react-flow__edge-path.is-active { stroke: var(--color-accent-strong); stroke-width: 2.15; }
+  .framework-flow .react-flow__edge-path.is-muted { opacity: 0.96; }
   .framework-flow__edge-label {
     position: absolute;
     padding: 1px var(--space-1);
     color: var(--color-text-muted);
     background: color-mix(in srgb, var(--color-graph-label-bg) 88%, transparent);
-    font: 500 0.6875rem/1.2 var(--font-meta);
+    font: 500 0.625rem/1.2 var(--font-meta);
     white-space: nowrap;
     pointer-events: none;
   }
