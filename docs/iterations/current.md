@@ -34,7 +34,8 @@ Practice 内容独立检查、提交与发布能力
 
 ## Engineering 允许范围
 
-- `package.json`/锁文件中本版本命令入口（不升级无关依赖）；
+- `package.json`/`package-lock.json` 中本版本命令入口（不升级无关依赖）；
+- `VERSION.md` 与 `package.json` 的 `0.21.0` 产品版本记录；Practice 内容发布命令不得修改产品版本；
 - `scripts/practice-scope-check.mjs`；
 - `publish-practice.command`；
 - `scripts/verify-practice-release.mjs`；
@@ -45,7 +46,7 @@ Practice 内容独立检查、提交与发布能力
 
 - `src/` 页面、组件、CSS、视觉 token、路由和 PageDefinition 组合；
 - Robotaxi 业务事实、manifest 审批结论、公开媒体内容和独立 Robotaxi 仓库；
-- Observation、Article、About、产品版本/tag、EdgeOne 项目配置、未确认 DRAFT；
+- Observation、Article、About、Practice 内容发布命令中的产品版本/tag、EdgeOne 项目配置、未确认 DRAFT；产品版本收口所需版本文件只按本方案更新；
 - 任何与目标 Practice 无关的代码、内容、规则、worker、发布配置或 workspace 文件。
 
 ## 验收
