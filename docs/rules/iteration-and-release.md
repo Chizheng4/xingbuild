@@ -34,11 +34,19 @@
 - 当前版本完成全部串行交付状态后，仅由产品与视觉责任 task 将已确认草案整理为正式方案并批准进入 `docs/iterations/current.md`，再交 Engineering 开启下一个唯一版本。
 - 内容运营、媒体替换和其他不改变产品能力的工作继续遵守各自独立合同，不因产品草案并行而转为产品迭代。
 
+### 2.2.2 已确认候选自动续跑
+
+- 用户已明确确认并记录的候选，必须在当前版本完成公网验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
+- 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
+- `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
+- 每个确认候选完成“方案正式化 → Engineering 实现 → 产品/视觉验收 → 本地收口 → push → 部署 → 公网验收”后，立即回到候选清点，按 roadmap 优先级逐个执行，直到没有 `confirmed` 候选。
+- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容/运营任务始终按独立合同继续，不被该流水线阻断。
+
 ### 2.2.1 DRAFT、主线与版本提交门禁
 
 - `DRAFT（草案）` 是未确认的产品/视觉候选，不是当前版本，也不是发布输入。它不得进入主线版本提交、版本 tag、push、deploy 或公网验收。
 - 产品 DRAFT 在并行设计阶段必须位于独立 task 的隔离 branch/worktree；进入项目共享文档后，唯一目录为 `docs/iterations/candidates/`，不得继续放在 `docs/design/`、`docs/iterations/current.md` 或版本 history 中。DRAFT 可以被 Git 追踪以保留连续性，但不能成为产品版本输入。
-- 候选目录中的 DRAFT 必须有候选 ID、状态、事实源、已确认决策、非目标、待确认项、目标后续版本、责任 task 和验收草案。状态只能是 `DRAFT | selected | deferred | rejected | superseded`；未确认状态不得改写成正式方案。
+- 候选目录中的 DRAFT 必须有候选 ID、状态、`executionAuthorization`、事实源、已确认决策、非目标、待确认项、目标后续版本、责任 task 和验收草案。状态只能是 `DRAFT | selected | deferred | rejected | superseded`；未确认状态不得改写成正式方案。
 - 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 通过 `git mv` 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`，再交 Engineering 实现。
 - 版本收口只暂存 `current.md` 明确列出的文件。`docs/iterations/candidates/` 下的 DRAFT、无责任归属的历史修改和未追踪文件必须被收口检查识别并排除；不得为了通过门禁临时删除、改名或混入文件。
 - 其他 task 的未纳入修改不得删除或覆盖。需要收口时，使用独立 branch/worktree 或可逆的有记录隔离，并在收口后完整恢复。

@@ -28,7 +28,7 @@
 
 ## 工作流门禁速查
 
-- 产品版本严格一个接一个：当前版本未完成实现、验证、专业验收、提交/tag、push、部署和公网验收，不开启下一版本。
+- 产品版本严格一个接一个：当前版本未完成实现、验证、专业验收、提交/tag、push、部署和公网验收，不开启下一版本；完成后按 `docs/rules/iteration-and-release.md` 的“已确认候选自动续跑”清点并逐个执行已确认候选。
 - 并行设计只能形成明确标记为 `DRAFT` 的文档；共享后的 DRAFT 只能放在 `docs/iterations/candidates/`，不进入主线版本提交/tag；不得修改 `current.md`、VERSION、代码、依赖或发布规则。
 - 跨 task 使用事件驱动交接，不使用持续 `wait`、空轮询或长历史；完整方案留在文档，消息只传文档路径、版本/commit、证据、阻断 ID 和下一动作。
 - 当前版本中发现的新优化先登记在 `docs/iterations/current.md` 的“在途变更登记”；后续候选的完整方案进入 `docs/iterations/candidates/`，由产品 task 分类为当前采纳、后续候选、内容/运营或拒绝；不得直接改代码或混入当前范围。

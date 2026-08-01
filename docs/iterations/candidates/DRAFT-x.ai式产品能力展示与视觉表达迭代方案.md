@@ -2,6 +2,7 @@
 
 > 候选 ID：XBUILD-CAPABILITY-001
 > 状态：DRAFT（草案，待用户确认）
+> executionAuthorization：pending
 > 责任：xingbuild 产品与视觉 task  继承：`docs/product/xingbuild 网站产品架构与视觉系统总案.md`
 > 目标后续版本：`v0.23.0+` 候选，不是当前版本授权
 > 当前边界：只做学习、产品方案、视觉方案和验收合同；不改代码、`current.md`、VERSION、依赖、tag、Git、部署或生产内容。
