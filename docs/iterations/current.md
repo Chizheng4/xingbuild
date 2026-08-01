@@ -2,7 +2,7 @@
 
 ## 当前唯一版本：`v0.22.0`
 
-状态：产品方案已正式纳入，等待 Engineering 按合同实现；当前只允许这一版本进入实现、验证、收口与发布。
+状态：已完成实现、产品/视觉验收、提交/tag、推送、部署与公网验收；当前没有下一正式产品版本。此文件暂保留上一已发布版本作为唯一基线，直到下一方案正式进入 current。
 正式方案：[`docs/design/v0.22.0 企业经营体系多视图架构阅读能力方案.md`](../design/v0.22.0%20企业经营体系多视图架构阅读能力方案.md)
 候选 ID：`XBUILD-ARCH-VIEWS-001`
 
@@ -35,10 +35,10 @@
 
 ## 已发布基线
 
-- 产品版本：`v0.21.0`
-- commit/tag：`6493f43a7504a78113f2cd0c5dff2b2894a24e34` / `v0.21.0`
+- 产品版本：`v0.22.0`
+- commit/tag：`7ad9edd0e3cc4888bbaece0ddeace0cc32bf270c` / `v0.22.0`
 - 生产：`https://xingbuild.top/`
-- EdgeOne deployment：`dp6rooguw0og`
+- EdgeOne deployment：`dpslfti62ltf`
 
 ## 在途变更登记
 
@@ -46,10 +46,10 @@
 
 | ID | 发现事实/证据 | 分类 | 当前决定 | 范围/验收影响 | 责任与下一动作 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
-| XBUILD-V022-VIS-001 | 产品独立验收发现 1440 桌面 LikeC4 运行时使用默认蓝色节点、灰色虚线关系，纵向 aspect 943×2117，首屏只能看到局部；证据 `/private/tmp/xingbuild-v022-likec4-desktop.png` | P1 视觉/可读性阻断 | 保留 LikeC4 真运行时与同源模型，修正运行时主题和桌面可读几何；未修订前不得收口或发布 | 需要补充桌面视觉合同与截图/六档复验，不改文章对象、模型语义或移动文本降级 | Engineering 在同一 v0.22 候选修订；产品/视觉复验后才允许 closeout | blocked |
+| XBUILD-V022-VIS-001 | 产品独立验收发现桌面 LikeC4 默认主题和舞台几何不符合视觉合同 | P1 视觉/可读性阻断 | 已在 v0.22 同版本修订并通过独立复验 | 暖色节点/实线关系；六档无横向溢出；移动端同源文本降级；不改模型语义 | 已完成并随 v0.22 发布 | closed |
 
 登记规则：P0/P1 只有在补充本方案和验收后才可 `adopt-current`；需要新能力的事项登记为 `defer-next` 并进入 `docs/iterations/candidates/`；内容/运营问题移交 `docs/operations/内容运营与发布问题清单.md`，不得改变本版本。
 
 ## 版本完成后的下一步
 
-v0.22.0 完成实现、专业验收、commit/tag、push、部署和公网验收后，创建 `history/v0.22.0.md` 并清空本文件的当前指针。候选 `XBUILD-CAPABILITY-001` 仍需基于真实使用证据单独评估，不自动开启 v0.23.0。
+v0.22.0 已完成实现、专业验收、commit/tag、push、部署和公网验收；归档记录见 `history/v0.22.0.md`。候选 `XBUILD-CAPABILITY-001` 仍需基于真实使用证据单独评估，不自动开启 v0.23.0。
