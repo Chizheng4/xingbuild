@@ -1,5 +1,11 @@
 # xingbuild 版本记录
 
+## v0.21.0 — Practice 内容独立发布能力
+
+- 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。
+- 范围仅建立单一 Practice 的内容 scope check、独立发布命令及目标公网投影验证；日常 Practice 内容提交不改变产品版本或 tag。
+- 不修改页面、Practice schema、Robotaxi 事实或媒体审批结论、Observation、Article、About 和 EdgeOne 配置。
+
 ## v0.20.0 — 页面定义注册与既有页面组合渲染
 
 - 当前状态：页面定义 registry、四种既有组合 renderer、`/about` 迁移与同组合 fixture 已实现；自动检查、六档本地页面验证和产品/视觉独立验收完成，尚未推送 GitHub、部署或公网验收。

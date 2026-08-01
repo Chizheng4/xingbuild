@@ -153,6 +153,10 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 `EvergreenArticlePublication` 的日常更新同样不改变产品版本或 tag。提交必须显式指定一个文章 slug，且范围只能包含 `content/articles/<slug>.json`、该文章引用的可编辑图形源和生成 SVG；必须通过 `article:check`、`article:scope-check`、build、Sites 和目标 URL/manifest 验证。当前图形适配器锁定 Mermaid CLI 11.16.0 与 LikeC4；D2 是未来可选 adapter，未锁定并通过专项验收前不得在内容对象中声明。`publish-article.command --slug <slug>` 只允许推送已验证 HEAD 并部署既有项目；它不接受页面、规则、版本或无关内容混入。
 
+### 3.5 Practice 内容发布
+
+日常 Practice 内容使用 `npm run practice:scope-check -- --id <practiceId> [--commit HEAD]` 和 `./publish-practice.command --id <practiceId>`；当前仅支持已登记的 `robotaxi`。它们不创建产品版本或 tag，只接受目标 Practice JSON、对应 manifest 及模块实际引用的必要 public 媒体文件；未引用的 pending/revoked/internal/superseded 归档资产可保留但不得投影。目标提交必须复用 Practice schema、lifecycle 和 SHA-256 校验，拒绝路径穿越、绝对路径逃逸和目标媒体目录外文件，且 `origin/main` 只能是 `HEAD^`（首次推送）或 `HEAD`（同一提交部署重试）。发布命令依次执行 Practice 检查、scope check、build、Sites test、main push、既有 `xingbuild-nochina` 部署与 `verify-practice-release`；后者必须验证 `/products` 的公开应用投影包含目标 Practice、模块与媒体。任何失败均保留同一提交，不扫描或清理无关 workspace。页面、样式、版本、tag、规则、其他内容与 Robotaxi 独立系统混入一律失败。
+
 ## 4. 当前迭代
 
 唯一当前指针：`docs/iterations/current.md`。

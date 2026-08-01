@@ -1,14 +1,9 @@
-import { access, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
 import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.js";
 
-export const practiceDirectory = path.join(projectRoot, "content", "products");
-export const robotaxiPracticeFile = path.join(practiceDirectory, "robotaxi.json");
-export const robotaxiMediaManifestFile = path.join(projectRoot, "content", "media", "robotaxi", "manifest.json");
-export const robotaxiPublicMediaDirectory = path.join(projectRoot, "public", "media", "robotaxi");
-export const robotaxiArchivedMediaDirectory = path.join(projectRoot, "content", "media", "robotaxi", "archive");
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const absoluteHttpsPattern = /^https:\/\/[^\s]+$/;
@@ -19,6 +14,9 @@ const manifestPublicStatuses = new Set(["public", "internal"]);
 const publicationStatuses = new Set(["active", "suspended"]);
 const assetReviewStatuses = new Set(["approved", "pending_review", "revoked"]);
 const assetApprovalStatuses = new Set(["approved", "paused", "revoked"]);
+
+export const practiceIdPattern = slugPattern;
+export const supportedPracticeIds = new Set(["robotaxi"]);
 
 function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
@@ -88,6 +86,136 @@ export function isPublicMediaAsset(manifest, asset) {
   return isPublicPracticeMedia(manifest, asset);
 }
 
+export function assertSupportedPracticeId(practiceId) {
+  if (!practiceIdPattern.test(practiceId || "")) {
+    throw new Error("Practice id must be a non-empty kebab-case value");
+  }
+  if (!supportedPracticeIds.has(practiceId)) {
+    throw new Error(`Practice id is not currently supported: ${practiceId}`);
+  }
+}
+
+export function practiceContentPaths(practiceId, { rootDirectory = projectRoot } = {}) {
+  assertSupportedPracticeId(practiceId);
+  return {
+    practiceFile: path.join(rootDirectory, "content", "products", `${practiceId}.json`),
+    manifestFile: path.join(rootDirectory, "content", "media", practiceId, "manifest.json"),
+    practicePath: `content/products/${practiceId}.json`,
+    manifestPath: `content/media/${practiceId}/manifest.json`,
+  };
+}
+
+function isNormalizedPublicMediaPath(location, directory) {
+  return hasText(location)
+    && location.startsWith(`${directory}/`)
+    && !location.includes("\\")
+    && !location.split("/").includes("..")
+    && path.posix.normalize(location) === location;
+}
+
+function isNormalizedArchivePath(location, practiceId) {
+  const archiveDirectory = `content/media/${practiceId}/archive`;
+  return hasText(location)
+    && !path.posix.isAbsolute(location)
+    && location.startsWith(`${archiveDirectory}/`)
+    && !location.includes("\\")
+    && !location.split("/").includes("..")
+    && path.posix.normalize(location) === location;
+}
+
+function safeMediaFileLocation(asset, manifest) {
+  if (asset?.src !== undefined) {
+    if (isNormalizedPublicMediaPath(asset.src, manifest?.directory || "")) return { location: `public${asset.src}` };
+    return { error: `media asset ${asset?.id || "(unknown)"} has an unsafe public src path` };
+  }
+  const practiceId = /^\/media\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(manifest?.directory || "")?.[1];
+  if (practiceId && isNormalizedArchivePath(asset?.archivePath, practiceId)) return { location: asset.archivePath };
+  return { error: `media asset ${asset?.id || "(unknown)"} has an unsafe archive path` };
+}
+
+export function referencedPracticeMediaAssets(practice, manifest) {
+  const assets = new Map((manifest?.assets || []).map((asset) => [asset.id, asset]));
+  const mediaIds = new Set((practice?.modules || []).map((module) => module.mediaId).filter(hasText));
+  return [...mediaIds].map((mediaId) => assets.get(mediaId)).filter(Boolean);
+}
+
+export function mediaPathsForPractice(practice, manifest) {
+  return referencedPracticeMediaAssets(practice, manifest)
+    .filter((asset) => isNormalizedPublicMediaPath(asset.src, manifest?.directory || ""))
+    .map((asset) => `public${asset.src}`);
+}
+
+export function validatePublishablePracticeBundle(practice, manifest, { expectedId } = {}) {
+  const errors = validatePracticeBundle(practice, manifest);
+  if (expectedId && practice?.id !== expectedId) errors.push(`practice.id must be ${expectedId}`);
+  if (manifest?.reviewStatus !== "approved") errors.push("target media manifest reviewStatus must be approved");
+  if (manifest?.publicStatus !== "public") errors.push("target media manifest publicStatus must be public");
+  if (manifest?.currentPublication?.status !== "active") errors.push("target media manifest currentPublication.status must be active");
+  if (!practice?.modules?.length) errors.push("Practice publication requires at least one module");
+  for (const asset of referencedPracticeMediaAssets(practice, manifest)) {
+    const label = asset?.id || "(unknown)";
+    if (asset?.reviewStatus !== "approved") errors.push(`media asset ${label} reviewStatus must be approved`);
+    if (asset?.publicStatus !== "public") errors.push(`media asset ${label} publicStatus must be public`);
+    if (asset?.provenance?.approvalStatus !== "approved") errors.push(`media asset ${label} provenance approvalStatus must be approved`);
+    if (typeof asset?.src !== "string" || !asset.src.startsWith(manifest?.directory || "")) {
+      errors.push(`media asset ${label} src must belong to ${manifest?.directory || "the target media directory"}`);
+    }
+  }
+  return errors;
+}
+
+export async function validatePracticeMediaFiles(manifest, { readBytes, practice } = {}) {
+  const errors = [];
+  const assets = practice ? referencedPracticeMediaAssets(practice, manifest) : manifest.assets || [];
+  for (const asset of assets) {
+    const { location, error } = safeMediaFileLocation(asset, manifest);
+    if (error) {
+      errors.push(error);
+      continue;
+    }
+    try {
+      const actualHash = createHash("sha256").update(await readBytes(location)).digest("hex");
+      if (actualHash !== asset.assetSha256) errors.push(`media asset hash mismatch: ${location}`);
+    } catch {
+      errors.push(`media asset file is missing: ${location}`);
+    }
+  }
+  return errors;
+}
+
+export function evaluatePracticeCommitReadiness({
+  practiceId,
+  files,
+  currentVersion,
+  parentVersion,
+  head,
+  parent,
+  originMain,
+  headTags = [],
+  practice,
+  manifest,
+}) {
+  const errors = [];
+  try { assertSupportedPracticeId(practiceId); } catch (error) { errors.push(error.message); }
+  const normalized = files.filter(Boolean).map((file) => file.replace(/\\/g, "/"));
+  const practicePath = `content/products/${practiceId}.json`;
+  const manifestPath = `content/media/${practiceId}/manifest.json`;
+  const mediaPaths = new Set(mediaPathsForPractice(practice, manifest));
+  const allowed = new Set([practicePath, manifestPath, ...mediaPaths]);
+  const rejected = normalized.filter((file) => !allowed.has(file));
+  if (!normalized.includes(practicePath)) errors.push(`Practice commit must contain ${practicePath}`);
+  if (rejected.length) errors.push(`Practice commit contains forbidden files: ${rejected.join(", ")}`);
+  if (normalized.some((file) => mediaPaths.has(file)) && !normalized.includes(manifestPath)) {
+    errors.push(`Practice media files require ${manifestPath}`);
+  }
+  if (currentVersion !== parentVersion) errors.push("Practice publication must not change product version");
+  if (headTags.length) errors.push(`Practice commit must not create a product tag: ${headTags.join(", ")}`);
+  if (originMain !== parent && originMain !== head) {
+    errors.push("origin/main must equal HEAD^ before push or HEAD for same-commit deployment retry");
+  }
+  return { ready: errors.length === 0, errors, practicePath, manifestPath, phase: originMain === parent ? "pre-push" : originMain === head ? "post-push-retry" : "blocked" };
+}
+
 export function validatePracticeBundle(practice, manifest) {
   const errors = [];
   if (!isObject(practice)) return ["practice must be an object"];
@@ -138,8 +266,8 @@ export function validatePracticeBundle(practice, manifest) {
     }
     if (!slugPattern.test(asset.id || "")) errors.push(`${field}.id must be kebab-case`);
     if (assets.has(asset.id)) errors.push(`duplicate media asset id: ${asset.id}`);
-    if (asset.src !== undefined && (!hasText(asset.src) || !asset.src.startsWith(`${manifest.directory}/`))) errors.push(`${field}.src must stay under ${manifest.directory}`);
-    if (asset.archivePath !== undefined && (!hasText(asset.archivePath) || !asset.archivePath.startsWith("content/media/robotaxi/archive/"))) errors.push(`${field}.archivePath must stay under content/media/robotaxi/archive`);
+    if (asset.src !== undefined && !isNormalizedPublicMediaPath(asset.src, manifest.directory)) errors.push(`${field}.src must stay safely under ${manifest.directory}`);
+    if (asset.archivePath !== undefined && !isNormalizedArchivePath(asset.archivePath, practice.id)) errors.push(`${field}.archivePath must stay safely under content/media/${practice.id}/archive`);
     if (isPublicMediaAsset(manifest, asset) && asset.archivePath !== undefined) errors.push(`${field}.archivePath is only for non-public media`);
     if (!isPublicMediaAsset(manifest, asset) && !hasText(asset.archivePath)) errors.push(`${field}.archivePath must preserve non-public media`);
     if (asset.type !== "image") errors.push(`${field}.type must be image`);
@@ -182,26 +310,19 @@ export function validatePracticeBundle(practice, manifest) {
 }
 
 export async function assertCurrentPracticeContent() {
-  const [practice, manifest] = await Promise.all([
-    readJson(robotaxiPracticeFile),
-    readJson(robotaxiMediaManifestFile),
-  ]);
-  const errors = validatePracticeBundle(practice, manifest);
-  for (const asset of manifest.assets) {
-    const isPublic = hasText(asset.src);
-    const file = isPublic
-      ? path.join(robotaxiPublicMediaDirectory, path.basename(asset.src))
-      : path.join(robotaxiArchivedMediaDirectory, path.basename(asset.archivePath));
-    const location = isPublic ? asset.src : asset.archivePath;
-    try {
-      await access(file);
-      const bytes = await readFile(file);
-      const actualHash = createHash("sha256").update(bytes).digest("hex");
-      if (actualHash !== asset.assetSha256) errors.push(`media asset hash mismatch: ${location}`);
-    } catch {
-      errors.push(`media asset file is missing: ${location}`);
-    }
-  }
+  return assertPracticeContent("robotaxi");
+}
+
+export async function assertPracticeContent(practiceId, { rootDirectory = projectRoot, publishable = false } = {}) {
+  const paths = practiceContentPaths(practiceId, { rootDirectory });
+  const [practice, manifest] = await Promise.all([readJson(paths.practiceFile), readJson(paths.manifestFile)]);
+  const errors = publishable
+    ? validatePublishablePracticeBundle(practice, manifest, { expectedId: practiceId })
+    : validatePracticeBundle(practice, manifest);
+  errors.push(...await validatePracticeMediaFiles(manifest, {
+    practice: publishable ? practice : undefined,
+    readBytes: (location) => readFile(path.join(rootDirectory, location)),
+  }));
   if (errors.length) throw new Error(errors.map((error) => `- ${error}`).join("\n"));
   return { practice, manifest };
 }
