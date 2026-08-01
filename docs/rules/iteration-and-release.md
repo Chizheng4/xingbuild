@@ -36,12 +36,13 @@
 ### 2.2.1 DRAFT、主线与版本提交门禁
 
 - `DRAFT（草案）` 是未确认的产品/视觉候选，不是当前版本，也不是发布输入。它不得进入主线版本提交、版本 tag、push、deploy 或公网验收。
-- 产品 DRAFT 必须位于独立 task 的隔离 branch/worktree；可以在该隔离位置提交以保留连续性，但不得写入主线的 `current.md`、`VERSION.md`、代码、依赖或发布配置。
-- 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将状态从 `DRAFT` 改为正式方案后，才允许写入 `current.md`，再交 Engineering 实现。
-- 版本收口只暂存 `current.md` 明确列出的文件。未转正的 DRAFT、无责任归属的历史修改和未追踪文件必须在版本收口工作区之外保存；不得为了通过门禁临时挑选、改名或混入文件。
+- 产品 DRAFT 在并行设计阶段必须位于独立 task 的隔离 branch/worktree；进入项目共享文档后，唯一目录为 `docs/iterations/candidates/`，不得继续放在 `docs/design/`、`docs/iterations/current.md` 或版本 history 中。DRAFT 可以被 Git 追踪以保留连续性，但不能成为产品版本输入。
+- 候选目录中的 DRAFT 必须有候选 ID、状态、事实源、已确认决策、非目标、待确认项、目标后续版本、责任 task 和验收草案。状态只能是 `DRAFT | selected | deferred | rejected | superseded`；未确认状态不得改写成正式方案。
+- 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 通过 `git mv` 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`，再交 Engineering 实现。
+- 版本收口只暂存 `current.md` 明确列出的文件。`docs/iterations/candidates/` 下的 DRAFT、无责任归属的历史修改和未追踪文件必须被收口检查识别并排除；不得为了通过门禁临时删除、改名或混入文件。
 - 其他 task 的未纳入修改不得删除或覆盖。需要收口时，使用独立 branch/worktree 或可逆的有记录隔离，并在收口后完整恢复。
 - 内容 `draft` 是另一条内容生命周期，继续只存在被忽略的 `.content-workspace/`，无论是否已人工审核，都不得进入产品版本提交。
-- 因此“DRAFT 不进入版本”指不进入未确认方案的产品版本交付；DRAFT 经过确认并正式进入 `current.md` 后，才可作为目标版本的一部分。
+- 因此“DRAFT 不进入版本”指候选目录中的未确认方案不进入产品版本交付；只有转为正式 `docs/design/v{版本号}...方案.md` 并进入 `current.md` 后，才可作为目标版本的一部分。
 
 ### 2.3 统一问题登记与转入
 
@@ -78,6 +79,15 @@ ID / discoveredAt
 只有 `adopt-current` 才能改变当前版本的目标、文件范围或验收；产品 task 必须先更新 `current.md`，Engineering 才能执行。`defer-next` 不得修改当前版本或让当前版本等待未来方案。
 
 版本收口时，所有登记必须变为 `closed`、`defer-next` 或已明确交给内容/运营；未决条目不得藏在 task 历史中。历史版本只记录最终决策和结果，完整候选方案保留在对应 DRAFT 或问题清单。
+
+#### 2.3.2 候选方案目录与版本收口清点
+
+- `docs/iterations/candidates/` 是产品优化 DRAFT 的唯一共享入口；`roadmap.md` 只登记候选 ID、路径、优先级、进入条件和状态，不复制方案正文。
+- `docs/design/` 只保存已确认的正式设计方案、视觉系统和验收合同；文件名不得以 `DRAFT-` 开头。历史正式方案仍可保留在此用于追溯，结果以 `docs/iterations/history/` 为准。
+- 版本开始前，产品责任 task 必须从 candidates 中选择一个候选，将其转为正式方案并写入唯一 `current.md`；未选择的候选保持原状态，不阻断当前版本。
+- 版本收口前，必须检查 candidates 中每个文件都有合法状态、候选 ID、责任 task 和下一动作；无责任、过期目标版本或状态缺失的候选是治理阻断，不得静默忽略。
+- 版本收口后，必须输出简短候选清点：已完成、延期、拒绝、被替代和仍待确认；没有正式下一候选时，清空 current 指针并停止，不自动开启版本。
+- 候选 DRAFT 可以进入独立规则/文档治理提交，但不得进入产品版本 tag、内容提交、部署或公开页面。
 
 ### 2.4 事件驱动的跨 task 调度
 
@@ -153,15 +163,11 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 `EvergreenArticlePublication` 的日常更新同样不改变产品版本或 tag。提交必须显式指定一个文章 slug，且范围只能包含 `content/articles/<slug>.json`、该文章引用的可编辑图形源和生成 SVG；必须通过 `article:check`、`article:scope-check`、build、Sites 和目标 URL/manifest 验证。当前图形适配器锁定 Mermaid CLI 11.16.0 与 LikeC4；D2 是未来可选 adapter，未锁定并通过专项验收前不得在内容对象中声明。`publish-article.command --slug <slug>` 只允许推送已验证 HEAD 并部署既有项目；它不接受页面、规则、版本或无关内容混入。
 
-### 3.5 Practice 内容发布
-
-日常 Practice 内容使用 `npm run practice:scope-check -- --id <practiceId> [--commit HEAD]` 和 `./publish-practice.command --id <practiceId>`；当前仅支持已登记的 `robotaxi`。它们不创建产品版本或 tag，只接受目标 Practice JSON、对应 manifest 及模块实际引用的必要 public 媒体文件；未引用的 pending/revoked/internal/superseded 归档资产可保留但不得投影。目标提交必须复用 Practice schema、lifecycle 和 SHA-256 校验，拒绝路径穿越、绝对路径逃逸和目标媒体目录外文件，且 `origin/main` 只能是 `HEAD^`（首次推送）或 `HEAD`（同一提交部署重试）。发布命令依次执行 Practice 检查、scope check、build、Sites test、main push、既有 `xingbuild-nochina` 部署与 `verify-practice-release`；后者必须验证 `/products` 的公开应用投影包含目标 Practice、模块与媒体。任何失败均保留同一提交，不扫描或清理无关 workspace。页面、样式、版本、tag、规则、其他内容与 Robotaxi 独立系统混入一律失败。
-
 ## 4. 当前迭代
 
 唯一当前指针：`docs/iterations/current.md`。
 
-已确认方向的版本先后、进入条件和跨版本文档包以 `docs/iterations/roadmap.md` 为准；路线图不是当前授权，不得绕过 `current.md` 直接实现候选版本。
+未确认的产品优化统一位于 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。已确认方向的版本先后、进入条件和跨版本文档包以 `docs/iterations/roadmap.md` 为准；路线图不是当前授权，不得绕过 `current.md` 直接实现候选版本。
 
 每轮开始时至少记录：
 
@@ -202,6 +208,8 @@ npm run release:closeout-check
 ```
 
 它会阻止未暂存修改或未追踪文件跨入本次收口。通过后再提交与打标签。
+
+版本收口同时必须完成候选清点：`docs/iterations/candidates/` 中的 DRAFT 不得被暂存；每个候选必须有合法状态、候选 ID、责任 task 和下一动作；未确认候选不视为当前版本未完成。没有正式下一候选时，归档完成后清空 `current.md`，不因候选存在自动开启下一版本。
 
 本地提交和标签完成后、双击发布前，再执行一次快速只读门槛：
 

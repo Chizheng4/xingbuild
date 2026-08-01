@@ -15,7 +15,8 @@
 - 当前唯一实施版本：[`docs/iterations/current.md`](docs/iterations/current.md)。无版本时不得自行开始产品实现。
 - 版本、task、问题、内容发布、Git、部署和浏览器资源规则：[`docs/rules/iteration-and-release.md`](docs/rules/iteration-and-release.md)。这是本项目通用工作流唯一来源。
 - 已完成版本和公网结果：`docs/iterations/history/`；内容运营合同：`docs/operations/`；career/Robotaxi 上游事实：`docs/upstream/`及各自项目的权威源。
-- `docs/design/` 只保留历史方案、DRAFT 或明确交接附件；不能直接覆盖主文档和规则。
+- `docs/design/` 只保留已确认的正式版本方案、视觉系统与验收合同；未确认 DRAFT 统一位于 `docs/iterations/candidates/`，不得在 `design/` 另建草案。
+- `docs/operations/内容运营与发布问题清单.md` 是内容采集、审核、发布和公网验收问题的唯一 tracked 入口；公开结构/视觉/发布能力问题必须转入 `docs/iterations/candidates/` 或当前正式迭代。
 
 ## 责任边界速查
 
@@ -28,9 +29,9 @@
 ## 工作流门禁速查
 
 - 产品版本严格一个接一个：当前版本未完成实现、验证、专业验收、提交/tag、push、部署和公网验收，不开启下一版本。
-- 并行设计只能形成明确标记为 `DRAFT` 的文档；DRAFT 不进入主线版本提交/tag；不得修改 `current.md`、VERSION、代码、依赖或发布规则。
+- 并行设计只能形成明确标记为 `DRAFT` 的文档；共享后的 DRAFT 只能放在 `docs/iterations/candidates/`，不进入主线版本提交/tag；不得修改 `current.md`、VERSION、代码、依赖或发布规则。
 - 跨 task 使用事件驱动交接，不使用持续 `wait`、空轮询或长历史；完整方案留在文档，消息只传文档路径、版本/commit、证据、阻断 ID 和下一动作。
-- 当前版本中发现的新优化先登记在 `docs/iterations/current.md` 的“在途变更登记”，由产品 task 分类为当前采纳、后续候选、内容/运营或拒绝；不得直接改代码或混入当前范围。
+- 当前版本中发现的新优化先登记在 `docs/iterations/current.md` 的“在途变更登记”；后续候选的完整方案进入 `docs/iterations/candidates/`，由产品 task 分类为当前采纳、后续候选、内容/运营或拒绝；不得直接改代码或混入当前范围。
 - 实现、验证、commit/tag、push、deploy、公网验收分别报告；未获当前 task 明确授权不得发布或触发远端部署。
 - 修改产品内容、结构、视觉、部署行为或域名配置前，先阅读 `docs/rules/iteration-and-release.md` 和对应事实源。
 - 稳定迭代必须运行 `npm run release:check`；浏览器验证串行且结束即释放服务、headless worker 和临时 profile。

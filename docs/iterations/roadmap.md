@@ -122,6 +122,13 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 每项能力独立形成 DRAFT、独立验收和独立版本，不打包成“全能力平台”大版本。
 
+当前候选登记（均未进入 `current.md`）：
+
+| 候选 ID | 文件 | 状态 | 进入条件 |
+| --- | --- | --- | --- |
+| `XBUILD-CAPABILITY-001` | [`iterations/candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md`](candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md) | `DRAFT` | 真实内容/页面重复需求证明需要统一能力展示控件 |
+| `XBUILD-ARCH-VIEWS-001` | [`iterations/candidates/DRAFT-企业经营体系架构视图与文章图形表达方案.md`](candidates/DRAFT-企业经营体系架构视图与文章图形表达方案.md) | `DRAFT` | 企业架构阅读问题与 Robotaxi 上游边界共同确认，并形成单一最小视图合同 |
+
 ## 5. 版本排队与文档职责
 
 路线图只记录版本队列、依赖、进入条件和产品侧决策，不复制项目通用工作流。新需求分流、问题登记、DRAFT 门禁、跨 task 交接、串行执行、验证、提交/tag、发布和资源规则，统一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准。
