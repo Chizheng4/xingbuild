@@ -41,6 +41,27 @@ function isolatedDraftPreview() {
   };
 }
 
+function previewMetadata() {
+  return {
+    name: "xingbuild-preview-metadata",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use("/__xingbuild/preview-meta", (_request, response) => {
+        response.statusCode = 200;
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setHeader("Cache-Control", "no-store");
+        response.end(JSON.stringify({
+          cwd: process.env.XINGBUILD_PREVIEW_CWD || null,
+          commit: process.env.XINGBUILD_PREVIEW_COMMIT || null,
+          version: process.env.XINGBUILD_PREVIEW_VERSION || null,
+          taskId: process.env.XINGBUILD_PREVIEW_TASK_ID || null,
+          port: 4317,
+        }));
+      });
+    },
+  };
+}
+
 export default defineConfig({
   define: {
     __XINGBUILD_VERSION__: JSON.stringify(`v${JSON.parse(readFileSync(new URL("./package.json", import.meta.url))).version}`),
@@ -58,5 +79,5 @@ export default defineConfig({
       clientFiles: ["./src/main.jsx"],
     },
   },
-  plugins: [isolatedDraftPreview(), react()],
+  plugins: [isolatedDraftPreview(), previewMetadata(), react()],
 });

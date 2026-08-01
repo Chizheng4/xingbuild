@@ -19,7 +19,7 @@ fi
 
 npm run check
 
-if curl --noproxy "*" --fail --silent --max-time 3 "${LOCAL_URL}" | grep -q "<title>xingbuild"; then
+if node scripts/preview-runtime.mjs check "${LOCAL_URL}"; then
   echo ""
   echo "xingbuild 已在本地运行，直接打开现有服务。"
   echo "本地网站：${LOCAL_URL}"
@@ -43,6 +43,5 @@ echo "线上网站：${ONLINE_URL}"
 echo "保持此窗口开启；按 Control-C 停止。"
 echo ""
 
-# 启动窗口只负责承载服务。关闭标准输入，避免误触 h/r/q 等字符
-# 被 Vite 解释为交互快捷键；Control-C 仍可向前台进程发送停止信号。
-npm run dev -- --host 127.0.0.1 --port 4317 --strictPort --open / </dev/null
+# 预览 supervisor 记录 worktree/commit/PID，并在退出时释放 npm/Vite 和租约。
+node scripts/preview-runtime.mjs
