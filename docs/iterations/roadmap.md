@@ -91,24 +91,28 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 **验收核心**：新增同组合页面不改页面组件和页面 CSS；桌面/紧凑/手机结构一致；关闭可选区域不留空占位；内容发布仍不改产品版本。
 
-### `v0.21.0` 候选：统一能力展示控件
+### `v0.21.0` 当前实施版本：Practice 内容独立发布能力
 
-**前置条件**：`v0.20.0` 已完成并通过公网验收，且真实内容确实出现重复的媒体/图形/互动空间需求。
+正式实施方案：[`v0.21.0 Practice内容独立发布能力方案`](../design/v0.21.0%20Practice内容独立发布能力方案.md)。
 
-**目标**：建立最小 `CapabilityHost / VisualizationHost`，让图片、视频、静态图形和受控互动能力以内容声明调用。
+**要解决的问题**：让已批准的 B 端 Practice 内容可以按单一目标独立检查、提交、push、部署和公网验收，不再与产品版本或页面工程绑定。
 
 **最小范围**：
 
-- 统一空间边界、状态、响应式投影、键盘/tap、错误和文本降级；
-- 先支持一个真实静态 figure 或媒体场景作为 pilot（试点）；
-- 保持现有 `RichDocument` 和 B端展示母版兼容。
+- `practice:scope-check -- --id <practiceId>` 目标文件与版本门禁；
+- `publish-practice.command --id <practiceId>` 内容专用发布闭环；
+- 复用现有 Practice schema、媒体 manifest、审批状态、文件/hash 和页面投影；
+- 保持产品版本/tag、页面结构、视觉系统和 Robotaxi 独立系统不变。
 
-**明确不做**：一次性支持所有 renderer、任意第三方图形运行时、自由画布或 Robotaxi 登录态嵌入。
+**明确不做**：`CapabilityHost / VisualizationHost`、LikeC4 多视图、Robotaxi embed、页面重构、Practice schema 扩展和批量发布。
 
-### `v0.22.0+` 后续候选：按真实使用选择能力
+**当前状态**：已进入唯一 `docs/iterations/current.md`，Engineering 只能按方案范围实现。
 
-只有当 v0.21.0 的实际使用暴露明确重复需求时，才分别评估：
+### `v0.22.0+` 后续候选：统一能力展示与受控互动
 
+只有当 `v0.21.0` 的真实 Practice 内容继续证明需要新的展示能力时，才分别评估：
+
+- `CapabilityHost / VisualizationHost` 统一图片、视频、静态图形和受控互动空间；
 - LikeC4 多视图浏览能力；
 - Robotaxi 受控 `/embed` 展示边界；
 - 更多 Mermaid/LikeC4 adapter 或其他开源 renderer；
@@ -147,5 +151,6 @@ xingbuild 的产品侧分流只保留以下判断：
 
 - 当前公开基线：`v0.20.0`。
 - 当前没有实施中的版本；唯一正式指针见 `docs/iterations/current.md`。
-- `v0.21.0` 仍有两个候选方向：统一能力展示控件，或 Practice 独立内容发布 CLI；必须二选一，不得混装。
+- `v0.21.0` 已选择 Practice 独立内容发布能力，唯一正式指针见 `docs/iterations/current.md`。
+- `CapabilityHost / VisualizationHost` 保留为 `v0.22.0+` 候选，不得提前混入当前版本。
 - 内容运营继续使用现有 Brief/Article 合同，不因 `v0.20.0` 改变产品版本或发布流程。
