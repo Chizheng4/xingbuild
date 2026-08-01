@@ -34,6 +34,9 @@ const requiredFiles = [
   "src/components/reading/RichDocument.jsx",
   "src/content/evergreenArticleRepository.js",
   "src/content/diagramFigureAssets.js",
+  "src/content/pageDefinitions.js",
+  "src/content/pageContentResolver.js",
+  "src/components/page-compositions/PageCompositionRenderer.jsx",
   "scripts/generate-evergreen-figures.mjs",
   "scripts/article-content-check.mjs",
   "scripts/article-scope-check.mjs",
@@ -118,6 +121,15 @@ assert(observationRepository.includes("import.meta.glob"), "published observatio
 assert(practiceRepository.includes("content/products/robotaxi.json"), "practice content must use the repository");
 const evergreenRepository = await readFile(new URL("../src/content/evergreenArticleRepository.js", import.meta.url), "utf8");
 assert(evergreenRepository.includes("content/articles/enterprise-operating-system.json"), "framework article must use the evergreen content source");
+const pageDefinitions = await readFile(new URL("../src/content/pageDefinitions.js", import.meta.url), "utf8");
+const compositionRenderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
+assert(pageDefinitions.includes("pageDefinitionRegistry"), "page definitions must expose a controlled registry");
+for (const composition of ["HomeComposition", "ShowcaseComposition", "CollectionComposition", "ReadingComposition"]) {
+  assert(pageDefinitions.includes(composition), `page definitions must register ${composition}`);
+  assert(compositionRenderer.includes(composition), `composition renderer must support ${composition}`);
+}
+assert(app.includes("findPageDefinitionByRoute"), "app routes must resolve through the page definition registry");
+assert(app.includes("PageCompositionRenderer"), "app routes must use the shared composition renderer");
 for (const route of ["/products", "/business-observations", "/observations", "/about"]) {
   assert(app.includes(route), `app must include the ${route} route`);
 }

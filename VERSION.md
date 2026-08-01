@@ -1,8 +1,14 @@
 # xingbuild 版本记录
 
+## v0.20.0 — 页面定义注册与既有页面组合渲染
+
+- 当前状态：页面定义 registry、四种既有组合 renderer、`/about` 迁移与同组合 fixture 已实现；自动检查、六档本地页面验证和产品/视觉独立验收完成，尚未推送 GitHub、部署或公网验收。
+- 范围仅建立受控 `PageDefinition` registry 与共享 composition renderer，保持既有 URL、内容对象、视觉 token、Header、Footer、ReturnNavigation、Observation/Article schema 和发布命令不变。
+- 不实现 `VisualizationHost`、`CapabilityHost`、LikeC4 原生 runtime、自由画布或 Robotaxi embed；不迁移全部页面、不删除旧实现、不修改内容事实。
+
 ## v0.19.0 — 企业经营体系常青长文与图形内容能力
 
-- 当前状态：Engineering 实现与本地验证中；尚未提交、tag、推送、部署或公网验收。
+- 当前状态：已发布并完成公网验收；发布 commit/tag 为 `43a08ab6200405c753b5766f75f544827a1e38e8` / `v0.19.0`。
 - 范围仅将企业经营体系迁移为内容驱动的常青文章、共享目录与构建期静态 SVG figure，并建立后续单 slug 文章内容发布边界。
 - 不修改上游企业经营事实、网站结构、Robotaxi、Observation Brief、Header、Footer 或其他 backlog。
 

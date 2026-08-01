@@ -11,6 +11,7 @@
 | `design/` | 已确认的视觉与交互原则 | 经确认后修改 |
 | `explorations/` | 尚在分析、比较和确认中的方案 | 可以持续迭代 |
 | `iterations/current.md` | 当前唯一正式迭代指针 | 只由实施迭代更新 |
+| `iterations/roadmap.md` | 已确认方向的版本队列和跨版本协作合同 | 产品方案确认后更新，不代表当前实现 |
 | `iterations/history/` | 已完成版本的计划和结果 | 只追加，不回写 |
 | `upstream/` | career、Robotaxi 等上游事实快照与同步说明 | 按上游同步规则修改 |
 | `qa/` | 按版本保存的设计验证结论和必要证据 | 完成验证时追加 |
@@ -31,12 +32,19 @@
 
 页面实现只进入 `src/`；构建与发布辅助进入 `scripts/`；Worker 和兼容测试分别进入 `worker/` 与 `tests/`。
 
-## 当前设计探索
+## 当前唯一产品与视觉基线
 
-- [网站出版体系、品牌与视觉方向](explorations/网站出版体系、品牌与视觉方向.md)
+- [xingbuild 网站产品架构与视觉系统总案](product/xingbuild%20网站产品架构与视觉系统总案.md)
+- [产品能力迭代路线图与版本计划](iterations/roadmap.md)
 
-## 当前设计基线
+产品与视觉 task、Engineering 和内容 task 都必须先读取这份主文档。它是当前唯一的产品/视觉入口；旧版本方案不能与本文并列作为现行事实源。
 
-- [xingbuild Visual System v1](design/xingbuild%20Visual%20System%20v1.md)
-- [v0.4.0 视觉系统工程化升级方案](design/v0.4.0%20视觉系统工程化升级方案.md)
-- [v0.4.0 Engineering task 执行指令](design/v0.4.0%20Engineering%20task%20执行指令.md)
+## 历史设计与未确认草案
+
+- `design/v*.md`：对应版本的历史方案，保留用于追溯，不指导当前实现。
+- `product/个人网站定位、内容与信息架构设计 v1.0.md`：早期产品定位方案，保留用于追溯，不指导当前实现。
+- [网站出版体系、品牌与视觉方向](explorations/网站出版体系、品牌与视觉方向.md)：早期探索，保留作为来源记录。
+- [x.ai 式产品能力展示与视觉表达迭代方案（DRAFT）](design/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md)：候选能力细节；版本先后和进入条件以路线图为准，确认前不得进入 `current.md` 或 Engineering。
+- [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：当前已确认实施方案；具体实现状态以 `current.md` 和 Engineering 回传为准。
+- [企业经营体系架构视图与文章图形表达方案（DRAFT）](design/DRAFT-企业经营体系架构视图与文章图形表达方案.md)：跨 task 边界尚未完全收口前保留；确认后应将有效决策归入主文档并删除或归档。
+- `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。

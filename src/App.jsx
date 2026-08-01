@@ -1,17 +1,15 @@
 import { lazy, Suspense, useEffect } from "react";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import { HomePage } from "./pages/HomePage";
 import { RobotaxiPage } from "./pages/RobotaxiPage";
-import { ProductsPage } from "./pages/ProductsPage";
-import { ObservationsPage } from "./pages/ObservationsPage";
 import { ObservationPage } from "./pages/ObservationPage";
 import { DraftObservationPage } from "./pages/DraftObservationPage";
-import { AboutPage } from "./pages/AboutPage";
 import { SiteFooter } from "./components/site/SiteFooter";
 import { SiteHeader } from "./components/site/SiteHeader";
+import { PageCompositionRenderer } from "./components/page-compositions/PageCompositionRenderer";
 import { navigate, useLocation } from "./lib/navigation";
 import { site } from "./content/siteContent";
 import { findObservation } from "./content/observationRepository";
+import { findPageDefinitionByRoute } from "./content/pageDefinitions";
 import { startVisitQualification } from "./lib/visitQualification";
 
 const BusinessObservationsPage = lazy(() => import("./pages/BusinessObservationsPage").then((module) => ({ default: module.BusinessObservationsPage })));
@@ -19,12 +17,9 @@ const FRAMEWORK_BASE = "/enterprise-operating-framework";
 
 function resolvePage(location) {
   const { pathname } = location;
-  if (pathname === "/") return <HomePage />;
-  if (pathname === "/products") return <ProductsPage />;
-  if (pathname === "/business-observations") return <BusinessObservationsPage />;
+  const definition = findPageDefinitionByRoute(pathname);
+  if (definition) return <PageCompositionRenderer definition={definition} location={location} />;
   if (pathname === FRAMEWORK_BASE) return <BusinessObservationsPage />;
-  if (pathname === "/observations") return <ObservationsPage location={location} />;
-  if (pathname === "/about") return <AboutPage />;
 
   if (pathname.startsWith("/observations/")) {
     const slug = pathname.split("/")[2];
