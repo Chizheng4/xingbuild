@@ -25,6 +25,10 @@ export async function validateEvergreenArticle(article, { expectedSlug } = {}) {
   for (const field of ["id", "title", "summary", "updatedAt"]) if (!article?.[field]) errors.push(`article ${field} is required`);
   if (article?.status !== "published") errors.push("article status must be published");
   if (!Array.isArray(article?.blocks) || !article.blocks.length) errors.push("article requires blocks");
+  const architectureViews = article?.blocks?.filter((block) => block.type === "architectureViews") ?? [];
+  if (architectureViews.some((block) => block.id !== "enterprise-architecture-views" || Object.keys(block).some((key) => !["type", "id"].includes(key)))) {
+    errors.push("architecture views require the single controlled enterprise entry");
+  }
   const headingIds = article?.blocks?.filter((block) => block.type === "heading" && [2, 3].includes(block.level)).map((block) => block.id) ?? [];
   if (!headingIds.length || headingIds.some((id) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id))) errors.push("H2/H3 headings need stable anchor ids");
   if (new Set(headingIds).size !== headingIds.length) errors.push("article heading anchors must be unique");

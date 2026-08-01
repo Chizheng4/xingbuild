@@ -3,7 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import process from "node:process";
-import { evaluateProductReleaseReadiness } from "./lib/release-readiness.mjs";
+import { evaluateProductReleaseReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
 
 function git(...args) {
   try {
@@ -24,7 +24,7 @@ const result = evaluateProductReleaseReadiness({
   statusEntries: git("status", "--porcelain").split("\n"),
   packageVersion: packageJson.version,
   versionRecord: versionRecord.match(/^##\s+(v\d+\.\d+\.\d+)\b/m)?.[1],
-  currentVersion: currentIteration.match(/## 当前目标版本\s*\n\s*`(v\d+\.\d+\.\d+)`/)?.[1],
+  currentVersion: parseCurrentIterationVersion(currentIteration),
   headTag: git("describe", "--tags", "--exact-match", "HEAD"),
   origin: git("remote", "get-url", "origin"),
 });

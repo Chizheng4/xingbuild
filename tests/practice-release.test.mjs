@@ -194,15 +194,15 @@ test("public Practice verification aligns release, manifest, target modules and 
   }), /target Practice public projection/);
 });
 
-test("v0.21 product records are synchronized while Practice publishing remains version-neutral", async () => {
+test("current product records are synchronized while Practice publishing remains version-neutral", async () => {
   const [packageJson, packageLock, versionRecord] = await Promise.all([
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
     readFile(new URL("../VERSION.md", import.meta.url), "utf8"),
   ]);
-  assert.equal(JSON.parse(packageJson).version, "0.21.0");
-  assert.equal(JSON.parse(packageLock).version, "0.21.0");
-  assert.match(versionRecord, /## v0\.21\.0/);
+  assert.equal(JSON.parse(packageJson).version, "0.22.0");
+  assert.equal(JSON.parse(packageLock).version, "0.22.0");
+  assert.match(versionRecord, /## v0\.22\.0/);
   assert.ok(readiness({ currentVersion: "0.21.1" }).errors.includes("Practice publication must not change product version"));
 });
 

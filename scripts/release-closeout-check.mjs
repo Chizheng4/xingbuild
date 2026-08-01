@@ -3,7 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import process from "node:process";
-import { evaluateCloseoutReadiness } from "./lib/release-readiness.mjs";
+import { evaluateCloseoutReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -22,7 +22,7 @@ const result = evaluateCloseoutReadiness({
   untrackedEntries: git("ls-files", "--others", "--exclude-standard").split("\n"),
   packageVersion: packageJson.version,
   versionRecord: versionRecord.match(/^##\s+(v\d+\.\d+\.\d+)\b/m)?.[1],
-  currentVersion: currentIteration.match(/## 当前目标版本\s*\n\s*`(v\d+\.\d+\.\d+)`/)?.[1],
+  currentVersion: parseCurrentIterationVersion(currentIteration),
 });
 
 if (!result.ready) {

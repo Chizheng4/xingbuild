@@ -1,16 +1,17 @@
 {
   "name": "xingbuild",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "framework:data": "node scripts/generate-digital-architecture.mjs",
+    "architecture:views": "node scripts/generate-enterprise-architecture-views.mjs",
     "article:figures": "node scripts/generate-evergreen-figures.mjs",
     "article:check": "node scripts/article-content-check.mjs",
     "article:scope-check": "node scripts/article-scope-check.mjs",
     "framework:layout": "node scripts/generate-framework-layout.mjs",
-    "build": "npm run article:figures && vite build && node scripts/prepare-sites-build.mjs",
+    "build": "npm run architecture:views && npm run article:figures && vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/*.test.mjs",
     "check": "node scripts/check-project.mjs",
@@ -38,11 +39,11 @@
     "elkjs": "0.11.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "vite": "6.4.2"
+    "vite": "6.4.2",
+    "likec4": "1.59.2"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
-    "edgeone": "1.6.17",
-    "likec4": "1.59.2"
+    "edgeone": "1.6.17"
   }
 }

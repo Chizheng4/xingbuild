@@ -1,5 +1,9 @@
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
 
+export function parseCurrentIterationVersion(currentIteration = "") {
+  return currentIteration.match(/## 当前(?:唯一|目标)版本[：:]?\s*(?:\n\s*)?`(v\d+\.\d+\.\d+)`/)?.[1];
+}
+
 function normalizedEntries(statusEntries = []) {
   return statusEntries.filter(Boolean).map((entry) => String(entry));
 }

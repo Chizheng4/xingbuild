@@ -11,6 +11,7 @@ const page = await readFile(new URL("../src/pages/FrameworkPage.jsx", import.met
 const articleComponent = await readFile(new URL("../src/components/reading/EvergreenArticle.jsx", import.meta.url), "utf8");
 const toc = await readFile(new URL("../src/components/reading/ReadingTOC.jsx", import.meta.url), "utf8");
 const richDocument = await readFile(new URL("../src/components/reading/RichDocument.jsx", import.meta.url), "utf8");
+const architectureReader = await readFile(new URL("../src/components/reading/EnterpriseArchitectureViews.jsx", import.meta.url), "utf8");
 const layout = await readFile(new URL("../src/styles/layout.css", import.meta.url), "utf8");
 const styles = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 const articleScope = await readFile(new URL("../scripts/article-scope-check.mjs", import.meta.url), "utf8");
@@ -23,6 +24,7 @@ test("enterprise operating system is a content-driven evergreen article", async 
     "enterprise-operating-system", "system-boundary", "operating-and-architecture-design", "digital-implementation", "operations-facts-results", "analysis-and-feedback", "sources-and-fact-boundary",
   ]);
   assert.ok(article.blocks.some((block) => block.type === "figure" && block.renderer === "likec4" && block.layoutPreset === "reader" && block.sourcePath.endsWith(".c4") && !block.src && !block.mobileSrc));
+  assert.deepEqual(article.blocks.filter((block) => block.type === "architectureViews").map((block) => block.id), ["enterprise-architecture-views"]);
   assert.match(page, /<EvergreenArticle article=\{article\}/);
   assert.match(articleComponent, /<ReadingTOC blocks=\{article\.blocks\}/);
   assert.match(articleComponent, /<RichDocument blocks=\{article\.blocks\}/);
@@ -32,6 +34,8 @@ test("public framework route no longer reads an architecture graph runtime", () 
   assert.doesNotMatch(page, /FrameworkExplorer|ArchitectureExplorer|FrameworkGraphRuntime|frameworkModel/);
   assert.doesNotMatch(app, /frameworkModel|FrameworkExplorer|ArchitectureExplorer/);
   assert.match(app, /navigate\("\/business-observations#digital-implementation", \{ replace: true, scroll: false \}\)/);
+  assert.match(architectureReader, /LikeC4Reader/);
+  assert.doesNotMatch(architectureReader, /ArchitectureExplorer|FrameworkGraphRuntime/);
 });
 
 test("the shared TOC uses anchors, desktop sticky navigation and native mobile details", () => {

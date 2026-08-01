@@ -1,5 +1,11 @@
 # xingbuild 版本记录
 
+## v0.22.0 — 企业经营体系多视图架构阅读能力
+
+- 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。
+- 范围仅为企业经营体系文章内 LikeC4 只读多视图：总览、业务、数字化与 B 端产品架构，以及稳定进入、返回、焦点恢复和响应式文本降级。
+- 不实现通用 CapabilityHost/VisualizationHost 平台，不改 Robotaxi、Practice、Observation、Article 内容事实、全站主题或内容发布合同。
+
 ## v0.21.0 — Practice 内容独立发布能力
 
 - 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。

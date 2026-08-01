@@ -1,0 +1,55 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "xingbuild-enterprise-operating-system",
+  "inferTechnologyFromIcon": false,
+  "styles": {
+    "theme": {
+      "colors": {
+        "primary": {
+          "elements": {
+            "fill": "#f1e7d8",
+            "stroke": "#6f513c",
+            "hiContrast": "#2c211b",
+            "loContrast": "#6f6257"
+          },
+          "relationships": {
+            "line": "#7c624e",
+            "label": "#4c392b",
+            "labelBg": "#f7f0e6"
+          }
+        },
+        "secondary": {
+          "elements": {
+            "fill": "#e9dfd2",
+            "stroke": "#856c57",
+            "hiContrast": "#382a20",
+            "loContrast": "#74675a"
+          },
+          "relationships": {
+            "line": "#93755d",
+            "label": "#584434",
+            "labelBg": "#faf4eb"
+          }
+        }
+      },
+      "sizes": {
+        "xs": { "width": 180, "height": 80 }
+      }
+    },
+    "defaults": {
+      "color": "primary",
+      "size": "xs",
+      "border": "solid",
+      "relationship": {
+        "color": "primary",
+        "line": "solid",
+        "arrow": "normal"
+      }
+    }
+  },
+  "metadata": {
+    "semanticSource": "src/content/frameworkModel.js",
+    "articleSlug": "enterprise-operating-system",
+    "viewIds": ["landscape", "business", "digital", "product"]
+  }
+}

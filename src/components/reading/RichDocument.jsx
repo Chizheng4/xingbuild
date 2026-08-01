@@ -1,6 +1,7 @@
 import { Link } from "../../lib/navigation";
 import { classifySourceUrl } from "../../content/sourceUrls";
 import { diagramFigureAssets } from "../../content/diagramFigureAssets";
+import { EnterpriseArchitectureViews } from "./EnterpriseArchitectureViews.jsx";
 
 function SourceLinks({ sources = [], prefix = "来源：" }) {
   return <p className="rich-document__sources">{prefix}{sources.map((source, index) => {
@@ -24,6 +25,7 @@ export function RichDocument({ blocks = [], sources }) {
           <picture>{assets ? <source media="(max-width: 32.4375rem)" srcSet={assets.mobile} /> : null}<img src={assets?.desktop} alt={block.alt} /></picture>
           <figcaption>{block.caption}</figcaption>
         </figure>; }
+        if (block.type === "architectureViews") return <EnterpriseArchitectureViews key={block.id} />;
         if (block.type === "link") return <p key={index}><Link href={block.href}>{block.text}</Link></p>;
         return null;
       })}

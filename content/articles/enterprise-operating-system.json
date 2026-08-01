@@ -16,6 +16,7 @@
     { "type": "heading", "level": 2, "id": "digital-implementation", "text": "数字化实现" },
     { "type": "paragraph", "text": "数字化实现承接企业业务架构提出的需求。B端产品架构与数据架构协同设计、相互约束，共同驱动技术架构；工程实现将其转化为企业数字化系统，系统进入企业现实，支持或在授权和规则范围内执行业务活动。" },
     { "type": "figure", "sourcePath": "src/architecture/digital-implementation/model.c4", "renderer": "likec4", "layoutPreset": "reader", "alt": "数字化实现从企业业务架构经产品、数据、技术和工程进入企业运作，并把事实和分析反馈回业务架构的关系图。", "caption": "数字化实现的九个对象与十三条关系；按从业务设计到工程实现、经营运行与反馈的顺序阅读。" },
+    { "type": "architectureViews", "id": "enterprise-architecture-views" },
     { "type": "heading", "level": 2, "id": "operations-facts-results", "text": "企业运作、事实与经营结果" },
     { "type": "paragraph", "text": "企业运作是业务活动与支撑活动的实际执行。事实记录已经发生并可验证的状态、事件、活动、资源投入和数量；经营结果是在明确范围和期间内形成的可验证后果。数字化系统记录其中可以数字化的部分，但记录不等于全部企业现实。" },
     { "type": "heading", "level": 2, "id": "analysis-and-feedback", "text": "经营分析与反馈" },

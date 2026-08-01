@@ -13,6 +13,7 @@ import {
   evaluateCloseoutReadiness,
   evaluateProductReleaseReadiness,
   expectedOrigin,
+  parseCurrentIterationVersion,
 } from "../scripts/lib/release-readiness.mjs";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname);
@@ -708,6 +709,18 @@ test("product release readiness requires a clean, tagged, version-consistent rep
   assert.equal(blocked.blockers.length, 2);
   assert.match(blocked.blockers[0], /2 项未提交修改/);
   assert.match(blocked.blockers[1], /HEAD 标签/);
+});
+
+test("release gates parse both current iteration heading conventions", () => {
+  assert.equal(
+    parseCurrentIterationVersion("## 当前唯一版本：`v0.22.0`"),
+    "v0.22.0",
+  );
+  assert.equal(
+    parseCurrentIterationVersion("## 当前目标版本\n\n`v0.12.2`"),
+    "v0.12.2",
+  );
+  assert.equal(parseCurrentIterationVersion("## 其他版本\n\n`v0.22.0`"), undefined);
 });
 
 test("version closeout stops before commit when work remains outside the staged scope", () => {

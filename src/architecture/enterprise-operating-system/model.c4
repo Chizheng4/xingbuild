@@ -1,0 +1,125 @@
+// This view model is an editable LikeC4 projection of the approved frameworkModel.
+// It intentionally contains only identifiers, reader labels and directed relationships.
+specification {
+  element landscape
+  element business
+  element digital
+  element product
+}
+
+model {
+  external-context = landscape '外部环境、利益相关者与需求'
+  operation-design = landscape '经营与架构设计'
+  digital-implementation = landscape '数字化实现'
+  enterprise-reality = landscape '企业现实'
+  enterprise-operation = landscape '企业运作'
+  operating-facts-results = landscape '事实与经营结果'
+  operating-decision = landscape '经营分析与决策'
+
+  business-trigger = business '利益相关者需求 / 业务事件'
+  value-stream = business '价值流'
+  capability-resource = business '企业能力与资源'
+  responsibility = business '企业职能归类 / 组织承担'
+  business-process = business '业务流程'
+  business-rule = business '业务规则'
+  business-object-state = business '业务对象的状态与关系'
+  business-facts-results = business '事实与结果'
+  business-metric = business '指标'
+  target-gap = business '价值流结果与经营目标差距'
+
+  enterprise-business-architecture = digital '企业业务架构'
+  b2b-product-architecture = product 'B 端产品架构'
+  data-architecture = digital '数据架构'
+  technical-architecture = digital '技术架构'
+  engineering = digital '工程实现'
+  enterprise-digital-system = digital '企业数字化系统'
+  enterprise-reality-operation = digital '企业现实中的企业运作'
+  digital-facts-results = digital '事实与经营结果'
+  digital-decision = digital '经营分析与决策'
+
+  external-context -> operation-design '影响' { metadata { id 'op-external-design' } }
+  external-context -> enterprise-reality '构成现实条件' { metadata { id 'op-external-reality' } }
+  operation-design -> enterprise-reality '建设和调整' { metadata { id 'op-design-reality' } }
+  operation-design -> digital-implementation '提出数字化需求' { metadata { id 'op-design-digital' } }
+  digital-implementation -> enterprise-reality '形成系统并进入' { metadata { id 'op-digital-reality' } }
+  enterprise-reality -> enterprise-operation '进行' { metadata { id 'op-reality-operation' } }
+  enterprise-operation -> operating-facts-results '产生' { metadata { id 'op-operation-facts' } }
+  operating-facts-results -> operating-decision '支持' { metadata { id 'op-facts-decision' } }
+  operating-decision -> operation-design '调整选择与设计' { metadata { id 'op-decision-design' } }
+  operating-decision -> enterprise-operation '影响后续运作' { metadata { id 'op-decision-operation' } }
+
+  business-trigger -> value-stream '触发' { metadata { id 'bd-trigger-value' } }
+  value-stream -> capability-resource '需要' { metadata { id 'bd-value-capability' } }
+  capability-resource -> business-process '通过流程落实' { metadata { id 'bd-capability-process' } }
+  business-process -> business-object-state '改变' { metadata { id 'bd-process-object' } }
+  business-object-state -> business-facts-results '产生' { metadata { id 'bd-object-facts' } }
+  responsibility -> capability-resource '归类并承担' { metadata { id 'bd-responsibility-capability' } }
+  business-rule -> business-process '约束行为与判断' { metadata { id 'bd-rule-process' } }
+  business-rule -> business-object-state '约束关系与状态变化' { metadata { id 'bd-rule-object' } }
+  business-facts-results -> business-metric '提供计算依据' { metadata { id 'bd-facts-metric' } }
+  business-metric -> target-gap '衡量并比较' { metadata { id 'bd-metric-gap' } }
+  target-gap -> capability-resource '调整能力与资源' { metadata { id 'bd-gap-capability' } }
+  target-gap -> business-process '调整流程' { metadata { id 'bd-gap-process' } }
+  target-gap -> business-rule '调整规则' { metadata { id 'bd-gap-rule' } }
+
+  enterprise-business-architecture -> b2b-product-architecture '提出数字化需求' { metadata { id 'di-business-product' } }
+  enterprise-business-architecture -> data-architecture '提出数字化需求' { metadata { id 'di-business-data' } }
+  b2b-product-architecture -> data-architecture '协同设计' { metadata { id 'di-product-data' } }
+  data-architecture -> b2b-product-architecture '相互约束' { metadata { id 'di-data-product' } }
+  b2b-product-architecture -> technical-architecture '共同驱动' { metadata { id 'di-product-tech' } }
+  data-architecture -> technical-architecture '共同驱动' { metadata { id 'di-data-tech' } }
+  technical-architecture -> engineering '指导实现' { metadata { id 'di-tech-engineering' } }
+  engineering -> enterprise-digital-system '形成' { metadata { id 'di-engineering-system' } }
+  enterprise-digital-system -> enterprise-reality-operation '进入并支持或执行' { metadata { id 'di-system-reality' } }
+  enterprise-reality-operation -> digital-facts-results '产生' { metadata { id 'di-reality-facts' } }
+  enterprise-digital-system -> digital-facts-results '记录' { metadata { id 'di-system-facts' } }
+  digital-facts-results -> digital-decision '支持' { metadata { id 'di-facts-decision' } }
+  digital-decision -> enterprise-business-architecture '调整业务架构' { metadata { id 'di-decision-business' } }
+}
+
+views {
+  view landscape {
+    include external-context
+    include operation-design
+    include digital-implementation
+    include enterprise-reality
+    include enterprise-operation
+    include operating-facts-results
+    include operating-decision
+    autoLayout TopBottom
+  }
+  view business {
+    include business-trigger
+    include value-stream
+    include capability-resource
+    include responsibility
+    include business-process
+    include business-rule
+    include business-object-state
+    include business-facts-results
+    include business-metric
+    include target-gap
+    autoLayout TopBottom
+  }
+  view digital {
+    include enterprise-business-architecture
+    include b2b-product-architecture
+    include data-architecture
+    include technical-architecture
+    include engineering
+    include enterprise-digital-system
+    include enterprise-reality-operation
+    include digital-facts-results
+    include digital-decision
+    autoLayout TopBottom
+  }
+  view product {
+    include enterprise-business-architecture
+    include b2b-product-architecture
+    include data-architecture
+    include technical-architecture
+    include engineering
+    include enterprise-digital-system
+    autoLayout TopBottom
+  }
+}
