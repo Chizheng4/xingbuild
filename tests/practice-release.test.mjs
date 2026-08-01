@@ -200,9 +200,10 @@ test("current product records are synchronized while Practice publishing remains
     readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
     readFile(new URL("../VERSION.md", import.meta.url), "utf8"),
   ]);
-  assert.equal(JSON.parse(packageJson).version, "0.22.0");
-  assert.equal(JSON.parse(packageLock).version, "0.22.0");
-  assert.match(versionRecord, /## v0\.22\.0/);
+  const currentVersion = JSON.parse(packageJson).version;
+  assert.equal(currentVersion, "0.23.0");
+  assert.equal(JSON.parse(packageLock).version, currentVersion);
+  assert.match(versionRecord, new RegExp(`## v${currentVersion.replace(".", "\\.")}`));
   assert.ok(readiness({ currentVersion: "0.21.1" }).errors.includes("Practice publication must not change product version"));
 });
 

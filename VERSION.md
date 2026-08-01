@@ -1,5 +1,11 @@
 # xingbuild 版本记录
 
+## v0.23.0 — 统一能力展示控件与可组合表达
+
+- 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。
+- 范围仅建立声明式 CapabilityStage/VisualizationHost、统一状态/失败降级与响应式能力空间，并用既有图形和 Showcase/SystemStage 做 fixture。
+- 不修改 Robotaxi 上游、Observation/Practice schema、主题、一级导航、公开运营内容或内容发布边界。
+
 ## v0.22.0 — 企业经营体系多视图架构阅读能力
 
 - 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。

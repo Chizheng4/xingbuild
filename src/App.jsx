@@ -11,12 +11,14 @@ import { site } from "./content/siteContent";
 import { findObservation } from "./content/observationRepository";
 import { findPageDefinitionByRoute } from "./content/pageDefinitions";
 import { startVisitQualification } from "./lib/visitQualification";
+import { CapabilityFixturePage } from "./pages/CapabilityFixturePage";
 
 const BusinessObservationsPage = lazy(() => import("./pages/BusinessObservationsPage").then((module) => ({ default: module.BusinessObservationsPage })));
 const FRAMEWORK_BASE = "/enterprise-operating-framework";
 
 function resolvePage(location) {
   const { pathname } = location;
+  if (pathname === "/__fixtures__/capability-stage") return <CapabilityFixturePage />;
   const definition = findPageDefinitionByRoute(pathname);
   if (definition) return <PageCompositionRenderer definition={definition} location={location} />;
   if (pathname === FRAMEWORK_BASE) return <BusinessObservationsPage />;
