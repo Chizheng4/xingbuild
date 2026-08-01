@@ -91,7 +91,7 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 **验收核心**：新增同组合页面不改页面组件和页面 CSS；桌面/紧凑/手机结构一致；关闭可选区域不留空占位；内容发布仍不改产品版本。
 
-### `v0.21.0` 当前实施版本：Practice 内容独立发布能力
+### `v0.21.0` 已完成版本：Practice 内容独立发布能力
 
 正式实施方案：[`v0.21.0 Practice内容独立发布能力方案`](../design/v0.21.0%20Practice内容独立发布能力方案.md)。
 
@@ -106,7 +106,9 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 **明确不做**：`CapabilityHost / VisualizationHost`、LikeC4 多视图、Robotaxi embed、页面重构、Practice schema 扩展和批量发布。
 
-**当前状态**：已进入唯一 `docs/iterations/current.md`，Engineering 只能按方案范围实现。
+**结果**：已完成并公开验收。建立了单一 Practice id 的独立检查、提交、push、部署和公网验收能力；产品版本/tag、页面结构、视觉系统和 Robotaxi 独立系统均未被内容发布改变。完整结果见 [`docs/iterations/history/v0.21.0.md`](history/v0.21.0.md)。
+
+**发布结果**：commit/tag 为 `6493f43a7504a78113f2cd0c5dff2b2894a24e34` / `v0.21.0`；GitHub、EdgeOne 和公网 release/content manifest 已对齐；当前没有公开 Practice module，未执行 Practice 内容发布。
 
 ### `v0.22.0+` 后续候选：统一能力展示与受控互动
 
@@ -149,8 +151,7 @@ xingbuild 的产品侧分流只保留以下判断：
 
 ## 9. 当前状态与下一动作
 
-- 当前公开基线：`v0.20.0`。
-- 当前没有实施中的版本；唯一正式指针见 `docs/iterations/current.md`。
-- `v0.21.0` 已选择 Practice 独立内容发布能力，唯一正式指针见 `docs/iterations/current.md`。
-- `CapabilityHost / VisualizationHost` 保留为 `v0.22.0+` 候选，不得提前混入当前版本。
-- 内容运营继续使用现有 Brief/Article 合同，不因 `v0.20.0` 改变产品版本或发布流程。
+- 当前公开基线：`v0.21.0`。
+- 当前没有实施中的版本；`docs/iterations/current.md` 已清空当前指针，完整结果见 `history/v0.21.0.md`。
+- `v0.22.0+` 的 CapabilityHost / VisualizationHost、LikeC4 多视图、Robotaxi `/embed` 和更多 renderer 仍是候选，必须由真实使用证据和正式方案决定，不能自动开启。
+- 内容运营继续使用现有 Brief/Article 合同，不因 `v0.21.0` 改变产品版本或发布流程；Practice 内容可在批准后使用已发布的独立命令。
