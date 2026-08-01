@@ -628,7 +628,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 `docs/design/xingbuild Visual System v1.md` 和 `docs/design/视觉系统与交互原则.md` 的有效内容已经吸收到本文。前者保留为历史视觉快照，后者只作为兼容入口，不得继续追加新规则。
 
-当前跨项目交接草案 `docs/design/DRAFT-企业经营体系架构视图与文章图形表达方案.md` 在 Robotaxi 产品管理 task 完成边界确认前保留；确认后应把有效决策归入本文并删除或精确归档该草案，避免形成第二真值。
+企业经营体系多视图方案已在 `docs/design/v0.22.0 企业经营体系多视图架构阅读能力方案.md` 正式落点；本总案仍是长期产品/视觉事实源，版本方案只承载本次实施范围与验收，不形成第二份网站总架构。
 
 ### 12.4 删除门禁
 

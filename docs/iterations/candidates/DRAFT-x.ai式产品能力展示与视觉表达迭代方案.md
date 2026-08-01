@@ -3,7 +3,7 @@
 > 候选 ID：XBUILD-CAPABILITY-001
 > 状态：DRAFT（草案，待用户确认）
 > 责任：xingbuild 产品与视觉 task  继承：`docs/product/xingbuild 网站产品架构与视觉系统总案.md`
-> 目标后续版本：`v0.22.0+` 候选，不是当前版本授权
+> 目标后续版本：`v0.23.0+` 候选，不是当前版本授权
 > 当前边界：只做学习、产品方案、视觉方案和验收合同；不改代码、`current.md`、VERSION、依赖、tag、Git、部署或生产内容。
 
 > 归属说明：页面产品架构与组合合同已于 2026-08-01 写入唯一现行总案。本文不再拥有页面结构的第二份真值，只保留 x.ai 能力展示机制与后续 `CapabilityStage / VisualizationHost` 的候选细节。
@@ -318,7 +318,7 @@ Brief 只可以在未来引用一个已批准的能力展示对象；没有必�
 
 不做：代码、current、VERSION、依赖、内容发布、Robotaxi 工程修改。
 
-### 阶段 1：候选 `v0.22.0+`——统一能力展示控件
+### 阶段 1：候选 `v0.23.0+`——统一能力展示控件
 
 建议只做一个最小产品版本：
 
@@ -395,7 +395,7 @@ Engineering 只在本文确认并进入 `current.md` 后开始实现。
 ## 9. 当前未决事项
 
 1. `SystemStage` 是直接演进为统一能力控件，还是由新的 `CapabilityStage` 包装；
-2. `v0.22.0+` 首个 pilot 选择 Robotaxi 互动模块还是文章图形；
+2. `v0.23.0+` 首个 pilot 选择 Robotaxi 互动模块还是文章图形；
 3. LikeC4 原生 runtime 是统一能力控件的首个 adapter，还是作为后续独立能力；
 4. Robotaxi 受控互动空间是否需要独立 `/embed`；
 5. x.ai 式演示是否需要独立的“状态说明/结果栏”，还是复用现有文章和模块说明；

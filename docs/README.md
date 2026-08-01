@@ -49,6 +49,6 @@
 - [x.ai 式产品能力展示与视觉表达迭代方案（DRAFT）](iterations/candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md)：候选能力细节；版本先后和进入条件以路线图为准，确认前不得进入 `current.md` 或 Engineering。
 - [v0.21.0 Practice 内容独立发布能力方案](design/v0.21.0%20Practice内容独立发布能力方案.md)：当前已确认实施方案；具体实现状态以 `current.md` 和 Engineering 回传为准。
 - [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：已完成版本方案，结果见 `iterations/history/v0.20.0.md`。
-- [企业经营体系架构视图与文章图形表达方案（DRAFT）](iterations/candidates/DRAFT-企业经营体系架构视图与文章图形表达方案.md)：跨 task 边界尚未完全收口前保留；确认后应转为正式版本方案，未确认前不进入 `current.md` 或 Engineering。
+- [v0.22.0 企业经营体系多视图架构阅读能力方案](design/v0.22.0%20企业经营体系多视图架构阅读能力方案.md)：当前正式产品/视觉合同，唯一版本入口见 `iterations/current.md`。
 - [内容运营与发布问题清单](operations/内容运营与发布问题清单.md)：候选采集、事实审核、单条发布和公网验收问题的唯一 tracked 入口；治理标签不投影到读者界面。
 - `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。

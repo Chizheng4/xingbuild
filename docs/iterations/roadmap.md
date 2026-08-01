@@ -110,7 +110,24 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 **发布结果**：commit/tag 为 `6493f43a7504a78113f2cd0c5dff2b2894a24e34` / `v0.21.0`；GitHub、EdgeOne 和公网 release/content manifest 已对齐；当前没有公开 Practice module，未执行 Practice 内容发布。
 
-### `v0.22.0+` 后续候选：统一能力展示与受控互动
+### `v0.22.0` 当前版本：企业经营体系多视图架构阅读能力
+
+正式方案：[`v0.22.0 企业经营体系多视图架构阅读能力方案`](../design/v0.22.0%20企业经营体系多视图架构阅读能力方案.md)。
+
+**要解决的问题**：企业经营体系此前被压成一张静态图，层级、边界、关系类型和下钻路径不可读；本版本用同一语义源驱动 LikeC4 多视图阅读能力。
+
+**最小范围**：
+
+- 企业经营体系文章内的架构视图入口；
+- Landscape、Business、Digital、Product 四个视图；
+- 只读进入/返回、焦点恢复、键盘/触控、移动分层/文本降级；
+- LikeC4 validate/codegen/runtime、失败清理旧产物、六档响应式验收。
+
+**明确不做**：通用 CapabilityHost 全平台、Robotaxi embed/登录、Mermaid/D2 新 adapter、B 端主页重构、Observation/Practice 内容模型或全站主题改变。
+
+**状态**：已写入 `docs/iterations/current.md`，Engineering 只按正式方案实现。版本完成后才创建 history 并决定后续候选。
+
+### `v0.23.0+` 后续候选：统一能力展示与受控互动
 
 只有当 `v0.21.0` 的真实 Practice 内容继续证明需要新的展示能力时，才分别评估：
 
@@ -126,8 +143,8 @@ history/v{version}.md：记录已经完成了什么和学到了什么
 
 | 候选 ID | 文件 | 状态 | 进入条件 |
 | --- | --- | --- | --- |
-| `XBUILD-CAPABILITY-001` | [`iterations/candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md`](candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md) | `DRAFT` | 真实内容/页面重复需求证明需要统一能力展示控件 |
-| `XBUILD-ARCH-VIEWS-001` | [`iterations/candidates/DRAFT-企业经营体系架构视图与文章图形表达方案.md`](candidates/DRAFT-企业经营体系架构视图与文章图形表达方案.md) | `DRAFT` | 企业架构阅读问题与 Robotaxi 上游边界共同确认，并形成单一最小视图合同 |
+| `XBUILD-CAPABILITY-001` | [`iterations/candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md`](candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md) | `DRAFT` | v0.22.0 真实使用证明需要统一图片、视频、图形和受控互动展示控件 |
+| `XBUILD-ARCH-VIEWS-001` | [`design/v0.22.0 企业经营体系多视图架构阅读能力方案.md`](../design/v0.22.0%20企业经营体系多视图架构阅读能力方案.md) | `selected / current` | 已转正式方案并写入 current；完成 v0.22.0 后归档 |
 
 ## 5. 版本排队与文档职责
 
@@ -158,7 +175,6 @@ xingbuild 的产品侧分流只保留以下判断：
 
 ## 9. 当前状态与下一动作
 
-- 当前公开基线：`v0.21.0`。
-- 当前没有实施中的版本；`docs/iterations/current.md` 已清空当前指针，完整结果见 `history/v0.21.0.md`。
-- `v0.22.0+` 的 CapabilityHost / VisualizationHost、LikeC4 多视图、Robotaxi `/embed` 和更多 renderer 仍是候选，必须由真实使用证据和正式方案决定，不能自动开启。
+- 当前公开基线：`v0.21.0`；正在实施的唯一版本：`v0.22.0` 企业经营体系多视图架构阅读能力。
+- `XBUILD-CAPABILITY-001` 仍是候选，不因 v0.22.0 自动进入 Engineering；Robotaxi `/embed` 和更多 renderer 也不在当前版本。
 - 内容运营继续使用现有 Brief/Article 合同，不因 `v0.21.0` 改变产品版本或发布流程；Practice 内容可在批准后使用已发布的独立命令。
