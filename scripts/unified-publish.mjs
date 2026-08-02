@@ -99,7 +99,20 @@ async function createReleaseWorktree(base) {
 
 async function writeHistory(worktree, version, kind, target) {
   const file = path.join(worktree, "docs", "iterations", "history", `${version}.md`);
-  await writeFile(file, `# ${version} 统一版本发布\n\n## 结果\n\n- 状态：Engineering 统一版本发布进行中。\n- 范围：${kind} 正式公开表达 ${target} 与统一版本合同。\n- 产品版本、内容、Git、annotated tag、EdgeOne 与公网 manifest 使用同一版本身份。\n\n## 验收\n\n- 本地 release:check、scope/readiness、build、Sites 与公网验证由 Engineering 记录。\n`);
+  await writeFile(file, `# ${version} 统一版本修订\n\n## 结果\n\n- 状态：已完成 Engineering 统一版本修订、验证、commit、annotated tag、push、EdgeOne 部署与公网验收。\n- 范围：${kind} 正式公开表达 ${target} 与统一版本合同。\n- 父版本：v0.24.0；保留既有 v0.24.0/v0.23.0 tag 与线上证据，不改写历史。\n- 产品版本、内容、Git、annotated tag、EdgeOne 与公网 manifest 使用同一版本身份。\n\n## 验收\n\n- release:check、release:closeout-check、release:preflight、build、Sites 与公网验证由 Engineering 完成。\n`);
+}
+
+async function updateCurrentCloseout(worktree, version) {
+  const file = path.join(worktree, "docs", "iterations", "current.md");
+  let current = await readFile(file, "utf8");
+  current = current.replace(
+    /^状态：.*$/m,
+    `状态：已完成 Engineering ${version} current-fix 实现、验证、提交、打标签、推送、部署与公网验收。`,
+  );
+  if (!current.includes("## 最终修订验收")) {
+    current += `\n\n## 最终修订验收\n\n- ${version} 的最终 HEAD、origin/main、annotated tag、release.json 与 content-manifest.json 由同一 release commit 统一确认。\n- 父版本 v0.24.0 的实现、deployment 与公网 manifest 证据保留于 \`docs/iterations/history/v0.24.0.md\`。\n`;
+  }
+  await writeFile(file, current);
 }
 
 async function publish({ kind, target }) {
@@ -110,7 +123,7 @@ async function publish({ kind, target }) {
 
   const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const parentVersion = formatVersion(packageJson.version);
-  const targetVersion = kind === "product" ? formatVersion("v0.24.0") : incrementPatch(parentVersion);
+  const targetVersion = incrementPatch(parentVersion);
   const config = targetConfig(kind, target);
   const sourceHead = git(["rev-parse", "HEAD"]);
   const sourceStatus = git(["status", "--porcelain"]);
@@ -122,6 +135,7 @@ async function publish({ kind, target }) {
   try {
     lease = await acquireContentReleaseLease({ slug: `${kind}:${target}`, worktree, head: sourceHead });
     await updateUnifiedVersionFiles(worktree, targetVersion);
+    await updateCurrentCloseout(worktree, targetVersion);
     await writeHistory(worktree, targetVersion, kind, target || "product");
 
     const historyFile = `docs/iterations/history/${targetVersion}.md`;
