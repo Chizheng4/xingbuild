@@ -319,23 +319,28 @@ npm run test:sites
 
 默认权限边界：
 
-- Engineering 可以在稳定迭代完成后执行本地 Git 提交和版本标签；
+- Engineering 只能在稳定迭代完成后执行本地 Git 提交和版本标签；
+- publish 不能创建版本，不能回写版本文件，不能 commit/tag；
 - 本地提交不等于推送 GitHub，也不等于发布线上；
 - GitHub 仓库创建、首次推送、EdgeOne 发布、域名绑定和 DNS 修改需要用户明确授权；
 - 常规情况下由用户双击发布命令；
 - 只有 `current.md` 明确标记“直接上线”，或用户在当前任务明确要求“直接发布”时，Engineering 才能代为执行线上发布。
 
-发布命令按顺序执行：
+发布命令只消费已完成产品/视觉验收的现有 local commit/tag，按以下顺序执行：
 
-1. 执行 `release:preflight`，确认当前位于 `main`、工作区干净、版本记录与 HEAD 标签一致；
-2. 确认 GitHub origin、EdgeOne CLI 和登录账号可用；
-3. 运行完整发布前检查并生成带版本和提交标识的 `release.json`；
-4. 推送版本标签和 `main` 到 GitHub，并确认远端提交一致；
-5. 将 `dist/client` 发布到 EdgeOne Makers 的 `xingbuild-nochina` 生产环境；
-6. 访问 `xingbuild.top`，核对页面、版本号和 Git 提交；
-7. 只有全部成功后才报告正式上线。
+1. 读取 source cwd、`current.md`、`VERSION.md`、package、history、HEAD 和 annotated tag，确认版本身份与产品/视觉验收状态一致；
+2. 确认 source cwd 为官方 direct-local clean `main`，并记录 source HEAD；
+3. 使用精确 HEAD 的内部只读构建沙箱（不形成工程分支），执行 `check`、content/article/practice scope、`release:check` 和 Sites 测试；
+4. 构建后再次检查 source 与构建沙箱的 tracked dirty paths；任何变化立即失败并报告精确路径；
+5. 执行 `release:preflight`，确认版本记录、HEAD、annotated tag 和工作区一致；
+6. 只有用户明确 publish 授权后，才 push 同一 HEAD 与同名 tag；
+7. 将同一构建产物部署到 EdgeOne `xingbuild-nochina`；
+8. 使用同一 version/commit 访问公网并校验 `release.json`、`content-manifest.json` 和核心页面；
+9. 只有公网验证成功才报告线上统一版本；失败时保留未发布/部分完成事实，不写完成声明、不继续后续阶段。
 
-双击 `publish-xingbuild.command` 本身就是明确的生产发布动作，脚本不再要求二次输入 `publish`。一次执行同时完成 GitHub 同步和 EdgeOne 生产发布，但两者仍是独立步骤。GitHub 推送成功而 EdgeOne 失败时，必须报告“代码已同步、网站未上线”，不得把部分成功描述为正式发布。
+双击 `publish-xingbuild.command` 本身就是明确的生产发布动作，入口将该动作显式传给统一脚本；直接调用统一脚本时必须传 `--authorize-publish` 或设置 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`。它不创建新版本；一次执行可完成 GitHub 同步和 EdgeOne 生产发布，两者仍须分别报告。GitHub 推送成功而 EdgeOne 失败时，必须报告“代码已同步、网站未上线”，不得把部分成功描述为正式发布。
+
+publish 禁止：`incrementPatch`、写 package/VERSION/current/history、`git commit`、`git tag`、自动修复脏改、自动推导 publish 授权、在失败后继续 push/deploy。
 
 ### 7.1 内容专用发布
 
@@ -348,14 +353,14 @@ npm run test:sites
 该命令必须参与统一版本收口，并且必须：
 
 1. 缺失或非法 slug 立即失败，不从 HEAD 猜测目标；
-2. 从最新 `origin/main` 创建唯一干净内容 worktree，确认目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；不得要求产品责任方工作区干净；
+2. 从已验收的精确 HEAD 创建内部只读内容构建沙箱，确认目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；不得创建工程分支、版本提交或 tag；
 3. 只检查目标 slug 的 candidate/import 冲突；无关 ignored workspace 内容可以并存；
-4. 在短时 release lease（发布租约）内确认 HEAD 只包含目标 Observation 与必要 approved media；若 lease 前远端 main 已前进，则 fast-forward、重建目标 slug 并重新检查，不得发布旧构建；
+4. 在短时 release lease（发布租约）内确认精确 HEAD 只包含目标 Observation 与必要 approved media；source 或远端主线变化时停止，不自动 fast-forward、commit 或重建版本；
 5. 执行目标检查、全量 content check、生产构建和 Sites 测试，并拒绝任何 workspace 路径进入生产 source/bundle；
 6. 部署前再次确认远端 main 仍等于已验证 HEAD；若不一致则停止并按 lease 重建，绝不部署旧 HEAD；
 7. 部署既有 `xingbuild-nochina` 项目；
 8. 以目标 slug URL、统一版本和同一最终 commit 完成公网验证，分别报告版本、tag、push、部署和公网结果；
-9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 post-push retry 成功后仍执行 finalize。
+9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 retry 成功后仍执行 finalize。
 
 脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
 
@@ -405,6 +410,8 @@ npm run test:sites
 - **本地提交版本**：版本号、名称、说明、代码 commit、annotated tag、版本记录和官方工作区 clean 已一致；线上可以尚未发布。
 - **线上统一版本**：publish 成功后，线上 `release.json`、`content-manifest.json`、版本号和最终提交与本地提交版本一致。
 
+Publish 不改变“本地提交版本”的身份，只把同一 HEAD/tag 推送、部署并验证；publish 失败不得新增版本、回写 current/history 或制造完成状态。版本身份冲突、tag 冲突、构建 dirty 或授权缺失必须回到产品/Engineering 版本流程解决。
+
 每次 Engineering 或产品/视觉 task 收口必须同时报告：本地版本状态、本地预览 `http://127.0.0.1:4317/`、线上版本状态、线上网站 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界。无候选、无阻断时必须明确写出“等待用户下一步”。链接用于便捷访问，不代表对应状态已经完成。
 
 ## 9. Git 版本管理
@@ -417,10 +424,10 @@ npm run test:sites
 4. 暂存本轮范围并执行 `npm run release:closeout-check`；
 5. 创建本地提交；
 6. 创建同名版本标签；
-7. 执行 `npm run release:preflight`；只有通过后才报告“可发布”；
+7. 执行 `npm run release:preflight`；只有通过后才报告“可发布”；publish 只能消费这一已存在的 local commit/tag；
 8. 需要共享、备份或触发 EdgeOne Git 部署时，再单独推送 GitHub。
 
-本地 commit 是统一版本候选，不等于公网发布；正式发布必须创建同名 annotated tag，并使线上 `release.json` 与 `content-manifest.json` 同一版本/commit 对齐。产品/视觉验收发现问题时，以新修复版本 commit 继续，不移动已发布 tag、不重写历史。
+本地 commit 是统一版本候选，不等于公网发布；正式版本的 annotated tag 必须在本地版本收口中创建，publish 不得创建或移动 tag。线上 `release.json` 与 `content-manifest.json` 必须与同一版本/commit 对齐。产品/视觉验收发现问题时，以新修复版本 commit 继续，不移动已发布 tag、不重写历史。
 
 本地 Git、GitHub 和 EdgeOne 分别承担不同责任：
 

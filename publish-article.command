@@ -5,4 +5,4 @@ if [[ "$#" -ne 2 || "$1" != "--slug" || ! "$2" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; t
   echo "Usage: ./publish-article.command --slug <slug>"
   exit 1
 fi
-exec node scripts/unified-publish.mjs --kind article --slug "$2"
+exec node scripts/unified-publish.mjs --kind article --slug "$2" --authorize-publish

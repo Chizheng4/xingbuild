@@ -1,3 +1,8 @@
+## v0.24.8 — 统一发布消费现有版本与构建纯度治理
+
+- 状态：Engineering 实现与自 QA 已完成，待本地 commit/tag 与产品/视觉验收；尚未 push、publish、部署或公网验收。
+- 范围：统一发布只消费已验收现有 local commit/tag；构建沙箱记录并拒绝 tracked dirty；授权、失败短路和同一 version/commit 公网验证形成集成合同。
+
 ## v0.24.6 — 版本身份冲突收口
 - 状态：Engineering 本地提交版本；已完成版本身份冲突收口、自 QA、版本记录、commit 与 annotated tag；尚未 push、publish、部署或公网验收。
 - 范围：保留既有 v0.24.5 tag，将动态版本测试修复统一转入 v0.24.6。

@@ -53,3 +53,7 @@
 - `operations/` 下的运行问题记录已归档；产品与工程优化只读取活动 `iterations/candidates/` 下的候选文件，历史候选只用于追溯。
 - `operations/` 仅保存内容发布合同、来源覆盖合同和历史证据；不参与版本状态判断。
 - `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。
+
+## Publish 命令边界
+
+`publish-xingbuild.command`、`publish-content.command`、`publish-article.command` 和 `publish-practice.command` 只发布已完成产品/视觉验收的现有 local commit/tag；不自动递增版本、不修改版本记录、不 commit/tag。入口脚本携带用户明确的 `--authorize-publish` 动作，直接调用统一脚本时必须显式传入该参数或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`。发布失败只报告未发布或部分完成，不生成完成历史。详细合同见 [迭代与发布规则](rules/iteration-and-release.md)。

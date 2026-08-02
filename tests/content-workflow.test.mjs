@@ -736,15 +736,18 @@ test("product and content publish scripts share the unified release contract", a
   assert.match(runtime, /unified-publish\.mjs/);
   const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
   assert.match(unified, /worktree.*add/);
-  assert.match(unified, /release:closeout-check/);
   assert.match(unified, /release:preflight/);
   assert.match(unified, /content:scope-check/);
   assert.match(unified, /verify-content-release\.mjs/);
   assert.match(unified, /makers.*deploy/);
   assert.match(unified, /git.*push/);
-  assert.match(unified, /tag.*-a/);
+  assert.match(unified, /--authorize-publish/);
+  assert.match(unified, /build polluted tracked paths/);
+  assert.doesNotMatch(unified, /incrementPatch/);
+  assert.doesNotMatch(unified, /updateUnifiedVersionFiles/);
+  assert.doesNotMatch(unified, /git\(\["commit"/);
+  assert.doesNotMatch(unified, /git\(\["tag",[^\n]*-a/);
   assert.doesNotMatch(content, /find \.content-workspace/);
-  assert.match(unified, /updateUnifiedVersionFiles/);
 });
 
 test("content publish entry hard-fails missing or invalid slug before side effects", () => {

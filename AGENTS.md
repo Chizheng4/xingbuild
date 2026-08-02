@@ -35,7 +35,8 @@
 - 候选只属于产品设计前阶段：产品与视觉确认并纳入正式设计方案后，必须在同一产品设计版本中记录来源并立即移入 `docs/iterations/history/candidates/` 归档；不得继续留在活动 candidates，也不得以长期 `confirmed` 状态等待 Engineering。`closed` 候选同样移入归档并保留关闭理由；只有未确认的 `pending`/DRAFT 留在活动 candidates。
 - 运营工具、CLI 或 Skill 出现缺陷时必须立即停止该次运营操作，只登记候选并通知产品与视觉；禁止内容 task 或其他 task 为自己创建工程分支、修改 main 或绕过产品版本门禁。
 - 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。
-- 新采集、候选、draft、审核和 recovery 仍是运营数据，不进入产品版本；但任何通过 `publish-content.command`、`publish-article.command`、`publish-practice.command` 或 `publish-xingbuild.command` 进入公网的正式表达，必须使用同一套版本合同：`package.json`、`VERSION.md`、`current.md`、Git commit、annotated tag、`release.json` 与 `content-manifest.json` 的版本和最终提交必须一致。不得再保留“产品版本不变、内容提交和线上 manifest 独立前进”的发布路径。
+- 新采集、候选、draft、审核和 recovery 仍是运营数据，不进入产品版本；任何 publish 指令只消费已完成产品/视觉验收的现有 local commit/tag，不能自动递增版本、回写 package/VERSION/current/history、commit 或 tag。进入公网的正式表达必须让同一版本合同：`package.json`、`VERSION.md`、`current.md`、Git commit、annotated tag、`release.json` 与 `content-manifest.json` 全部对齐。不得再保留“产品版本不变、内容提交和线上 manifest 独立前进”的发布路径。
+- Publish 是线上发布执行器，不是版本创建器：版本创建只发生在 Engineering 本地提交闭环；publish 前后都必须围绕同一 HEAD/tag，构建后再次检查 tracked dirty paths，任何失败不得写入完成声明或继续后续阶段。
 - main 只作为干净集成/发布基线；产品 DRAFT 与 Engineering 可使用有界 worktree，内容 task 只调用既有 CLI（CLI 内部临时 worktree 不属于产品工程分支），禁止共享脏工作区。
 - 任何 branch/worktree/并行 task 都必须得到用户明确授权，并在启动时记录目的、范围、责任 task、canonical HEAD 与清理条件；未获明确授权不得创建或复用。
 - task 创建与 task 交接是两种不同动作：普通“执行”、版本推进或规则更新不等于创建 Engineering/内容/Ops task。交接只能发送给用户已明确指定且已存在的目标 task；找不到、无法确认或目标 task 不存在时，必须向用户报告并等待确认，不得自行创建、猜测、替代、轮询或保持后台等待。

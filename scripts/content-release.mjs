@@ -11,7 +11,7 @@ if (args.length !== 2 || args[0] !== "--slug" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.t
   process.exit(1);
 }
 
-execFileSync(process.execPath, [path.join(root, "scripts", "unified-publish.mjs"), "--kind", "content", "--slug", args[1]], {
+execFileSync(process.execPath, [path.join(root, "scripts", "unified-publish.mjs"), "--kind", "content", "--slug", args[1], "--authorize-publish"], {
   cwd: root,
   stdio: "inherit",
   env: process.env,

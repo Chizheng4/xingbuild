@@ -222,7 +222,12 @@ test("Practice publish command uses the unified product version and tag contract
   const unified = await readFile(new URL("../scripts/unified-publish.mjs", import.meta.url), "utf8");
   assert.match(unified, /practice:scope-check/);
   assert.match(unified, /release:check/);
-  assert.match(unified, /tag.*-a/);
+  assert.match(unified, /--authorize-publish/);
+  assert.match(unified, /rev-parse.*\^\{commit\}/);
+  assert.doesNotMatch(unified, /incrementPatch/);
+  assert.doesNotMatch(unified, /updateUnifiedVersionFiles/);
+  assert.doesNotMatch(unified, /git\(\["commit"/);
+  assert.doesNotMatch(unified, /git\(\["tag",[^\n]*-a/);
   assert.match(verify, /content-manifest\.json/);
   assert.match(verify, /referencedPracticeMediaAssets/);
   assert.match(verify, /target Practice public projection/);
