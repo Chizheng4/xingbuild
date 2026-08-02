@@ -5,7 +5,7 @@
 1. [网站产品架构与视觉系统总案](docs/product/xingbuild%20网站产品架构与视觉系统总案.md)
 2. [迭代与发布规则](docs/rules/iteration-and-release.md)
 3. [当前唯一版本](docs/iterations/current.md)
-4. `docs/iterations/candidates/` 下的候选文件（唯一优化记录）
+4. `docs/iterations/candidates/` 下的活动候选文件；历史转化/关闭记录见 `docs/iterations/history/candidates/`
 
 ## 项目边界
 
@@ -17,7 +17,7 @@
 
 ## 责任边界
 
-- 产品与视觉：维护产品总案、候选、正式版本方案、`current.md`，负责版本启动和最终产品/视觉验收。
+- 产品与视觉：维护产品总案、候选、正式版本方案、`current.md`，负责版本启动、候选转方案与归档、最终产品/视觉验收。
 - Engineering：只实现已写入 `current.md` 的合同；负责代码、测试、本地收口、版本记录、commit/tag，并按授权完成 push、部署和公网验收。
 - 内容与发布：负责事实审核、Brief/Article/Practice 结构和既有能力的日常发布；不修改产品版本或视觉合同。
 - Ops：只生成可信证据候选、去重和覆盖记录；不写公开正文、不审核、不发布。
@@ -31,7 +31,8 @@
 
 - 产品优化 DRAFT 只进入 `docs/iterations/candidates/`；未确认前不得修改 `current.md`、代码、版本或发布状态。
 - 当前版本只由 `docs/iterations/current.md` 定义；已完成版本进入 `docs/iterations/history/`。
-- Engineering 实施中发现的跨范围问题、运营工具/CLI/Skill 缺陷和新的产品优化先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。产品与视觉验收已提交本地版本时发现的问题不走普通候选，直接定义下一版本并写入 `current.md`。
+- Engineering 实施中发现的跨范围问题、运营工具/CLI/Skill 缺陷和新的产品优化先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定是否转化为产品设计方案。产品与视觉验收已提交本地版本时发现的问题不走普通候选，直接定义下一版本并写入 `current.md`。
+- 候选只属于产品设计前阶段：产品与视觉确认并纳入正式设计方案后，必须在同一产品设计版本中记录来源并立即移入 `docs/iterations/history/candidates/` 归档；不得继续留在活动 candidates，也不得以长期 `confirmed` 状态等待 Engineering。`closed` 候选同样移入归档并保留关闭理由；只有未确认的 `pending`/DRAFT 留在活动 candidates。
 - 运营工具、CLI 或 Skill 出现缺陷时必须立即停止该次运营操作，只登记候选并通知产品与视觉；禁止内容 task 或其他 task 为自己创建工程分支、修改 main 或绕过产品版本门禁。
 - 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。
 - 新采集、候选、draft、审核和 recovery 仍是运营数据，不进入产品版本；但任何通过 `publish-content.command`、`publish-article.command`、`publish-practice.command` 或 `publish-xingbuild.command` 进入公网的正式表达，必须使用同一套版本合同：`package.json`、`VERSION.md`、`current.md`、Git commit、annotated tag、`release.json` 与 `content-manifest.json` 的版本和最终提交必须一致。不得再保留“产品版本不变、内容提交和线上 manifest 独立前进”的发布路径。

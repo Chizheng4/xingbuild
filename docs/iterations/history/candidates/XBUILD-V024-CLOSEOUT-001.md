@@ -1,6 +1,13 @@
 # XBUILD-V024-CLOSEOUT-001：v0.24.0 统一版本收口修订
 
-## 状态
+## 归档状态
+
+- `archiveStatus: archived_transformed`
+- 转化版本：`v0.24.1`
+- 正式方案/实施结果：已写入 `docs/iterations/history/v0.24.1.md`
+- 归档原因：本候选已被 v0.24.1 产品设计方案继承并完成本地收口；候选不再作为活动输入。
+
+## 原评审状态
 
 - `status: confirmed`
 - `executionAuthorization: confirmed`
@@ -37,4 +44,4 @@ v0.24.0 的产品实现和公网部署已完成，最终产品 commit 为 `3e3d4
 
 ## 下一动作
 
-将本候选写入 `current.md` 后，Engineering 在同一修订版本内完成版本记录、commit/tag、push、部署和公网验收；产品 task 不等待或轮询。
+归档结果：本候选已写入 current/history 并完成 v0.24.1 收口；后续只通过版本 history 追溯。

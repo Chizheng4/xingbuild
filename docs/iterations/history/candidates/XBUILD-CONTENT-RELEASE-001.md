@@ -1,6 +1,13 @@
 # XBUILD-CONTENT-RELEASE-001：内容发布隔离生命周期闭环
 
-## 状态
+## 归档状态
+
+- `archiveStatus: archived_transformed`
+- 转化版本：`v0.24.0`
+- 正式方案/实施结果：已写入 `docs/iterations/history/v0.24.0.md`
+- 归档原因：本候选已被产品设计方案继承并完成 Engineering 实现与发布闭环；候选不再作为活动输入。
+
+## 原评审状态
 
 - `status: confirmed`
 - `executionAuthorization: confirmed`
@@ -56,4 +63,4 @@
 
 ## 下一动作
 
-下一动作：将本候选写入 `docs/iterations/current.md` 的 `v0.24.0` 合同后，Engineering 实现、验证、commit/tag、push、部署和公网验收；成功后在候选中追加结果并归档。
+归档结果：本候选已写入 `v0.24.0` 方案/current，并完成实现、验证、commit/tag、push、部署和公网验收；后续只通过版本 history 追溯。

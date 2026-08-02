@@ -38,7 +38,7 @@
 - 产品方案可以在独立 task 与隔离 worktree/branch 中并行推进，但只能形成明确标记为 `DRAFT（草案）` 的设计文档或有界决策检查点，不等于当前迭代、实现授权或发布计划。
 - 并行草案不得修改 `docs/iterations/current.md`、`VERSION.md`、产品代码、依赖、发布配置或正在执行版本的验收合同，也不得在当前版本收口前合入主线。
 - 草案至少记录事实源、已确认决策、明确非目标、待确认项和建议的后续版本；跨 task 仍只传递不超过 20 行的决策与状态检查点。
-- 当前版本完成后，产品与视觉 task 只检查 `docs/iterations/candidates/`，将已确认候选综合为一个正式方案并写入 `docs/iterations/current.md`，再交 Engineering 开启下一个唯一版本。
+- 当前版本完成后，产品与视觉 task 只检查活动 `docs/iterations/candidates/`，将已确认候选综合为一个正式方案并写入 `docs/iterations/current.md`；方案正式化的同时移入 `docs/iterations/history/candidates/` 归档，再交 Engineering 开启下一个唯一版本。
 - 内容运营、媒体替换和其他不改变产品能力的工作继续遵守各自独立合同，不因产品草案并行而转为产品迭代。
 
 ### 2.2.1 DRAFT、主线与版本提交门禁
@@ -46,20 +46,20 @@
 - `DRAFT（草案）` 是未确认的产品/视觉候选，不是当前版本，也不是发布输入。它不得进入主线版本提交、版本 tag、push、deploy 或公网验收。
 - 产品 DRAFT 在并行设计阶段必须位于独立 task 的隔离 branch/worktree；进入项目共享文档后，唯一目录为 `docs/iterations/candidates/`，不得继续放在 `docs/design/`、`docs/iterations/current.md` 或版本 history 中。DRAFT 可以被 Git 追踪以保留连续性，但不能成为产品版本输入。
 - 隔离 worktree 只允许准备候选草稿；候选交接只有在 docs-only commit 已同步到 canonical `main` 后才成立。通知必须携带 canonical commit、候选路径和下一动作；仅存在于 task 私有 worktree 的文件不得作为共享事实源。
-- 候选目录中的文件必须有 `status: pending | confirmed | closed`、`executionAuthorization: pending | confirmed`、事实源、优化目标、影响范围、责任 task 和下一动作；不再维护额外的版本路线图状态。
-- 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 通过 `git mv` 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`，再交 Engineering 实现。
+- 活动候选文件必须有 `status: pending | DRAFT`、`executionAuthorization: pending | confirmed`、事实源、优化目标、影响范围、责任 task 和下一动作；`confirmed` 只允许作为产品设计转化的瞬时评审结果，不能停留在活动目录。已转化或已关闭文件统一移入 `docs/iterations/history/candidates/`，不再维护额外的版本路线图状态。
+- 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`；同时必须把原候选移入 `docs/iterations/history/candidates/` 并保留“已转化为方案”的来源链接，再交 Engineering 实现。
 - 版本收口只暂存 `current.md` 明确列出的文件。`docs/iterations/candidates/` 下的 DRAFT、无责任归属的历史修改和未追踪文件必须被收口检查识别并排除；不得为了通过门禁临时删除、改名或混入文件。
 - 其他 task 的未纳入修改不得删除或覆盖。需要收口时，使用独立 branch/worktree 或可逆的有记录隔离，并在收口后完整恢复。
 - 内容 `draft` 是另一条内容生命周期，继续只存在被忽略的 `.content-workspace/`，无论是否已人工审核，都不得进入产品版本提交。
 - 因此“DRAFT 不进入版本”指候选目录中的未确认方案不进入产品版本交付；只有转为正式 `docs/design/v{版本号}...方案.md` 并进入 `current.md` 后，才可作为目标版本的一部分。
 
-### 2.2.2 已确认候选自动续跑
+### 2.2.2 候选转产品方案与自动续跑
 
-- 用户已明确确认并记录的候选，必须在当前版本完成公网验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
-- 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
-- `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
-- 每个确认候选完成“方案正式化 → Engineering 实现与自 QA → 本地提交版本 → 产品/视觉验收 → 用户 publish 授权 → push → 部署 → 公网验收”后，立即回到候选目录清点，直到没有 `confirmed` 候选；不读取 roadmap 或 task 历史决定顺序。
-- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容采集和审核继续按独立运营合同运行，但正式发布必须进入统一版本流水线。
+- 用户已明确确认并记录的候选，必须在当前版本完成产品/视觉验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
+- 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有已确认且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可转为正式设计方案、写入 `current.md`，并在同一动作中归档原候选。
+- `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在活动 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断。
+- 候选转方案并归档后，执行“正式方案 → Engineering 实现与自 QA → 本地提交版本 → 产品/视觉验收 → 用户 publish 授权 → push → 部署 → 公网验收”。候选不作为长期队列，也不以 `confirmed` 状态等待 Engineering。
+- 只有活动 candidates 中没有 `pending`/DRAFT，且所有已确认项都已转方案并归档时，产品版本流水线才停止；内容采集和审核继续按独立运营合同运行，但正式发布必须进入统一版本流水线。
 
 ### 2.2.3 实施问题与提交后验收问题分流
 
@@ -72,26 +72,26 @@
 
 - Engineering 实施中需要跨范围决策的可验证问题、产品优化、运营工具/CLI/Skill 缺陷和内容流程能力缺口，必须先写入 `docs/iterations/candidates/<candidate-id>.md`；这里是唯一 tracked 优化入口。已提交本地版本的产品与视觉验收问题不走普通候选，直接形成下一版本。
 - 候选文件由发现方填写事实、证据、影响、非目标、责任 task 和下一动作，并将 `status: pending` 与 `executionAuthorization: pending` 初始写入；发现方不得自行决定进入版本或 Engineering。
-- 产品与视觉 task 负责逐条评审并更新 `status: confirmed | pending | closed`，同时记录路由 `current-fix`、`next-version`、`content-ops` 或 `closed` 及理由。`executionAuthorization` 只表示是否允许进入已确认的执行闭环，不替代产品状态。
-- 只有 `status: confirmed`、`executionAuthorization: confirmed` 且已写入 current 的候选才能交 Engineering；未确认候选不能实现、提交、tag、push、deploy 或进入公开页面。
+- 产品与视觉 task 负责逐条评审；确认后必须立即写入正式设计方案/current 并将候选移入 `docs/iterations/history/candidates/`，归档记录路由、目标版本、方案路径、commit/tag 与理由。未确认的活动候选保持 `pending`；否决或重复项直接归档为 `closed` 并保留关闭理由。
+- Engineering 不读取活动候选决定实现范围，只实现已写入 `current.md` 的正式方案；活动候选不能实现、提交、tag、push、deploy 或进入公开页面。
 - 运营工具、CLI 或 Skill 发现缺陷时，立即停止本次运营操作；不得为了本 task 在分支或 main 私自修复、创建工程迭代或绕过门禁。发现方只登记 pending 候选并通知产品与视觉 task，由其决定是否形成后续产品能力版本。
 - `.content-workspace/ops/` 只保存采集、覆盖、运行和发布证据；不建立第二个 tracked 问题清单。已关闭的旧问题清单只作为历史归档，不参与启动或状态判断。
-- Engineering 只实现当前迭代已批准的问题；相邻问题必须新增候选文件，不能顺手夹带。问题关闭后在候选文件中追加 commit/tag 与验证结果。
+- Engineering 只实现当前迭代已批准的问题；相邻问题必须新增活动候选文件，不能顺手夹带。候选转化为方案或关闭后，所有结果、commit/tag 与验证证据写入历史归档文件，不回写活动候选入口。
 
 #### 2.3.1 当前版本进行中的新优化
 
-当前版本尚未完成时发现的新优化，也必须先写入唯一候选文件，不得只留在 `current.md`、task 消息、私有笔记或运营问题清单。
+当前版本尚未完成时发现的新优化，也必须先写入唯一活动候选文件，不得只留在 `current.md`、task 消息、私有笔记或运营问题清单。候选是产品设计前的输入，不是 Engineering 的实现清单。
 
 每条候选至少包含：
 
 ```text
 ID / discoveredAt
-status: pending | confirmed | closed
+status: pending | DRAFT
 发现事实与证据路径
 要解决的问题和用户影响
 executionAuthorization: pending | confirmed
-路由：current-fix | next-version | content-ops | closed
-下一动作：等待产品评审 | 写入 current | 留在运营证据 | 记录关闭
+路由：待产品设计 | content-ops
+下一动作：等待产品评审 | 补充事实 | 形成设计方案
 是否改变当前范围或验收
 责任 task / 下一动作 / 决定时间
 ```
@@ -99,19 +99,34 @@ executionAuthorization: pending | confirmed
 处理规则：
 
 1. 发现方只写 `status: pending`、`executionAuthorization: pending` 候选，并在 canonical `main` 同步后通知产品与视觉 task。
-2. 产品与视觉 task 评审后决定路由和 `confirmed/pending/closed`。
-3. `current-fix` 或 `next-version` 只有在 `status` 与 `executionAuthorization` 均为 `confirmed` 且写入 current 后才交 Engineering。
-4. `content-ops` 留在被忽略的运营证据中，不创建第二个 tracked backlog。
-5. `closed` 保留理由和证据，不能删除候选文件抹去决策历史。
+2. 产品与视觉 task 负责理解候选、补齐事实边界、确认是否进入产品设计；未确认项保持 `pending` 并向用户报告。
+3. 一旦候选被产品设计方案继承，产品 task 必须在同一版本设计提交中写明来源候选 ID、目标版本、方案路径、current 路径和下一动作，然后把候选移入 `docs/iterations/history/candidates/`；活动目录不得保留 `confirmed`。
+4. 被否决、重复或失效的候选直接移入 `docs/iterations/history/candidates/`，归档中保留关闭理由与证据；不得删除候选文件制造“从未发生”。
+5. `content-ops` 只保留在被忽略的运营证据中，不创建第二个 tracked backlog；若后续改变产品能力，重新登记新的产品候选。
 
 #### 2.3.2 候选方案目录与版本收口清点
 
-- `docs/iterations/candidates/` 是全部问题与优化候选的唯一共享入口；不再维护活动 roadmap、运营问题清单或候选 README。
+- `docs/iterations/candidates/` 是未确认问题与产品优化的唯一活动共享入口；已转化/已关闭候选只在 `docs/iterations/history/candidates/` 保留归档；不再维护活动 roadmap、运营问题清单或候选 README。
 - `docs/design/` 只保存已确认的正式设计方案、视觉系统和验收合同；文件名不得以 `DRAFT-` 开头。历史正式方案仍可保留在此用于追溯，结果以 `docs/iterations/history/` 为准。
-- 版本开始前，产品责任 task 只检查 candidates 下的候选文件，逐条确认状态；综合 `confirmed` 候选形成一个正式版本；未确认候选保留原文件，不阻断当前版本。
-- 同一时间最多一个 `confirmed` 候选；出现多个时只登记排序阻断，不自行猜测顺序。
-- 版本收口后，若没有 `confirmed` 候选，保留上一已发布版本作为 current 基线并停止；不读取 roadmap 或 task 历史补全队列。
-- 候选 DRAFT 可以进入独立规则/文档治理提交，但不得进入产品版本 tag、内容提交、部署或公开页面。
+- 版本开始前，产品责任 task 只检查活动 candidates 下的候选文件，逐条确认状态；综合确认项形成一个正式版本，写入 current 后立即归档来源候选；未确认候选保留原文件并提示用户。
+- 同一时间可以有多个待评估候选，但必须先形成一个明确的产品设计方案；不得让多个 `confirmed` 候选停留在活动目录中。
+- 版本收口后，若活动 candidates 为空，保留当前版本状态并停止；不读取 roadmap 或 task 历史补全队列。
+- 活动候选中的 DRAFT/pending 可以进入独立规则/文档治理提交，但不得进入产品版本 tag、内容提交、部署或公开页面；一旦形成正式设计方案，必须和来源候选一起完成“写入方案/current → 移入历史候选归档”的原子闭环。
+
+候选生命周期是单向转换，不允许回流或长期停留：
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: 发现并登记
+    pending --> DRAFT: 进入产品设计
+    DRAFT --> archived_transformed: 方案确认并写入 current
+    pending --> archived_closed: 否决/重复/失效
+    DRAFT --> archived_closed: 方案否决/失效
+    archived_transformed --> [*]
+    archived_closed --> [*]
+```
+
+活动目录只保存 `pending`/DRAFT；历史归档目录保存 `archived_transformed`/`archived_closed` 及来源、目标版本、方案路径、commit/tag 和证据。
 
 ### 2.4 事件驱动的跨 task 调度
 
@@ -221,7 +236,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 唯一当前指针：`docs/iterations/current.md`。
 
-未确认的产品优化和运营转入的产品候选统一位于 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。版本顺序只由产品 task 在当前版本结束后根据唯一 `confirmed` 候选决定，不读取 roadmap 或 task 历史。
+未确认的产品优化和运营转入的产品候选统一位于活动 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。产品 task 在当前版本结束后把候选转化为一个正式设计方案并立即归档来源候选；版本顺序不读取 roadmap 或 task 历史。
 
 每轮开始时至少记录：
 
@@ -263,7 +278,7 @@ npm run release:closeout-check
 
 它会阻止未暂存修改或未追踪文件跨入本次收口。通过后再提交与打标签。
 
-版本收口同时必须完成候选清点：`docs/iterations/candidates/` 中未确认候选不得被暂存；每个候选必须有候选 ID、`executionAuthorization`、责任 task 和下一动作。验收修复优先于候选清点；没有验收修复且没有 `confirmed` 候选时，归档完成后保留上一已发布版本作为 current 基线并停止。
+版本收口同时必须完成候选生命周期核对：活动 `docs/iterations/candidates/` 只允许保留 `pending`/DRAFT；任何已纳入方案或已关闭候选必须位于 `docs/iterations/history/candidates/`，并保留来源、方案/历史版本和关闭证据。没有验收修复且活动候选为空时，归档完成后保留当前版本作为基线并停止；有 pending 候选则向用户报告待确认项，不得自行启动下一版本。
 
 本地提交和标签完成后、双击发布前，再执行一次快速只读门槛：
 

@@ -1,6 +1,11 @@
 # XBUILD-CONTENT-RELEASE-002：内容发布与产品主线的隔离租约能力
 
-## 状态
+## 归档状态
+
+- `archiveStatus: archived_closed`
+- 归档原因：能力已由既有 Engineering commit 实现，属于重复候选，不再进入产品设计或 Engineering。
+
+## 原评审状态
 
 - `status: closed`
 - `executionAuthorization: pending`

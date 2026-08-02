@@ -1,3 +1,7 @@
+## v0.24.4 — 候选转产品设计与归档治理
+- 状态：Engineering 本地提交版本；已完成候选生命周期治理合同、版本记录、自 QA、commit 与 annotated tag；尚未 push、publish、部署或公网验收。
+- 范围：候选仅属于产品设计前阶段；正式方案继承或关闭后立即归档，Engineering 只读取 current 与正式方案。
+
 ## v0.24.3 — v0.24.2 状态表达修订
 - 状态：Engineering 本地 current-fix 已完成；已形成 v0.24.3 本地 commit/tag，产品/视觉验收待确认；origin/main 尚未同步，未 push、publish、部署或公网验收。
 - 范围：仅修正 current.md 对 v0.24.2 本地 commit/tag、产品/视觉验收状态与 origin/main 未同步的准确表达。

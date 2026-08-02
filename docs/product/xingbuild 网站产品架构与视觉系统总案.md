@@ -18,7 +18,8 @@
 | `AGENTS.md` | 项目边界、协作、语言和执行规则 | 只引用本文件，不复制产品/视觉正文 |
 | `docs/rules/iteration-and-release.md` | 版本、task、内容发布、Git 和部署规则 | 工程流程事实源，不由本文替代 |
 | `docs/iterations/current.md` | 唯一当前工程迭代指针 | 只记录正在实施的版本 |
-| `docs/iterations/candidates/` | 未确认产品优化的唯一候选入口 | 当前版本结束后由产品 task 统一检查，不定义当前授权 |
+| `docs/iterations/candidates/` | 产品设计前的未确认候选入口 | 只保留 pending/DRAFT，不定义 Engineering 授权 |
+| `docs/iterations/history/candidates/` | 已转化或已关闭候选的历史归档 | 只保留来源、转化/关闭结果和证据，不参与当前决策 |
 | `docs/iterations/history/` | 已完成版本的计划和结果 | 只用于追溯，不重新定义当前产品 |
 | `docs/qa/` | 版本或问题的验证证据 | 证明某次验收，不是长期设计源 |
 | `docs/operations/` | 日常采集、审核和发布操作合同 | 不存产品视觉正文 |
@@ -599,13 +600,13 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 ## 11. 产品变化的分流原则
 
-本文件只维护“网站产品应该是什么”。项目通用的版本启动、DRAFT 门禁、问题登记、跨 task 交接、串行实现、验证、提交/tag、发布和资源规则，唯一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准；未来候选以 `docs/iterations/candidates/` 为准；当前实施状态以 `docs/iterations/current.md` 为准。
+本文件只维护“网站产品应该是什么”。项目通用的版本启动、DRAFT 门禁、问题登记、候选转产品方案并归档、跨 task 交接、串行实现、验证、提交/tag、发布和资源规则，唯一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准；活动候选以 `docs/iterations/candidates/` 为准；转化/关闭记录以 `docs/iterations/history/candidates/` 为准；当前实施状态以 `docs/iterations/current.md` 为准。
 
 产品侧只保留以下分流：
 
 - 新增内容对象、章节、来源或现有类型图形：按内容合同运营；正式 publish 仍必须生成统一版本，不得创建独立内容版本；
 - 新页面但复用已有组合：使用已确认的 `PageDefinition` 能力；当前尚未实现时排入相应版本；
-- 新页面组合、内容 block、共享视觉、响应式或 renderer：形成候选记录；产品 task 启动版本时再综合确定版本方案；
+- 新页面组合、内容 block、共享视觉、响应式或 renderer：形成活动候选记录；产品 task 启动版本时综合形成正式设计方案，写入 `current.md`，并立即归档来源候选；
 - 上游事实继续由 career/Robotaxi 和 Ops 事实合同维护；Engineering 实施中的跨范围问题、工具缺陷或新的产品优化统一登记到 `docs/iterations/candidates/`，由产品与视觉 task 评审；已提交本地版本的产品与视觉验收问题直接定义下一版本，不在运营文档或 task 私有文件中另建问题入口；
 - 任何新产品方案都必须回到本文确认，不得在 task、页面组件或旧设计文件中形成第二份网站主架构。
 
@@ -680,7 +681,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 ## 14. 当前待确认事项
 
-当前产品总案没有已确认但未进入候选入口的事项。新的产品、视觉、页面或公开发布能力优化，必须先登记到 `docs/iterations/candidates/`，由产品 task 在下一次版本启动时统一评估；内容 task、Ops 和 Engineering 不得自行把问题升级为产品版本。
+当前产品总案没有脱离活动候选入口的已确认事项。新的产品、视觉、页面或公开发布能力优化，必须先登记到活动 `docs/iterations/candidates/`；产品 task 评估后要么转为正式设计方案并归档候选，要么保留 pending 并向用户报告。内容 task、Ops 和 Engineering 不得自行把问题升级为产品版本。
 
 ## 15. 变更记录
 

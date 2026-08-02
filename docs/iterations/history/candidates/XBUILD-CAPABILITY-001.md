@@ -1,10 +1,11 @@
 # DRAFT｜x.ai 式产品能力展示与视觉表达迭代方案
 
 > 候选 ID：XBUILD-CAPABILITY-001
-> 状态：closed（已由 v0.23.0 CapabilityStage/VisualizationHost 方案吸收；本文保留学习与追溯，不再作为待办候选）
+> archiveStatus：archived_transformed（已由 v0.23.0 CapabilityStage/VisualizationHost 方案吸收；本文保留学习与追溯，不再作为活动候选）
 > executionAuthorization：closed（不再进入 Engineering）
 > 责任：xingbuild 产品与视觉 task  继承：`docs/product/xingbuild 网站产品架构与视觉系统总案.md`
 > 目标后续版本：无；如未来发现新的能力缺口，必须新建候选 ID，不复用本文
+> 归档原因：已转化为 v0.23.0 正式产品设计方案，来源候选退出活动目录。
 > 当前边界：只做学习、产品方案、视觉方案和验收合同；不改代码、`current.md`、VERSION、依赖、tag、Git、部署或生产内容。
 
 > 归属说明：页面产品架构与组合合同已于 2026-08-01 写入唯一现行总案。本文不再拥有页面结构的第二份真值，只保留 x.ai 能力展示机制与后续 `CapabilityStage / VisualizationHost` 的候选细节。
