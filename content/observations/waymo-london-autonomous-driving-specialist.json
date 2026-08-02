@@ -1,0 +1,103 @@
+{
+  "id": "observation-waymo-london-autonomous-driving-specialist",
+  "slug": "waymo-london-autonomous-driving-specialist",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "Waymo在伦敦启动带监督自动驾驶道路验证",
+  "summary": "Waymo称已在伦敦开展由受训专业人员在车内监督的自动驾驶道路运行，并为后续全无人叫车服务筹备本地团队与服务中心。",
+  "companies": [
+    "Waymo"
+  ],
+  "regions": [
+    "英国伦敦"
+  ],
+  "dimensions": [
+    "合作与扩张",
+    "产品与能力"
+  ],
+  "primaryDimension": "合作与扩张",
+  "eventAt": "2026-04-14",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "当前阶段",
+      "value": "专业人员车内监督的道路验证"
+    },
+    {
+      "label": "地点",
+      "value": "英国伦敦"
+    },
+    {
+      "label": "后续方向",
+      "value": "筹备全无人叫车服务"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Waymo官方称，已在伦敦开始由受训专业人员在车内监督的自动驾驶道路运行，并已完成本地道路驾驶；公司同时扩充英国团队、建设服务中心并与运营伙伴推进准备工作。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-london-road-test",
+      "evidence-waymo-london-ops-prep"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "伦敦验证把道路适应、运营团队和服务设施准备连接起来，为后续无人化服务扩张积累条件；但道路验证不等于已取得商业许可或已向公众提供全无人服务。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-waymo-london-ops-prep"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-waymo-london-road-test",
+      "claim": "Waymo官方称已在伦敦开始由受训专业人员在车内监督的自动驾驶道路运行。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-london-april14"
+      ]
+    },
+    {
+      "id": "evidence-waymo-london-ops-prep",
+      "claim": "Waymo官方称正在扩充英国团队、建设多个自动驾驶服务中心并与运营伙伴推进准备。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-waymo-london-april14"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-waymo-london-april14",
+      "publisher": "Waymo",
+      "title": "From the road — April 14, 2026",
+      "url": "https://waymo.com/blog/shorts/autonomous-driving-in-london/",
+      "publishedAt": "2026-04-14",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "可确认Waymo在伦敦开展带专业人员监督的自动驾驶道路验证及运营准备；不能宣称其已取得英国商业许可或已向公众提供全无人服务。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "Waymo伦敦验证",
+    "body": "Waymo称已在伦敦启动由受训专业人员在车内监督的自动驾驶道路验证，并同步扩充英国团队、建设服务中心和推进运营伙伴准备。这显示其在为后续全无人叫车积累本地道路与运营能力，但不代表已取得英国商业许可，也不表示公众已可使用全无人服务。",
+    "sourceRefs": [
+      "source-waymo-london-april14"
+    ],
+    "isOpinion": false
+  }
+}
