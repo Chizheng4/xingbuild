@@ -11,10 +11,10 @@
 | `design/` | 已确认的正式版本设计、视觉系统与验收合同 | 只能在方案确认后修改；禁止存放 DRAFT |
 | `explorations/` | 尚在分析、比较和确认中的方案 | 可以持续迭代 |
 | `iterations/current.md` | 当前唯一正式迭代指针 | 只由实施迭代更新 |
-| `iterations/candidates/` | 未确认的产品优化 DRAFT 唯一共享入口 | 只登记候选，不进入产品版本 |
-| `iterations/roadmap.md` | 已确认方向的版本队列和跨版本协作合同 | 产品方案确认后更新，不代表当前实现 |
+| `iterations/candidates/` | 产品优化候选唯一共享入口（未确认或已确认待启动） | 只登记候选；产品 task 在版本结束后清点，不直接进入产品版本 |
+| `iterations/roadmap.md` | 历史参考文件 | 不再作为活动事实源；当前只读取 `candidates/`、`current.md` 和 `history/` |
 | `iterations/history/` | 已完成版本的计划和结果 | 只追加，不回写 |
-| `operations/` | 内容运营、采集和发布问题的唯一 tracked 清单 | 问题治理时修改，不进入内容提交 |
+| `operations/` | 内容运营合同、入口索引和问题清单 | 运营治理时修改，不进入产品或内容提交 |
 | `upstream/` | career、Robotaxi 等上游事实快照与同步说明 | 按上游同步规则修改 |
 | `qa/` | 按版本保存的设计验证结论和必要证据 | 完成验证时追加 |
 
@@ -37,7 +37,7 @@
 ## 当前唯一产品与视觉基线
 
 - [xingbuild 网站产品架构与视觉系统总案](product/xingbuild%20网站产品架构与视觉系统总案.md)
-- [产品能力迭代路线图与版本计划](iterations/roadmap.md)
+- 版本当前状态只看 [当前迭代](iterations/current.md)；未开始的候选只看 `iterations/candidates/`；完成结果只看 `iterations/history/`。
 
 产品与视觉 task、Engineering 和内容 task 都必须先读取这份主文档。它是当前唯一的产品/视觉入口；旧版本方案不能与本文并列作为现行事实源。
 
@@ -46,9 +46,9 @@
 - `design/v*.md`：对应版本的历史方案，保留用于追溯，不指导当前实现。
 - `product/个人网站定位、内容与信息架构设计 v1.0.md`：早期产品定位方案，保留用于追溯，不指导当前实现。
 - [网站出版体系、品牌与视觉方向](explorations/网站出版体系、品牌与视觉方向.md)：早期探索，保留作为来源记录。
-- [x.ai 式产品能力展示与视觉表达迭代方案（DRAFT）](iterations/candidates/DRAFT-x.ai式产品能力展示与视觉表达迭代方案.md)：候选能力细节；版本先后和进入条件以路线图为准，确认前不得进入 `current.md` 或 Engineering。
-- [v0.21.0 Practice 内容独立发布能力方案](design/v0.21.0%20Practice内容独立发布能力方案.md)：当前已确认实施方案；具体实现状态以 `current.md` 和 Engineering 回传为准。
+- `iterations/candidates/`：未确认或等待产品评估的候选；候选文件自带 `executionAuthorization`，不另设版本路线图。
 - [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：已完成版本方案，结果见 `iterations/history/v0.20.0.md`。
-- [v0.22.0 企业经营体系多视图架构阅读能力方案](design/v0.22.0%20企业经营体系多视图架构阅读能力方案.md)：当前正式产品/视觉合同，唯一版本入口见 `iterations/current.md`。
+- `design/v*.md`：已完成或已确认的版本方案，只用于追溯和当前版本实施；当前产品/视觉基准仍以产品总案为准。
 - [内容运营与发布问题清单](operations/内容运营与发布问题清单.md)：候选采集、事实审核、单条发布和公网验收问题的唯一 tracked 入口；治理标签不投影到读者界面。
+- [运营文档入口](operations/README.md)：内容发布合同、来源覆盖合同和运营问题清单的唯一导航，不复制正文。
 - `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。

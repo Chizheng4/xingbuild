@@ -3,7 +3,7 @@
 > 状态：正式产品与视觉基线（唯一现行主文档）  
 > 责任：xingbuild 产品与视觉 task 维护；Engineering 只实现已经确认并进入当前迭代的能力  
 > 更新时间：2026-08-01  
-> 适用版本：从当前公开 `v0.19.0` 起，持续适用于后续网站版本  
+> 适用版本：从当前公开 `v0.23.0` 起，持续适用于后续网站版本
 > 说明：本文档不是产品版本号，也不是内容发布版本号。它是网站产品结构、视觉系统、内容对象与能力边界的统一依据。
 
 ## 0. 唯一事实源与阅读方式
@@ -18,12 +18,12 @@
 | `AGENTS.md` | 项目边界、协作、语言和执行规则 | 只引用本文件，不复制产品/视觉正文 |
 | `docs/rules/iteration-and-release.md` | 版本、task、内容发布、Git 和部署规则 | 工程流程事实源，不由本文替代 |
 | `docs/iterations/current.md` | 唯一当前工程迭代指针 | 只记录正在实施的版本 |
-| `docs/iterations/roadmap.md` | 已确认方向的版本队列与跨版本协作合同 | 只定义先后和进入条件，不替代本文或 `current.md` |
+| `docs/iterations/candidates/` | 未确认产品优化的唯一候选入口 | 当前版本结束后由产品 task 统一检查，不定义当前授权 |
 | `docs/iterations/history/` | 已完成版本的计划和结果 | 只用于追溯，不重新定义当前产品 |
 | `docs/qa/` | 版本或问题的验证证据 | 证明某次验收，不是长期设计源 |
 | `docs/operations/` | 日常采集、审核和发布操作合同 | 不存产品视觉正文 |
 | `docs/upstream/` | career、Robotaxi 等上游事实快照 | 提供事实，不提供网站 UI 决策 |
-| `docs/design/` | 只保留历史方案、未确认草案或跨项目交接附件 | 不得作为当前基线直接指导实现 |
+| `docs/design/` | 已确认的正式版本方案、视觉系统与验收合同 | 不得存放未确认 DRAFT |
 
 事实冲突时按以下顺序处理：
 
@@ -63,7 +63,7 @@
 
 ### 2.1 已经工程化并公开使用
 
-当前公开 `v0.19.0` 已经形成以下稳定能力：
+当前公开 `v0.23.0` 已经形成以下稳定能力：
 
 | 能力 | 当前实现 | 内容更新是否需要产品迭代 |
 | --- | --- | --- |
@@ -592,17 +592,17 @@ sourcePath / renderer / layoutPreset / alt / caption
 | 新增或改变 VisualizationHost/renderer adapter | 是 |
 | 修改 Robotaxi 嵌入安全、权限或公开演示能力 | 是 |
 
-工作流、发布命令和串行交接继续遵守 `docs/rules/iteration-and-release.md`。产品方案可以并行形成 `DRAFT`，但不能修改当前版本或合入主线；当前版本收口后由产品 task 更新本文并交 Engineering。
+工作流、发布命令和串行交接继续遵守 `docs/rules/iteration-and-release.md`。产品方案可以并行形成 `DRAFT`，但不能修改当前版本或合入主线；当前版本收口后由产品 task 检查候选入口并交 Engineering。
 
 ## 11. 产品变化的分流原则
 
-本文件只维护“网站产品应该是什么”。项目通用的版本启动、DRAFT 门禁、问题登记、跨 task 交接、串行实现、验证、提交/tag、发布和资源规则，唯一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准；版本先后以 [`docs/iterations/roadmap.md`](../iterations/roadmap.md) 为准；当前实施状态以 `docs/iterations/current.md` 为准。
+本文件只维护“网站产品应该是什么”。项目通用的版本启动、DRAFT 门禁、问题登记、跨 task 交接、串行实现、验证、提交/tag、发布和资源规则，唯一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准；未来候选以 `docs/iterations/candidates/` 为准；当前实施状态以 `docs/iterations/current.md` 为准。
 
 产品侧只保留以下分流：
 
 - 新增内容对象、章节、来源或现有类型图形：按内容合同运营，不改变产品能力；
 - 新页面但复用已有组合：使用已确认的 `PageDefinition` 能力；当前尚未实现时排入相应版本；
-- 新页面组合、内容 block、共享视觉、响应式或 renderer：形成版本方案并进入产品路线图；
+- 新页面组合、内容 block、共享视觉、响应式或 renderer：形成候选记录；产品 task 启动版本时再综合确定版本方案；
 - 上游事实、候选、审核和运营问题：交对应上游或运营责任文档；
 - 任何新产品方案都必须回到本文确认，不得在 task、页面组件或旧设计文件中形成第二份网站主架构。
 
@@ -677,15 +677,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 ## 14. 当前待确认事项
 
-以下事项不是本文的默认事实，必须在进入产品版本前形成明确决策：
-
-1. `VisualizationHost` 的首个 LikeC4 原生运行时是否进入下一个产品版本；
-2. 文章内多视图架构是直接嵌入交互 host，还是提供进入独立架构浏览器的入口；
-3. Robotaxi 受控互动空间是否建设独立 `/embed` 公开演示边界；
-4. 现有旧 `src/components/framework/` 遗留代码何时以独立清理任务删除；
-5. 当前 `docs/iterations/current.md` 与已发布 `v0.19.0` 的收口状态是否由发布责任 task 单独校正。
-
-这些待确认项不能由内容 task、Engineering 或本文作者单方面实现。
+当前产品总案没有已确认但未进入候选入口的事项。新的产品、视觉、页面或公开发布能力优化，必须先登记到 `docs/iterations/candidates/`，由产品 task 在下一次版本启动时统一评估；内容 task、Ops 和 Engineering 不得自行把问题升级为产品版本。
 
 ## 15. 变更记录
 
@@ -693,5 +685,4 @@ sourcePath / renderer / layoutPreset / alt / caption
 | --- | --- | --- |
 | 2026-08-01 | 首次建立统一产品架构、内容对象、视觉系统、展示能力和文档治理主文档 | 产品与视觉 task |
 | 2026-08-01 | 补充 `PageDefinition → PageComposition` 页面产品架构、共享区域和能力展示互动合同；候选 DRAFT 改为只保留未确认能力细节 | 产品与视觉 task |
-| 2026-08-01 | 增加跨版本路线图与完整版本文档包合同；按已发布事实归档 `v0.19.0` 并将 `current.md` 重置为无进行中版本 | 产品与视觉 task |
-| 2026-08-01 | 用户确认 `v0.20.0` 页面定义注册与组合渲染范围，方案进入 `current.md`；通用工作流收回项目规则，路线图仅保留版本队列 | 产品与视觉 task |
+| 2026-08-02 | 统一候选入口、current/history 和规则索引；roadmap 不再作为活动事实源 | 产品与视觉 task |

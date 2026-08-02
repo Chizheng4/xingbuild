@@ -27,43 +27,49 @@
 
 ### 2.2 并行设计与串行交付
 
-- Engineering 当前产品版本从实现开始，直至实现、验证、专业验收、提交/tag、push、部署和公网验收全部完成，必须保持唯一且严格串行；任何较早状态都不得作为开启下一产品版本的依据。
+- Engineering 当前产品版本从实现开始，直至实现、验证、产品/视觉验收、本地提交、版本记录、tag、push、部署和公网验收全部完成，必须保持唯一且严格串行。
 - 产品方案可以在独立 task 与隔离 worktree/branch 中并行推进，但只能形成明确标记为 `DRAFT（草案）` 的设计文档或有界决策检查点，不等于当前迭代、实现授权或发布计划。
 - 并行草案不得修改 `docs/iterations/current.md`、`VERSION.md`、产品代码、依赖、发布配置或正在执行版本的验收合同，也不得在当前版本收口前合入主线。
 - 草案至少记录事实源、已确认决策、明确非目标、待确认项和建议的后续版本；跨 task 仍只传递不超过 20 行的决策与状态检查点。
-- 当前版本完成全部串行交付状态后，仅由产品与视觉责任 task 将已确认草案整理为正式方案并批准进入 `docs/iterations/current.md`，再交 Engineering 开启下一个唯一版本。
+- 当前版本完成后，产品与视觉 task 只检查 `docs/iterations/candidates/`，将已确认候选综合为一个正式方案并写入 `docs/iterations/current.md`，再交 Engineering 开启下一个唯一版本。
 - 内容运营、媒体替换和其他不改变产品能力的工作继续遵守各自独立合同，不因产品草案并行而转为产品迭代。
-
-### 2.2.2 已确认候选自动续跑
-
-- 用户已明确确认并记录的候选，必须在当前版本完成公网验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
-- 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
-- `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
-- 每个确认候选完成“方案正式化 → Engineering 实现 → 产品/视觉验收 → 本地收口 → push → 部署 → 公网验收”后，立即回到候选清点，按 roadmap 优先级逐个执行，直到没有 `confirmed` 候选。
-- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容/运营任务始终按独立合同继续，不被该流水线阻断。
 
 ### 2.2.1 DRAFT、主线与版本提交门禁
 
 - `DRAFT（草案）` 是未确认的产品/视觉候选，不是当前版本，也不是发布输入。它不得进入主线版本提交、版本 tag、push、deploy 或公网验收。
 - 产品 DRAFT 在并行设计阶段必须位于独立 task 的隔离 branch/worktree；进入项目共享文档后，唯一目录为 `docs/iterations/candidates/`，不得继续放在 `docs/design/`、`docs/iterations/current.md` 或版本 history 中。DRAFT 可以被 Git 追踪以保留连续性，但不能成为产品版本输入。
-- 候选目录中的 DRAFT 必须有候选 ID、状态、`executionAuthorization`、事实源、已确认决策、非目标、待确认项、目标后续版本、责任 task 和验收草案。状态只能是 `DRAFT | selected | deferred | rejected | superseded`；未确认状态不得改写成正式方案。
+- 候选目录中的文件必须有候选 ID、`executionAuthorization: pending | confirmed`、事实源、优化目标、影响范围、责任 task 和下一动作；不再维护额外的版本路线图状态。
 - 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 通过 `git mv` 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`，再交 Engineering 实现。
 - 版本收口只暂存 `current.md` 明确列出的文件。`docs/iterations/candidates/` 下的 DRAFT、无责任归属的历史修改和未追踪文件必须被收口检查识别并排除；不得为了通过门禁临时删除、改名或混入文件。
 - 其他 task 的未纳入修改不得删除或覆盖。需要收口时，使用独立 branch/worktree 或可逆的有记录隔离，并在收口后完整恢复。
 - 内容 `draft` 是另一条内容生命周期，继续只存在被忽略的 `.content-workspace/`，无论是否已人工审核，都不得进入产品版本提交。
 - 因此“DRAFT 不进入版本”指候选目录中的未确认方案不进入产品版本交付；只有转为正式 `docs/design/v{版本号}...方案.md` 并进入 `current.md` 后，才可作为目标版本的一部分。
 
+### 2.2.2 已确认候选自动续跑
+
+- 用户已明确确认并记录的候选，必须在当前版本完成公网验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
+- 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
+- `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
+- 每个确认候选完成“方案正式化 → Engineering 实现 → 产品/视觉验收 → 本地收口 → push → 部署 → 公网验收”后，立即回到候选目录清点，直到没有 `confirmed` 候选；不读取 roadmap 或 task 历史决定顺序。
+- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容/运营任务始终按独立合同继续，不被该流水线阻断。
+
+### 2.2.3 当前版本验收修复优先
+
+- 本地版本提交完成后，Engineering 版本候选已经完成；产品/视觉验收发现的问题不退回旧版本，也不进入候选队列。
+- 验收问题由产品 task 直接形成当前版本的修复方案：无能力变化使用 patch 版本（例如 `v0.23.1`），新增共享能力使用 minor 版本；只有公开契约或信息架构破坏性变化才考虑 major 版本。
+- 修复版本完成并通过产品/视觉验收后，才回到 `candidates/` 检查下一个候选。
+
 ### 2.3 统一问题登记与转入
 
 - 可验证问题先进入责任域的唯一 tracked 问题清单；task 不维护私有 backlog，也不以完整会话历史保存问题。
 - 问题使用唯一 ID，并记录状态、证据、影响、临时控制、责任 task、是否需要产品版本、下一动作和关闭验证。跨 task 只传 ID 与当前检查点。
 - 内容运营问题统一登记在 `docs/operations/内容运营与发布问题清单.md`。内部规则修正使用独立文档提交，不改变产品版本/tag，也不夹入内容提交。
-- 只有公开内容对象、信息架构、页面投影、视觉/响应式或发布能力合同需要改变时，产品与视觉 task 才批准其进入 `docs/iterations/current.md`。
+- 只有公开内容对象、信息架构、页面投影、视觉/响应式或发布能力合同需要改变时，才创建产品候选；产品与视觉 task 在下一版本启动时统一评估并写入 `docs/iterations/current.md`。
 - Engineering 只实现当前迭代中已批准的问题；发现相邻问题时登记，不顺手夹带。问题关闭时保留 commit/tag（如适用）与验证结果。
 
 #### 2.3.1 当前版本进行中的新优化
 
-当前版本尚未完成时发现的新优化，统一先写入当前唯一指针 `docs/iterations/current.md` 的“在途变更登记”，不得只留在 task 消息、私有笔记或新建无责任归属的 backlog。
+当前版本尚未完成时发现的新优化，统一写入 `docs/iterations/current.md` 的“在途变更登记”，不得只留在 task 消息、私有笔记或新建无责任归属的 backlog。
 
 每条登记使用唯一 ID（例如 `V020-OPT-001`），至少包含：
 
@@ -71,31 +77,28 @@
 ID / discoveredAt
 发现事实与证据路径
 要解决的问题和用户影响
-分类与优先级：P0 当前阻断 | P1 当前范围内 | P2 后续候选 | 内容/运营
-当前决定：adopt-current | defer-next | route-content-ops | reject | closed
+分类：current-fix | candidate | content-ops | closed
+下一动作：修复当前版本 | 写入 candidates | 留在运营合同 | 记录关闭
 是否改变当前范围或验收
 责任 task / 下一动作 / 决定时间
 ```
 
 处理规则：
 
-1. **P0 当前阻断**：影响安全、事实正确性、公开合同或当前验收时，产品 task 先登记并通知 Engineering 在安全检查点暂停相关路径；确认后才可更新当前范围和验收。
-2. **P1 当前范围内**：不改变产品目标和公共合同、且能在当前范围内验证的，登记为 `adopt-current`，补充当前方案/验收后再实现；不得借机夹带相邻功能。
-3. **P2 后续候选**：不影响当前验收或需要新能力的，登记为 `defer-next`；完整设计进入明确标记的 `DRAFT`，路线图只增加版本队列指针，当前 Engineering 继续原范围。
-4. **内容/运营**：交内容、Ops 或问题清单合同处理，不进入产品 current，也不要求 Engineering 等待。
-5. **reject / closed**：记录理由和证据，不能删除登记来抹去决策历史。
+1. `current-fix`：当前版本验收或安全问题，直接形成修复版本，不进入候选队列。
+2. `candidate`：不影响当前验收或需要新能力，写入 `docs/iterations/candidates/`，当前 Engineering 继续原范围。
+3. `content-ops`：交内容、Ops 或运营问题清单；不进入 current，也不要求 Engineering 等待。
+4. `closed`：记录理由和证据，不能删除登记来抹去决策历史。
 
-只有 `adopt-current` 才能改变当前版本的目标、文件范围或验收；产品 task 必须先更新 `current.md`，Engineering 才能执行。`defer-next` 不得修改当前版本或让当前版本等待未来方案。
-
-版本收口时，所有登记必须变为 `closed`、`defer-next` 或已明确交给内容/运营；未决条目不得藏在 task 历史中。历史版本只记录最终决策和结果，完整候选方案保留在对应 DRAFT 或问题清单。
+只有产品 task 把候选正式化并写入 `current.md` 后，Engineering 才能执行；在途登记必须在版本收口时成为 `current-fix`、`candidate`、`content-ops` 或 `closed`，不得藏在 task 历史中。
 
 #### 2.3.2 候选方案目录与版本收口清点
 
-- `docs/iterations/candidates/` 是产品优化 DRAFT 的唯一共享入口；`roadmap.md` 只登记候选 ID、路径、优先级、进入条件和状态，不复制方案正文。
+- `docs/iterations/candidates/` 是产品优化候选的唯一共享入口，也是运营问题转入产品评估的唯一入口；不再维护活动 roadmap。
 - `docs/design/` 只保存已确认的正式设计方案、视觉系统和验收合同；文件名不得以 `DRAFT-` 开头。历史正式方案仍可保留在此用于追溯，结果以 `docs/iterations/history/` 为准。
-- 版本开始前，产品责任 task 必须从 candidates 中选择一个候选，将其转为正式方案并写入唯一 `current.md`；未选择的候选保持原状态，不阻断当前版本。
-- 版本收口前，必须检查 candidates 中每个文件都有合法状态、候选 ID、责任 task 和下一动作；无责任、过期目标版本或状态缺失的候选是治理阻断，不得静默忽略。
-- 版本收口后，必须输出简短候选清点：已完成、延期、拒绝、被替代和仍待确认；没有正式下一候选时，保留上一已发布版本作为 current 基线并停止，不自动开启版本。
+- 版本开始前，产品责任 task 只检查 candidates 中的 `executionAuthorization: confirmed`，综合确定一个正式版本；未纳入的候选保留原文件，不阻断当前版本。
+- 同一时间最多一个 `confirmed` 候选；出现多个时只登记排序阻断，不自行猜测顺序。
+- 版本收口后，若没有 `confirmed` 候选，保留上一已发布版本作为 current 基线并停止；不读取 roadmap 或 task 历史补全队列。
 - 候选 DRAFT 可以进入独立规则/文档治理提交，但不得进入产品版本 tag、内容提交、部署或公开页面。
 
 ### 2.4 事件驱动的跨 task 调度
@@ -112,6 +115,22 @@ ID / discoveredAt
 - 用户查询状态时，只允许一次即时快照（例如 `timeoutMs: 0`）或读取目标 task 已主动回传的最新检查点；查询结束后不得自动进入持续监控。
 - `等待上游输入`、`blocked` 或“待用户授权”表示目标 task 已报告条件并结束当前回合，不表示后台调用等待工具。
 - 只有用户明确要求“监控”“等待完成”或同一 task 内不可拆分的短时异步命令，才允许有界等待；每次等待不得超过沟通与资源规则允许的时长。
+
+#### 2.4.1 固定版本交接
+
+- 产品/视觉启动版本：检查上一个版本结果和 `candidates/`，形成正式方案并写入 `current.md`，只交一次 Engineering。
+- Engineering 本地完成实现、QA、commit 和 `current.md`/`VERSION.md` 记录后，只向产品/视觉发送一次验收检查点；不得另开文档收口 task。
+- 产品/视觉验收通过后，Engineering 在同一版本 task 内完成 tag、push、部署和公网验收；`current.md` 转入 `history/` 的最终记录也由 Engineering 完成。
+- 若验收发现问题，直接形成当前版本修复版本；不回写已提交版本、不进入候选队列。
+- 当前版本的 `current.md` 只保留：版本、目标、阶段、证据、阻断 ID、下一动作和发布授权；不建立复杂状态机。
+
+#### 2.4.2 Git 回退与资源安全
+
+- 未 push 的本地版本问题：只在 Engineering 隔离 worktree 中修正或放弃，不操作用户主工作区。
+- 已 push 未部署的问题：用新修正 commit，不改写远端历史、不移动已创建 tag。
+- 已部署的问题：使用上一个已验证 commit/tag 重新发布，保留问题版本和回退证据。
+- `main` 只作为干净集成/发布基线；DRAFT、Engineering 和内容发布不得共享脏工作区。
+- 产品预览只使用带身份租约的 `4317`；租约必须包含 worktree、HEAD、版本、PID 和 task。端口冲突时由占用者释放，禁止静默换端口或终止未知进程。
 
 ### 2.5 多项目与项目 Agent
 
@@ -150,10 +169,11 @@ ID / discoveredAt
 - 必须通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
 - 必须形成独立 Git 提交；范围只能是 `content/observations/<slug>.json` 与该对象必要的 approved media，产品版本不得变化；
-- 发布前必须满足 `origin/main == HEAD^`；push 后的部署或公网验收重试必须保持同一 HEAD，不创建替代提交；
+- 内容发布不等待产品版本，也不要求产品 task 的工作区干净；发布器必须从最新 `origin/main` 创建唯一干净内容 worktree，并在 fetch→目标提交→push→部署→公网验收临界区使用短时 release lease。
+- 部署前必须再次确认远端 HEAD 仍是目标内容提交；主线在 lease 外推进时，内容发布器自动 fast-forward、重建并重新校验目标 slug，不发布旧构建；push 后的部署或公网验收重试保持同一 HEAD。
 - 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
 - `content:approve` 不扫描、不删除也不修改无关 workspace；目标已有 review、recovery、production 或 candidate/import 冲突时硬失败，不得用该机械命令代替人工选题、写稿、事实审核、内容提交或发布授权；
-- 发布仍需用户执行 `./publish-content.command` 或在当前任务明确授权；
+- 用户在项目规则或当前任务明确授权“直接发布”后，内容 task 可按合同自动执行，不再为每条内容重复等待；事实审核、目标 slug、范围和公网门禁不变。
 - Scheduled task 只能产生可信证据候选，不能决定 Brief/Article 表达、人工审核、promote 或生产发布。
 
 `ObservationPublication → EvidenceUnit → Source` 是观察内容的固定三层模型。缺失字段必须失败或保留明确待补项，脚本不得虚构事实、来源、经营影响或证据关系。
@@ -176,7 +196,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 唯一当前指针：`docs/iterations/current.md`。
 
-未确认的产品优化统一位于 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。已确认方向的版本先后、进入条件和跨版本文档包以 `docs/iterations/roadmap.md` 为准；路线图不是当前授权，不得绕过 `current.md` 直接实现候选版本。
+未确认的产品优化和运营转入的产品候选统一位于 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。版本顺序只由产品 task 在当前版本结束后根据唯一 `confirmed` 候选决定，不读取 roadmap 或 task 历史。
 
 每轮开始时至少记录：
 
@@ -186,7 +206,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 - 验收标准；
 - 当前状态。
 
-完成后将计划移动到 `docs/iterations/history/v{版本号}.md`，再重置当前指针。历史文件只用于追溯，不回写。
+本地提交后由 Engineering 在 current 记录 commit/tag 和验收阶段；产品/视觉通过且公网验收完成后，由同一 Engineering task 将最终结果写入 `docs/iterations/history/v{版本号}.md`，current 保留最近发布基线。历史文件只用于追溯，不回写。
 
 ## 5. 标准启动
 
@@ -218,7 +238,7 @@ npm run release:closeout-check
 
 它会阻止未暂存修改或未追踪文件跨入本次收口。通过后再提交与打标签。
 
-版本收口同时必须完成候选清点：`docs/iterations/candidates/` 中的 DRAFT 不得被暂存；每个候选必须有合法状态、候选 ID、责任 task 和下一动作；未确认候选不视为当前版本未完成。没有正式下一候选时，归档完成后保留上一已发布版本作为 `current.md` 的基线锚点，并标明“没有下一正式版本”；只有下一方案正式 `adopt-current` 时才替换该指针，不因候选存在自动开启下一版本。这样可同时满足版本追溯与项目门禁对 current/version 一致性的要求。
+版本收口同时必须完成候选清点：`docs/iterations/candidates/` 中未确认候选不得被暂存；每个候选必须有候选 ID、`executionAuthorization`、责任 task 和下一动作。验收修复优先于候选清点；没有验收修复且没有 `confirmed` 候选时，归档完成后保留上一已发布版本作为 current 基线并停止。
 
 本地提交和标签完成后、双击发布前，再执行一次快速只读门槛：
 
@@ -259,11 +279,11 @@ npm run test:sites
 
 默认权限边界：
 
-- Codex 可以在稳定迭代完成后执行本地 Git 提交和版本标签；
+- Engineering 可以在稳定迭代完成后执行本地 Git 提交和版本标签；
 - 本地提交不等于推送 GitHub，也不等于发布线上；
 - GitHub 仓库创建、首次推送、EdgeOne 发布、域名绑定和 DNS 修改需要用户明确授权；
 - 常规情况下由用户双击发布命令；
-- 只有用户在当前任务中明确要求“直接发布”时，Codex 才能代为执行线上发布。
+- 只有 `current.md` 明确标记“直接上线”，或用户在当前任务明确要求“直接发布”时，Engineering 才能代为执行线上发布。
 
 发布命令按顺序执行：
 
@@ -288,11 +308,11 @@ npm run test:sites
 该命令不创建或推送版本 tag，但必须：
 
 1. 缺失或非法 slug 立即失败，不从 HEAD 猜测目标；
-2. 确认 `main`、工作区干净，目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；
+2. 从最新 `origin/main` 创建唯一干净内容 worktree，确认目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；不得要求产品责任方工作区干净；
 3. 只检查目标 slug 的 candidate/import 冲突；无关 ignored workspace 内容可以并存；
-4. 确认 HEAD 只包含目标 Observation 与必要 approved media，相对父提交产品版本不变，且首次 push 前 `origin/main == HEAD^`；
+4. 在短时 release lease（发布租约）内确认 HEAD 只包含目标 Observation 与必要 approved media；若 lease 前远端 main 已前进，则 fast-forward、重建目标 slug 并重新检查，不得发布旧构建；
 5. 执行目标检查、全量 content check、生产构建和 Sites 测试，并拒绝任何 workspace 路径进入生产 source/bundle；
-6. 只推送已验证 HEAD；若 `origin/main == HEAD`，仅允许以同一提交重试部署与公网验收；
+6. 部署前再次确认远端 main 仍等于已验证 HEAD；若不一致则停止并按 lease 重建，绝不部署旧 HEAD；
 7. 部署既有 `xingbuild-nochina` 项目；
 8. 以目标 slug URL、稳定产品版本和同一 commit 完成公网验证，分别报告 push、部署和公网结果；
 9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 post-push retry 成功后仍执行 finalize。
@@ -349,13 +369,15 @@ npm run test:sites
 本地 Git 是 xingbuild 代码和网站表达变化的版本事实源：
 
 1. 每个稳定版本完成验证；
-2. 更新当前迭代和 `VERSION.md`；
+2. Engineering 在同一收口中更新 `current.md`、`VERSION.md` 和（最终发布时）`history/v{版本号}.md`；
 3. 检查变更范围；
 4. 暂存本轮范围并执行 `npm run release:closeout-check`；
 5. 创建本地提交；
 6. 创建同名版本标签；
 7. 执行 `npm run release:preflight`；只有通过后才报告“可发布”；
 8. 需要共享、备份或触发 EdgeOne Git 部署时，再单独推送 GitHub。
+
+本地 commit 是可审计的版本候选，不等于公网发布。产品/视觉验收发现问题时，以新修复版本 commit 继续，不移动已发布 tag、不重写历史。
 
 本地 Git、GitHub 和 EdgeOne 分别承担不同责任：
 

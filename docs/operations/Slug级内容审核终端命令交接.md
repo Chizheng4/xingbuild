@@ -24,7 +24,7 @@ npm run content:approve -- --slug <slug> --authority <authority>
 1. 在既有 content workflow 脚本中抽取共享校验，避免以子进程串接 npm 命令或复制审核逻辑。
 2. 更新 `package.json`、`docs/rules/iteration-and-release.md` 与对应自动化测试；实现后把 AGENTS 中“目标”表述改为已交付合同。
 3. 至少覆盖：正常目标、缺 slug/authority、已有 production、目标候选或草稿冲突、缺来源或证据、无关 workspace 草稿并存、失败不写 production。
-4. 版本按产品串行规则由产品/视觉 task 开启并验收；本文件不授权发布。
+4. 这是内容运营能力合同，不进入产品 current、产品版本或 tag；Engineering 在独立运营能力提交中实现并测试，本文件不授权发布。
 
 ## 不得扩展
 
