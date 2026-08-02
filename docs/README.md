@@ -46,7 +46,7 @@
 - `design/v*.md`：对应版本的历史方案，保留用于追溯，不指导当前实现。
 - `product/个人网站定位、内容与信息架构设计 v1.0.md`：早期产品定位方案，保留用于追溯，不指导当前实现。
 - [网站出版体系、品牌与视觉方向](explorations/网站出版体系、品牌与视觉方向.md)：早期探索，保留作为来源记录。
-- `iterations/candidates/`：未确认或等待产品评估的候选；候选文件自带 `executionAuthorization`，不另设版本路线图。
+- `iterations/candidates/`：未确认或等待产品评估的候选；候选文件同时记录 `status` 与 `executionAuthorization`，不另设版本路线图。
 - [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：已完成版本方案，结果见 `iterations/history/v0.20.0.md`。
 - `design/v*.md`：已完成或已确认的版本方案，只用于追溯和当前版本实施；当前产品/视觉基准仍以产品总案为准。
 - `operations/` 下的运行问题记录已归档；产品与工程优化只读取 `iterations/candidates/` 下的候选文件。

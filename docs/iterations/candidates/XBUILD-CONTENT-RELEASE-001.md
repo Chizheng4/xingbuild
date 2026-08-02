@@ -2,6 +2,7 @@
 
 ## 状态
 
+- `status: pending`
 - `executionAuthorization: pending`
 - 产品评审：`pending`（路由：`current-fix`）
 - 评审结论：问题事实成立，属于既有内容发布能力的闭环缺口；本轮按用户要求暂不进入 Engineering，待明确启动修复版本后再改为 `confirmed`。

@@ -1,6 +1,6 @@
 # Slug 级内容审核终端命令交接
 
-状态：待 Engineering 实现。范围仅为日常经营观察内容运营能力；不改读者页面、视觉、内容对象或产品版本展示。
+状态：已交付，日常内容运营使用（v0.15.7）。范围仅为日常经营观察内容运营能力；不改读者页面、视觉、内容对象或产品版本展示。
 
 ## 目标
 
@@ -19,12 +19,11 @@ npm run content:approve -- --slug <slug> --authority <authority>
 - 失败不得覆盖已有 production、审核记录或草稿；不得留下半成品 production 对象。目标已有审核、生产同 slug、来源/证据缺失、哈希不一致或目标冲突都应硬失败。
 - 该命令不创建 Git commit、不 push、不部署、不修改 package/VERSION/tag。其后仍由独立内容提交与 `./publish-content.command --slug <slug>` 完成发布。
 
-## 实现与验证边界
+## 交付与验证边界
 
-1. 在既有 content workflow 脚本中抽取共享校验，避免以子进程串接 npm 命令或复制审核逻辑。
-2. 更新 `package.json`、`docs/rules/iteration-and-release.md` 与对应自动化测试；实现后把 AGENTS 中“目标”表述改为已交付合同。
-3. 至少覆盖：正常目标、缺 slug/authority、已有 production、目标候选或草稿冲突、缺来源或证据、无关 workspace 草稿并存、失败不写 production。
-4. 这是内容运营能力合同，不进入产品 current、产品版本或 tag；Engineering 在独立运营能力提交中实现并测试，本文件不授权发布。
+1. 交付实现复用既有 content workflow 校验，并覆盖正常目标、参数缺失、已有 production、目标冲突、来源/证据缺失、无关 workspace 并存和失败不写 production。
+2. 命令已作为独立运营能力交付；它不进入产品 `current`、产品版本或 tag，日常使用不触发 Engineering 迭代。
+3. 后续若发现命令或发布工具缺陷，必须先停止该次运营操作并登记 `docs/iterations/candidates/` 候选；不得由内容 task 私自创建工程分支或修改 main。
 
 ## 不得扩展
 

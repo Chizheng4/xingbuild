@@ -38,7 +38,8 @@
 
 - `DRAFT（草案）` 是未确认的产品/视觉候选，不是当前版本，也不是发布输入。它不得进入主线版本提交、版本 tag、push、deploy 或公网验收。
 - 产品 DRAFT 在并行设计阶段必须位于独立 task 的隔离 branch/worktree；进入项目共享文档后，唯一目录为 `docs/iterations/candidates/`，不得继续放在 `docs/design/`、`docs/iterations/current.md` 或版本 history 中。DRAFT 可以被 Git 追踪以保留连续性，但不能成为产品版本输入。
-- 候选目录中的文件必须有候选 ID、`executionAuthorization: pending | confirmed`、事实源、优化目标、影响范围、责任 task 和下一动作；不再维护额外的版本路线图状态。
+- 隔离 worktree 只允许准备候选草稿；候选交接只有在 docs-only commit 已同步到 canonical `main` 后才成立。通知必须携带 canonical commit、候选路径和下一动作；仅存在于 task 私有 worktree 的文件不得作为共享事实源。
+- 候选目录中的文件必须有 `status: pending | confirmed | closed`、`executionAuthorization: pending | confirmed`、事实源、优化目标、影响范围、责任 task 和下一动作；不再维护额外的版本路线图状态。
 - 只有用户和产品责任 task 明确确认、补齐事实源/非目标/验收、指定目标版本，并将 DRAFT 通过 `git mv` 转为 `docs/design/v{版本号}...方案.md` 后，才允许写入 `current.md`，再交 Engineering 实现。
 - 版本收口只暂存 `current.md` 明确列出的文件。`docs/iterations/candidates/` 下的 DRAFT、无责任归属的历史修改和未追踪文件必须被收口检查识别并排除；不得为了通过门禁临时删除、改名或混入文件。
 - 其他 task 的未纳入修改不得删除或覆盖。需要收口时，使用独立 branch/worktree 或可逆的有记录隔离，并在收口后完整恢复。
@@ -62,9 +63,10 @@
 ### 2.3 统一问题登记与产品评审
 
 - 任何可验证的问题、优化点或能力缺口，不论来自产品、视觉、Engineering、内容或 Ops，都必须先写入 `docs/iterations/candidates/<candidate-id>.md`；这里是唯一 tracked 优化入口。
-- 候选文件由发现方填写事实、证据、影响、非目标、责任 task 和下一动作，并将 `executionAuthorization` 初始设为 `pending`；发现方不得自行决定进入版本或 Engineering。
-- 产品与视觉 task 负责逐条评审并写入 `confirmed`、`pending` 或 `closed`，同时记录路由 `current-fix`、`next-version`、`content-ops` 或 `closed` 及理由。
-- 只有 `confirmed` 且已写入 current 的候选才能交 Engineering；未确认候选不能实现、提交、tag、push、deploy 或进入公开页面。
+- 候选文件由发现方填写事实、证据、影响、非目标、责任 task 和下一动作，并将 `status: pending` 与 `executionAuthorization: pending` 初始写入；发现方不得自行决定进入版本或 Engineering。
+- 产品与视觉 task 负责逐条评审并更新 `status: confirmed | pending | closed`，同时记录路由 `current-fix`、`next-version`、`content-ops` 或 `closed` 及理由。`executionAuthorization` 只表示是否允许进入已确认的执行闭环，不替代产品状态。
+- 只有 `status: confirmed`、`executionAuthorization: confirmed` 且已写入 current 的候选才能交 Engineering；未确认候选不能实现、提交、tag、push、deploy 或进入公开页面。
+- 运营工具、CLI 或 Skill 发现缺陷时，立即停止本次运营操作；不得为了本 task 在分支或 main 私自修复、创建工程迭代或绕过门禁。发现方只登记 pending 候选并通知产品与视觉 task，由其决定是否形成后续产品能力版本。
 - `.content-workspace/ops/` 只保存采集、覆盖、运行和发布证据；不建立第二个 tracked 问题清单。已关闭的旧问题清单只作为历史归档，不参与启动或状态判断。
 - Engineering 只实现当前迭代已批准的问题；相邻问题必须新增候选文件，不能顺手夹带。问题关闭后在候选文件中追加 commit/tag 与验证结果。
 
@@ -76,6 +78,7 @@
 
 ```text
 ID / discoveredAt
+status: pending | confirmed | closed
 发现事实与证据路径
 要解决的问题和用户影响
 executionAuthorization: pending | confirmed
@@ -87,9 +90,9 @@ executionAuthorization: pending | confirmed
 
 处理规则：
 
-1. 发现方只写 `pending` 候选并通知产品与视觉 task。
+1. 发现方只写 `status: pending`、`executionAuthorization: pending` 候选，并在 canonical `main` 同步后通知产品与视觉 task。
 2. 产品与视觉 task 评审后决定路由和 `confirmed/pending/closed`。
-3. `current-fix` 或 `next-version` 只有在确认并写入 current 后才交 Engineering。
+3. `current-fix` 或 `next-version` 只有在 `status` 与 `executionAuthorization` 均为 `confirmed` 且写入 current 后才交 Engineering。
 4. `content-ops` 留在被忽略的运营证据中，不创建第二个 tracked backlog。
 5. `closed` 保留理由和证据，不能删除候选文件抹去决策历史。
 
@@ -171,6 +174,7 @@ executionAuthorization: pending | confirmed
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
 - 必须形成独立 Git 提交；范围只能是 `content/observations/<slug>.json` 与该对象必要的 approved media，产品版本不得变化；
 - 内容发布不等待产品版本，也不要求产品 task 的工作区干净；发布器必须从最新 `origin/main` 创建唯一干净内容 worktree，并在 fetch→目标提交→push→部署→公网验收临界区使用短时 release lease。
+- 内容 task 不创建、不管理产品 Engineering 的 branch/worktree，也不把 CLI 的内部临时内容 worktree当作工程迭代；若发布工具自身失败，立即停止本次发布并登记候选，不在 main 或隔离分支中自行修复。
 - 部署前必须再次确认远端 HEAD 仍是目标内容提交；主线在 lease 外推进时，内容发布器自动 fast-forward、重建并重新校验目标 slug，不发布旧构建；push 后的部署或公网验收重试保持同一 HEAD。
 - 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
 - `content:approve` 不扫描、不删除也不修改无关 workspace；目标已有 review、recovery、production 或 candidate/import 冲突时硬失败，不得用该机械命令代替人工选题、写稿、事实审核、内容提交或发布授权；

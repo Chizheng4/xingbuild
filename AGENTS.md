@@ -26,9 +26,10 @@
 
 - 产品优化 DRAFT 只进入 `docs/iterations/candidates/`；未确认前不得修改 `current.md`、代码、版本或发布状态。
 - 当前版本只由 `docs/iterations/current.md` 定义；已完成版本进入 `docs/iterations/history/`。
-- 任何问题或优化点先创建候选 ID；候选初始为 `executionAuthorization: pending`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。只有 `confirmed` 候选才能进入 current 或 Engineering。
+- 任何问题或优化点先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。只有两者均为 `confirmed` 且写入 current 的候选才能进入 Engineering。
+- 运营工具、CLI 或 Skill 出现缺陷时必须立即停止该次运营操作，只登记候选并通知产品与视觉；禁止内容 task 或其他 task 为自己创建工程分支、修改 main 或绕过产品版本门禁。
 - 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。
-- main 只作为干净集成/发布基线；Engineering、DRAFT 和内容发布使用有界 worktree，禁止共享脏工作区。
+- main 只作为干净集成/发布基线；产品 DRAFT 与 Engineering 可使用有界 worktree，内容 task 只调用既有 CLI（CLI 内部临时 worktree 不属于产品工程分支），禁止共享脏工作区。
 - 产品预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不换端口、不终止未知进程。
 - 详细迭代、分支、端口、验证、回退和发布规则只以 `docs/rules/iteration-and-release.md` 为准。
 

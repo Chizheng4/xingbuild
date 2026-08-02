@@ -2,6 +2,7 @@
 
 ## 状态
 
+- `status: closed`
 - `executionAuthorization: pending`
 - 产品评审：`closed`（路由：`closed`）
 - 评审结论：候选所描述的能力已由 `c49fab4031a4d166f472e9a6cb60f40291fcb7c` 实现并验证；不再开启重复 Engineering 工作。

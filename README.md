@@ -2,10 +2,12 @@
 
 xingbuild 是金星（Xingjin）的作者型个人网站和持续演进的作品体系。
 
+> 本文件只作项目入口说明，不是产品、迭代、问题或发布事实源；工作流以 `AGENTS.md`、`docs/rules/iteration-and-release.md`、产品总案和 `docs/iterations/current.md` 为准。
+
 当前网站通过三个顶层栏目连接作者观察、持续构建的作品和职业信用：
 
 ```text
-观察 / 作品 / 关于我
+B端产品 / 经营观察 / 关于我
 ```
 
 ## 本地运行
