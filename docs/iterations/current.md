@@ -2,11 +2,19 @@
 
 ## 当前唯一版本：`v0.24.0`
 
-状态：已确认，进入 Engineering 实现；完成后直接提交、打标签、推送、部署并公网验收。
+状态：已完成 Engineering 实现、验证、提交、打标签、推送、部署与公网验收。
 发布授权：用户已明确要求本版本直接上线。
 正式方案：[`docs/design/v0.24.0 项目文件与协作基线治理方案.md`](../design/v0.24.0%20项目文件与协作基线治理方案.md)
 方案 ID：`XBUILD-UNIFIED-RELEASE-001`
 关联候选：`XBUILD-CONTENT-RELEASE-001`
+
+## 最终发布证据
+
+- 最终发布 commit：`3e3d499693a4b3c60d4b4b9ed46362b6dad5880b`。
+- Annotated tag：`v0.24.0`，未移动既有 `v0.23.0` tag。
+- EdgeOne production deployment：`dp1opgx44tst`。
+- 公网 `https://xingbuild.top/release.json` 与 `https://xingbuild.top/content-manifest.json` 均为 `version=v0.24.0`、`commit=3e3d499693a4b3c60d4b4b9ed46362b6dad5880b`。
+- `release:check` 111/111、`release:preflight`、build、Sites tests 及 390×844/1440×900 公网响应式 QA 通过；移动菜单可用，console error/warning 为 0。
 
 ## 根本目标
 
