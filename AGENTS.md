@@ -25,6 +25,7 @@
 - Engineering 完成本地实现与自 QA 后，形成一个“本地提交版本”（版本号/名称/说明、代码提交、tag、版本记录和 clean 工作区），再交产品与视觉 task 验收；本地提交后任何修改都属于下一版本。
 - 产品与视觉 task 验收本地提交版本；验收发现产品、视觉、对象边界或验收合同问题时，直接定义下一个 patch/小迭代/大迭代并写入 `current.md`，不重新创建普通候选。
 - 产品与视觉验收通过后，只有用户明确要求 publish 时，Engineering 才执行线上发布；publish 成功后线上版本必须与本地提交版本的版本号和最终提交一致。
+- `current.md` 必须同时维护 `localSubmission`、`productVisualAcceptance`、`publishAuthorization`、`onlineRelease` 四个状态字段；自然语言、Git/tag 和线上证据不一致时，必须停止验收或发布，不能自行修正文案后继续。
 - 每次 Engineering 或产品与视觉 task 收口都必须报告：本地版本状态、线上版本状态、本地 URL、线上 URL、已确定项、未确定项、候选状态、阻断和下一动作；无候选也必须明确报告等待用户下一步。
 
 ## 最小执行门禁

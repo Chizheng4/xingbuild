@@ -236,6 +236,17 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 唯一当前指针：`docs/iterations/current.md`。
 
+`current.md` 必须同时记录并保持以下机器可检验状态字段：
+
+```text
+localSubmission: pending | complete
+productVisualAcceptance: pending | passed | rejected
+publishAuthorization: pending | confirmed
+onlineRelease: pending | complete | partial
+```
+
+状态转换必须遵循：产品方案确认 → Engineering local commit/tag/clean → 产品/视觉验收 → 用户 publish 授权 → push/deploy/public verify。自然语言状态、Git/tag、线上 manifest 与四个字段不一致时，closeout、preflight 或产品验收必须失败；任何脚本不得自行把 pending 写成 complete。
+
 未确认的产品优化和运营转入的产品候选统一位于活动 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。产品 task 在当前版本结束后把候选转化为一个正式设计方案并立即归档来源候选；版本顺序不读取 roadmap 或 task 历史。
 
 每轮开始时至少记录：

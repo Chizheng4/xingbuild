@@ -1,3 +1,8 @@
+## v0.24.9 — 版本状态机与收口事实治理
+
+- 状态：Engineering 已完成状态字段、事实一致性门禁与自 QA；待本地 commit/tag 后产品/视觉验收，尚未 push、publish、部署或公网验收。
+- 范围：current 统一记录 localSubmission、productVisualAcceptance、publishAuthorization、onlineRelease，并由 closeout/preflight 阻止自然语言、Git/tag 与线上事实矛盾。
+
 ## v0.24.8 — 统一发布消费现有版本与构建纯度治理
 
 - 状态：Engineering 实现与自 QA 已完成，待本地 commit/tag 与产品/视觉验收；尚未 push、publish、部署或公网验收。
