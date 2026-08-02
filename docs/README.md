@@ -57,3 +57,5 @@
 ## Publish 命令边界
 
 `publish-xingbuild.command`、`publish-content.command`、`publish-article.command` 和 `publish-practice.command` 只发布已完成产品/视觉验收的现有 local commit/tag；不自动递增版本、不修改版本记录、不 commit/tag。入口脚本携带用户明确的 `--authorize-publish` 动作，直接调用统一脚本时必须显式传入该参数或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`。发布失败只报告未发布或部分完成，不生成完成历史。详细合同见 [迭代与发布规则](rules/iteration-and-release.md)。
+
+构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 仅在产品方案变更后、local commit 前显式运行并将生成物一并提交。

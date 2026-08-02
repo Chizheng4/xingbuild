@@ -1,3 +1,8 @@
+## v0.24.11 — 发布构建只读消费已提交生成物
+
+- 状态：Engineering 已完成构建纯度根修正与自 QA；生成器保持显式源变更命令，release build 只消费已提交生成物。
+- 范围：移除 build/release:check/publish 对 tracked-output generators 的无条件调用；构建后 tracked dirty 仍硬失败。
+
 ## v0.24.10 — 不可变版本身份与提交后事件分离
 
 - 状态：Engineering 已完成本地 commit/tag 与自 QA；提交后的产品/视觉验收、publish 授权和线上状态由外部 QA、显式授权参数与 release manifest 承担。

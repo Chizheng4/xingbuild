@@ -750,6 +750,18 @@ test("product and content publish scripts share the unified release contract", a
   assert.doesNotMatch(content, /find \.content-workspace/);
 });
 
+test("release build consumes committed generated outputs without invoking generators", async () => {
+  const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+  assert.equal(packageJson.scripts.build, "vite build && node scripts/prepare-sites-build.mjs");
+  for (const command of ["architecture:views", "framework:data", "framework:layout", "article:figures"]) {
+    assert.ok(packageJson.scripts[command], `${command} remains an explicit source-generation command`);
+  }
+  const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
+  assert.match(unified, /release:check/);
+  assert.match(unified, /build polluted tracked paths/);
+  assert.doesNotMatch(unified, /architecture:views|article:figures/);
+});
+
 test("content publish entry hard-fails missing or invalid slug before side effects", () => {
   for (const args of [[], ["--slug", "Invalid Slug"]]) {
     const result = spawnSync("zsh", [path.join(root, "publish-content.command"), ...args], {

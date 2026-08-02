@@ -49,6 +49,7 @@
 
 - 重大视觉修改且视觉事实源不明确时，先使用 Product Design 的 `get-context`；不要用临时截图或页面私有样式替代已确认设计。
 - 保持 `.openai/hosting.json`、`worker/index.js`、`scripts/prepare-sites-build.mjs` 和 Sites 测试完整；交付 Sites 前运行 `npm run build` 与 `npm run test:sites`。
+- 生成器命令（`architecture:views`、`framework:data`、`framework:layout`、`article:figures`）只在源/产品方案变更后、local commit 前显式运行；`npm run build`、`release:check` 与 publish 构建只读消费已提交生成物，不回写 tracked `src/generated/` 或 `public/`。
 
 ## 协作语言
 

@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.24.10",
+  "version": "0.24.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "article:check": "node scripts/article-content-check.mjs",
     "article:scope-check": "node scripts/article-scope-check.mjs",
     "framework:layout": "node scripts/generate-framework-layout.mjs",
-    "build": "npm run architecture:views && npm run article:figures && vite build && node scripts/prepare-sites-build.mjs",
+    "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/*.test.mjs",
     "check": "node scripts/check-project.mjs",

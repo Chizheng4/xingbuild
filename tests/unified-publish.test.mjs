@@ -20,6 +20,7 @@ test("unified publish treats tracked build output as a hard failure", () => {
     "dist/client/index.html",
   ]);
   assert.deepEqual(trackedDirtyPaths(""), []);
+  assert.deepEqual(trackedDirtyPaths("\n"), []);
 });
 
 test("current stores only immutable local version identity facts", () => {

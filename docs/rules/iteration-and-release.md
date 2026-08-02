@@ -317,6 +317,8 @@ npm run test:sites
 
 内容专项验证聚焦 schema、枚举、来源引用、事实边界、草稿隔离、目标文章与相关集合，不替代首次建立或修改内容系统时的产品版本完整验收。
 
+构建纯度规则：`npm run build`、`npm run release:check` 和统一 publish 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 是显式源变更/素材生成命令，只能在产品方案变更后、local commit 前运行，并将生成物纳入同一提交；构建后的 tracked dirty 检查仍是硬门禁。
+
 ## 7. EdgeOne 发布
 
 生产发布入口由用户手动执行：
