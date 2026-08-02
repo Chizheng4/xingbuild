@@ -1,47 +1,34 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.1`
+## 当前唯一版本：`v0.24.2`
 
-状态：已完成 Engineering v0.24.1 current-fix 实现、验证、提交、打标签、推送、部署与公网验收。
-发布授权：用户已明确要求直接上线；本修订不移动既有 `v0.24.0` tag。
-父版本：`v0.24.0` / `3e3d499693a4b3c60d4b4b9ed46362b6dad5880b`
-正式方案：[`docs/design/v0.24.0 项目文件与协作基线治理方案.md`](../design/v0.24.0%20项目文件与协作基线治理方案.md)
-方案/修订 ID：`XBUILD-V024-CLOSEOUT-001`
+状态：Engineering 本地实现与自 QA 完成；待本地提交、annotated tag、产品/视觉验收；尚未 push、publish、部署或公网验收。
+发布授权：未授权线上 publish、push 或部署。
+父版本：`v0.24.1` / `e4b5100b56cb6fd2e84a2329f88ad2ceab3d7b93`
+责任 task：产品与视觉主线负责合同与验收；Engineering 主线负责实现、自 QA、本地版本记录、commit/tag 和 clean 收口。
 
-## 阻断修复目标
+## 本版本目标
 
-修复 v0.24.0 发布后追加 docs-only closeout commit 导致的 tag/HEAD 分离，使本地 canonical main、产品版本、Git tag 和线上发布重新成为同一版本身份。
+将跨项目总合同落地为 xingbuild 的可执行产品、工程、内容与 task 治理流程，统一本地提交版本、产品/视觉验收、线上 publish 和候选清点边界。
 
 ## 本版本范围
 
-- 保留并追溯 v0.24.0 的实现、线上部署和公网证据；
-- 将 current/history 最终证据与 v0.24.1 的版本记录纳入同一修订发布；
-- 更新 `package.json`、`VERSION.md`、`current.md`、`docs/iterations/history/v0.24.1.md` 及必要 release 校验；
-- 创建不可移动的 annotated `v0.24.1` tag，使最终 `HEAD == origin/main == tag`；
-- 重新生成并部署 `release.json` 与 `content-manifest.json`，使二者与 v0.24.1 和最终 commit 完全一致；
-- 完成 `release:check`、`release:closeout-check`、`release:preflight`、build、Sites、push、EdgeOne 和公网验证。
+- `AGENTS.md`：canonical direct-local、task 创建/交接权限、Engineering/产品视觉责任和强制状态报告。
+- `docs/rules/iteration-and-release.md`：本地提交版本、history 不回写、验收后下一版本、线上可滞后、publish 统一版本和 task 目标缺失阻断。
+- `docs/product/xingbuild 网站产品架构与视觉系统总案.md`：产品/视觉验收责任、Engineering 自 QA 边界和状态报告。
+- `docs/operations/Slug级内容审核终端命令交接.md`：内容与发布 task 的本地/线上状态报告和 publish 边界。
+- `package.json`、`VERSION.md`、`current.md`、`docs/iterations/history/v0.24.2.md`：统一 v0.24.2 本地提交版本身份。
 
 ## 明确不做
 
-- 不移动或重写 `v0.24.0`、`v0.23.0` tag；
-- 不改变页面 IA、视觉、内容 schema、内容事实或上游工程；
-- 不新增第二套版本、content-only tag 或未打 tag 的线上 closeout 提交。
+- 不修改 UI、页面 IA、内容 schema、上游事实或运营内容。
+- 不创建 branch、worktree、替代 task 或第二个问题清单。
+- 不在本地提交前执行 push、publish、部署或公网验收。
+- 不回写既有 v0.24.1 history、tag 或线上版本。
 
-## 统一验收合同
+## 验收与下一动作
 
-```text
-package.json / VERSION.md / current.md / history
-        = v0.24.1
-最终 Git HEAD / origin/main / annotated tag
-        = RELEASE_COMMIT
-release.json / content-manifest.json / EdgeOne / 公网
-        = v0.24.1 + RELEASE_COMMIT
-```
-
-只有上述身份全部一致，且 `npm run release:preflight` 通过，产品与视觉 task 才能将本修订标记完成。
-
-
-## 最终修订验收
-
-- v0.24.1 的最终 HEAD、origin/main、annotated tag、release.json 与 content-manifest.json 由同一 release commit 统一确认。
-- 父版本 v0.24.0 的实现、deployment 与公网 manifest 证据保留于 `docs/iterations/history/v0.24.0.md`。
+- `npm run check`、`npm run content:check`、`npm run article:check`、`npm run practice:check` 已通过。
+- 完整 `release:check` 的既有 Mermaid/Puppeteer 浏览器启动 I/O 失败记录为阻断；不扩展本版本范围。
+- `git diff --check` 已通过。
+- 下一动作：完成版本收口、commit、annotated tag 和 clean 工作区后，向产品/视觉 task 发送一次本地提交检查点；等待产品/视觉验收与用户 publish 授权。

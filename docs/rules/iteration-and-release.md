@@ -25,6 +25,13 @@
 - 浏览器验证串行执行并在结束后释放资源。单个浏览器工作进程超过 2GB、Codex 合计超过 6GB、swap 持续增长或出现重复 worker 时，立即停止验证并请求用户决定；不得自行终止或清理用户进程。
 - 本地预览是当前 Engineering task 的唯一资源：固定端口 `4317` 必须绑定当前 worktree、HEAD、PID 和 task；启动只复用身份完全匹配的服务，否则硬失败，不换端口、不自动终止未知进程。标准 supervisor 退出时释放子进程和租约；未登记或归属不明的进程只报告阻断。
 
+### 2.1.1 Canonical 基线与并行资源门禁
+
+- 官方项目目录与 canonical `main` 是唯一长期事实源和默认执行基线；新 task 默认 direct-local，不自动创建 branch、worktree 或 detached checkout。
+- 只有用户明确授权并行或高风险隔离时，才允许创建 branch/worktree；启动记录必须包含目的、范围、责任 task、canonical HEAD 和清理条件。
+- 并行资源不得改变 canonical `main`、当前版本或发布状态；未授权的 detached worktree 不得作为交接、验收或版本事实源。
+- task 归档前必须完成 canonical 同步、脏改分类、官方工作区 clean、版本身份核对和本 task 临时 worktree 清理；无法确认归属的修改必须先报告阻断，不得擅自删除或混入版本。
+
 ### 2.2 并行设计与串行交付
 
 - Engineering 当前产品版本从实现开始，直至实现、验证、产品/视觉验收、本地提交、版本记录、tag、push、部署和公网验收全部完成，必须保持唯一且严格串行。
@@ -51,18 +58,19 @@
 - 用户已明确确认并记录的候选，必须在当前版本完成公网验收后由产品与视觉 task 自动清点；不再重复询问“是否开始下一版本”。
 - 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
 - `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
-- 每个确认候选完成“方案正式化 → Engineering 实现 → 产品/视觉验收 → 本地收口 → push → 部署 → 公网验收”后，立即回到候选目录清点，直到没有 `confirmed` 候选；不读取 roadmap 或 task 历史决定顺序。
+- 每个确认候选完成“方案正式化 → Engineering 实现与自 QA → 本地提交版本 → 产品/视觉验收 → 用户 publish 授权 → push → 部署 → 公网验收”后，立即回到候选目录清点，直到没有 `confirmed` 候选；不读取 roadmap 或 task 历史决定顺序。
 - 只有没有 `confirmed` 候选时才停止产品版本流水线；内容采集和审核继续按独立运营合同运行，但正式发布必须进入统一版本流水线。
 
-### 2.2.3 当前版本验收修复优先
+### 2.2.3 实施问题与提交后验收问题分流
 
-- 本地版本或公网验收发现任何问题，先创建唯一候选文件并通知产品与视觉 task；候选不得直接进入 Engineering。
-- 产品与视觉 task 将候选决定为 `current-fix`、`next-version` 或 `closed`；`current-fix` 使用 patch/minor/major 规则形成修复版本，`next-version` 等待后续版本，`closed` 保留理由和证据。
-- 只有产品与视觉 task 明确 `executionAuthorization: confirmed` 并写入 current 后，Engineering 才能实现。
+- Engineering 在本地提交前发现工程实现问题，先在当前版本内自行修复并重新 QA；不得把普通实现缺陷转成产品候选。
+- Engineering 发现产品目标、对象边界、事实口径、视觉合同或验收合同不成立时，停止越界实现，回到产品与视觉 task 重新确认；只有需要形成跨范围后续能力的问题才登记候选。
+- Engineering 形成本地提交版本后，产品与视觉 task 负责验收该已提交版本。验收发现产品、视觉、对象边界或验收合同问题时，产品与视觉 task 直接在 `current.md` 定义下一个 patch/小迭代/大迭代，不再创建普通候选。
+- 已提交版本不得回写、移动或覆盖；下一个版本必须重新走产品设计合同 → Engineering 实现与自 QA → 本地提交 → 产品与视觉验收。
 
 ### 2.3 统一问题登记与产品评审
 
-- 任何可验证的问题、优化点或能力缺口，不论来自产品、视觉、Engineering、内容或 Ops，都必须先写入 `docs/iterations/candidates/<candidate-id>.md`；这里是唯一 tracked 优化入口。
+- Engineering 实施中需要跨范围决策的可验证问题、产品优化、运营工具/CLI/Skill 缺陷和内容流程能力缺口，必须先写入 `docs/iterations/candidates/<candidate-id>.md`；这里是唯一 tracked 优化入口。已提交本地版本的产品与视觉验收问题不走普通候选，直接形成下一版本。
 - 候选文件由发现方填写事实、证据、影响、非目标、责任 task 和下一动作，并将 `status: pending` 与 `executionAuthorization: pending` 初始写入；发现方不得自行决定进入版本或 Engineering。
 - 产品与视觉 task 负责逐条评审并更新 `status: confirmed | pending | closed`，同时记录路由 `current-fix`、`next-version`、`content-ops` 或 `closed` 及理由。`executionAuthorization` 只表示是否允许进入已确认的执行闭环，不替代产品状态。
 - 只有 `status: confirmed`、`executionAuthorization: confirmed` 且已写入 current 的候选才能交 Engineering；未确认候选不能实现、提交、tag、push、deploy 或进入公开页面。
@@ -120,13 +128,25 @@ executionAuthorization: pending | confirmed
 - `等待上游输入`、`blocked` 或“待用户授权”表示目标 task 已报告条件并结束当前回合，不表示后台调用等待工具。
 - 只有用户明确要求“监控”“等待完成”或同一 task 内不可拆分的短时异步命令，才允许有界等待；每次等待不得超过沟通与资源规则允许的时长。
 
+#### 2.4.0 Task 创建与交接权限门禁
+
+- task 创建、fork、唤起和交接是不同动作；普通“执行”、版本推进、规则更新或工程授权不自动包含 task 创建权限。
+- 交接前必须确认目标 task 已由用户明确指定且真实存在，并记录目标 task 身份；不得用新建 task、临时 task、猜测的 task 或其他责任 task 替代缺失目标。
+- 找不到目标 task、目标 task 不存在、责任归属不清或无法确认目标身份时，必须立即向用户报告阻断并请求确认；不得自行创建、fork、@mention、轮询、后台等待或继续推进跨 task 工作。
+- 只有用户明确要求创建/启动/分派新的 task，且给出目标责任域或允许由本 task 代为创建时，才可创建 task；创建后仍须记录目的、范围、canonical HEAD、允许范围、禁止范围、回传 task 和清理条件。
+- 目标 task 已存在时，只发送不超过 20 行的有界交接；源 task 发送后结束当前回合，不通过持续等待维持协作。
+- 没有目标 task 时，下一动作只能是“等待用户确认目标 task 或授权创建”，不自动转入 Engineering、内容、Ops 或其他项目责任域。
+
 #### 2.4.1 固定版本交接
 
 - 产品/视觉启动版本：检查上一个版本结果和 `candidates/`，形成正式方案并写入 `current.md`，只交一次 Engineering。
-- Engineering 本地完成实现、QA、commit 和 `current.md`/`VERSION.md` 记录后，只向产品/视觉发送一次验收检查点；不得另开文档收口 task。
-- 产品/视觉验收通过后，Engineering 在同一版本 task 内完成 tag、push、部署和公网验收；`current.md` 转入 `history/` 的最终记录也由 Engineering 完成。
-- 若验收发现问题，直接形成当前版本修复版本；不回写已提交版本、不进入候选队列。
-- 当前版本的 `current.md` 只保留：版本、目标、阶段、证据、阻断 ID、下一动作和发布授权；不建立复杂状态机。
+- Engineering 在当前合同内完成实现、自 QA、本地提交和版本记录，形成一个本地提交版本：版本号、名称、说明、commit、annotated tag、`VERSION.md`、`current.md`/`history` 和 clean 工作区一致；随后只向产品/视觉 task 发送一次验收检查点。
+- 本地提交版本一经形成即为已提交版本；其完整迭代记录迁移到 `docs/iterations/history/v{版本号}.md`，不得因为后续验收结果回写旧版本。
+- 产品/视觉验收发现问题时，直接在 `current.md` 定义下一个 patch/小迭代/大迭代；旧版本保留，Engineering 重新执行下一版本闭环。
+- 产品/视觉验收通过后，Engineering 等待用户 publish 指令；未 publish 时线上可以落后于本地版本，但不得声称已上线。
+- 用户明确要求 publish 后，Engineering 执行线上发布；成功后线上 `release.json`、`content-manifest.json`、版本号和最终提交必须与本地提交版本一致。
+- 每次交接和收口必须报告：本地版本状态与 `http://127.0.0.1:4317/`、线上版本状态与 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界；无候选也必须明确报告等待用户下一步。
+- `current.md` 只保留当前唯一版本、阶段、证据、阻断 ID、下一动作和发布授权；不建立复杂状态机。
 
 #### 2.4.2 Git 回退与资源安全
 
@@ -211,7 +231,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 - 验收标准；
 - 当前状态。
 
-本地提交后由 Engineering 在 current 记录 commit/tag 和验收阶段；产品/视觉通过且公网验收完成后，由同一 Engineering task 将最终结果写入 `docs/iterations/history/v{版本号}.md`，current 保留最近发布基线。历史文件只用于追溯，不回写。
+本地提交后由 Engineering 形成版本记录并将完整迭代记录一次性写入 `docs/iterations/history/v{版本号}.md`；该历史文件随后不可回写。产品/视觉验收证据写入 `docs/qa/`，线上发布证据由 release manifest、部署记录和公网验收记录承担；`current.md` 保留当前唯一版本和下一动作。
 
 ## 5. 标准启动
 
@@ -365,16 +385,19 @@ npm run test:sites
 - **域名生效**：`xingbuild.top` 已指向该部署且 HTTPS 正常；
 - **公网验收完成**：通过桌面和手机从公网打开并验证核心页面。
 
-任何前一状态都不能替代后一状态。
+任何前一状态都不能替代后一状态。另定义两个主版本状态：
 
-每轮迭代完成报告必须同时给出可点击的本地预览 `http://127.0.0.1:4317/` 和线上网站 `https://xingbuild.top/`。链接用于便捷访问，不代表对应状态已经完成；仍需分别说明本地服务、生产部署和公网验收状态。
+- **本地提交版本**：版本号、名称、说明、代码 commit、annotated tag、版本记录和官方工作区 clean 已一致；线上可以尚未发布。
+- **线上统一版本**：publish 成功后，线上 `release.json`、`content-manifest.json`、版本号和最终提交与本地提交版本一致。
+
+每次 Engineering 或产品/视觉 task 收口必须同时报告：本地版本状态、本地预览 `http://127.0.0.1:4317/`、线上版本状态、线上网站 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界。无候选、无阻断时必须明确写出“等待用户下一步”。链接用于便捷访问，不代表对应状态已经完成。
 
 ## 9. Git 版本管理
 
 本地 Git 是 xingbuild 代码和网站表达变化的版本事实源：
 
 1. 每个稳定版本完成验证；
-2. Engineering 在同一收口中更新 `current.md`、`VERSION.md` 和（最终发布时）`history/v{版本号}.md`；
+2. Engineering 在本地提交收口中一次性更新 `current.md`、`VERSION.md` 和 `history/v{版本号}.md`；历史文件提交后不可回写，线上 publish 结果由 release manifest、部署记录和公网验收记录承担；
 3. 检查变更范围；
 4. 暂存本轮范围并执行 `npm run release:closeout-check`；
 5. 创建本地提交；

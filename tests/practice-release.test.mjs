@@ -201,7 +201,7 @@ test("current product records are synchronized with unified publishing", async (
     readFile(new URL("../VERSION.md", import.meta.url), "utf8"),
   ]);
   const currentVersion = JSON.parse(packageJson).version;
-  assert.equal(currentVersion, "0.24.1");
+  assert.equal(currentVersion, "0.24.2");
   assert.equal(JSON.parse(packageLock).version, currentVersion);
   assert.match(versionRecord, new RegExp(`## v${currentVersion.replace(".", "\\.")}`));
   assert.ok(readiness({ currentVersion: "0.21.2" }).errors.includes("content release must use the next patch version"));

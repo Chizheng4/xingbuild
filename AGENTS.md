@@ -13,6 +13,7 @@
 - career 与 Robotaxi 是上游事实源；xingbuild 只保存经过核验的网站表达快照，不复制或改写上游业务事实。
 - `xingbuild.top` 是本项目正式域名；`robotaxi.xingbuild.top` 由 Robotaxi 项目独立发布。
 - 产品版本、内容运营、上游采集和问题治理是不同责任域，但所有进入公网的正式产品表达必须归属于同一个统一版本身份；不得用内容快照、独立发布提交或运营记录制造第二套线上版本。
+- 官方项目目录与 canonical `main` 是唯一长期基线；默认 task 直接使用官方目录（direct-local），不自动创建 branch、worktree 或 detached checkout。
 
 ## 责任边界
 
@@ -21,16 +22,23 @@
 - 内容与发布：负责事实审核、Brief/Article/Practice 结构和既有能力的日常发布；不修改产品版本或视觉合同。
 - Ops：只生成可信证据候选、去重和覆盖记录；不写公开正文、不审核、不发布。
 - 每个文件、版本和发布动作只有一个执行 owner；其他 task 只提供事实、验收或短检查点。
+- Engineering 完成本地实现与自 QA 后，形成一个“本地提交版本”（版本号/名称/说明、代码提交、tag、版本记录和 clean 工作区），再交产品与视觉 task 验收；本地提交后任何修改都属于下一版本。
+- 产品与视觉 task 验收本地提交版本；验收发现产品、视觉、对象边界或验收合同问题时，直接定义下一个 patch/小迭代/大迭代并写入 `current.md`，不重新创建普通候选。
+- 产品与视觉验收通过后，只有用户明确要求 publish 时，Engineering 才执行线上发布；publish 成功后线上版本必须与本地提交版本的版本号和最终提交一致。
+- 每次 Engineering 或产品与视觉 task 收口都必须报告：本地版本状态、线上版本状态、本地 URL、线上 URL、已确定项、未确定项、候选状态、阻断和下一动作；无候选也必须明确报告等待用户下一步。
 
 ## 最小执行门禁
 
 - 产品优化 DRAFT 只进入 `docs/iterations/candidates/`；未确认前不得修改 `current.md`、代码、版本或发布状态。
 - 当前版本只由 `docs/iterations/current.md` 定义；已完成版本进入 `docs/iterations/history/`。
-- 任何问题或优化点先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。只有两者均为 `confirmed` 且写入 current 的候选才能进入 Engineering。
+- Engineering 实施中发现的跨范围问题、运营工具/CLI/Skill 缺陷和新的产品优化先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。产品与视觉验收已提交本地版本时发现的问题不走普通候选，直接定义下一版本并写入 `current.md`。
 - 运营工具、CLI 或 Skill 出现缺陷时必须立即停止该次运营操作，只登记候选并通知产品与视觉；禁止内容 task 或其他 task 为自己创建工程分支、修改 main 或绕过产品版本门禁。
 - 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。
 - 新采集、候选、draft、审核和 recovery 仍是运营数据，不进入产品版本；但任何通过 `publish-content.command`、`publish-article.command`、`publish-practice.command` 或 `publish-xingbuild.command` 进入公网的正式表达，必须使用同一套版本合同：`package.json`、`VERSION.md`、`current.md`、Git commit、annotated tag、`release.json` 与 `content-manifest.json` 的版本和最终提交必须一致。不得再保留“产品版本不变、内容提交和线上 manifest 独立前进”的发布路径。
 - main 只作为干净集成/发布基线；产品 DRAFT 与 Engineering 可使用有界 worktree，内容 task 只调用既有 CLI（CLI 内部临时 worktree 不属于产品工程分支），禁止共享脏工作区。
+- 任何 branch/worktree/并行 task 都必须得到用户明确授权，并在启动时记录目的、范围、责任 task、canonical HEAD 与清理条件；未获明确授权不得创建或复用。
+- task 创建与 task 交接是两种不同动作：普通“执行”、版本推进或规则更新不等于创建 Engineering/内容/Ops task。交接只能发送给用户已明确指定且已存在的目标 task；找不到、无法确认或目标 task 不存在时，必须向用户报告并等待确认，不得自行创建、猜测、替代、轮询或保持后台等待。
+- task 归档前必须确认 canonical 已同步、所有修改已分类、官方工作区 clean，并清理本 task 创建的临时 worktree；未确认归属的脏改不得删除或混入版本。
 - 产品预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不换端口、不终止未知进程。
 - 详细迭代、分支、端口、验证、回退和发布规则只以 `docs/rules/iteration-and-release.md` 为准。
 

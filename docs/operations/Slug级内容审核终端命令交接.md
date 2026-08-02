@@ -18,6 +18,7 @@ npm run content:approve -- --slug <slug> --authority <authority>
 - 成功后只产生该 slug 的审核记录、recovery 记录和 `content/observations/<slug>.json`；草稿、审核和 recovery 在公网验收前保留。
 - 失败不得覆盖已有 production、审核记录或草稿；不得留下半成品 production 对象。目标已有审核、生产同 slug、来源/证据缺失、哈希不一致或目标冲突都应硬失败。
 - 该命令只负责审核与 promote，不创建 Git commit、不 push、不部署；其后由 `./publish-content.command --slug <slug>` 完成统一版本提交、tag、push、部署和公网验证。
+- 内容与发布 task 每次收口必须报告本地版本状态、线上版本状态、本地预览 URL、线上 URL、已确定项、未确定项、目标 slug、候选状态、阻断和下一动作；未 publish 时必须明确线上落后于本地，publish 成功后必须报告两者已统一。
 
 ## 交付与验证边界
 
