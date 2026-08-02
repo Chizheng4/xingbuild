@@ -1,4 +1,6 @@
-# xingbuild Visual System v1
+# xingbuild Visual System v1（历史快照）
+
+> 本文件是 `v0.x` 阶段的视觉系统历史快照，不再是当前事实源。当前唯一产品/视觉基线见 [`docs/product/xingbuild 网站产品架构与视觉系统总案.md`](../product/xingbuild%20网站产品架构与视觉系统总案.md)。保留本文件仅用于版本追溯和历史 QA 引用。
 
 ## 1. 文档状态
 
