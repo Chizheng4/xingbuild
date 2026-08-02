@@ -1,0 +1,115 @@
+{
+  "id": "observation-pony-gen7-lower-cost-l4-truck",
+  "slug": "pony-gen7-lower-cost-l4-truck",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "Pony.ai披露Gen-7 Robotaxi降本目标与L4轻卡",
+  "summary": "Pony.ai在北京车展披露Gen-7 Robotaxi降本路线、广州道路测试许可和L4城市物流轻卡，但成本与投放仍是前瞻目标。",
+  "companies": [
+    "Pony.ai",
+    "Toyota",
+    "CATL"
+  ],
+  "regions": [
+    "中国广州"
+  ],
+  "dimensions": [
+    "产品与能力",
+    "合作与扩张"
+  ],
+  "primaryDimension": "产品与能力",
+  "eventAt": "2026-04-24",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "成本目标",
+      "value": "2027年中国市场总车辆成本不高于23万元"
+    },
+    {
+      "label": "测试许可",
+      "value": "Gen-7 bZ4X获广州道路测试许可"
+    },
+    {
+      "label": "新产品",
+      "value": "全冗余L4城市物流轻卡"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Pony.ai官方称，Gen-7 Robotaxi计划持续降本，相关bZ4X已获广州道路测试许可；公司同时发布与CATL联合开发的全冗余L4城市物流轻卡。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-pony-gen7-cost",
+      "evidence-pony-toyota-guangzhou-permit",
+      "evidence-pony-l4-truck"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "降本目标、道路测试许可和新车型共同指向规模化商业化准备，但23万元成本、1000辆投放和轻卡效率仍属公司目标或披露，不能视为已实现运营结果。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-pony-gen7-cost",
+      "evidence-pony-toyota-guangzhou-permit"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-pony-gen7-cost",
+      "claim": "Pony.ai官方称预计到2027年将中国市场Robotaxi总车辆成本降至人民币23万元或以下。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-pony-april24-auto-china"
+      ]
+    },
+    {
+      "id": "evidence-pony-toyota-guangzhou-permit",
+      "claim": "Pony.ai官方称Gen-7 bZ4X Robotaxi已获得广州道路测试许可，并计划在中国一线城市部署1000辆。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-pony-april24-auto-china"
+      ]
+    },
+    {
+      "id": "evidence-pony-l4-truck",
+      "claim": "Pony.ai官方称发布与CATL联合开发的全汽车级、全冗余L4城市物流轻型卡车。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-pony-april24-auto-china"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-pony-april24-auto-china",
+      "publisher": "Pony AI Inc.",
+      "title": "PONY AI Inc. Drives Commercialization at Scale with Lower-Cost Robotaxis and New L4 Light Truck",
+      "url": "https://ir.pony.ai/news-releases/news-release-details/pony-ai-inc-drives-commercialization-scale-lower-cost-robotaxis",
+      "publishedAt": "2026-04-24",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "可确认Pony.ai官方披露的产品、成本目标、合作和广州道路测试许可；不能把前瞻目标、展示车型或测试许可写成已完成商业部署或已实现单位经济性。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "Pony.ai降本路线",
+    "body": "Pony.ai披露Gen-7 Robotaxi的降本路线：目标是在2027年把中国市场总车辆成本降至23万元或以下，并称合作车型已获广州道路测试许可；公司同时发布全冗余L4城市物流轻卡。成本目标、计划投放和产品展示有助于观察规模化准备，但不等于当前已实现的单位经济性或商业运营规模。",
+    "sourceRefs": [
+      "source-pony-april24-auto-china"
+    ],
+    "isOpinion": false
+  }
+}
