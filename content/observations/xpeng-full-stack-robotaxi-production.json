@@ -1,0 +1,94 @@
+{
+  "id": "observation-xpeng-full-stack-robotaxi-production",
+  "slug": "xpeng-full-stack-robotaxi-production",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "小鹏披露全栈自研Robotaxi量产下线与后续试运营计划",
+  "summary": "小鹏汽车称全栈自研Robotaxi在广州量产下线，披露本地算力与下半年试运营计划，但公告未证明商业服务已启动。",
+  "companies": [
+    "小鹏汽车"
+  ],
+  "regions": [
+    "中国广州"
+  ],
+  "dimensions": [
+    "产品与能力",
+    "运营与市场"
+  ],
+  "primaryDimension": "产品与能力",
+  "eventAt": "2026-05-18",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "产品阶段",
+      "value": "全栈自研Robotaxi量产下线"
+    },
+    {
+      "label": "本地算力",
+      "value": "3000 TOPS"
+    },
+    {
+      "label": "后续方向",
+      "value": "预计下半年试运营"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "小鹏官方称其全栈自研Robotaxi于5月18日在广州量产下线，GX原型车本地算力为3000 TOPS，并预计下半年开展试运营。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-xpeng-robotaxi-production"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "量产下线显示产品从原型验证进入制造阶段，后续试运营计划则把产品能力连接到运营验证；试运营日期、车辆数量、乘客范围和收费状态仍需后续事实确认。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-xpeng-robotaxi-production"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-xpeng-robotaxi-production",
+      "claim": "小鹏官方称其全栈自研Robotaxi于5月18日在广州量产下线，GX原型车本地算力3000 TOPS，并预计下半年开展试运营。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-xpeng-5564"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-xpeng-5564",
+      "publisher": "小鹏汽车",
+      "title": "中国首台全栈自研Robotaxi量产下线！小鹏GX为原型车，本地算力3000 TOPS全球最高",
+      "url": "https://www.xiaopeng.com/news/company_news/5564.html",
+      "publishedAt": "2026-05-22",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "可确认小鹏官方量产下线及公司计划表述；不能把试运营计划当作已发生运营或商业收入。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "小鹏Robotaxi量产",
+    "body": "小鹏汽车称，全栈自研Robotaxi于5月18日在广州量产下线，GX原型车本地算力达到3000 TOPS，并预计下半年开展试运营。量产下线说明产品进入制造阶段，试运营计划说明公司正在准备运营验证，但公告没有证明试运营已经开始，车辆数量、乘客范围和收费状态仍待后续披露。",
+    "sourceRefs": [
+      "source-xpeng-5564"
+    ],
+    "isOpinion": false
+  }
+}
