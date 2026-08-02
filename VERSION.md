@@ -1,3 +1,7 @@
+## v0.24.5 — 统一发布版本动态一致性测试修复
+- 状态：Engineering 本地提交版本；已完成测试合同修复、自 QA、版本记录、commit 与 annotated tag；尚未 push、publish、部署或公网验收。
+- 范围：动态校验 package.json、package-lock.json、VERSION.md 与 current.md 的统一版本身份；固定测试夹具行为版本保持不变。
+
 ## v0.24.4 — 候选转产品设计与归档治理
 - 状态：Engineering 本地提交版本；已完成候选生命周期治理合同、版本记录、自 QA、commit 与 annotated tag；尚未 push、publish、部署或公网验收。
 - 范围：候选仅属于产品设计前阶段；正式方案继承或关闭后立即归档，Engineering 只读取 current 与正式方案。

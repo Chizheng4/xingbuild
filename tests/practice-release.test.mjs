@@ -15,6 +15,7 @@ import {
 } from "../scripts/lib/practice-content.mjs";
 import { checkPracticeCommit } from "../scripts/practice-scope-check.mjs";
 import { verifyPracticeReleaseOnce } from "../scripts/verify-practice-release.mjs";
+import { parseCurrentIterationVersion } from "../scripts/lib/release-readiness.mjs";
 
 const mediaBytes = Buffer.from("approved-practice-media");
 const assetSha256 = createHash("sha256").update(mediaBytes).digest("hex");
@@ -195,15 +196,18 @@ test("public Practice verification aligns release, manifest, target modules and 
 });
 
 test("current product records are synchronized with unified publishing", async () => {
-  const [packageJson, packageLock, versionRecord] = await Promise.all([
+  const [packageJson, packageLock, versionRecord, currentIteration] = await Promise.all([
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
     readFile(new URL("../VERSION.md", import.meta.url), "utf8"),
+    readFile(new URL("../docs/iterations/current.md", import.meta.url), "utf8"),
   ]);
   const currentVersion = JSON.parse(packageJson).version;
-  assert.equal(currentVersion, "0.24.2");
-  assert.equal(JSON.parse(packageLock).version, currentVersion);
+  const lock = JSON.parse(packageLock);
+  assert.equal(lock.version, currentVersion);
+  assert.equal(lock.packages[""].version, currentVersion);
   assert.match(versionRecord, new RegExp(`## v${currentVersion.replace(".", "\\.")}`));
+  assert.equal(parseCurrentIterationVersion(currentIteration), `v${currentVersion}`);
   assert.ok(readiness({ currentVersion: "0.21.2" }).errors.includes("content release must use the next patch version"));
 });
 
