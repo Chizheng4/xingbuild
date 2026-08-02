@@ -59,6 +59,8 @@ const requiredFiles = [
   "scripts/content-approve.mjs",
   "scripts/content-supersede.mjs",
   "scripts/content-scope-check.mjs",
+  "scripts/content-release.mjs",
+  "scripts/lib/content-release-lease.mjs",
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
   "scripts/lib/content-release-readiness.mjs",

@@ -5,6 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { validateApprovedMedia, validateContentScope } from "../scripts/content-scope-check.mjs";
+import {
+  acquireContentReleaseLease,
+  assertRemoteHeadForDeployment,
+  chooseContentReleaseBase,
+  releaseContentReleaseLease,
+} from "../scripts/lib/content-release-lease.mjs";
 import { evaluateContentCommitReadiness } from "../scripts/lib/content-release-readiness.mjs";
 import { readPublishedObservations } from "../scripts/lib/observation-content.mjs";
 import { verifyContentReleaseOnce } from "../scripts/verify-content-release.mjs";
@@ -537,6 +543,50 @@ test("content commit readiness fixes version, tag, scope and origin ancestry", (
   }
 });
 
+test("content release lease is unique and stale leases are recoverable", async () => {
+  const leasePath = path.join(await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-lease-")), "lease.json");
+  const first = await acquireContentReleaseLease({
+    slug: "first-item",
+    worktree: "/tmp/first-content-worktree",
+    head: "first-head",
+    leasePath,
+    pid: process.pid,
+  });
+  assert.equal(first.slug, "first-item");
+  await assert.rejects(
+    acquireContentReleaseLease({ slug: "second-item", worktree: "/tmp/second", head: "second", leasePath, pid: process.pid }),
+    /lease is held by PID/,
+  );
+  await releaseContentReleaseLease({ leasePath, pid: process.pid });
+  await writeFile(leasePath, JSON.stringify({ pid: 999999, slug: "stale-item" }));
+  const recovered = await acquireContentReleaseLease({ slug: "recovered-item", worktree: "/tmp/recovered", head: "recovered", leasePath, pid: process.pid });
+  assert.equal(recovered.slug, "recovered-item");
+  await releaseContentReleaseLease({ leasePath, pid: process.pid });
+});
+
+test("content release rebuilds on a forward main and preserves same-HEAD retry", () => {
+  assert.deepEqual(
+    chooseContentReleaseBase({ sourceHead: "content", sourceParent: "base", originMain: "base" }),
+    { mode: "first-push", base: "content", cherryPick: null },
+  );
+  assert.deepEqual(
+    chooseContentReleaseBase({ sourceHead: "content", sourceParent: "base", originMain: "content" }),
+    { mode: "post-push-retry", base: "content", cherryPick: null },
+  );
+  assert.deepEqual(
+    chooseContentReleaseBase({ sourceHead: "content", sourceParent: "base", originMain: "new-main" }),
+    { mode: "rebuild-on-latest-main", base: "new-main", cherryPick: "content" },
+  );
+});
+
+test("content deployment hard-fails when remote main moves after verification", () => {
+  assert.equal(assertRemoteHeadForDeployment({ remoteHead: "target", expectedHead: "target" }), true);
+  assert.throws(
+    () => assertRemoteHeadForDeployment({ remoteHead: "new-main", expectedHead: "target" }),
+    /deployment requires remote main target/,
+  );
+});
+
 test("approved target media requires scoped files and matching SHA-256", async () => {
   const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-media-"));
   const slug = "new-item";
@@ -665,16 +715,19 @@ test("production source and bundle contracts exclude local drafts", async () => 
 test("product and content publish scripts retain distinct safety contracts", async () => {
   const product = await readFile(path.join(root, "publish-xingbuild.command"), "utf8");
   const content = await readFile(path.join(root, "publish-content.command"), "utf8");
+  const runtime = await readFile(path.join(root, "scripts", "content-release.mjs"), "utf8");
   assert.match(product, /npm run release:preflight/);
-  assert.match(content, /--slug/);
-  assert.match(content, /content:scope-check -- --slug "\$CONTENT_SLUG" --commit HEAD/);
-  assert.match(content, /PARENT_COMMIT/);
-  assert.match(content, /ORIGIN_COMMIT/);
-  assert.match(content, /fetch origin main/);
-  assert.match(content, /npm run content:check[\s\S]*content:scope-check[\s\S]*npm run build[\s\S]*npm run test:sites/);
-  assert.match(content, /verify-content-release\.mjs[\s\S]*--finalize/);
+  assert.match(runtime, /--slug/);
+  assert.match(content, /content-release\.mjs/);
+  assert.match(runtime, /\["worktree", "add"/);
+  assert.match(runtime, /content:scope-check/);
+  assert.match(runtime, /npm.*run.*content:check[\s\S]*npm.*run.*build[\s\S]*npm.*run.*test:sites/);
+  assert.match(runtime, /verify-content-release\.mjs[\s\S]*--finalize/);
+  assert.match(runtime, /\["makers", "deploy"/);
+  assert.match(runtime, /\["fetch", "origin", "main"\]/);
+  assert.match(runtime, /assertRemoteHeadForDeployment/);
   assert.doesNotMatch(content, /find \.content-workspace/);
-  assert.doesNotMatch(content, /git push origin "\$HEAD_TAG"|push_with_retry "\$HEAD_TAG"/);
+  assert.doesNotMatch(runtime, /git push origin "\$HEAD_TAG"|push_with_retry "\$HEAD_TAG"/);
 });
 
 test("content publish entry hard-fails missing or invalid slug before side effects", () => {
