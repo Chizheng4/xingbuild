@@ -1,0 +1,104 @@
+{
+  "id": "observation-tesla-q1-cybercab-pilot-capex",
+  "slug": "tesla-q1-cybercab-pilot-capex",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "Tesla在Q1披露Cybercab试生产与全年资本支出预期",
+  "summary": "Tesla在Q1 10-Q中披露已开始Cybercab试生产，并预计2026年资本支出超过250亿美元；该金额覆盖公司AI与制造等多项投入。",
+  "companies": [
+    "Tesla"
+  ],
+  "regions": [
+    "全球"
+  ],
+  "dimensions": [
+    "产品与能力",
+    "经营与资本"
+  ],
+  "primaryDimension": "经营与资本",
+  "eventAt": "2026-04-22",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "产品阶段",
+      "value": "Cybercab试生产已开始"
+    },
+    {
+      "label": "资本支出预期",
+      "value": "2026年超过250亿美元"
+    },
+    {
+      "label": "口径边界",
+      "value": "公司整体AI、制造与车队投入"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "Tesla提交的2026年第一季度10-Q称，第一季度已开始Cybercab试生产，并预计2026年资本支出超过250亿美元，投入方向包括AI、算力、数据中心、制造研发产线和公司运营AI车队。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-tesla-q1-cybercab-pilot",
+      "evidence-tesla-q1-capex-outlook"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "Cybercab试生产与大额公司级资本支出显示Tesla在为自动驾驶和AI基础设施投入产能，但申报没有给出试生产数量、节拍或Robotaxi专属资本支出，不能推导城市服务已启动。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-tesla-q1-cybercab-pilot",
+      "evidence-tesla-q1-capex-outlook"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-tesla-q1-cybercab-pilot",
+      "claim": "Tesla 2026年第一季度10-Q称第一季度已开始Cybercab试生产。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-tesla-q1-10q"
+      ]
+    },
+    {
+      "id": "evidence-tesla-q1-capex-outlook",
+      "claim": "Tesla 10-Q称预计2026年资本支出超过250亿美元，驱动因素包括AI计划、算力基础设施和数据中心、制造及研发产线扩张以及公司运营AI车队。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-tesla-q1-10q"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-tesla-q1-10q",
+      "publisher": "Tesla, Inc. / U.S. SEC",
+      "title": "Form 10-Q for the quarterly period ended March 31, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026026673/tsla-20260331.htm",
+      "publishedAt": "2026-04-22",
+      "sourceTier": "primary",
+      "sourceType": "report",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "仅证明Tesla在10-Q中披露Q1 Cybercab试生产和2026年公司整体资本支出预期；不得据此推导任何城市已新增运营、Cybercab已量产或Robotaxi专属投入金额。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "Tesla Cybercab投入",
+    "body": "Tesla在Q1 10-Q中披露已开始Cybercab试生产，并预计2026年资本支出超过250亿美元，方向覆盖AI、算力、数据中心、制造研发产线和公司运营AI车队。这显示自动驾驶与AI产能建设进入投入阶段，但金额是公司整体预期，不代表Cybercab已量产，也不能推导任何城市已开始新的Robotaxi运营。",
+    "sourceRefs": [
+      "source-tesla-q1-10q"
+    ],
+    "isOpinion": false
+  }
+}
