@@ -1,3 +1,8 @@
+## v0.24.13 — transport 合同测试收口
+
+- 状态：Engineering 修正 transport-only 发布合同的 Practice/范围测试断言并完成自 QA；v0.24.12 tag 保留不动。
+- 范围：测试只验证精确目标 manifest 与 transport 边界，不要求 publish 阶段运行业务 scope-check。
+
 ## v0.24.12 — publish 纯传输部署与预生成产物合同
 
 - 状态：Engineering 已完成 publish transport 拆分与自 QA；publish 只消费预先生成且身份匹配的 `dist/client`，业务验证和构建在 publish 前完成。

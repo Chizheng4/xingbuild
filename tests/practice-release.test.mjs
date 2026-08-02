@@ -220,8 +220,9 @@ test("Practice publish command uses the unified product version and tag contract
   assert.match(packageJson, /practice:scope-check/);
   assert.match(command, /unified-publish\.mjs --kind practice/);
   const unified = await readFile(new URL("../scripts/unified-publish.mjs", import.meta.url), "utf8");
-  assert.match(unified, /practice:scope-check/);
-  assert.match(unified, /release:check/);
+  assert.match(unified, /content-manifest\.json/);
+  assert.match(unified, /readPreparedDist/);
+  assert.doesNotMatch(unified, /practice:scope-check|release:check|test:sites|npm run build/);
   assert.match(unified, /--authorize-publish/);
   assert.match(unified, /rev-parse.*\^\{commit\}/);
   assert.doesNotMatch(unified, /incrementPatch/);
