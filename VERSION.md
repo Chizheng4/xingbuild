@@ -2,13 +2,13 @@
 
 ## v0.23.0 — 统一能力展示控件与可组合表达
 
-- 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。
+- 当前状态：已发布并完成公网验收；发布 commit/tag 为 `3d2f90c39ac5952aa122d1d4ee6aacd117b65e28` / `v0.23.0`，EdgeOne deployment 为 `dp9oxdxvo4a4`。
 - 范围仅建立声明式 CapabilityStage/VisualizationHost、统一状态/失败降级与响应式能力空间，并用既有图形和 Showcase/SystemStage 做 fixture。
 - 不修改 Robotaxi 上游、Observation/Practice schema、主题、一级导航、公开运营内容或内容发布边界。
 
 ## v0.22.0 — 企业经营体系多视图架构阅读能力
 
-- 当前状态：Engineering 实现与本地验证进行中；尚未提交、tag、推送、部署或公网验收。
+- 当前状态：已发布并完成公网验收；发布 commit/tag 为 `7ad9edd0e3cc4888bbaece0ddeace0cc32bf270c` / `v0.22.0`。
 - 范围仅为企业经营体系文章内 LikeC4 只读多视图：总览、业务、数字化与 B 端产品架构，以及稳定进入、返回、焦点恢复和响应式文本降级。
 - 不实现通用 CapabilityHost/VisualizationHost 平台，不改 Robotaxi、Practice、Observation、Article 内容事实、全站主题或内容发布合同。
 
