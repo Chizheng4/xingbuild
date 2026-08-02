@@ -49,20 +49,9 @@
 - 生产：`https://xingbuild.top/`
 - EdgeOne deployment：`dp9oxdxvo4a4`
 
-## 在途变更登记
+## 当前状态边界
 
-当前没有超出 v0.23.0 正式合同的在途优化，也没有下一项已确认候选。发现相邻问题时：
-
-- 当前版本验收问题直接形成 `v0.23.x` 修复版本，不进入候选队列；
-- 新产品能力或跨版本优化进入 `docs/iterations/candidates/`；
-- 内容/运营问题进入 `docs/operations/内容运营与发布问题清单.md`，只有影响产品能力时再创建候选 ID；
-- 任何相邻问题不得在 Engineering 工作区顺手修复。
-
-| ID | 发现事实/证据 | 分类 | 下一动作 | 范围/验收影响 | 责任与下一动作 | 状态 |
-| --- | --- | --- | --- | --- | --- | --- |
-| — | 当前暂无新增登记 | — | — | — | 发现后按本版本合同登记 | open |
-
-登记规则：当前验收缺陷优先形成修复版本；需要新能力的事项登记到 `docs/iterations/candidates/`；内容/运营问题移交 `docs/operations/内容运营与发布问题清单.md`，不得改变本版本。
+当前没有已确认的产品版本变更。任何新问题或优化点必须先进入 `docs/iterations/candidates/<candidate-id>.md`，由产品与视觉 task 评审；候选确认并写入 current 前，Engineering 不得实现。日常内容与 Ops 运行证据只保留在被忽略的 `.content-workspace/ops/`，不改变本版本。
 
 ## 版本完成后的下一步
 

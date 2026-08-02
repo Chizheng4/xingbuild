@@ -14,7 +14,7 @@
 | `iterations/candidates/` | 产品优化候选唯一共享入口（未确认或已确认待启动） | 只登记候选；产品 task 在版本结束后清点，不直接进入产品版本 |
 | `iterations/roadmap.md` | 历史参考文件 | 不再作为活动事实源；当前只读取 `candidates/`、`current.md` 和 `history/` |
 | `iterations/history/` | 已完成版本的计划和结果 | 只追加，不回写 |
-| `operations/` | 内容运营合同、入口索引和问题清单 | 运营治理时修改，不进入产品或内容提交 |
+| `operations/` | 内容运营合同与来源覆盖规则 | 不作为产品问题或版本入口 |
 | `upstream/` | career、Robotaxi 等上游事实快照与同步说明 | 按上游同步规则修改 |
 | `qa/` | 按版本保存的设计验证结论和必要证据 | 完成验证时追加 |
 
@@ -49,6 +49,6 @@
 - `iterations/candidates/`：未确认或等待产品评估的候选；候选文件自带 `executionAuthorization`，不另设版本路线图。
 - [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：已完成版本方案，结果见 `iterations/history/v0.20.0.md`。
 - `design/v*.md`：已完成或已确认的版本方案，只用于追溯和当前版本实施；当前产品/视觉基准仍以产品总案为准。
-- [内容运营与发布问题清单](operations/内容运营与发布问题清单.md)：候选采集、事实审核、单条发布和公网验收问题的唯一 tracked 入口；治理标签不投影到读者界面。
-- [运营文档入口](operations/README.md)：内容发布合同、来源覆盖合同和运营问题清单的唯一导航，不复制正文。
+- `operations/` 下的运行问题记录已归档；产品与工程优化只读取 `iterations/candidates/` 下的候选文件。
+- `operations/` 仅保存内容发布合同、来源覆盖合同和历史证据；不参与版本状态判断。
 - `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。

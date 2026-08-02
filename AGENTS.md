@@ -5,8 +5,7 @@
 1. [网站产品架构与视觉系统总案](docs/product/xingbuild%20网站产品架构与视觉系统总案.md)
 2. [迭代与发布规则](docs/rules/iteration-and-release.md)
 3. [当前唯一版本](docs/iterations/current.md)
-4. [产品优化候选入口](docs/iterations/candidates/)
-5. [运营文档入口](docs/operations/README.md)
+4. `docs/iterations/candidates/` 下的候选文件（唯一优化记录）
 
 ## 项目边界
 
@@ -27,7 +26,8 @@
 
 - 产品优化 DRAFT 只进入 `docs/iterations/candidates/`；未确认前不得修改 `current.md`、代码、版本或发布状态。
 - 当前版本只由 `docs/iterations/current.md` 定义；已完成版本进入 `docs/iterations/history/`。
-- 内容更新不进入产品版本；运营问题若影响产品能力，必须创建候选 ID 后才由产品 task 评估。
+- 任何问题或优化点先创建候选 ID；候选初始为 `executionAuthorization: pending`，由产品与视觉 task 评审后决定 `confirmed`、`pending` 或 `closed`。只有 `confirmed` 候选才能进入 current 或 Engineering。
+- 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。
 - main 只作为干净集成/发布基线；Engineering、DRAFT 和内容发布使用有界 worktree，禁止共享脏工作区。
 - 产品预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不换端口、不终止未知进程。
 - 详细迭代、分支、端口、验证、回退和发布规则只以 `docs/rules/iteration-and-release.md` 为准。
@@ -39,4 +39,4 @@
 
 ## 协作语言
 
-规则以中文为主；命令、文件名、字段、枚举、API 和必要技术名保留英文，并在首次出现时给出简短中文含义。task 消息只传文件路径、版本/commit、证据、阻断 ID 和下一动作，不传完整历史或媒体。
+规则以中文为主；命令、文件名、字段、枚举、API 和必要技术名保留英文，并在首次出现时给出简短中文含义。task 消息只传候选 ID/文件路径、版本/commit、证据、阻断 ID 和下一动作，不传完整历史或媒体；消息不能替代候选文件。

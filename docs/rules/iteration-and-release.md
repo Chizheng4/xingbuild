@@ -55,48 +55,49 @@
 
 ### 2.2.3 当前版本验收修复优先
 
-- 本地版本提交完成后，Engineering 版本候选已经完成；产品/视觉验收发现的问题不退回旧版本，也不进入候选队列。
-- 验收问题由产品 task 直接形成当前版本的修复方案：无能力变化使用 patch 版本（例如 `v0.23.1`），新增共享能力使用 minor 版本；只有公开契约或信息架构破坏性变化才考虑 major 版本。
-- 修复版本完成并通过产品/视觉验收后，才回到 `candidates/` 检查下一个候选。
+- 本地版本或公网验收发现任何问题，先创建唯一候选文件并通知产品与视觉 task；候选不得直接进入 Engineering。
+- 产品与视觉 task 将候选决定为 `current-fix`、`next-version` 或 `closed`；`current-fix` 使用 patch/minor/major 规则形成修复版本，`next-version` 等待后续版本，`closed` 保留理由和证据。
+- 只有产品与视觉 task 明确 `executionAuthorization: confirmed` 并写入 current 后，Engineering 才能实现。
 
-### 2.3 统一问题登记与转入
+### 2.3 统一问题登记与产品评审
 
-- 可验证问题先进入责任域的唯一 tracked 问题清单；task 不维护私有 backlog，也不以完整会话历史保存问题。
-- 问题使用唯一 ID，并记录状态、证据、影响、临时控制、责任 task、是否需要产品版本、下一动作和关闭验证。跨 task 只传 ID 与当前检查点。
-- 内容运营问题统一登记在 `docs/operations/内容运营与发布问题清单.md`。内部规则修正使用独立文档提交，不改变产品版本/tag，也不夹入内容提交。
-- 只有公开内容对象、信息架构、页面投影、视觉/响应式或发布能力合同需要改变时，才创建产品候选；产品与视觉 task 在下一版本启动时统一评估并写入 `docs/iterations/current.md`。
-- Engineering 只实现当前迭代中已批准的问题；发现相邻问题时登记，不顺手夹带。问题关闭时保留 commit/tag（如适用）与验证结果。
+- 任何可验证的问题、优化点或能力缺口，不论来自产品、视觉、Engineering、内容或 Ops，都必须先写入 `docs/iterations/candidates/<candidate-id>.md`；这里是唯一 tracked 优化入口。
+- 候选文件由发现方填写事实、证据、影响、非目标、责任 task 和下一动作，并将 `executionAuthorization` 初始设为 `pending`；发现方不得自行决定进入版本或 Engineering。
+- 产品与视觉 task 负责逐条评审并写入 `confirmed`、`pending` 或 `closed`，同时记录路由 `current-fix`、`next-version`、`content-ops` 或 `closed` 及理由。
+- 只有 `confirmed` 且已写入 current 的候选才能交 Engineering；未确认候选不能实现、提交、tag、push、deploy 或进入公开页面。
+- `.content-workspace/ops/` 只保存采集、覆盖、运行和发布证据；不建立第二个 tracked 问题清单。已关闭的旧问题清单只作为历史归档，不参与启动或状态判断。
+- Engineering 只实现当前迭代已批准的问题；相邻问题必须新增候选文件，不能顺手夹带。问题关闭后在候选文件中追加 commit/tag 与验证结果。
 
 #### 2.3.1 当前版本进行中的新优化
 
-当前版本尚未完成时发现的新优化，统一写入 `docs/iterations/current.md` 的“在途变更登记”，不得只留在 task 消息、私有笔记或新建无责任归属的 backlog。
+当前版本尚未完成时发现的新优化，也必须先写入唯一候选文件，不得只留在 `current.md`、task 消息、私有笔记或运营问题清单。
 
-每条登记使用唯一 ID（例如 `V020-OPT-001`），至少包含：
+每条候选至少包含：
 
 ```text
 ID / discoveredAt
 发现事实与证据路径
 要解决的问题和用户影响
-分类：current-fix | candidate | content-ops | closed
-下一动作：修复当前版本 | 写入 candidates | 留在运营合同 | 记录关闭
+executionAuthorization: pending | confirmed
+路由：current-fix | next-version | content-ops | closed
+下一动作：等待产品评审 | 写入 current | 留在运营证据 | 记录关闭
 是否改变当前范围或验收
 责任 task / 下一动作 / 决定时间
 ```
 
 处理规则：
 
-1. `current-fix`：当前版本验收或安全问题，直接形成修复版本，不进入候选队列。
-2. `candidate`：不影响当前验收或需要新能力，写入 `docs/iterations/candidates/`，当前 Engineering 继续原范围。
-3. `content-ops`：交内容、Ops 或运营问题清单；不进入 current，也不要求 Engineering 等待。
-4. `closed`：记录理由和证据，不能删除登记来抹去决策历史。
-
-只有产品 task 把候选正式化并写入 `current.md` 后，Engineering 才能执行；在途登记必须在版本收口时成为 `current-fix`、`candidate`、`content-ops` 或 `closed`，不得藏在 task 历史中。
+1. 发现方只写 `pending` 候选并通知产品与视觉 task。
+2. 产品与视觉 task 评审后决定路由和 `confirmed/pending/closed`。
+3. `current-fix` 或 `next-version` 只有在确认并写入 current 后才交 Engineering。
+4. `content-ops` 留在被忽略的运营证据中，不创建第二个 tracked backlog。
+5. `closed` 保留理由和证据，不能删除候选文件抹去决策历史。
 
 #### 2.3.2 候选方案目录与版本收口清点
 
-- `docs/iterations/candidates/` 是产品优化候选的唯一共享入口，也是运营问题转入产品评估的唯一入口；不再维护活动 roadmap。
+- `docs/iterations/candidates/` 是全部问题与优化候选的唯一共享入口；不再维护活动 roadmap、运营问题清单或候选 README。
 - `docs/design/` 只保存已确认的正式设计方案、视觉系统和验收合同；文件名不得以 `DRAFT-` 开头。历史正式方案仍可保留在此用于追溯，结果以 `docs/iterations/history/` 为准。
-- 版本开始前，产品责任 task 只检查 candidates 中的 `executionAuthorization: confirmed`，综合确定一个正式版本；未纳入的候选保留原文件，不阻断当前版本。
+- 版本开始前，产品责任 task 只检查 candidates 下的候选文件，逐条确认状态；综合 `confirmed` 候选形成一个正式版本；未确认候选保留原文件，不阻断当前版本。
 - 同一时间最多一个 `confirmed` 候选；出现多个时只登记排序阻断，不自行猜测顺序。
 - 版本收口后，若没有 `confirmed` 候选，保留上一已发布版本作为 current 基线并停止；不读取 roadmap 或 task 历史补全队列。
 - 候选 DRAFT 可以进入独立规则/文档治理提交，但不得进入产品版本 tag、内容提交、部署或公开页面。
