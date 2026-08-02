@@ -17,6 +17,7 @@ const currentIteration = await readFile(
 );
 const result = evaluateCloseoutReadiness({
   branch: git("branch", "--show-current"),
+  allowReleaseWorktree: process.env.XINGBUILD_RELEASE_WORKTREE === "1",
   stagedEntries: git("diff", "--cached", "--name-only").split("\n"),
   unstagedEntries: git("diff", "--name-only").split("\n"),
   untrackedEntries: git("ls-files", "--others", "--exclude-standard").split("\n"),

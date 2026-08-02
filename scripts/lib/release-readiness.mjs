@@ -16,12 +16,13 @@ export function evaluateProductReleaseReadiness({
   currentVersion,
   headTag,
   origin,
+  allowReleaseWorktree = false,
 }) {
   const version = `v${packageVersion}`;
   const blockers = [];
   const changes = normalizedEntries(statusEntries);
 
-  if (branch !== "main") blockers.push(`当前分支是 ${branch || "无"}，应为 main。`);
+  if (branch !== "main" && !allowReleaseWorktree) blockers.push(`当前分支是 ${branch || "无"}，应为 main。`);
   if (changes.length) blockers.push(`工作区仍有 ${changes.length} 项未提交修改。`);
   if (versionRecord !== version) {
     blockers.push(`VERSION.md 最新版本为 ${versionRecord || "无"}，应为 ${version}。`);
@@ -45,6 +46,7 @@ export function evaluateCloseoutReadiness({
   packageVersion,
   versionRecord,
   currentVersion,
+  allowReleaseWorktree = false,
 }) {
   const version = `v${packageVersion}`;
   const blockers = [];
@@ -52,7 +54,7 @@ export function evaluateCloseoutReadiness({
   const untracked = normalizedEntries(untrackedEntries);
   const staged = normalizedEntries(stagedEntries);
 
-  if (branch !== "main") blockers.push(`当前分支是 ${branch || "无"}，应为 main。`);
+  if (branch !== "main" && !allowReleaseWorktree) blockers.push(`当前分支是 ${branch || "无"}，应为 main。`);
   if (!staged.length) blockers.push("没有暂存本轮版本变更。");
   if (unstaged.length) blockers.push(`仍有 ${unstaged.length} 项未暂存修改。`);
   if (untracked.length) blockers.push(`仍有 ${untracked.length} 项未追踪文件。`);

@@ -21,6 +21,7 @@ const currentIteration = await readFile(
 );
 const result = evaluateProductReleaseReadiness({
   branch: git("branch", "--show-current"),
+  allowReleaseWorktree: process.env.XINGBUILD_RELEASE_WORKTREE === "1",
   statusEntries: git("status", "--porcelain").split("\n"),
   packageVersion: packageJson.version,
   versionRecord: versionRecord.match(/^##\s+(v\d+\.\d+\.\d+)\b/m)?.[1],

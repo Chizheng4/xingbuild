@@ -40,7 +40,7 @@ const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
 function readiness(overrides = {}) {
   return evaluatePracticeCommitReadiness({
-    practiceId: "robotaxi", files: [practicePath, manifestPath, mediaPath], currentVersion: "0.21.0", parentVersion: "0.21.0",
+    practiceId: "robotaxi", files: [practicePath, manifestPath, mediaPath, "package.json", "package-lock.json", "VERSION.md", "docs/iterations/current.md", "docs/iterations/history/v0.21.1.md"], currentVersion: "0.21.1", parentVersion: "0.21.0",
     head: "head", parent: "parent", originMain: "parent", headTags: [], practice, manifest, ...overrides,
   });
 }
@@ -50,8 +50,8 @@ test("Practice scope accepts exactly one approved target package and rejects mix
   for (const overrides of [
     { files: [practicePath, manifestPath, mediaPath, "src/pages/ProductsPage.jsx"] },
     { files: [practicePath, mediaPath] },
-    { currentVersion: "0.21.1" },
-    { headTags: ["v0.21.0"] },
+    { currentVersion: "0.21.2" },
+    { headTags: ["v0.21.2"] },
     { originMain: "other" },
   ]) assert.ok(readiness(overrides).errors.length);
 });
@@ -112,7 +112,7 @@ test("unsafe Practice paths never reach the scope or local file readers", async 
   const json = new Map([
     ["HEAD:content/products/robotaxi.json", JSON.stringify(practice)],
     ["HEAD:content/media/robotaxi/manifest.json", JSON.stringify(unsafeManifest)],
-    ["HEAD:package.json", JSON.stringify({ version: "0.21.0" })],
+    ["HEAD:package.json", JSON.stringify({ version: "0.21.1" })],
     ["HEAD^:package.json", JSON.stringify({ version: "0.21.0" })],
   ]);
   const gitImpl = (args) => {
@@ -152,7 +152,7 @@ test("Practice scope reads one target commit, including manifest media, without 
   const json = new Map([
     ["HEAD:content/products/robotaxi.json", JSON.stringify(practice)],
     ["HEAD:content/media/robotaxi/manifest.json", JSON.stringify(manifest)],
-    ["HEAD:package.json", JSON.stringify({ version: "0.21.0" })],
+    ["HEAD:package.json", JSON.stringify({ version: "0.21.1" })],
     ["HEAD^:package.json", JSON.stringify({ version: "0.21.0" })],
   ]);
   const gitImpl = (args) => {
@@ -161,7 +161,7 @@ test("Practice scope reads one target commit, including manifest media, without 
     if (args[0] === "rev-parse" && args[1] === "HEAD^") return "parent";
     if (args[0] === "rev-parse" && args[1] === "HEAD") return "head";
     if (args[0] === "rev-parse" && args[1] === "origin/main") return "parent";
-    if (args[0] === "diff-tree") return [practicePath, manifestPath, mediaPath].join("\n");
+    if (args[0] === "diff-tree") return [practicePath, manifestPath, mediaPath, "package.json", "package-lock.json", "VERSION.md", "docs/iterations/current.md", "docs/iterations/history/v0.21.1.md"].join("\n");
     if (args[0] === "tag") return "";
     throw new Error(`unexpected git call: ${args.join(" ")}`);
   };
@@ -194,29 +194,31 @@ test("public Practice verification aligns release, manifest, target modules and 
   }), /target Practice public projection/);
 });
 
-test("current product records are synchronized while Practice publishing remains version-neutral", async () => {
+test("current product records are synchronized with unified publishing", async () => {
   const [packageJson, packageLock, versionRecord] = await Promise.all([
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
     readFile(new URL("../VERSION.md", import.meta.url), "utf8"),
   ]);
   const currentVersion = JSON.parse(packageJson).version;
-  assert.equal(currentVersion, "0.23.0");
+  assert.equal(currentVersion, "0.24.0");
   assert.equal(JSON.parse(packageLock).version, currentVersion);
   assert.match(versionRecord, new RegExp(`## v${currentVersion.replace(".", "\\.")}`));
-  assert.ok(readiness({ currentVersion: "0.21.1" }).errors.includes("Practice publication must not change product version"));
+  assert.ok(readiness({ currentVersion: "0.21.2" }).errors.includes("content release must use the next patch version"));
 });
 
-test("Practice publish command remains separate from product versions and tags", async () => {
+test("Practice publish command uses the unified product version and tag contract", async () => {
   const [packageJson, command, verify] = await Promise.all([
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../publish-practice.command", import.meta.url), "utf8"),
     readFile(new URL("../scripts/verify-practice-release.mjs", import.meta.url), "utf8"),
   ]);
   assert.match(packageJson, /practice:scope-check/);
-  assert.match(command, /practice:scope-check -- --id/);
-  assert.match(command, /npm run build[\s\S]*npm run test:sites/);
-  assert.doesNotMatch(command, /git tag|VERSION\.md/);
+  assert.match(command, /unified-publish\.mjs --kind practice/);
+  const unified = await readFile(new URL("../scripts/unified-publish.mjs", import.meta.url), "utf8");
+  assert.match(unified, /practice:scope-check/);
+  assert.match(unified, /release:check/);
+  assert.match(unified, /tag.*-a/);
   assert.match(verify, /content-manifest\.json/);
   assert.match(verify, /referencedPracticeMediaAssets/);
   assert.match(verify, /target Practice public projection/);

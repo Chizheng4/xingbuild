@@ -481,7 +481,7 @@ test("supersede refuses an already published old slug", async () => {
   assert.match(result.stderr, /Published observations cannot be superseded/);
 });
 
-test("content-only scope rejects mixed engineering files", () => {
+test("content release scope rejects mixed engineering files", () => {
   assert.deepEqual(
     validateContentScope(["content/observations/new-item.json"], { slug: "new-item" }),
     [],
@@ -496,9 +496,16 @@ test("content-only scope rejects mixed engineering files", () => {
 test("content commit readiness fixes version, tag, scope and origin ancestry", () => {
   const ready = evaluateContentCommitReadiness({
     slug: "new-item",
-    files: ["content/observations/new-item.json"],
-    currentVersion: "0.15.4",
-    parentVersion: "0.15.4",
+    files: [
+      "content/observations/new-item.json",
+      "package.json",
+      "package-lock.json",
+      "VERSION.md",
+      "docs/iterations/current.md",
+      "docs/iterations/history/v0.24.1.md",
+    ],
+    currentVersion: "0.24.1",
+    parentVersion: "0.24.0",
     head: "content-head",
     parent: "product-head",
     originMain: "product-head",
@@ -510,29 +517,36 @@ test("content commit readiness fixes version, tag, scope and origin ancestry", (
   const retry = evaluateContentCommitReadiness({
     ...ready,
     slug: "new-item",
-    files: ["content/observations/new-item.json"],
-    currentVersion: "0.15.4",
-    parentVersion: "0.15.4",
+    files: [
+      "content/observations/new-item.json",
+      "package.json",
+      "package-lock.json",
+      "VERSION.md",
+      "docs/iterations/current.md",
+      "docs/iterations/history/v0.24.1.md",
+    ],
+    currentVersion: "0.24.1",
+    parentVersion: "0.24.0",
     head: "content-head",
     parent: "product-head",
     originMain: "content-head",
-    headTags: [],
+    headTags: ["v0.24.1"],
   });
   assert.equal(retry.ready, true);
   assert.equal(retry.phase, "post-push-retry");
 
   for (const blocked of [
-    { currentVersion: "0.15.5" },
+    { currentVersion: "0.24.2" },
     { originMain: "unrelated-head" },
-    { headTags: ["v0.15.5"] },
+    { headTags: ["v0.24.2"] },
     { files: ["content/observations/new-item.json", "src/App.jsx"] },
     { files: ["content/observations/new-item.json", "public/media/new-item/figure.png"] },
   ]) {
     const result = evaluateContentCommitReadiness({
       slug: "new-item",
       files: ["content/observations/new-item.json"],
-      currentVersion: "0.15.4",
-      parentVersion: "0.15.4",
+      currentVersion: "0.24.1",
+      parentVersion: "0.24.0",
       head: "content-head",
       parent: "product-head",
       originMain: "product-head",
@@ -712,22 +726,25 @@ test("production source and bundle contracts exclude local drafts", async () => 
   assert.doesNotMatch(bundleText, /sanitized-candidate-preview|示例候选：只用于验证内容流水线/);
 });
 
-test("product and content publish scripts retain distinct safety contracts", async () => {
+test("product and content publish scripts share the unified release contract", async () => {
   const product = await readFile(path.join(root, "publish-xingbuild.command"), "utf8");
   const content = await readFile(path.join(root, "publish-content.command"), "utf8");
   const runtime = await readFile(path.join(root, "scripts", "content-release.mjs"), "utf8");
-  assert.match(product, /npm run release:preflight/);
+  assert.match(product, /unified-publish\.mjs --kind product/);
   assert.match(runtime, /--slug/);
-  assert.match(content, /content-release\.mjs/);
-  assert.match(runtime, /\["worktree", "add"/);
-  assert.match(runtime, /content:scope-check/);
-  assert.match(runtime, /npm.*run.*content:check[\s\S]*npm.*run.*build[\s\S]*npm.*run.*test:sites/);
-  assert.match(runtime, /verify-content-release\.mjs[\s\S]*--finalize/);
-  assert.match(runtime, /\["makers", "deploy"/);
-  assert.match(runtime, /\["fetch", "origin", "main"\]/);
-  assert.match(runtime, /assertRemoteHeadForDeployment/);
+  assert.match(content, /unified-publish\.mjs --kind content/);
+  assert.match(runtime, /unified-publish\.mjs/);
+  const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
+  assert.match(unified, /worktree.*add/);
+  assert.match(unified, /release:closeout-check/);
+  assert.match(unified, /release:preflight/);
+  assert.match(unified, /content:scope-check/);
+  assert.match(unified, /verify-content-release\.mjs/);
+  assert.match(unified, /makers.*deploy/);
+  assert.match(unified, /git.*push/);
+  assert.match(unified, /tag.*-a/);
   assert.doesNotMatch(content, /find \.content-workspace/);
-  assert.doesNotMatch(runtime, /git push origin "\$HEAD_TAG"|push_with_retry "\$HEAD_TAG"/);
+  assert.match(unified, /updateUnifiedVersionFiles/);
 });
 
 test("content publish entry hard-fails missing or invalid slug before side effects", () => {

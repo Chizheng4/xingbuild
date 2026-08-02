@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
 import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.js";
+import { evaluateUnifiedReleaseReadiness, unifiedReleaseRecordFiles } from "./unified-release.mjs";
 
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -191,6 +192,7 @@ export function evaluatePracticeCommitReadiness({
   head,
   parent,
   originMain,
+  originMainIsAncestor = false,
   headTags = [],
   practice,
   manifest,
@@ -201,19 +203,33 @@ export function evaluatePracticeCommitReadiness({
   const practicePath = `content/products/${practiceId}.json`;
   const manifestPath = `content/media/${practiceId}/manifest.json`;
   const mediaPaths = new Set(mediaPathsForPractice(practice, manifest));
-  const allowed = new Set([practicePath, manifestPath, ...mediaPaths]);
+  const allowed = new Set([
+    practicePath,
+    manifestPath,
+    ...mediaPaths,
+    ...unifiedReleaseRecordFiles(currentVersion),
+  ]);
   const rejected = normalized.filter((file) => !allowed.has(file));
   if (!normalized.includes(practicePath)) errors.push(`Practice commit must contain ${practicePath}`);
   if (rejected.length) errors.push(`Practice commit contains forbidden files: ${rejected.join(", ")}`);
   if (normalized.some((file) => mediaPaths.has(file)) && !normalized.includes(manifestPath)) {
     errors.push(`Practice media files require ${manifestPath}`);
   }
-  if (currentVersion !== parentVersion) errors.push("Practice publication must not change product version");
-  if (headTags.length) errors.push(`Practice commit must not create a product tag: ${headTags.join(", ")}`);
-  if (originMain !== parent && originMain !== head) {
-    errors.push("origin/main must equal HEAD^ before push or HEAD for same-commit deployment retry");
-  }
-  return { ready: errors.length === 0, errors, practicePath, manifestPath, phase: originMain === parent ? "pre-push" : originMain === head ? "post-push-retry" : "blocked" };
+  const unified = evaluateUnifiedReleaseReadiness({
+    files: normalized,
+    targetFile: practicePath,
+    currentVersion,
+    parentVersion,
+    head,
+    parent,
+    originMain,
+    originMainIsAncestor,
+    headTags,
+    kind: "practice",
+    extraAllowedFiles: [manifestPath, ...mediaPaths],
+  });
+  errors.push(...unified.errors);
+  return { ready: errors.length === 0, errors, practicePath, manifestPath, phase: unified.phase };
 }
 
 export function validatePracticeBundle(practice, manifest) {

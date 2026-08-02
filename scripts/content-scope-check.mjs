@@ -20,8 +20,8 @@ export function validateContentScope(files, { slug } = {}) {
     const entries = normalized.filter((file) => /^content\/observations\/[a-z0-9-]+\.json$/.test(file));
     const rejected = normalized.filter((file) => !entries.includes(file));
     const errors = [];
-    if (entries.length !== 1) errors.push(`content-only change must contain exactly one Observation; found ${entries.length}`);
-    if (rejected.length) errors.push(`content-only change contains forbidden files: ${rejected.join(", ")}`);
+    if (entries.length !== 1) errors.push(`content release must contain exactly one Observation; found ${entries.length}`);
+    if (rejected.length) errors.push(`content release contains forbidden files: ${rejected.join(", ")}`);
     return errors;
   }
   return evaluateContentCommitReadiness({ slug, files }).errors;
@@ -94,6 +94,8 @@ async function main() {
   const currentVersion = JSON.parse(git(["show", `${commit}:package.json`])).version;
   const parentVersion = JSON.parse(git(["show", `${commit}^:package.json`])).version;
   const originMain = git(["rev-parse", "origin/main"]);
+  let originMainIsAncestor = true;
+  try { execFileSync("git", ["merge-base", "--is-ancestor", originMain, parent], { cwd: root, stdio: "ignore" }); } catch { originMainIsAncestor = false; }
   const headTags = git(["tag", "--points-at", commit]).split("\n").filter(Boolean);
   const result = evaluateContentCommitReadiness({
     slug,
@@ -103,6 +105,7 @@ async function main() {
     head,
     parent,
     originMain,
+    originMainIsAncestor,
     headTags,
   });
   const errors = [...result.errors];

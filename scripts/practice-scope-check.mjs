@@ -40,6 +40,9 @@ export async function checkPracticeCommit({ practiceId, commit = "HEAD", gitImpl
     head,
     parent,
     originMain: gitImpl(["rev-parse", "origin/main"]),
+    originMainIsAncestor: (() => {
+      try { gitImpl(["merge-base", "--is-ancestor", gitImpl(["rev-parse", "origin/main"]), parent]); return true; } catch { return false; }
+    })(),
     headTags: gitImpl(["tag", "--points-at", commit]).split("\n").filter(Boolean),
     practice,
     manifest,

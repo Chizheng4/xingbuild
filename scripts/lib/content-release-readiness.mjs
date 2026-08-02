@@ -1,4 +1,5 @@
 import { slugPattern } from "./observation-content.mjs";
+import { evaluateUnifiedReleaseReadiness, unifiedReleaseRecordFiles } from "./unified-release.mjs";
 
 export function evaluateContentCommitReadiness({
   slug,
@@ -8,6 +9,7 @@ export function evaluateContentCommitReadiness({
   head,
   parent,
   originMain,
+  originMainIsAncestor = false,
   headTags = [],
 }) {
   const errors = [];
@@ -20,7 +22,8 @@ export function evaluateContentCommitReadiness({
     file === mediaManifest ||
     file.startsWith(`public/media/${slug}/`)
   );
-  const allowed = new Set([contentFile, ...allowedMedia]);
+  const releaseFiles = currentVersion ? [...unifiedReleaseRecordFiles(currentVersion)] : [];
+  const allowed = new Set([contentFile, ...allowedMedia, ...releaseFiles]);
   const rejected = normalized.filter((file) => !allowed.has(file));
 
   if (!normalized.includes(contentFile)) errors.push(`content commit must contain ${contentFile}`);
@@ -28,19 +31,28 @@ export function evaluateContentCommitReadiness({
   if (allowedMedia.some((file) => file !== mediaManifest) && !normalized.includes(mediaManifest)) {
     errors.push(`approved media files require ${mediaManifest}`);
   }
-  if (currentVersion !== undefined && currentVersion !== parentVersion) {
-    errors.push("content publication must not change product version");
-  }
-  if (headTags.length) errors.push(`content commit must not create a product tag: ${headTags.join(", ")}`);
-  if (originMain !== undefined && originMain !== parent && originMain !== head) {
-    errors.push("origin/main must equal HEAD^ before push or HEAD for same-commit deployment retry");
-  }
+  const unified = currentVersion === undefined || parentVersion === undefined
+    ? { errors: [] }
+    : evaluateUnifiedReleaseReadiness({
+      files: normalized,
+      targetFile: contentFile,
+      currentVersion,
+      parentVersion,
+      head,
+      parent,
+      originMain,
+      originMainIsAncestor,
+      headTags,
+      kind: "content",
+      extraAllowedFiles: [...allowedMedia],
+    });
+  errors.push(...(unified.errors || []).filter((error) => !errors.includes(error)));
 
   return {
     ready: errors.length === 0,
     errors,
     contentFile,
     mediaManifest: normalized.includes(mediaManifest) ? mediaManifest : undefined,
-    phase: originMain === parent ? "pre-push" : originMain === head ? "post-push-retry" : "blocked",
+    phase: unified.phase || (originMain === parent ? "pre-push" : originMain === head ? "post-push-retry" : "blocked"),
   };
 }

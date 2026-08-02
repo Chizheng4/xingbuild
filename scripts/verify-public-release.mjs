@@ -12,25 +12,28 @@ if (!expectedVersion || !expectedCommit) {
 
 const publicUrl = new URL(baseUrl);
 const releaseUrl = new URL("/release.json", publicUrl);
+const manifestUrl = new URL("/content-manifest.json", publicUrl);
 const attempts = Number(process.env.XINGBUILD_VERIFY_ATTEMPTS || 12);
 const intervalMs = Number(process.env.XINGBUILD_VERIFY_INTERVAL_MS || 10_000);
 
 for (let attempt = 1; attempt <= attempts; attempt += 1) {
   try {
-    const [pageResponse, releaseResponse] = await Promise.all([
+    const [pageResponse, releaseResponse, manifestResponse] = await Promise.all([
       fetch(publicUrl, { redirect: "follow" }),
       fetch(releaseUrl, { redirect: "follow", cache: "no-store" }),
+      fetch(manifestUrl, { redirect: "follow", cache: "no-store" }),
     ]);
 
-    if (!pageResponse.ok || !releaseResponse.ok) {
+    if (!pageResponse.ok || !releaseResponse.ok || !manifestResponse.ok) {
       throw new Error(
-        `HTTP page=${pageResponse.status} release=${releaseResponse.status}`,
+        `HTTP page=${pageResponse.status} release=${releaseResponse.status} manifest=${manifestResponse.status}`,
       );
     }
 
-    const [html, release] = await Promise.all([
+    const [html, release, manifest] = await Promise.all([
       pageResponse.text(),
       releaseResponse.json(),
+      manifestResponse.json(),
     ]);
 
     if (!html.includes("<title>xingbuild")) {
@@ -45,6 +48,9 @@ for (let attempt = 1; attempt <= attempts; attempt += 1) {
       throw new Error(
         `commit is ${release.commit || "missing"}, expected ${expectedCommit}`,
       );
+    }
+    if (manifest.version !== expectedVersion || manifest.commit !== expectedCommit) {
+      throw new Error("content manifest does not match the verified release");
     }
 
     console.log(
