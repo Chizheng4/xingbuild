@@ -319,6 +319,8 @@ npm run test:sites
 
 构建纯度规则：`npm run build`、`npm run release:check` 和统一 publish 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 是显式源变更/素材生成命令，只能在产品方案变更后、local commit 前运行，并将生成物纳入同一提交；构建后的 tracked dirty 检查仍是硬门禁。
 
+发布职责拆分：publish 前必须由 `npm run release:prepare` 与 `npm run release:build` 完成业务验证、构建和 Sites 测试；`publish-xingbuild.command`/`unified-publish.mjs --kind product` 只读取 clean main 的既有 HEAD+annotated tag，校验预先生成的 `dist/client/release.json` 与 `content-manifest.json`，再执行授权后的 push、EdgeOne deploy 和公网 manifest 验证。Transport 阶段不得运行 `release:check`、`release:build`、`build`、生成器或内容/文章/实践业务 QA；dist 缺失或身份不匹配立即失败。
+
 ## 7. EdgeOne 发布
 
 生产发布入口由用户手动执行：

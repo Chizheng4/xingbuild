@@ -735,14 +735,14 @@ test("product and content publish scripts share the unified release contract", a
   assert.match(content, /unified-publish\.mjs --kind content/);
   assert.match(runtime, /unified-publish\.mjs/);
   const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
-  assert.match(unified, /worktree.*add/);
   assert.match(unified, /release:preflight/);
-  assert.match(unified, /content:scope-check/);
   assert.match(unified, /verify-content-release\.mjs/);
+  assert.match(unified, /readPreparedDist/);
+  assert.match(unified, /content-manifest\.json/);
   assert.match(unified, /makers.*deploy/);
   assert.match(unified, /git.*push/);
   assert.match(unified, /--authorize-publish/);
-  assert.match(unified, /build polluted tracked paths/);
+  assert.doesNotMatch(unified, /release:check|test:sites|npm run build|architecture:views|article:figures/);
   assert.doesNotMatch(unified, /incrementPatch/);
   assert.doesNotMatch(unified, /updateUnifiedVersionFiles/);
   assert.doesNotMatch(unified, /git\(\["commit"/);
@@ -757,8 +757,9 @@ test("release build consumes committed generated outputs without invoking genera
     assert.ok(packageJson.scripts[command], `${command} remains an explicit source-generation command`);
   }
   const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
-  assert.match(unified, /release:check/);
-  assert.match(unified, /build polluted tracked paths/);
+  assert.match(JSON.stringify(packageJson.scripts), /release:prepare/);
+  assert.match(JSON.stringify(packageJson.scripts), /release:build/);
+  assert.doesNotMatch(unified, /release:check|test:sites|npm run build/);
   assert.doesNotMatch(unified, /architecture:views|article:figures/);
 });
 

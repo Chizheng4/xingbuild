@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   assertPublishAuthorization,
   isPublishAuthorized,
+  readPreparedDist,
   trackedDirtyPaths,
 } from "../scripts/unified-publish.mjs";
 import { evaluateVersionState, parseVersionState } from "../scripts/lib/version-state.mjs";
@@ -32,4 +36,21 @@ test("current stores only immutable local version identity facts", () => {
   assert.equal(evaluateVersionState({ currentText: mutable, phase: "preflight", headTagged: true, clean: true }).ready, false);
   const contradictory = "状态：等待本地 commit/tag。\nlocalSubmission: complete";
   assert.equal(evaluateVersionState({ currentText: contradictory, phase: "preflight", headTagged: true, clean: true }).ready, false);
+});
+
+test("transport accepts only a prepared dist matching the exact version and HEAD", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "xingbuild-prepared-dist-"));
+  try {
+    await mkdir(path.join(directory, "dist", "client"), { recursive: true });
+    const release = { version: "v0.24.12", commit: "head" };
+    const manifest = { version: "v0.24.12", commit: "head", publishedSlugs: ["target"] };
+    await writeFile(path.join(directory, "dist", "client", "release.json"), `${JSON.stringify(release)}\n`);
+    await writeFile(path.join(directory, "dist", "client", "content-manifest.json"), `${JSON.stringify(manifest)}\n`);
+    const prepared = await readPreparedDist({ sourceCwd: directory, version: "v0.24.12", head: "head", kind: "content", target: "target" });
+    assert.equal(prepared.release.commit, "head");
+    await writeFile(path.join(directory, "dist", "client", "release.json"), `${JSON.stringify({ ...release, commit: "other" })}\n`);
+    await assert.rejects(readPreparedDist({ sourceCwd: directory, version: "v0.24.12", head: "head", kind: "product" }), /release\.json does not match/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

@@ -1,3 +1,8 @@
+## v0.24.12 — publish 纯传输部署与预生成产物合同
+
+- 状态：Engineering 已完成 publish transport 拆分与自 QA；publish 只消费预先生成且身份匹配的 `dist/client`，业务验证和构建在 publish 前完成。
+- 范围：新增 `release:prepare`/`release:build` 业务准备入口；publish 不运行 check、build、Sites、生成器或内容业务 QA。
+
 ## v0.24.11 — 发布构建只读消费已提交生成物
 
 - 状态：Engineering 已完成构建纯度根修正与自 QA；生成器保持显式源变更命令，release build 只消费已提交生成物。
