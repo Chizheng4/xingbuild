@@ -1,0 +1,104 @@
+{
+  "id": "observation-weride-lenovo-200k-av-deployment",
+  "slug": "weride-lenovo-200k-av-deployment",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "WeRide与Lenovo提出五年全球部署20万辆自动驾驶车计划",
+  "summary": "WeRide与Lenovo宣布扩大合作，计划未来五年全球部署20万辆自动驾驶车辆并整合L4车载计算能力，具体交付仍待披露。",
+  "companies": [
+    "WeRide",
+    "Lenovo"
+  ],
+  "regions": [
+    "全球"
+  ],
+  "dimensions": [
+    "合作与扩张",
+    "产品与能力"
+  ],
+  "primaryDimension": "合作与扩张",
+  "eventAt": "2026-04-27",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "合作方向",
+      "value": "自动驾驶系统与L4车载计算整合"
+    },
+    {
+      "label": "计划规模",
+      "value": "未来五年全球20万辆"
+    },
+    {
+      "label": "当前阶段",
+      "value": "战略合作与前瞻部署计划"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "WeRide官方称与Lenovo扩大合作，计划未来五年在全球部署20万辆自动驾驶车辆，并整合自动驾驶系统、L4域控制器与高性能车载计算能力。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-weride-lenovo-plan",
+      "evidence-weride-lenovo-computing"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "该计划把自动驾驶系统、车载计算和全球部署规模放进同一合作叙事，值得作为产业化方向观察；但它不是已签订单、已生产或已部署数量，城市、交付、许可与收入仍未披露。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-weride-lenovo-plan"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-weride-lenovo-plan",
+      "claim": "WeRide官方新闻稿称其与Lenovo扩大合作，计划未来五年在全球部署200000台自动驾驶车辆。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-weride-lenovo-april27"
+      ]
+    },
+    {
+      "id": "evidence-weride-lenovo-computing",
+      "claim": "官方摘要称合作将整合WeRide自动驾驶系统与Lenovo车计算L4域控制器和高性能计算能力。",
+      "claimKind": "company_statement",
+      "sourceRefs": [
+        "source-weride-lenovo-april27"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-weride-lenovo-april27",
+      "publisher": "WeRide Inc.",
+      "title": "WeRide and Lenovo Collaborate to Deploy 200,000 Autonomous Vehicles Globally Over Five Years",
+      "url": "https://ir.weride.ai/news-releases/news-release-details/weride-and-lenovo-collaborate-deploy-200000-autonomous-vehicles",
+      "publishedAt": "2026-04-27",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "可确认WeRide官方发布的Lenovo合作与五年全球部署计划；不能据此宣称已签订确定数量订单、已实现部署或形成收入。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "WeRide全球部署计划",
+    "body": "WeRide与Lenovo称，双方计划未来五年在全球部署20万辆自动驾驶车辆，并把WeRide自动驾驶系统与Lenovo的L4车载计算平台整合。这个合作计划显示系统能力与车辆计算正在被放进规模化部署框架，但不是已签订单或已实现部署；具体城市、交付、运营许可与收入仍待后续披露。",
+    "sourceRefs": [
+      "source-weride-lenovo-april27"
+    ],
+    "isOpinion": false
+  }
+}
