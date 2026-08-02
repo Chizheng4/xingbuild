@@ -236,16 +236,13 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 唯一当前指针：`docs/iterations/current.md`。
 
-`current.md` 必须同时记录并保持以下机器可检验状态字段：
+`current.md`/history 只记录提交时冻结的本地版本身份事实；唯一允许的机器状态字段为：
 
 ```text
 localSubmission: pending | complete
-productVisualAcceptance: pending | passed | rejected
-publishAuthorization: pending | confirmed
-onlineRelease: pending | complete | partial
 ```
 
-状态转换必须遵循：产品方案确认 → Engineering local commit/tag/clean → 产品/视觉验收 → 用户 publish 授权 → push/deploy/public verify。自然语言状态、Git/tag、线上 manifest 与四个字段不一致时，closeout、preflight 或产品验收必须失败；任何脚本不得自行把 pending 写成 complete。
+`localSubmission: complete` 只在 Engineering 本地 commit/tag/clean 形成时写入并冻结。产品/视觉验收是提交后的外部 QA/协作事件，publish 授权只接受显式 `--authorize-publish` 或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`，线上状态只由 release manifest、部署记录和公网验证承担；这些事件不得回写已打 tag 的 current/history。closeout/preflight 只校验不可变本地身份事实，不能把事件状态写入版本文件。
 
 未确认的产品优化和运营转入的产品候选统一位于活动 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。产品 task 在当前版本结束后把候选转化为一个正式设计方案并立即归档来源候选；版本顺序不读取 roadmap 或 task 历史。
 
@@ -339,7 +336,7 @@ npm run test:sites
 
 发布命令只消费已完成产品/视觉验收的现有 local commit/tag，按以下顺序执行：
 
-1. 读取 source cwd、`current.md`、`VERSION.md`、package、history、HEAD 和 annotated tag，确认版本身份与产品/视觉验收状态一致；
+1. 读取 source cwd、`current.md`、`VERSION.md`、package、history、HEAD 和 annotated tag，确认不可变版本身份一致；产品/视觉验收不从 current/history 推导；
 2. 确认 source cwd 为官方 direct-local clean `main`，并记录 source HEAD；
 3. 使用精确 HEAD 的内部只读构建沙箱（不形成工程分支），执行 `check`、content/article/practice scope、`release:check` 和 Sites 测试；
 4. 构建后再次检查 source 与构建沙箱的 tracked dirty paths；任何变化立即失败并报告精确路径；
@@ -423,7 +420,7 @@ publish 禁止：`incrementPatch`、写 package/VERSION/current/history、`git c
 
 Publish 不改变“本地提交版本”的身份，只把同一 HEAD/tag 推送、部署并验证；publish 失败不得新增版本、回写 current/history 或制造完成状态。版本身份冲突、tag 冲突、构建 dirty 或授权缺失必须回到产品/Engineering 版本流程解决。
 
-每次 Engineering 或产品/视觉 task 收口必须同时报告：本地版本状态、本地预览 `http://127.0.0.1:4317/`、线上版本状态、线上网站 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界。无候选、无阻断时必须明确写出“等待用户下一步”。链接用于便捷访问，不代表对应状态已经完成。
+每次 Engineering 或产品/视觉 task 收口必须同时报告：本地版本状态、本地预览 `http://127.0.0.1:4317/`、线上版本状态、线上网站 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界；这些报告不回写已打 tag 的 current/history。无候选、无阻断时必须明确写出“等待用户下一步”。链接用于便捷访问，不代表对应状态已经完成。
 
 ## 9. Git 版本管理
 

@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { acquireContentReleaseLease, releaseContentReleaseLease } from "./lib/content-release-lease.mjs";
 import { formatVersion, parseCurrentVersion } from "./lib/unified-release.mjs";
+import { assertVersionState } from "./lib/version-state.mjs";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
@@ -47,12 +48,6 @@ export function assertPublishAuthorization(options = {}) {
   }
 }
 
-export function assertAcceptedCurrent(currentText) {
-  if (!/(?:产品\/视觉验收通过|产品\/视觉已验收|产品\/视觉验收：通过)/.test(currentText)) {
-    throw new Error("current.md does not record completed product/visual acceptance");
-  }
-}
-
 export async function readAcceptedVersion(sourceCwd = root) {
   const packageJson = JSON.parse(await readFile(path.join(sourceCwd, "package.json"), "utf8"));
   const packageLock = JSON.parse(await readFile(path.join(sourceCwd, "package-lock.json"), "utf8"));
@@ -65,7 +60,7 @@ export async function readAcceptedVersion(sourceCwd = root) {
   }
   if (!versionText.includes(`## ${version}`)) throw new Error(`VERSION.md does not record ${version}`);
   if (parseCurrentVersion(currentText) !== version) throw new Error(`current.md does not record ${version}`);
-  assertAcceptedCurrent(currentText);
+  assertVersionState({ currentText, phase: "publish", headTagged: true, clean: true });
   const historyFile = path.join(sourceCwd, "docs/iterations/history", `${version}.md`);
   if (!(await exists(historyFile))) throw new Error(`missing history record for ${version}`);
   return { version, packageJson, packageLock, versionText, currentText, historyFile };

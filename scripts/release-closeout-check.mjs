@@ -31,6 +31,7 @@ const stateResult = evaluateVersionState({
   phase: "closeout",
   headTagged: false,
   clean: false,
+  staged: git("diff", "--cached", "--name-only").trim() !== "",
   expectedVersion: `v${packageJson.version}`,
 });
 result.blockers.push(...stateResult.blockers);

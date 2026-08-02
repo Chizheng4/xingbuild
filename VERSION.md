@@ -1,3 +1,8 @@
+## v0.24.10 — 不可变版本身份与提交后事件分离
+
+- 状态：Engineering 已完成本地 commit/tag 与自 QA；提交后的产品/视觉验收、publish 授权和线上状态由外部 QA、显式授权参数与 release manifest 承担。
+- 范围：current/history 只保存 localSubmission 等不可变版本身份事实；不因验收、授权或线上变化回写已打 tag 文件。
+
 ## v0.24.9 — 版本状态机与收口事实治理
 
 - 状态：Engineering 已完成状态字段、事实一致性门禁与自 QA；待本地 commit/tag 后产品/视觉验收，尚未 push、publish、部署或公网验收。
