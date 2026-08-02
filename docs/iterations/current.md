@@ -2,7 +2,7 @@
 
 ## 当前唯一版本：`v0.24.1`
 
-状态：已确认，进入 Engineering current-fix 实现；完成后直接提交、打标签、推送、部署并公网验收。
+状态：已完成 Engineering v0.24.1 current-fix 实现、验证、提交、打标签、推送、部署与公网验收。
 发布授权：用户已明确要求直接上线；本修订不移动既有 `v0.24.0` tag。
 父版本：`v0.24.0` / `3e3d499693a4b3c60d4b4b9ed46362b6dad5880b`
 正式方案：[`docs/design/v0.24.0 项目文件与协作基线治理方案.md`](../design/v0.24.0%20项目文件与协作基线治理方案.md)
@@ -39,3 +39,9 @@ release.json / content-manifest.json / EdgeOne / 公网
 ```
 
 只有上述身份全部一致，且 `npm run release:preflight` 通过，产品与视觉 task 才能将本修订标记完成。
+
+
+## 最终修订验收
+
+- v0.24.1 的最终 HEAD、origin/main、annotated tag、release.json 与 content-manifest.json 由同一 release commit 统一确认。
+- 父版本 v0.24.0 的实现、deployment 与公网 manifest 证据保留于 `docs/iterations/history/v0.24.0.md`。
