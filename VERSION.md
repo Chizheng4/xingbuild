@@ -1,3 +1,7 @@
+## v0.24.3 — v0.24.2 状态表达修订
+- 状态：Engineering 本地 current-fix 已完成；已形成 v0.24.3 本地 commit/tag，产品/视觉验收待确认；origin/main 尚未同步，未 push、publish、部署或公网验收。
+- 范围：仅修正 current.md 对 v0.24.2 本地 commit/tag、产品/视觉验收状态与 origin/main 未同步的准确表达。
+
 ## v0.24.2 — 工程与 task 治理本地提交版本
 - 状态：Engineering 本地提交版本；已完成治理合同实现、自 QA、版本记录、commit、annotated tag；尚未 push、publish、部署或公网验收。
 - 范围：统一 canonical direct-local、task 创建/交接权限、Engineering 自 QA、本地提交版本、产品/视觉验收与线上 publish 状态边界；不修改 UI、IA、schema、上游事实或运营内容。
