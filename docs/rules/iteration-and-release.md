@@ -162,6 +162,8 @@ executionAuthorization: pending | confirmed
 
 日常 Observation 发布不是产品版本迭代。内容准备与生产发布是两个阶段，保持 `package.json` 版本和既有产品 tag 不变：
 
+这里的“版本不变”是产品版本不变，不要求内容提交 SHA 与产品 tag 相同。内容发布可以产生独立的内容提交、内容 manifest 和部署记录；它们只表示内容快照，不是第二套产品版本，也不能改变 `current.md`、`VERSION.md`、package version 或产品 tag。一个产品版本可以在其生命周期内持续增加和修订内容。
+
 - 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
 - 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；日常终端以 `npm run content:approve -- --slug <slug> --authority <authority>` 在共享 JS 能力层受控聚合 review + promote；
 - 生产发布固定为 checks → 独立内容 commit → `publish-content.command --slug <slug>` → push → EdgeOne → 公网验收；
