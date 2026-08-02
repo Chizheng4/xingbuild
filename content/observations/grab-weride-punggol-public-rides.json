@@ -1,0 +1,96 @@
+{
+  "id": "observation-grab-weride-punggol-public-rides",
+  "slug": "grab-weride-punggol-public-rides",
+  "status": "published",
+  "level": "brief",
+  "nature": "evidence-led",
+  "title": "新加坡Punggol开放Grab与WeRide自动驾驶接驳车公众试乘",
+  "summary": "新加坡LTA宣布Punggol固定路线自动驾驶接驳车开放公众乘坐，初期免费，后续收入服务仍取决于监管和运营进展。",
+  "companies": [
+    "Grab",
+    "WeRide"
+  ],
+  "regions": [
+    "新加坡Punggol"
+  ],
+  "dimensions": [
+    "运营与市场",
+    "合作与扩张",
+    "准入与政策"
+  ],
+  "primaryDimension": "运营与市场",
+  "eventAt": "2026-04-01",
+  "publishedAt": "2026-08-02",
+  "updatedAt": "2026-08-02",
+  "factOverview": [
+    {
+      "label": "服务阶段",
+      "value": "公众试乘开放"
+    },
+    {
+      "label": "路线",
+      "value": "Punggol固定路线1和3"
+    },
+    {
+      "label": "收费状态",
+      "value": "初期免费"
+    }
+  ],
+  "rangeAndFacts": {
+    "id": "range-and-facts",
+    "heading": "范围与事实",
+    "paragraphs": [
+      "新加坡LTA公告称，自4月1日起公众可乘坐Punggol自动驾驶接驳车，Grab运营车辆此前已累计超过25000公里测试；初期免费，收入服务预计在年中开始。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-lta-punggol-public-rides"
+    ]
+  },
+  "operatingImpact": {
+    "id": "operating-impact",
+    "heading": "经营影响",
+    "paragraphs": [
+      "该事件把自动驾驶接驳从测试推进到可预约的公众试乘，但免费试乘与后续收入服务必须分开看，不能把监管机构预期写成已经完成收费商业化。"
+    ],
+    "evidenceUnitIds": [
+      "evidence-lta-punggol-public-rides"
+    ]
+  },
+  "evidenceUnits": [
+    {
+      "id": "evidence-lta-punggol-public-rides",
+      "claim": "LTA公告称自4月1日起公众可乘坐Punggol自动驾驶接驳车，Grab运营车辆此前已累计超过25000公里测试；初期免费，收入服务预计年中开始。",
+      "claimKind": "verified_fact",
+      "sourceRefs": [
+        "source-lta-punggol-2026"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-lta-punggol-2026",
+      "publisher": "Singapore Land Transport Authority",
+      "title": "Autonomous Shuttle Services in Punggol Open for Public Rides from 1 April 2026",
+      "url": "https://www.lta.gov.sg/content/ltagov/en/newsroom/2026/3/news-releases/autonomous-shuttle-services-in-punggol-open-for-public-rides-fro.html",
+      "publishedAt": "2026-03-04",
+      "sourceTier": "official",
+      "sourceType": "official_statement",
+      "accessedAt": "2026-08-02"
+    }
+  ],
+  "sections": [],
+  "evidenceBoundary": "可确认LTA宣布的公众开放、测试里程和预期收入服务；不能据此宣称已完成收费商业化或收入服务已经开始。",
+  "relatedWorks": [
+    "robotaxi"
+  ],
+  "promoteToHome": false,
+  "presentation": "brief",
+  "brief": {
+    "subject": "新加坡公众试乘",
+    "body": "新加坡LTA宣布，Punggol固定路线1和3的自动驾驶接驳车自4月1日起开放公众乘坐；Grab运营车辆此前已累计超过25000公里测试，初期免费，收入服务预计年中开始。这里已发生的是公众试乘开放，不是已完成收费商业化，后续收入服务仍需按实际运营和监管进展核对。",
+    "sourceRefs": [
+      "source-lta-punggol-2026"
+    ],
+    "isOpinion": false
+  }
+}
