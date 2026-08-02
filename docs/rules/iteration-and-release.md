@@ -52,7 +52,7 @@
 - 候选必须显式区分 `executionAuthorization: confirmed | pending`。只有 `confirmed` 且没有会改变产品目标、页面责任、对象边界或工程范围的未决项，才可自动转正式方案、写入 `current.md` 并交 Engineering。
 - `pending`、`DRAFT` 或仍有重大未决项的候选继续停留在 `docs/iterations/candidates/`；仅在此类真实不确定性下形成一次短阻断，不得用常规确认代替已存在的执行授权。
 - 每个确认候选完成“方案正式化 → Engineering 实现 → 产品/视觉验收 → 本地收口 → push → 部署 → 公网验收”后，立即回到候选目录清点，直到没有 `confirmed` 候选；不读取 roadmap 或 task 历史决定顺序。
-- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容/运营任务始终按独立合同继续，不被该流水线阻断。
+- 只有没有 `confirmed` 候选时才停止产品版本流水线；内容采集和审核继续按独立运营合同运行，但正式发布必须进入统一版本流水线。
 
 ### 2.2.3 当前版本验收修复优先
 
@@ -160,11 +160,9 @@ executionAuthorization: pending | confirmed
 
 ### 3.3 日常观察内容发布
 
-日常 Observation 发布不是产品版本迭代。内容准备与生产发布是两个阶段，保持 `package.json` 版本和既有产品 tag 不变：
+日常 Observation 的准备和审核不是产品版本；正式生产发布是统一版本的 patch 发布。一次成功发布必须将批准内容、版本记录、Git 提交、annotated tag、线上 release manifest 和内容 manifest 收口为同一版本身份。
 
-这里的“版本不变”是产品版本不变，不要求内容提交 SHA 与产品 tag 相同。内容发布可以产生独立的内容提交、内容 manifest 和部署记录；它们只表示内容快照，不是第二套产品版本，也不能改变 `current.md`、`VERSION.md`、package version 或产品 tag。一个产品版本可以在其生命周期内持续增加和修订内容。
-
-- 不要求新版本号、设计方案、`VERSION.md`、版本 tag 或全站七档验收；
+- 内容准备和审核不要求版本号；正式 publish 必须生成或确认目标 patch 版本、更新 `VERSION.md`/`current.md`，并执行完整统一版本验收；
 - 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；日常终端以 `npm run content:approve -- --slug <slug> --authority <authority>` 在共享 JS 能力层受控聚合 review + promote；
 - 生产发布固定为 checks → 独立内容 commit → `publish-content.command --slug <slug>` → push → EdgeOne → 公网验收；
 - 人工审核 sidecar 至少保存 slug、`status=approved`、reviewedAt、authority 和 contentHash；draft 改动后 hash 不匹配必须失败；
@@ -174,8 +172,8 @@ executionAuthorization: pending | confirmed
 - 只有 `verify-content-release` 公网验收成功后，才精确 finalize 目标 slug：删除该 slug 的 draft、review 与 recovery 三份临时事实，不使用通配且不触碰任何无关 workspace 文件；
 - 必须通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
-- 必须形成独立 Git 提交；范围只能是 `content/observations/<slug>.json` 与该对象必要的 approved media，产品版本不得变化；
-- 内容发布不等待产品版本，也不要求产品 task 的工作区干净；发布器必须从最新 `origin/main` 创建唯一干净内容 worktree，并在 fetch→目标提交→push→部署→公网验收临界区使用短时 release lease。
+- 必须形成统一版本 Git 提交；范围可以包含目标公开内容、必要 approved media 和统一版本记录，不能产生 content-only tag；
+- 正式内容发布必须从最新 `origin/main` 创建唯一干净发布 worktree，在 release lease 内生成目标 patch 版本、更新版本记录、创建 annotated tag、push、部署和公网验收；不得使用产品版本不变的旁路。
 - 内容 task 不创建、不管理产品 Engineering 的 branch/worktree，也不把 CLI 的内部临时内容 worktree当作工程迭代；若发布工具自身失败，立即停止本次发布并登记候选，不在 main 或隔离分支中自行修复。
 - 部署前必须再次确认远端 HEAD 仍是目标内容提交；主线在 lease 外推进时，内容发布器自动 fast-forward、重建并重新校验目标 slug，不发布旧构建；push 后的部署或公网验收重试保持同一 HEAD。
 - 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
@@ -197,7 +195,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 ### 3.4 常青文章内容发布
 
-`EvergreenArticlePublication` 的日常更新同样不改变产品版本或 tag。提交必须显式指定一个文章 slug，且范围只能包含 `content/articles/<slug>.json`、该文章引用的可编辑图形源和生成 SVG；必须通过 `article:check`、`article:scope-check`、build、Sites 和目标 URL/manifest 验证。当前图形适配器锁定 Mermaid CLI 11.16.0 与 LikeC4；D2 是未来可选 adapter，未锁定并通过专项验收前不得在内容对象中声明。`publish-article.command --slug <slug>` 只允许推送已验证 HEAD 并部署既有项目；它不接受页面、规则、版本或无关内容混入。
+`EvergreenArticlePublication` 的准备不改变版本；正式文章 publish 是统一版本的 patch 发布。提交必须显式指定一个文章 slug，内容、必要图形源/生成 SVG 与统一版本记录收口为一个最终 commit/tag，并通过 `article:check`、统一 `article:scope-check`、build、Sites 和目标 URL/manifest 验证。当前图形适配器锁定 Mermaid CLI 11.16.0 与 LikeC4；D2 是未来可选 adapter，未锁定并通过专项验收前不得在内容对象中声明。
 
 ## 4. 当前迭代
 
@@ -306,13 +304,13 @@ npm run test:sites
 
 ### 7.1 内容专用发布
 
-日常 Observation 使用：
+正式 Observation 使用：
 
 ```bash
 ./publish-content.command --slug <slug>
 ```
 
-该命令不创建或推送版本 tag，但必须：
+该命令必须参与统一版本收口，并且必须：
 
 1. 缺失或非法 slug 立即失败，不从 HEAD 猜测目标；
 2. 从最新 `origin/main` 创建唯一干净内容 worktree，确认目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；不得要求产品责任方工作区干净；
@@ -321,7 +319,7 @@ npm run test:sites
 5. 执行目标检查、全量 content check、生产构建和 Sites 测试，并拒绝任何 workspace 路径进入生产 source/bundle；
 6. 部署前再次确认远端 main 仍等于已验证 HEAD；若不一致则停止并按 lease 重建，绝不部署旧 HEAD；
 7. 部署既有 `xingbuild-nochina` 项目；
-8. 以目标 slug URL、稳定产品版本和同一 commit 完成公网验证，分别报告 push、部署和公网结果；
+8. 以目标 slug URL、统一版本和同一最终 commit 完成公网验证，分别报告版本、tag、push、部署和公网结果；
 9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 post-push retry 成功后仍执行 finalize。
 
 脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
@@ -384,7 +382,7 @@ npm run test:sites
 7. 执行 `npm run release:preflight`；只有通过后才报告“可发布”；
 8. 需要共享、备份或触发 EdgeOne Git 部署时，再单独推送 GitHub。
 
-本地 commit 是可审计的版本候选，不等于公网发布。产品/视觉验收发现问题时，以新修复版本 commit 继续，不移动已发布 tag、不重写历史。
+本地 commit 是统一版本候选，不等于公网发布；正式发布必须创建同名 annotated tag，并使线上 `release.json` 与 `content-manifest.json` 同一版本/commit 对齐。产品/视觉验收发现问题时，以新修复版本 commit 继续，不移动已发布 tag、不重写历史。
 
 本地 Git、GitHub 和 EdgeOne 分别承担不同责任：
 

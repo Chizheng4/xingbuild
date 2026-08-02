@@ -2,10 +2,10 @@
 
 ## 状态
 
-- `status: pending`
-- `executionAuthorization: pending`
-- 产品评审：`pending`（路由：`current-fix`）
-- 评审结论：问题事实成立，属于既有内容发布能力的闭环缺口；本轮按用户要求暂不进入 Engineering，待明确启动修复版本后再改为 `confirmed`。
+- `status: confirmed`
+- `executionAuthorization: confirmed`
+- 产品评审：`confirmed`（路由：`next-version`，目标版本：`v0.24.0`）
+- 评审结论：问题事实成立，且现行独立内容提交/独立内容版本与新的统一版本合同冲突；本候选进入 v0.24.0，统一内容、产品、Git、tag 与公网 manifest 的版本身份。
 - 评审责任：产品与视觉 task
 - 候选类型：发布能力 / 内容运营基础设施
 - 来源问题：`OPS-CONTENT-006`
@@ -41,19 +41,19 @@
 ## 影响范围
 
 - 可能影响：内容发布命令、内容 release worktree、审核生命周期的传递与 finalize 路径、相关集成测试。
-- 不改变：产品版本/tag、UI、公开 Observation 字段、页面结构、视觉、Ops EvidenceCandidate 合同和日常内容事实审核。
+- 不改变：UI、公开 Observation 字段、页面结构、视觉、Ops EvidenceCandidate 合同和日常内容事实审核；采集、draft、review、recovery 仍不直接进入公网版本。
 
 ## 非目标与边界
 
-- 不进入当前产品版本，不直接修改 `src/`、`VERSION`、`current.md` 或公开内容对象。
+- 进入 `v0.24.0` 发布能力范围；允许 Engineering 修改统一发布脚本、版本记录、发布 manifest、相关测试和必要的内容发布适配，但不得借此改变上游事实或审核边界。
 - 不把 EvidenceCandidate 直接交给发布命令。
 - 不放宽 slug、scope、hash、origin/main、build、Sites 或公网验收门禁。
 - 不因该候选暂停既有 Observation/Article/Practice 日常运营；候选确认前不实施能力改动。
 
 ## 建议评审要点
 
-产品与视觉 task 只需确认这是否属于既有网站发布能力的必要闭环，以及是否保持读者界面和产品版本边界不变。若确认，再由 Engineering 形成最小实现与真实 worktree 集成测试合同；若不确认，保留当前受控临时操作并关闭候选。
+产品与视觉 task 已确认：这是统一网站版本身份所必需的发布能力；Engineering 需形成最小实现与真实 worktree 集成测试合同，并保证所有正式 publish 指令产生同一版本身份。
 
 ## 下一动作
 
-产品与视觉 task 已完成问题评审；在用户明确启动修复版本前保持 `executionAuthorization: pending`，不编码、不创建产品版本、不 push/deploy，也不改变日常内容发布对象。
+下一动作：将本候选写入 `docs/iterations/current.md` 的 `v0.24.0` 合同后，Engineering 实现、验证、commit/tag、push、部署和公网验收；成功后在候选中追加结果并归档。

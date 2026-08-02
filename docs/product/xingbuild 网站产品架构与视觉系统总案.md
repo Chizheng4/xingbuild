@@ -70,13 +70,13 @@
 | 全站 SiteShell、Header、Footer、sticky 状态 | `LayoutShell`、`SiteHeader`、`SiteFooter`、共享 token | 否 |
 | 一级导航与页面路由 | B端产品、经营观察、关于我；集中观察页为上下文入口 | 否 |
 | B端产品展示母版 | `ShowcaseLayout`、`PracticePage`、`SystemStage`、Observation rail | 增加已批准内容时否 |
-| Brief 观察内容 | `ObservationPublication`、schema、rail、集合页、单条文章 | 否，走 content-only 发布 |
-| 常青长文 | `EvergreenArticlePublication`、`EvergreenArticle`、`RichDocument`、`ReadingTOC` | 否，文章内容走 article-only 发布 |
+| Brief 观察内容 | `ObservationPublication`、schema、rail、集合页、单条文章 | 采集/审核不进版本；正式 publish 进入统一 patch 版本 |
+| 常青长文 | `EvergreenArticlePublication`、`EvergreenArticle`、`RichDocument`、`ReadingTOC` | 采集/审核不进版本；正式 article publish 进入统一 patch 版本 |
 | 富文本受控 block | lead、heading、paragraph、list、definitionList、figure、callout、sources、link | 新增 block 类型需要产品版本 |
 | 图形静态内容 | Mermaid/LikeC4 源文件在构建期生成 desktop/mobile SVG，文章用 `picture` 投影 | 增加图或章节不需要；改变渲染能力需要版本 |
 | 返回导航 | 共享 `ReturnNavigation`，使用安全站内目标和返回焦点 | 否 |
 | 响应式阅读 | 桌面双栏/目录、紧凑单栏、移动折叠目录和自然页面滚动 | 内容增加不需要 |
-| 内容与产品发布分离 | content/article 专项检查、独立提交、产品版本/tag 不变 | 日常发布不需要产品迭代 |
+| 内容与产品责任分离、版本发布统一 | 内容审核与采集仍独立；正式 `publish-*` 进入统一提交、tag 和公网 manifest | 运营数据不直接进入版本；正式公开表达必须归属统一版本 |
 
 ### 2.2 已确认但不是当前公开运行时的能力
 
@@ -472,7 +472,7 @@ section：96–128px  栏目之间
 - 一级导航保持 `B端产品 / 经营观察 / 关于我`；
 - 手机低于约 `520px` 使用全视口菜单 overlay，锁定背景滚动并恢复焦点；约 `557px` 保留紧凑行内 Header；
 - Footer 只显示 `© 年份 xingbuild · 当前产品版本`；作者、地点、更新时间和治理状态不进入全局 chrome；
-- 纯内容发布不改变产品版本显示。
+- 采集、draft、review、recovery 不进入产品版本；正式公开内容发布必须更新并显示统一产品版本。
 
 ### 7.5 卡片、链接与返回
 
@@ -548,7 +548,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 | 图形构建 | `src/architecture/`、`scripts/generate-evergreen-figures.mjs`、`src/content/diagramFigureAssets.js` | 构建期 adapter |
 | 文章图形投影 | `src/components/reading/RichDocument.jsx` | 统一 figure，不写业务 JSX |
 | 返回导航 | `src/components/navigation/ReturnNavigation.jsx` | 全站共享 |
-| 内容发布 | `scripts/content-*`、`scripts/article-*`、发布命令 | 不改变产品版本/tag |
+| 内容发布 | `scripts/content-*`、`scripts/article-*`、发布命令 | 采集/审核数据不进版本；正式 publish 使用统一版本/tag/manifest |
 
 `src/components/framework/` 中的旧架构运行时和投影代码属于迁移/历史实现，不是当前公开产品合同。未经新的产品版本方案确认，不得在新页面重新引用它们，也不得以删除遗留代码替代产品设计验收。
 
@@ -559,14 +559,14 @@ sourcePath / renderer / layoutPreset / alt / caption
 - 维护本文；
 - 决定产品目标、信息架构、内容对象、页面责任、视觉、响应式和验收合同；
 - 不参与日常选题、写稿、事实审核和逐条内容发布；
-- 只有内容对象、页面结构、视觉、响应式或发布能力改变时，才启动产品版本。
+- 负责确定统一版本合同和发布能力边界；正式公开内容发布属于统一版本发布，采集与审核数据不触发版本。
 
 ### 内容与发布 task
 
 - 按现有 schema 写 Brief、Article 和视觉表达声明；
 - 调整公开结构和可读性，但不得改变上游事实、来源性质或证据边界；
-- 只执行 content/article 专项检查、独立提交和授权发布；
-- 不修改本文、页面组件、视觉 token 或产品版本。
+- 只执行内容事实和 schema 检查，按统一发布命令提交已批准内容；
+- 不修改本文、页面组件或视觉 token；不得创建独立内容版本、独立 tag 或绕过统一版本合同。
 
 ### Ops task
 
@@ -585,8 +585,8 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 | 变化 | 是否产品版本 |
 | --- | --- |
-| 新增 Brief、文章章节、来源、图源或现有 block 内容 | 否，走内容发布 |
-| 新增十张同类型图，仍使用现有 figure 合同 | 否，走内容发布 |
+| 新增 Brief、文章章节、来源、图源或现有 block 内容 | 采集/审核不进入版本；正式 publish 作为统一版本的 patch 发布 |
+| 新增十张同类型图，仍使用现有 figure 合同 | 采集/审核不进入版本；正式 publish 作为统一版本的 patch 发布 |
 | 新增 block 类型、页面层级或新的内容对象 | 是 |
 | 改变共享 Layout、Header、Footer、返回、目录或视觉 token | 是 |
 | 新增或改变 VisualizationHost/renderer adapter | 是 |
@@ -600,7 +600,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 产品侧只保留以下分流：
 
-- 新增内容对象、章节、来源或现有类型图形：按内容合同运营，不改变产品能力；
+- 新增内容对象、章节、来源或现有类型图形：按内容合同运营；正式 publish 仍必须生成统一版本，不得创建独立内容版本；
 - 新页面但复用已有组合：使用已确认的 `PageDefinition` 能力；当前尚未实现时排入相应版本；
 - 新页面组合、内容 block、共享视觉、响应式或 renderer：形成候选记录；产品 task 启动版本时再综合确定版本方案；
 - 上游事实继续由 career/Robotaxi 和 Ops 事实合同维护；任何可验证的问题、工具缺陷或产品优化统一登记到 `docs/iterations/candidates/`，由产品与视觉 task 评审，不在运营文档或 task 私有文件中另建问题入口；
@@ -671,7 +671,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 - 构建失败不得复用旧图形产物；
 - 通过项目、内容、文章和 Sites 检查；
-- 产品版本和内容提交范围严格分离；
+- 产品能力、正式内容提交和线上部署共享一个统一版本身份；采集与审核数据保持内部边界；
 - 实现、验证、提交/tag、push、部署和公网验收分别记录；
 - 浏览器验证结束后释放服务和资源。
 
