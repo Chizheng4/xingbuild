@@ -20,11 +20,6 @@ const requiredFiles = [
   "src/content/sourceUrls.js",
   "src/lib/visitQualification.js",
   "content/schema/observation.schema.json",
-  ".content-workspace/content/products/robotaxi.json",
-  ".content-workspace/content/business-observations/enterprise-operating-framework.json",
-  ".content-workspace/content/articles/enterprise-operating-system.json",
-  ".content-workspace/content/profile/about.json",
-  ".content-workspace/content/media/robotaxi/manifest.json",
   "src/styles.css",
   "src/styles/tokens.css",
   "src/styles/foundations.css",
@@ -75,6 +70,7 @@ const requiredFiles = [
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
   "scripts/lib/content-release-readiness.mjs",
+  "tests/product-content-isolation.test.mjs",
   "scripts/verify-public-release.mjs",
   "edgeone.json",
   ".openai/hosting.json",
@@ -140,15 +136,21 @@ assert(
 );
 const showcaseRepository = await readFile(new URL("../src/content/showcaseRepository.js", import.meta.url), "utf8");
 const profileRepository = await readFile(new URL("../src/content/profileRepository.js", import.meta.url), "utf8");
-assert(showcaseRepository.includes(".content-workspace/content/products/robotaxi.json"), "Robotaxi must use the independent product content source");
-assert(showcaseRepository.includes(".content-workspace/content/business-observations/enterprise-operating-framework.json"), "framework must use the independent business-observation source");
-assert(profileRepository.includes(".content-workspace/content/profile/about.json"), "profile must use the independent profile content source");
+assert(showcaseRepository.includes("import.meta.glob"), "showcase content must use the independent repository glob");
+assert(showcaseRepository.includes("__XINGBUILD_CONTENT_BUILD__"), "showcase content must be gated to content builds");
+assert(profileRepository.includes("import.meta.glob"), "profile content must use the independent repository glob");
+assert(profileRepository.includes("__XINGBUILD_CONTENT_BUILD__"), "profile content must be gated to content builds");
 assert(!siteContent.includes("export const observations"), "observations must not be inlined in site content");
 assert(!siteContent.includes("export const practices"), "practices must use the controlled content repository");
 assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
-assert(practiceRepository.includes(".content-workspace/content/products/robotaxi.json"), "practice content must use the repository");
+assert(practiceRepository.includes("import.meta.glob"), "practice content must use the independent repository glob");
+assert(practiceRepository.includes("__XINGBUILD_CONTENT_BUILD__"), "practice content must be gated to content builds");
 const evergreenRepository = await readFile(new URL("../src/content/evergreenArticleRepository.js", import.meta.url), "utf8");
-assert(evergreenRepository.includes(".content-workspace/content/articles/enterprise-operating-system.json"), "framework article must use the evergreen content source");
+assert(evergreenRepository.includes("import.meta.glob"), "framework article must use the independent repository glob");
+assert(evergreenRepository.includes("__XINGBUILD_CONTENT_BUILD__"), "framework article must be gated to content builds");
+const siteBuild = await readFile(new URL("../scripts/prepare-sites-build.mjs", import.meta.url), "utf8");
+assert(!siteBuild.includes("contentRootDirectory"), "product Sites preparation must not read the independent content root");
+assert(!siteBuild.includes("independentMediaRoot"), "product Sites preparation must not copy independent media");
 const pageDefinitions = await readFile(new URL("../src/content/pageDefinitions.js", import.meta.url), "utf8");
 const compositionRenderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
 assert(pageDefinitions.includes("pageDefinitionRegistry"), "page definitions must expose a controlled registry");

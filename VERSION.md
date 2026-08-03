@@ -1,4 +1,10 @@
 
+## v0.24.25 — 产品与独立内容发布边界解耦
+
+- 状态：产品构建与独立内容根隔离；待 Engineering local commit/tag/clean、产品/视觉验收和用户 publish，未 push、publish、部署或公网验收。
+- 范围：产品 build 只消费产品能力与稳定源，独立内容仅在显式内容 staging build 中叠加；产品 dist/manifest 不携带独立正文、媒体或内容发布身份。
+- 不做：不修改 UI、IA、schema、路由、上游事实、v0.24.24 tag/history 或独立内容 task；不创建 branch、worktree、task、automation。
+
 ## v0.24.24 — 内容源与不可变产品基座解耦
 
 - 状态：本版本实现实际 source bundle 基座、独立内容根与稳定能力模板；待本地 commit/tag/clean 后产品/视觉验收，未 push、publish、部署或公网验收。

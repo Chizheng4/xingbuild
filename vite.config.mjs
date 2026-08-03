@@ -64,6 +64,7 @@ function previewMetadata() {
 
 export default defineConfig({
   define: {
+    __XINGBUILD_CONTENT_BUILD__: JSON.stringify(process.env.XINGBUILD_CONTENT_BUILD === "1"),
     __XINGBUILD_VERSION__: JSON.stringify(`v${JSON.parse(readFileSync(new URL("./package.json", import.meta.url))).version}`),
   },
   build: {

@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, cpSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
-import { contentRootDirectory } from "./lib/content-root.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -12,11 +11,9 @@ const index = path.join(dist, "client", "index.html");
 const worker = path.join(root, "worker", "index.js");
 const hosting = path.join(root, ".openai", "hosting.json");
 const edgeOneConfig = path.join(root, "edgeone.json");
-const contentRoot = contentRootDirectory({ sourceRoot: root });
-const observationsDirectory = path.join(contentRoot, "observations");
-const articlesDirectory = path.join(contentRoot, "articles");
-// Relative import keys may retain the independent root name; only an absolute
-// local filesystem path would leak the canonical workspace into the artifact.
+// Product builds deliberately do not read the independent content root. Content
+// builds run from an immutable staging copy with XINGBUILD_CONTENT_BUILD=1 and
+// write their own independent content manifest after this preparation step.
 const workspaceMarker = path.join(root, ".content-workspace");
 
 for (const file of [index, worker, hosting, edgeOneConfig]) {
@@ -28,8 +25,9 @@ mkdirSync(path.join(dist, ".openai"), { recursive: true });
 copyFileSync(worker, path.join(dist, "server", "index.js"));
 copyFileSync(hosting, path.join(dist, ".openai", "hosting.json"));
 copyFileSync(edgeOneConfig, path.join(dist, "client", "edgeone.json"));
-const independentMediaRoot = path.join(contentRoot, "media");
-if (existsSync(independentMediaRoot)) cpSync(independentMediaRoot, path.join(dist, "client", "media"), { recursive: true });
+if (process.env.XINGBUILD_CONTENT_BUILD !== "1") {
+  rmSync(path.join(dist, "client", "media"), { recursive: true, force: true });
+}
 
 const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const commit = process.env.XINGBUILD_PRODUCT_COMMIT || execFileSync("git", ["rev-parse", "HEAD"], {
@@ -37,28 +35,6 @@ const commit = process.env.XINGBUILD_PRODUCT_COMMIT || execFileSync("git", ["rev
   encoding: "utf8",
 }).trim();
 const releaseVersion = process.env.XINGBUILD_PRODUCT_VERSION || `v${packageJson.version}`;
-const publishedSlugs = readdirSync(observationsDirectory)
-  .filter((name) => name.endsWith(".json"))
-  .map((name) => {
-    const observation = JSON.parse(readFileSync(path.join(observationsDirectory, name), "utf8"));
-    if (observation.status !== "published") {
-      throw new Error(`Production content must be published: ${name}`);
-    }
-    if (name !== `${observation.slug}.json`) {
-      throw new Error(`Observation filename must match slug: ${name}`);
-    }
-    return observation.slug;
-  })
-  .sort();
-const publishedArticleSlugs = readdirSync(articlesDirectory)
-  .filter((name) => name.endsWith(".json"))
-  .map((name) => {
-    const article = JSON.parse(readFileSync(path.join(articlesDirectory, name), "utf8"));
-    if (article.status !== "published") throw new Error(`Production article must be published: ${name}`);
-    if (name !== `${article.slug}.json`) throw new Error(`Article filename must match slug: ${name}`);
-    return article.slug;
-  })
-  .sort();
 
 writeFileSync(
   path.join(dist, "client", "release.json"),
@@ -79,8 +55,8 @@ writeFileSync(
     {
       version: releaseVersion,
       commit,
-      publishedSlugs,
-      publishedArticleSlugs,
+      publishedSlugs: [],
+      publishedArticleSlugs: [],
     },
     null,
     2,
@@ -112,5 +88,5 @@ for (const file of inspectFiles(path.join(dist, "client"))) {
 }
 
 console.log(
-  `Prepared Sites build and content manifest: ${publishedSlugs.length} published observation(s), ${publishedArticleSlugs.length} evergreen article(s)`,
+  "Prepared product Sites build; independent content root and media were not read",
 );

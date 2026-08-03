@@ -838,12 +838,10 @@ test("public content verification requires the target slug in the build manifest
   );
 });
 
-test("built content manifest contains only current published slugs", async () => {
+test("product build content manifest carries no independent publication slugs", async () => {
   const manifest = JSON.parse(
     await readFile(path.join(root, "dist", "client", "content-manifest.json"), "utf8"),
   );
-  const expectedPublishedSlugs = (await readPublishedObservations())
-    .map((publication) => publication.slug)
-    .sort();
-  assert.deepEqual([...manifest.publishedSlugs].sort(), expectedPublishedSlugs);
+  assert.deepEqual(manifest.publishedSlugs, []);
+  assert.deepEqual(manifest.publishedArticleSlugs, []);
 });

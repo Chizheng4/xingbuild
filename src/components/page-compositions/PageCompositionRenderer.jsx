@@ -17,6 +17,10 @@ import {
   safeReturnTo,
 } from "../../lib/navigation";
 
+function EmptyContentState() {
+  return <section className="content-empty-state" aria-label="内容状态"><p>暂无已发布内容</p></section>;
+}
+
 function HomeComposition({ content }) {
   const practice = content.practice;
   const framework = content.businessObservation;
@@ -28,7 +32,7 @@ function HomeComposition({ content }) {
     <LayoutShell className="home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.site.homeTitle}</h1></section>
       <TwoColumnLayout renderRail={renderRail}>
-        <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={{ ...practice, title: practice.title }} headingLevel={2} headingId="home-product-title" /></section>
+        <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" /></section>
         <section className="home-page__projection"><BusinessObservationPresentation observation={framework} headingLevel={2} headingId="home-business-title" /></section>
       </TwoColumnLayout>
     </LayoutShell>
@@ -38,12 +42,12 @@ function HomeComposition({ content }) {
 function ShowcaseComposition({ content }) {
   const practice = content.practice;
   const briefs = content.briefs;
-  const renderRail = practice.modules.length && briefs.length
+  const renderRail = practice?.modules?.length && briefs.length
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/products" />
     : undefined;
   return (
     <LayoutShell className="practice-page">
-      <TwoColumnLayout renderRail={renderRail}><PracticePresentation practice={practice} /></TwoColumnLayout>
+      <TwoColumnLayout renderRail={renderRail}>{practice ? <PracticePresentation practice={practice} /> : <EmptyContentState />}</TwoColumnLayout>
     </LayoutShell>
   );
 }
@@ -72,6 +76,7 @@ function CollectionComposition({ content, location }) {
 }
 
 function ProfileReading({ profile: about }) {
+  if (!about) return <EmptyContentState />;
   return (
     <LayoutShell className="about-page">
       <ReadingShell>
@@ -83,6 +88,7 @@ function ProfileReading({ profile: about }) {
 }
 
 function ArticleReading({ article, briefs }) {
+  if (!article) return <EmptyContentState />;
   const renderRail = briefs.length
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/business-observations" />
     : undefined;
@@ -96,7 +102,7 @@ function ArticleReading({ article, briefs }) {
 function ReadingComposition({ content }) {
   if (content.profile) return <ProfileReading profile={content.profile} />;
   if (content.article) return <ArticleReading article={content.article} briefs={content.briefs || []} />;
-  throw new Error("ReadingComposition requires a profile or evergreen article content reference");
+  return <EmptyContentState />;
 }
 
 const compositionRenderers = Object.freeze({

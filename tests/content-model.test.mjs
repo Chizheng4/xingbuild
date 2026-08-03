@@ -9,12 +9,10 @@ import { selectObservationBriefs } from "../src/content/observationQueries.js";
 const observations = await readPublishedObservations();
 
 test("content ids stay singular across product, business observation, profile and publications", () => {
-  assert.equal(products.length, 1);
-  assert.equal(businessObservations.length, 1);
-  assert.equal(profile.id, "about");
+  assert.deepEqual(products, [], "product-mode repository must not read independent content");
+  assert.deepEqual(businessObservations, [], "product-mode repository must not read independent content");
+  assert.equal(profile, null, "product-mode repository must not read independent content");
   assert.equal(new Set(observations.map((item) => item.slug)).size, observations.length);
-  assert.match(products[0].boundary, /不代表真实城市运营/);
-  assert.equal(businessObservations[0].title, "企业经营体系");
 });
 
 test("published observations retain the three-layer evidence contract", () => {

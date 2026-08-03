@@ -5,10 +5,13 @@ import {
 } from "./observationQueries.js";
 import { projectObservationBrief } from "./briefProjection.js";
 
-const modules = import.meta.glob("../../.content-workspace/content/observations/*.json", {
-  eager: true,
-  import: "default",
-});
+const contentBuildEnabled = typeof __XINGBUILD_CONTENT_BUILD__ !== "undefined" && __XINGBUILD_CONTENT_BUILD__;
+const modules = contentBuildEnabled
+  ? import.meta.glob("../../.content-workspace/content/observations/*.json", {
+    eager: true,
+    import: "default",
+  })
+  : {};
 
 export const observations = Object.values(modules)
   .filter((item) => item.status === "published")

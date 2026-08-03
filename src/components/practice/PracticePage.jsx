@@ -33,6 +33,9 @@ export function PracticeModuleList({ modules, headingLevel = 2 }) {
 }
 
 export function PracticePresentation({ practice, headingLevel = 1, headingId }) {
+  if (!practice) {
+    return <section className="practice-presentation content-empty-state" aria-label="内容状态"><p>暂无已发布内容</p></section>;
+  }
   const hasModules = practice.modules.length > 0;
   return (
     <div className="practice-presentation">

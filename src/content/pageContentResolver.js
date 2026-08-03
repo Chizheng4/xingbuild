@@ -20,10 +20,7 @@ export function resolvePageContent(definition) {
   for (const [key, reference] of Object.entries(definition.contentRefs)) {
     const resolver = contentResolvers[reference.type];
     const value = resolver?.(reference);
-    if (value === null || value === undefined || (reference.type === "observationBriefs" && !Array.isArray(value))) {
-      throw new Error(`PageDefinition ${definition.id} references unavailable ${reference.type}:${reference.id ?? reference.scope}`);
-    }
-    content[key] = value;
+    content[key] = reference.type === "observationBriefs" && !Array.isArray(value) ? [] : value ?? null;
   }
   return content;
 }

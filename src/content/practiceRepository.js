@@ -1,6 +1,16 @@
-import robotaxiPractice from "../../.content-workspace/content/products/robotaxi.json" with { type: "json" };
-import robotaxiMediaManifest from "../../.content-workspace/content/media/robotaxi/manifest.json" with { type: "json" };
 import { isPublicPracticeMedia } from "./practiceMediaLifecycle.js";
+
+const contentBuildEnabled = typeof __XINGBUILD_CONTENT_BUILD__ !== "undefined" && __XINGBUILD_CONTENT_BUILD__;
+const practiceModules = contentBuildEnabled
+  ? import.meta.glob("../../.content-workspace/content/products/*.json", { eager: true, import: "default" })
+  : {};
+const mediaManifestModules = contentBuildEnabled
+  ? import.meta.glob("../../.content-workspace/content/media/*/manifest.json", { eager: true, import: "default" })
+  : {};
+
+const mediaManifestByPracticeId = new Map(
+  Object.values(mediaManifestModules).map((manifest) => [manifest.practiceId, manifest]),
+);
 
 export function projectPractice(practice, manifest) {
   const mediaById = new Map(manifest.assets
@@ -13,7 +23,9 @@ export function projectPractice(practice, manifest) {
   };
 }
 
-export const practices = [projectPractice(robotaxiPractice, robotaxiMediaManifest)];
+export const practices = Object.values(practiceModules)
+  .filter((practice) => practice && typeof practice.id === "string")
+  .map((practice) => projectPractice(practice, mediaManifestByPracticeId.get(practice.id) || { assets: [] }));
 
 export function findPractice(id) {
   return practices.find((item) => item.id === id);

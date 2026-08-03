@@ -24,8 +24,7 @@ test("practice projects only the approved independent Robotaxi media record", as
   assert.ok(manifest.assets.every((asset) => ["image", "video"].includes(asset.type) && asset.ratio));
   assert.ok(manifest.assets.every((asset) => asset.provenance.approvalStatus === "approved"));
   assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
-  assert.equal(findPractice("robotaxi").modules.length, practice.modules.length);
-  assert.equal(findPractice("robotaxi").modules.filter((module) => module.media).length, 1);
+  assert.equal(findPractice("robotaxi"), undefined, "product-mode repository must not read independent content");
 });
 
 test("practice media keeps reader interaction separate from internal provenance", () => {
@@ -162,7 +161,7 @@ test("rail contracts keep main height independent, reserve more and allow zero v
   assert.doesNotMatch(rail, /Math\.max\(1/);
   assert.match(rail, /aria-hidden="true" inert>/);
   assert.doesNotMatch(rail, /inert=""/);
-  assert.match(robotaxiPage, /practice\.modules\.length && briefs\.length/);
+  assert.match(robotaxiPage, /practice\?\.modules\?\.length && briefs\.length/);
   assert.match(components, /\.observation-rail \.brief-item__statement/);
   assert.match(pages, /\.observation-rail__measure[^}]*height: 0;[^}]*overflow: hidden;/);
 });

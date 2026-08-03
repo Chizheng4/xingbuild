@@ -86,10 +86,10 @@ test("a Mermaid source alone generates both responsive SVG outputs and removes s
   }
 });
 
-test("build manifest keeps evergreen articles separate from Observation publication", async () => {
+test("product build manifest excludes independent evergreen publication", async () => {
   const manifest = JSON.parse(await readFile(new URL("../dist/client/content-manifest.json", import.meta.url), "utf8"));
   assert.ok(Array.isArray(manifest.publishedSlugs));
-  assert.deepEqual(manifest.publishedArticleSlugs, ["enterprise-operating-system"]);
+  assert.deepEqual(manifest.publishedArticleSlugs, []);
 });
 
 test("future article publication is explicit and uses the independent content boundary", () => {

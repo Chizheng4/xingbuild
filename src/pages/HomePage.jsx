@@ -16,7 +16,7 @@ export function HomePage() {
     <LayoutShell className="home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{site.homeTitle}</h1></section>
       <TwoColumnLayout renderRail={renderRail}>
-        <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={{ ...practice, title: practice.title }} headingLevel={2} headingId="home-product-title" /></section>
+        <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" /></section>
         <section className="home-page__projection"><BusinessObservationPresentation observation={framework} headingLevel={2} headingId="home-business-title" /></section>
       </TwoColumnLayout>
     </LayoutShell>
