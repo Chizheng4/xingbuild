@@ -34,7 +34,7 @@ import {
 export const root = projectRoot;
 const edgeone = path.join(root, "node_modules", ".bin", "edgeone");
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const kinds = new Set(["content", "article", "practice"]);
+const kinds = new Set(["content", "article", "practice", "profile", "businessObservation"]);
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
@@ -56,12 +56,16 @@ function runCapture(command, args, cwd, env = process.env) {
 function targetPath(kind, target) {
   if (kind === "content") return path.join("content", "observations", `${target}.json`);
   if (kind === "article") return path.join("content", "articles", `${target}.json`);
+  if (kind === "profile") return path.join("content", "profile", `${target}.json`);
+  if (kind === "businessObservation") return path.join("content", "business-observations", `${target}.json`);
   return path.join("content", "products", `${target}.json`);
 }
 
 function publicPath(kind, target) {
   if (kind === "content") return `/observations/${target}`;
   if (kind === "article") return "/business-observations";
+  if (kind === "profile") return "/about";
+  if (kind === "businessObservation") return "/";
   return "/products";
 }
 
@@ -76,6 +80,8 @@ async function readTarget({ kind, target, sourceRoot }) {
     if (value.slug !== target) throw new Error(`content target slug mismatch: ${target}`);
   } else if (kind === "article") {
     if (value.slug !== target || value.status !== "published") throw new Error(`article target is not published: ${target}`);
+  } else if (kind === "profile" || kind === "businessObservation") {
+    if (value.id !== target) throw new Error(`${kind} target mismatch: ${target}`);
   } else {
     const bundle = await assertPracticeContent(target, { rootDirectory: sourceRoot, publishable: true });
     if (bundle.practice.id !== target) throw new Error(`practice target mismatch: ${target}`);
@@ -279,6 +285,8 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
       publishedSlugs: packageInfo.kind === "content" ? [packageInfo.target] : [],
       publishedArticleSlugs: packageInfo.kind === "article" ? [packageInfo.target] : [],
       practiceIds: packageInfo.kind === "practice" ? [packageInfo.target] : [],
+      profileIds: packageInfo.kind === "profile" ? [packageInfo.target] : [],
+      businessObservationIds: packageInfo.kind === "businessObservation" ? [packageInfo.target] : [],
     };
     await writeFile(path.join(client, "content-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
     const packageClient = path.join(packageInfo.packageDirectory, "dist", "client");
@@ -346,8 +354,8 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "public-verify", data: { publicUrl: completed.publicVerify.publicUrl } });
   if (packageInfo.kind === "content") {
     await finalizeReleasedContent(packageInfo.target, { rootDirectory: root });
-    await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "finalized", data: { target: packageInfo.target } });
   }
+  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "finalized", data: { target: packageInfo.target, kind: packageInfo.kind } });
   return { ...completed, deployment, edgeoneTarget, publicVerify };
 }
 
@@ -366,7 +374,7 @@ async function main(argv = process.argv.slice(2)) {
   const target = valueFor("--slug") || valueFor("--id");
   const changeSetPath = valueFor("--change-set");
   const artifactPath = valueFor("--base-site-artifact");
-  if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
+  if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice|profile|businessObservation> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
     const result = await prepareContentRelease({ kind, target, changeSetPath, artifactPath });
     console.log(`Content release prepared: ${result.contentReleaseId}`);

@@ -7,7 +7,7 @@ import { site } from "./siteContent.js";
 
 const contentResolvers = Object.freeze({
   site: (reference) => reference.id === "site" ? site : null,
-  profile: (reference) => profile.id === reference.id ? profile : null,
+  profile: (reference) => profile?.id === reference.id ? profile : null,
   practice: (reference) => findPractice(reference.id),
   businessObservation: (reference) => findBusinessObservation(reference.id),
   evergreenArticle: (reference) => findEvergreenArticle(reference.id),

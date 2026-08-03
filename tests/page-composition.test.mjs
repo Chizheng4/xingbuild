@@ -11,6 +11,7 @@ import {
   getPageDefinition,
   validatePageDefinitions,
 } from "../src/content/pageDefinitions.js";
+import { resolvePageContent } from "../src/content/pageContentResolver.js";
 
 const renderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
@@ -67,4 +68,9 @@ test("same-composition fixture uses only a page definition and an approved conte
   assert.match(app, /PageCompositionRenderer/);
   assert.match(about, /getPageDefinition\("about"\)/);
   assert.doesNotMatch(about, /RichDocument|page-specific|<h1/);
+});
+
+test("missing profile content resolves to null without dereferencing the absent object", () => {
+  const content = resolvePageContent({ contentRefs: { profile: { type: "profile", id: "about" } } });
+  assert.deepEqual(content, { profile: null });
 });

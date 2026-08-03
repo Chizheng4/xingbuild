@@ -13,6 +13,8 @@ export function contentRootDirectory({ sourceRoot = projectRoot } = {}) {
 export function contentRelativePath(kind, target) {
   if (kind === "content") return path.posix.join("observations", `${target}.json`);
   if (kind === "article") return path.posix.join("articles", `${target}.json`);
+  if (kind === "profile") return path.posix.join("profile", `${target}.json`);
+  if (kind === "businessObservation") return path.posix.join("business-observations", `${target}.json`);
   return path.posix.join("products", `${target}.json`);
 }
 

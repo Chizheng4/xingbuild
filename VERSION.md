@@ -1,4 +1,10 @@
 
+## v0.24.26 — 空内容安全与完整内容目标能力
+
+- 状态：Engineering 完成空内容解析安全与 profile/businessObservation 独立内容目标能力，待本地 commit/tag/clean、产品/视觉验收与用户授权；未 push、publish、部署或公网验收。
+- 范围：缺失内容安全返回 null/空集合；五类内容目标独立生成 contentReleaseId、contentHash、baseSiteArtifactId、deployment、publicVerify；产品构建继续隔离独立内容根。
+- 不做：不修改 UI、IA、schema、路由、上游事实、v0.24.25 tag/history 或内容任务边界；不创建 branch、worktree、task、automation。
+
 ## v0.24.25 — 产品与独立内容发布边界解耦
 
 - 状态：产品构建与独立内容根隔离；待 Engineering local commit/tag/clean、产品/视觉验收和用户 publish，未 push、publish、部署或公网验收。

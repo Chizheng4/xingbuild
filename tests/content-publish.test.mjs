@@ -62,6 +62,28 @@ test("content preparation accepts an explicit baseSiteArtifact without reading p
   }
 });
 
+test("independent content release supports profile and business observation targets", async () => {
+  const targets = [
+    { kind: "profile", target: "about", path: "/about", field: "profileIds" },
+    { kind: "businessObservation", target: "enterprise-operating-framework", path: "/", field: "businessObservationIds" },
+  ];
+  for (const fixture of targets) {
+    const prepared = await prepareContentRelease({ kind: fixture.kind, target: fixture.target, baseSiteArtifact: preparedArtifact, sourceRoot: root });
+    try {
+      assert.equal(prepared.targetPath, fixture.path);
+      assert.match(prepared.contentReleaseId, new RegExp(`^${fixture.kind}-${fixture.target}-[a-f0-9]{16}$`));
+      const built = await buildContentRelease({ packageInfo: prepared, sourceRoot: root });
+      assert.deepEqual(built.manifest[fixture.field], [fixture.target]);
+      assert.equal(built.manifest.contentReleaseId, prepared.contentReleaseId);
+      assert.equal(built.manifest.baseSiteArtifactId, prepared.baseSiteArtifactId);
+      assert.equal(built.manifest.deploymentId, null);
+      assert.equal(built.manifest.publicVerify, null);
+    } finally {
+      await rm(prepared.packageDirectory, { recursive: true, force: true });
+    }
+  }
+});
+
 test("content build uses a staging copy and emits an independent content manifest", async () => {
   const prepared = await prepareContentRelease({ kind: "article", target, baseSiteArtifact: preparedArtifact, sourceRoot: root });
   try {

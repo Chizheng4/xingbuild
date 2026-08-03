@@ -107,7 +107,7 @@ export async function resolveContentTarget(targetId, { rootDirectory = projectRo
   const target = (registry.targets || []).find((entry) => entry.targetId === targetId)
     || (registry.templates || []).map((entry) => instantiateTemplate(entry, targetId)).find(Boolean);
   if (!target) throw new Error(`content target is not registered: ${targetId}`);
-  if (!target.editable || target.scope !== "field" || !["product-content", "media-content", "observation", "article", "profile"].includes(target.kind)) throw new Error(`content target is outside the approved field scope: ${targetId}`);
+  if (!target.editable || target.scope !== "field" || !["product-content", "media-content", "observation", "article", "profile", "businessObservation"].includes(target.kind)) throw new Error(`content target is outside the approved field scope: ${targetId}`);
   if (target.sourcePath.startsWith("src/") || target.fieldPath.includes("[") && !target.fieldPath.includes("[id=")) {
     throw new Error(`content target has an unsafe source or field path: ${targetId}`);
   }
