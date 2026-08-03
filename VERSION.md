@@ -1,3 +1,8 @@
+## v0.24.15 — v0.24.14 本地收口状态事实修正
+
+- 状态：Engineering 修正当前版本自然语言与 `localSubmission`/commit/tag 实际状态的一致表达；不回写或移动 v0.24.14 tag。
+- 范围：仅版本记录与 current/history 状态事实；不改 UI、IA、schema、内容、上游事实、publish 脚本或规则。
+
 ## v0.24.14 — 发布 transport 目标与故障决策门治理
 
 - 状态：Engineering 在 direct-local main 完成发布规则定点修正、自 QA 与本地收口；提交后的产品/视觉验收、publish 授权和线上状态仍为外部事件。
