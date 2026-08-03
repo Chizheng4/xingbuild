@@ -15,7 +15,7 @@
 | `iterations/history/candidates/` | 已转化或已关闭候选的历史归档 | 只用于来源追溯，不参与当前版本判断 |
 | `iterations/roadmap.md` | 历史参考文件 | 不再作为活动事实源；当前只读取 `candidates/`、`current.md` 和 `history/` |
 | `iterations/history/` | 已完成版本的计划和结果 | 只追加，不回写 |
-| `operations/` | 内容运营合同与来源覆盖规则 | 不作为产品问题或版本入口 |
+| `operations/` | 内容运营合同、来源覆盖和独立内容发布规则 | 不作为产品问题或产品版本入口 |
 | `upstream/` | career、Robotaxi 等上游事实快照与同步说明 | 按上游同步规则修改 |
 | `qa/` | 按版本保存的设计验证结论和必要证据 | 完成验证时追加 |
 
@@ -51,12 +51,14 @@
 - [v0.20.0 页面定义注册与组合渲染方案](design/v0.20.0%20页面定义注册与组合渲染方案.md)：已完成版本方案，结果见 `iterations/history/v0.20.0.md`。
 - `design/v*.md`：已完成或已确认的版本方案，只用于追溯和当前版本实施；当前产品/视觉基准仍以产品总案为准。
 - `operations/` 下的运行问题记录已归档；产品与工程优化只读取活动 `iterations/candidates/` 下的候选文件，历史候选只用于追溯。
-- `operations/` 仅保存内容发布合同、来源覆盖合同和历史证据；不参与版本状态判断。
+- `operations/` 仅保存内容发布合同、来源覆盖合同和历史证据；不参与产品版本状态判断。当前正式运营入口为 [内容运营与发布规则](operations/内容运营与发布规则.md)。
 - `design/assets/`：被历史设计或 QA 引用的证据资产，不能当作当前设计源。
 
 ## Publish 命令边界
 
-`publish-xingbuild.command`、`publish-content.command`、`publish-article.command` 和 `publish-practice.command` 只发布已完成产品/视觉验收的现有 local commit/tag；不自动递增版本、不修改版本记录、不 commit/tag。入口脚本携带用户明确的 `--authorize-publish` 动作，直接调用统一脚本时必须显式传入该参数或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`。发布失败只报告未发布或部分完成，不生成完成历史。详细合同见 [迭代与发布规则](rules/iteration-and-release.md)。
+`publish-xingbuild.command` 只发布已完成产品/视觉验收的现有产品 local commit/tag；不自动递增版本、不修改版本记录、不 commit/tag。`publish-content.command`、`publish-article.command` 和 `publish-practice.command` 属于独立内容运营入口，使用内容发布身份，不创建或更新产品版本。内容独立发布能力完成前，内容 task 只能完成审核、确认和预览，不得绕过工程实现上线。入口授权和故障边界见 [内容运营与发布规则](operations/内容运营与发布规则.md) 与 [迭代与发布规则](rules/iteration-and-release.md)。
+
+内容发布先执行 `content:prepare`、`content:build`，在 ignored `.content-workspace/releases/` 形成独立发布包；transport 入口只消费该包，不读取产品 HEAD/tag 或产品 closeout/preflight。
 
 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 仅在产品方案变更后、local commit 前显式运行并将生成物一并提交。
 

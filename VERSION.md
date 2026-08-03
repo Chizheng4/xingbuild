@@ -1,3 +1,9 @@
+## v0.24.16 — 内容运营独立发布治理
+
+- 状态：Engineering 在 direct-local main 完成内容独立发布引擎、临时 staging 构建与产品/内容发布边界收口；待本地 commit/tag 后产品与视觉验收，未 push、publish、部署或公网验收。
+- 范围：内容 publish 使用独立 `contentReleaseId` 与 ignored 发布包，不读取产品 HEAD/tag/preflight/closeout 门禁，不修改产品版本文件或创建产品 tag；产品 publish 保持 transport-only。
+- 不做：不修改 UI、IA、schema、外部数据层、上游事实或 v0.24.15 tag。
+
 ## v0.24.15 — v0.24.14 本地收口状态事实修正
 
 - 状态：Engineering 修正当前版本自然语言与 `localSubmission`/commit/tag 实际状态的一致表达；不回写或移动 v0.24.14 tag。

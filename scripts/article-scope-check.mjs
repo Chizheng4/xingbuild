@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { articleSlugPattern, root, validateEvergreenArticle } from "./lib/evergreen-article.mjs";
-import { evaluateUnifiedReleaseReadiness, unifiedReleaseRecordFiles } from "./lib/unified-release.mjs";
 
 function git(args, cwd = root) { return execFileSync("git", args, { cwd, encoding: "utf8" }).trim(); }
 
@@ -18,31 +17,8 @@ export async function checkArticleCommit({ slug, commit = "HEAD", gitImpl = git,
     expectedArticle,
     ...figures.flatMap((figure) => [figure.sourcePath, figure.src, figure.mobileSrc]
       .filter(Boolean).map((file) => file.startsWith("/") ? `public${file}` : file)),
-    ...unifiedReleaseRecordFiles(JSON.parse(gitImpl(["show", `${commit}:package.json`])).version),
   ]);
   const errors = files.filter((file) => !allowedFiles.has(file)).map((file) => `article release contains forbidden files: ${file}`);
-  const currentVersion = JSON.parse(gitImpl(["show", `${commit}:package.json`])).version;
-  const parentVersion = JSON.parse(gitImpl(["show", `${commit}^:package.json`])).version;
-  const originMain = gitImpl(["rev-parse", "origin/main"]);
-  let originMainIsAncestor = true;
-  try {
-    gitImpl(["merge-base", "--is-ancestor", originMain, gitImpl(["rev-parse", `${commit}^`])]);
-  } catch {
-    originMainIsAncestor = false;
-  }
-  errors.push(...evaluateUnifiedReleaseReadiness({
-    files,
-    targetFile: expectedArticle,
-    currentVersion,
-    parentVersion,
-    head: gitImpl(["rev-parse", commit]),
-    parent: gitImpl(["rev-parse", `${commit}^`]),
-    originMain,
-    originMainIsAncestor,
-    headTags: gitImpl(["tag", "--points-at", commit]).split("\n").filter(Boolean),
-    kind: "article",
-    extraAllowedFiles: [...allowedFiles],
-  }).errors);
   errors.push(...await validateEvergreenArticle(article, { expectedSlug: slug }));
   return { errors, expectedArticle };
 }

@@ -60,6 +60,7 @@ const requiredFiles = [
   "scripts/content-supersede.mjs",
   "scripts/content-scope-check.mjs",
   "scripts/content-release.mjs",
+  "scripts/lib/publish-target.mjs",
   "scripts/unified-publish.mjs",
   "scripts/lib/unified-release.mjs",
   "scripts/lib/content-release-lease.mjs",
@@ -73,6 +74,7 @@ const requiredFiles = [
   "tests/visit-overview.test.mjs",
   "tests/framework-layout.test.mjs",
   "tests/framework-experience.test.mjs",
+  "tests/content-publish.test.mjs",
 ];
 
 for (const file of requiredFiles) {
@@ -83,6 +85,9 @@ for (const file of requiredFiles) {
 const packageJson = JSON.parse(
   await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
+assert.equal(packageJson.scripts["content:publish"], "node scripts/content-release.mjs", "content publish must use the independent content engine");
+assert.equal(packageJson.scripts["content:prepare"], "node scripts/content-release.mjs --prepare", "content prepare must stay explicit");
+assert.equal(packageJson.scripts["content:build"], "node scripts/content-release.mjs --build", "content build must stay explicit");
 const version = await readFile(new URL("../VERSION.md", import.meta.url), "utf8");
 const current = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),

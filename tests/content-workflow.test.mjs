@@ -493,68 +493,16 @@ test("content release scope rejects mixed engineering files", () => {
   assert.ok(validateContentScope(["content/observations/other-item.json"], { slug: "new-item" }).length);
 });
 
-test("content commit readiness fixes version, tag, scope and origin ancestry", () => {
-  const ready = evaluateContentCommitReadiness({
-    slug: "new-item",
-    files: [
-      "content/observations/new-item.json",
-      "package.json",
-      "package-lock.json",
-      "VERSION.md",
-      "docs/iterations/current.md",
-      "docs/iterations/history/v0.24.1.md",
-    ],
-    currentVersion: "0.24.1",
-    parentVersion: "0.24.0",
-    head: "content-head",
-    parent: "product-head",
-    originMain: "product-head",
-    headTags: [],
-  });
+test("content readiness rejects product version and Git identity files", () => {
+  const ready = evaluateContentCommitReadiness({ slug: "new-item", files: ["content/observations/new-item.json"] });
   assert.equal(ready.ready, true);
-  assert.equal(ready.phase, "pre-push");
-
-  const retry = evaluateContentCommitReadiness({
-    ...ready,
+  assert.equal(ready.phase, "content-prepare");
+  const blocked = evaluateContentCommitReadiness({
     slug: "new-item",
-    files: [
-      "content/observations/new-item.json",
-      "package.json",
-      "package-lock.json",
-      "VERSION.md",
-      "docs/iterations/current.md",
-      "docs/iterations/history/v0.24.1.md",
-    ],
-    currentVersion: "0.24.1",
-    parentVersion: "0.24.0",
-    head: "content-head",
-    parent: "product-head",
-    originMain: "content-head",
-    headTags: ["v0.24.1"],
+    files: ["content/observations/new-item.json", "package.json", "VERSION.md", "docs/iterations/current.md"],
   });
-  assert.equal(retry.ready, true);
-  assert.equal(retry.phase, "post-push-retry");
-
-  for (const blocked of [
-    { currentVersion: "0.24.2" },
-    { originMain: "unrelated-head" },
-    { headTags: ["v0.24.2"] },
-    { files: ["content/observations/new-item.json", "src/App.jsx"] },
-    { files: ["content/observations/new-item.json", "public/media/new-item/figure.png"] },
-  ]) {
-    const result = evaluateContentCommitReadiness({
-      slug: "new-item",
-      files: ["content/observations/new-item.json"],
-      currentVersion: "0.24.1",
-      parentVersion: "0.24.0",
-      head: "content-head",
-      parent: "product-head",
-      originMain: "product-head",
-      headTags: [],
-      ...blocked,
-    });
-    assert.equal(result.ready, false);
-  }
+  assert.equal(blocked.ready, false);
+  assert.match(blocked.errors[0], /forbidden files/);
 });
 
 test("content release lease is unique and stale leases are recoverable", async () => {
@@ -726,24 +674,22 @@ test("production source and bundle contracts exclude local drafts", async () => 
   assert.doesNotMatch(bundleText, /sanitized-candidate-preview|示例候选：只用于验证内容流水线/);
 });
 
-test("product and content publish scripts share the unified release contract", async () => {
+test("product and content publish scripts use separate release contracts", async () => {
   const product = await readFile(path.join(root, "publish-xingbuild.command"), "utf8");
   const content = await readFile(path.join(root, "publish-content.command"), "utf8");
   const runtime = await readFile(path.join(root, "scripts", "content-release.mjs"), "utf8");
   assert.match(product, /unified-publish\.mjs --kind product/);
   assert.match(runtime, /--slug/);
-  assert.match(content, /unified-publish\.mjs --kind content/);
-  assert.match(runtime, /unified-publish\.mjs/);
+  assert.match(content, /content-release\.mjs --kind content/);
+  assert.match(runtime, /contentReleaseId/);
+  assert.doesNotMatch(runtime, /unified-publish\.mjs/);
   const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
   assert.match(unified, /release:preflight/);
-  assert.match(unified, /verify-content-release\.mjs/);
   assert.match(unified, /readPreparedDist/);
-  assert.match(unified, /content-manifest\.json/);
   assert.match(unified, /makers.*deploy/);
   assert.match(unified, /--json/);
   assert.match(unified, /transport-push|transport-deploy|public-verify/);
-  assert.match(unified, /makers-ze0f6txvlhco/);
-  assert.match(unified, /xingbuild\.top/);
+  assert.match(runtime, /publish-target/);
   assert.match(unified, /git.*push/);
   assert.match(unified, /--authorize-publish/);
   assert.doesNotMatch(unified, /release:check|test:sites|npm run build|architecture:views|article:figures/);
@@ -752,6 +698,7 @@ test("product and content publish scripts share the unified release contract", a
   assert.doesNotMatch(unified, /git\(\["commit"/);
   assert.doesNotMatch(unified, /git\(\["tag",[^\n]*-a/);
   assert.doesNotMatch(content, /find \.content-workspace/);
+  assert.doesNotMatch(unified, /kind === "content"|kind === "article"|kind === "practice"/);
 });
 
 test("release rules separate prepare/build/closeout/preflight/transport and incident decisions", async () => {

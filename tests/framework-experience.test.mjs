@@ -92,9 +92,8 @@ test("build manifest keeps evergreen articles separate from Observation publicat
   assert.deepEqual(manifest.publishedArticleSlugs, ["enterprise-operating-system"]);
 });
 
-test("future article publication is explicit and uses the unified release boundary", () => {
+test("future article publication is explicit and uses the independent content boundary", () => {
   assert.match(articleScope, /Usage: npm run article:scope-check -- --slug <slug>/);
   assert.match(articleScope, /content\/articles\/\$\{slug\}\.json/);
-  assert.match(articleScope, /evaluateUnifiedReleaseReadiness/);
-  assert.match(articleScope, /unified-release/);
+  assert.doesNotMatch(articleScope, /evaluateUnifiedReleaseReadiness|unified-release/);
 });

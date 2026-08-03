@@ -41,19 +41,16 @@ const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
 function readiness(overrides = {}) {
   return evaluatePracticeCommitReadiness({
-    practiceId: "robotaxi", files: [practicePath, manifestPath, mediaPath, "package.json", "package-lock.json", "VERSION.md", "docs/iterations/current.md", "docs/iterations/history/v0.21.1.md"], currentVersion: "0.21.1", parentVersion: "0.21.0",
-    head: "head", parent: "parent", originMain: "parent", headTags: [], practice, manifest, ...overrides,
+    practiceId: "robotaxi", files: [practicePath, manifestPath, mediaPath], practice, manifest, ...overrides,
   });
 }
 
-test("Practice scope accepts exactly one approved target package and rejects mixed version or tag changes", () => {
+test("Practice scope accepts exactly one approved target package and rejects product files", () => {
   assert.deepEqual(readiness().errors, []);
   for (const overrides of [
     { files: [practicePath, manifestPath, mediaPath, "src/pages/ProductsPage.jsx"] },
     { files: [practicePath, mediaPath] },
-    { currentVersion: "0.21.2" },
-    { headTags: ["v0.21.2"] },
-    { originMain: "other" },
+    { files: [practicePath, manifestPath, mediaPath, "package.json"] },
   ]) assert.ok(readiness(overrides).errors.length);
 });
 
@@ -162,7 +159,7 @@ test("Practice scope reads one target commit, including manifest media, without 
     if (args[0] === "rev-parse" && args[1] === "HEAD^") return "parent";
     if (args[0] === "rev-parse" && args[1] === "HEAD") return "head";
     if (args[0] === "rev-parse" && args[1] === "origin/main") return "parent";
-    if (args[0] === "diff-tree") return [practicePath, manifestPath, mediaPath, "package.json", "package-lock.json", "VERSION.md", "docs/iterations/current.md", "docs/iterations/history/v0.21.1.md"].join("\n");
+    if (args[0] === "diff-tree") return [practicePath, manifestPath, mediaPath].join("\n");
     if (args[0] === "tag") return "";
     throw new Error(`unexpected git call: ${args.join(" ")}`);
   };
@@ -208,23 +205,22 @@ test("current product records are synchronized with unified publishing", async (
   assert.equal(lock.packages[""].version, currentVersion);
   assert.match(versionRecord, new RegExp(`## v${currentVersion.replace(".", "\\.")}`));
   assert.equal(parseCurrentIterationVersion(currentIteration), `v${currentVersion}`);
-  assert.ok(readiness({ currentVersion: "0.21.2" }).errors.includes("content release must use the next patch version"));
+  assert.equal(readiness().ready, true);
 });
 
-test("Practice publish command uses the unified product version and tag contract", async () => {
+test("Practice publish command uses the independent content contract", async () => {
   const [packageJson, command, verify] = await Promise.all([
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../publish-practice.command", import.meta.url), "utf8"),
     readFile(new URL("../scripts/verify-practice-release.mjs", import.meta.url), "utf8"),
   ]);
   assert.match(packageJson, /practice:scope-check/);
-  assert.match(command, /unified-publish\.mjs --kind practice/);
+  assert.match(command, /content-release\.mjs --kind practice/);
   const unified = await readFile(new URL("../scripts/unified-publish.mjs", import.meta.url), "utf8");
-  assert.match(unified, /content-manifest\.json/);
   assert.match(unified, /readPreparedDist/);
   assert.doesNotMatch(unified, /practice:scope-check|release:check|test:sites|npm run build/);
   assert.match(unified, /--authorize-publish/);
-  assert.match(unified, /rev-parse.*\^\{commit\}/);
+  assert.doesNotMatch(unified, /kind === "practice"/);
   assert.doesNotMatch(unified, /incrementPatch/);
   assert.doesNotMatch(unified, /updateUnifiedVersionFiles/);
   assert.doesNotMatch(unified, /git\(\["commit"/);

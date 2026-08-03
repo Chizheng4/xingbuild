@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
 import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.js";
-import { evaluateUnifiedReleaseReadiness, unifiedReleaseRecordFiles } from "./unified-release.mjs";
 
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -187,13 +186,6 @@ export async function validatePracticeMediaFiles(manifest, { readBytes, practice
 export function evaluatePracticeCommitReadiness({
   practiceId,
   files,
-  currentVersion,
-  parentVersion,
-  head,
-  parent,
-  originMain,
-  originMainIsAncestor = false,
-  headTags = [],
   practice,
   manifest,
 }) {
@@ -207,7 +199,6 @@ export function evaluatePracticeCommitReadiness({
     practicePath,
     manifestPath,
     ...mediaPaths,
-    ...unifiedReleaseRecordFiles(currentVersion),
   ]);
   const rejected = normalized.filter((file) => !allowed.has(file));
   if (!normalized.includes(practicePath)) errors.push(`Practice commit must contain ${practicePath}`);
@@ -215,21 +206,7 @@ export function evaluatePracticeCommitReadiness({
   if (normalized.some((file) => mediaPaths.has(file)) && !normalized.includes(manifestPath)) {
     errors.push(`Practice media files require ${manifestPath}`);
   }
-  const unified = evaluateUnifiedReleaseReadiness({
-    files: normalized,
-    targetFile: practicePath,
-    currentVersion,
-    parentVersion,
-    head,
-    parent,
-    originMain,
-    originMainIsAncestor,
-    headTags,
-    kind: "practice",
-    extraAllowedFiles: [manifestPath, ...mediaPaths],
-  });
-  errors.push(...unified.errors);
-  return { ready: errors.length === 0, errors, practicePath, manifestPath, phase: unified.phase };
+  return { ready: errors.length === 0, errors, practicePath, manifestPath, phase: "content-prepare" };
 }
 
 export function validatePracticeBundle(practice, manifest) {

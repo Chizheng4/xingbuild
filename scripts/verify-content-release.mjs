@@ -7,6 +7,8 @@ export async function verifyContentReleaseOnce({
   baseUrl,
   expectedVersion,
   expectedCommit,
+  expectedContentReleaseId,
+  expectedContentHash,
   targetPath,
   fetchImpl = fetch,
 }) {
@@ -39,13 +41,17 @@ export async function verifyContentReleaseOnce({
   if (!home.includes("<title>xingbuild") || !article.includes("<title>xingbuild")) {
     throw new Error("home or article route does not identify xingbuild");
   }
-  if (release.version !== expectedVersion) {
+  if (expectedContentReleaseId) {
+    if (manifest.contentReleaseId !== expectedContentReleaseId || manifest.contentHash !== expectedContentHash) {
+      throw new Error("content manifest does not match the independent content identity");
+    }
+  } else if (release.version !== expectedVersion) {
     throw new Error(`version is ${release.version}, expected ${expectedVersion}`);
   }
-  if (release.commit !== expectedCommit) {
+  if (!expectedContentReleaseId && release.commit !== expectedCommit) {
     throw new Error(`commit is ${release.commit}, expected ${expectedCommit}`);
   }
-  if (manifest.version !== expectedVersion || manifest.commit !== expectedCommit) {
+  if (!expectedContentReleaseId && (manifest.version !== expectedVersion || manifest.commit !== expectedCommit)) {
     throw new Error("content manifest does not match the verified release");
   }
   if (!Array.isArray(manifest.publishedSlugs) || !manifest.publishedSlugs.includes(targetSlug)) {

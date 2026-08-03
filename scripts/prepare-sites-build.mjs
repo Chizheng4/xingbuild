@@ -25,10 +25,11 @@ copyFileSync(hosting, path.join(dist, ".openai", "hosting.json"));
 copyFileSync(edgeOneConfig, path.join(dist, "client", "edgeone.json"));
 
 const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
-const commit = execFileSync("git", ["rev-parse", "HEAD"], {
+const commit = process.env.XINGBUILD_PRODUCT_COMMIT || execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: root,
   encoding: "utf8",
 }).trim();
+const releaseVersion = process.env.XINGBUILD_PRODUCT_VERSION || `v${packageJson.version}`;
 const publishedSlugs = readdirSync(observationsDirectory)
   .filter((name) => name.endsWith(".json"))
   .map((name) => {
@@ -56,7 +57,7 @@ writeFileSync(
   path.join(dist, "client", "release.json"),
   `${JSON.stringify(
     {
-      version: `v${packageJson.version}`,
+      version: releaseVersion,
       commit,
       builtAt: new Date().toISOString(),
     },
@@ -68,7 +69,7 @@ writeFileSync(
   path.join(dist, "client", "content-manifest.json"),
   `${JSON.stringify(
     {
-      version: `v${packageJson.version}`,
+      version: releaseVersion,
       commit,
       publishedSlugs,
       publishedArticleSlugs,

@@ -5,4 +5,4 @@ if [[ "$#" -ne 2 || "$1" != "--id" || ! "$2" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; the
   echo "Usage: ./publish-practice.command --id <practiceId>"
   exit 1
 fi
-exec node scripts/unified-publish.mjs --kind practice --id "$2" --authorize-publish
+exec node scripts/content-release.mjs --kind practice --id "$2" --authorize-publish

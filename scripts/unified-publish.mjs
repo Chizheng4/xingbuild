@@ -4,16 +4,22 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { acquireContentReleaseLease, releaseContentReleaseLease } from "./lib/content-release-lease.mjs";
 import { formatVersion, parseCurrentVersion } from "./lib/unified-release.mjs";
 import { assertVersionState } from "./lib/version-state.mjs";
+import {
+  assertFixedPublishTarget,
+  assertPublishAuthorization,
+  edgeoneDomain,
+  edgeoneProject,
+  edgeoneProjectId,
+  isPublishAuthorized,
+  publicUrl,
+  readDeploymentResult,
+  readFixedEdgeoneTarget,
+} from "./lib/publish-target.mjs";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
-export const edgeoneProject = "xingbuild-nochina";
-export const edgeoneProjectId = "makers-ze0f6txvlhco";
-export const publicUrl = "https://xingbuild.top/";
-export const edgeoneDomain = "xingbuild.top";
 const edgeone = path.join(root, "node_modules", ".bin", "edgeone");
 
 export function git(args, cwd = root) {
@@ -33,37 +39,6 @@ export function trackedDirtyPaths(statusText = "") {
   return statusText.split("\n").filter(Boolean).map((line) => line.slice(3).trim()).filter(Boolean);
 }
 
-export function isPublishAuthorized({ argv = process.argv.slice(2), env = process.env } = {}) {
-  return argv.includes("--authorize-publish") || env.XINGBUILD_PUBLISH_AUTHORIZATION === "confirmed";
-}
-
-export function assertPublishAuthorization(options = {}) {
-  if (!isPublishAuthorized(options)) {
-    throw new Error("publish authorization is required (--authorize-publish or XINGBUILD_PUBLISH_AUTHORIZATION=confirmed)");
-  }
-}
-
-export function assertFixedPublishTarget(env = process.env) {
-  const unsupportedOverrides = [
-    "XINGBUILD_EDGEONE_PROJECT",
-    "XINGBUILD_EDGEONE_PROJECT_ID",
-    "XINGBUILD_PUBLIC_URL",
-  ];
-  const override = unsupportedOverrides.find((name) => env[name]);
-  if (override) throw new Error(`${override} is not supported; publish target is fixed by the version contract`);
-  if (new URL(publicUrl).hostname !== edgeoneDomain) throw new Error(`publish domain mismatch: ${publicUrl}`);
-}
-
-export async function readFixedEdgeoneTarget(sourceCwd = root) {
-  const projectFile = path.join(sourceCwd, ".edgeone", "project.json");
-  if (!(await exists(projectFile))) throw new Error("missing .edgeone/project.json for fixed EdgeOne target");
-  const project = JSON.parse(await readFile(projectFile, "utf8"));
-  if (project.Name !== edgeoneProject || project.ProjectId !== edgeoneProjectId) {
-    throw new Error(`EdgeOne target mismatch: expected ${edgeoneProject}/${edgeoneProjectId}`);
-  }
-  return { name: edgeoneProject, projectId: edgeoneProjectId, domain: edgeoneDomain };
-}
-
 function runCapture(command, args, cwd, { env = process.env } = {}) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", env });
   const output = `${result.stdout || ""}${result.stderr || ""}`;
@@ -72,15 +47,17 @@ function runCapture(command, args, cwd, { env = process.env } = {}) {
   return output;
 }
 
-export function readDeploymentResult(output) {
-  const line = output.split(/\r?\n/).map((value) => value.trim()).reverse().find((value) => value.startsWith("{") && value.endsWith("}"));
-  if (!line) throw new Error("EdgeOne deployment did not return a machine-readable result");
-  const result = JSON.parse(line);
-  if (result.status !== "success" || result.projectId !== edgeoneProjectId) {
-    throw new Error(`EdgeOne deployment identity mismatch: expected ${edgeoneProjectId}`);
-  }
-  return result;
-}
+export {
+  assertFixedPublishTarget,
+  assertPublishAuthorization,
+  edgeoneDomain,
+  edgeoneProject,
+  edgeoneProjectId,
+  isPublishAuthorized,
+  publicUrl,
+  readDeploymentResult,
+  readFixedEdgeoneTarget,
+} from "./lib/publish-target.mjs";
 
 export async function readAcceptedVersion(sourceCwd = root) {
   const packageJson = JSON.parse(await readFile(path.join(sourceCwd, "package.json"), "utf8"));
@@ -113,17 +90,14 @@ export async function collectPublishContext(sourceCwd = root) {
   return { sourceCwd: resolved, head, tag, version: identity.version, historyFile: identity.historyFile, dirtyPaths: [] };
 }
 
-export async function readPreparedDist({ sourceCwd = root, version, head, kind, target } = {}) {
+export async function readPreparedDist({ sourceCwd = root, version, head } = {}) {
   const client = path.join(sourceCwd, "dist", "client");
   const releasePath = path.join(client, "release.json");
   const manifestPath = path.join(client, "content-manifest.json");
-  if (!(await exists(releasePath)) || !(await exists(manifestPath))) throw new Error("prepared dist/client release.json and content-manifest.json are required; publish will not build");
+  if (!(await exists(releasePath))) throw new Error("prepared dist/client/release.json is required; publish will not build");
   const release = JSON.parse(await readFile(releasePath, "utf8"));
-  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   if (release.version !== version || release.commit !== head) throw new Error(`prepared release.json does not match ${version}/${head}`);
-  if (manifest.version !== version || manifest.commit !== head) throw new Error(`prepared content-manifest.json does not match ${version}/${head}`);
-  if (kind === "content" && !manifest.publishedSlugs?.includes(target)) throw new Error(`prepared manifest does not contain target content slug ${target}`);
-  if (kind === "article" && !manifest.publishedArticleSlugs?.includes(target)) throw new Error(`prepared manifest does not contain target article slug ${target}`);
+  const manifest = await exists(manifestPath) ? JSON.parse(await readFile(manifestPath, "utf8")) : null;
   return { client, release, manifest };
 }
 
@@ -139,25 +113,17 @@ function configureNetwork() {
   run("curl", ["-fsSI", "--http1.1", "--noproxy", "*", "--connect-timeout", "10", "--max-time", "15", "https://github.com"], root);
 }
 
-function targetConfig(kind, target, version, commit) {
-  if (kind === "product") return { verify: ["node", ["scripts/verify-public-release.mjs", publicUrl, version, commit]] };
-  if (kind === "content") return { verify: ["node", ["scripts/verify-content-release.mjs", publicUrl, version, commit, `/observations/${target}`, "--finalize"]] };
-  if (kind === "article") return { verify: ["node", ["scripts/verify-article-release.mjs", publicUrl, version, commit, target]] };
-  if (kind === "practice") return { verify: ["node", ["scripts/verify-practice-release.mjs", publicUrl, version, commit, "--id", target]] };
-  throw new Error(`unknown unified publish kind: ${kind}`);
-}
-
 export async function publish({ kind, target, argv = process.argv.slice(2), env = process.env } = {}) {
+  if (kind !== "product") throw new Error("unified-publish only handles product transport; use the content publish engine for content targets");
   let phase = "source";
   let source;
   let prepared;
   let edgeoneTarget;
-  let lease;
   try {
     assertFixedPublishTarget(env);
     source = await collectPublishContext(root);
     phase = "prepared-dist";
-    prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head, kind, target });
+    prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head });
     phase = "preflight";
     run("npm", ["run", "release:preflight"], root, { env: { ...env, XINGBUILD_RELEASE_WORKTREE: "1" } });
     phase = "authorization";
@@ -166,7 +132,6 @@ export async function publish({ kind, target, argv = process.argv.slice(2), env 
     edgeoneTarget = await readFixedEdgeoneTarget(root);
     configureNetwork();
     run(edgeone, ["whoami"], root);
-    lease = kind === "product" ? null : await acquireContentReleaseLease({ slug: `${kind}:${target}`, worktree: root, head: source.head });
     phase = "transport-push";
     run("git", ["push", "origin", "HEAD:main"], root);
     run("git", ["push", "origin", source.tag], root);
@@ -175,21 +140,18 @@ export async function publish({ kind, target, argv = process.argv.slice(2), env 
     phase = "transport-deploy";
     const deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", prepared.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root));
     phase = "public-verify";
-    run(targetConfig(kind, target, source.version, source.head).verify[0], targetConfig(kind, target, source.version, source.head).verify[1], root, { env });
+    run("node", ["scripts/verify-public-release.mjs", publicUrl, source.version, source.head], root, { env });
     return { ...source, kind, target, dist: prepared.client, edgeoneTarget, deployment, online: true };
   } catch (error) {
     error.publishContext = { ...(source || {}), dist: prepared?.client, phase, edgeoneTarget };
     throw error;
-  } finally {
-    if (lease) await releaseContentReleaseLease({});
   }
 }
 
 export async function main(argv = process.argv.slice(2)) {
   const kind = argv[argv.indexOf("--kind") + 1];
   const target = argv[argv.indexOf("--slug") + 1] || argv[argv.indexOf("--id") + 1] || "";
-  if (!["product", "content", "article", "practice"].includes(kind)) throw new Error("Usage: node scripts/unified-publish.mjs --kind <product|content|article|practice> [--slug <slug>|--id <id>] [--authorize-publish]");
-  if (kind !== "product" && !target) throw new Error("Unified publish requires one explicit target");
+  if (kind !== "product") throw new Error("Usage: node scripts/unified-publish.mjs --kind product --authorize-publish");
   const result = await publish({ kind, target, argv });
   console.log(`Unified release completed: ${result.version} ${result.head} ${result.kind}${result.target ? ` ${result.target}` : ""}`);
 }

@@ -49,8 +49,8 @@ for (let attempt = 1; attempt <= attempts; attempt += 1) {
         `commit is ${release.commit || "missing"}, expected ${expectedCommit}`,
       );
     }
-    if (manifest.version !== expectedVersion || manifest.commit !== expectedCommit) {
-      throw new Error("content manifest does not match the verified release");
+    if (typeof manifest !== "object" || manifest === null) {
+      throw new Error("content manifest is not a valid JSON object");
     }
 
     console.log(
