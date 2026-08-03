@@ -1,62 +1,60 @@
 # xingbuild 项目 Agent 入口
 
-本文件只定义项目边界和事实源入口，不复制产品正文或完整工作流。开始任何工作前，按以下顺序读取：
+本文件只定义项目边界、强制红线和规则入口，不复制产品、工程、运营或跨 task 工作流正文。
 
-1. [网站产品架构与视觉系统总案](docs/product/xingbuild%20网站产品架构与视觉系统总案.md)
-2. [迭代与发布规则](docs/rules/iteration-and-release.md)
-3. [当前唯一版本](docs/iterations/current.md)
-4. `docs/iterations/candidates/` 下的活动候选文件；历史转化/关闭记录见 `docs/iterations/history/candidates/`
+## 一、开始工作前的唯一读取路由
 
-## 项目边界
+1. 本文件：确认项目边界与不可违反的红线。
+2. [`docs/rules/00-baseline-index.md`](docs/rules/00-baseline-index.md)：按任务类型选择唯一规则正文。
+3. 按索引读取职责、协作、迭代发布、产品视觉或 Engineering 架构规则。
+4. 只有涉及当前产品版本时才读 `docs/iterations/current.md` 和活动 `docs/iterations/candidates/`；历史文件只在需要追溯时读取。
+
+不要用 task 历史、旧设计、冷档案或其他项目文件补全当前规则。事实缺失就报告缺口。
+
+## 二、项目边界
 
 - `xingbuild` 是作者主导的个人网站和持续演进的作品集合，不是在线简历。
-- career 与 Robotaxi 是上游事实源；xingbuild 只保存经过核验的网站表达快照，不复制或改写上游业务事实。
+- career 与 Robotaxi 是上游事实源；xingbuild 只保存核验后的网站表达快照，不复制或改写上游事实。
 - `xingbuild.top` 是本项目正式域名；`robotaxi.xingbuild.top` 由 Robotaxi 项目独立发布。
-- 产品版本、内容运营、上游采集和问题治理是不同责任域。产品结构与工程能力使用统一产品版本身份；内容运营使用独立内容发布身份，不得把内容发布批次伪装成产品版本，也不得用内容快照制造第二套产品版本事实。
-- 官方项目目录与 canonical `main` 是唯一长期基线；默认 task 直接使用官方目录（direct-local），不自动创建 branch、worktree 或 detached checkout。
+- 产品工程版本、内容运营、Ops 采集和问题治理是不同责任域；内容使用独立内容发布身份，不制造第二套产品版本事实。
+- 官方项目目录 `/Users/kingjin/Documents/Builder/xingbuild` 与 canonical `main` 是唯一长期基线；默认 task 使用 direct-local，不自动创建 branch、worktree、detached checkout 或 task。
 
-## 责任边界
+## 三、唯一事实源入口
 
-- 产品与视觉：维护产品总案、候选、正式版本方案、`current.md`，负责版本启动、候选转方案与归档、最终产品/视觉验收。
-- Engineering：只实现已写入 `current.md` 的合同；负责代码、测试、本地收口、版本记录、commit/tag，并按授权完成 push、部署和公网验收。
-- 内容与发布：负责事实审核、Brief/Article/Practice 结构、B 端产品页面内容和独立内容发布；不修改产品版本或视觉合同。详细合同只见 `docs/operations/内容运营与发布规则.md`。
-- Ops：只生成可信证据候选、去重和覆盖记录；不写公开正文、不审核、不发布。经营观察唯一调度入口是已登记的 `xingbuild` 自动化；运行 task 是执行记录，不是新的调度器。
-- 每个文件、版本和发布动作只有一个执行 owner；其他 task 只提供事实、验收或短检查点。
-- Engineering 完成本地实现与自 QA 后，形成一个“本地提交版本”（版本号/名称/说明、代码提交、annotated tag、history 和 clean 工作区），再交产品与视觉 task 验收；本地提交后任何修改都属于下一版本。
-- 产品与视觉 task 验收本地提交版本；验收发现产品、视觉、对象边界或验收合同问题时，直接定义下一个 patch/小迭代/大迭代并写入 `current.md`，不重新创建普通候选。
-- 产品与视觉验收通过后，只有用户明确要求 publish 时，Engineering 才执行线上发布；publish 成功后线上版本必须与本地提交版本的版本号和最终提交一致。
-- `current.md` 只维护当前可执行产品方案；history 只在 Engineering 形成 local commit/tag/clean 后保存不可变版本事实（版本号、commit、annotated tag、clean、父版本和范围）。产品/视觉验收、publish 授权和线上状态是外部事件，不得写入 current/history。
-- 每次 Engineering 或产品与视觉 task 收口都必须报告：本地版本状态、线上版本状态、本地 URL、线上 URL、已确定项、未确定项、候选状态、阻断和下一动作；无候选也必须明确报告等待用户下一步。
+| 事实 | 唯一入口 |
+| --- | --- |
+| 规则路由与优先级 | `docs/rules/00-baseline-index.md` |
+| 职责与内部流程 | `docs/rules/responsibility-and-workflows.md` |
+| 跨 task 协作 | `docs/rules/collaboration-workflow.md` |
+| 产品版本与线上发布 | `docs/rules/iteration-and-release.md` |
+| 产品/视觉架构 | `docs/product/xingbuild 网站产品架构与视觉系统总案.md` |
+| Engineering 架构 | `docs/rules/engineering-architecture-and-principles.md` |
+| 内容独立运营 | `docs/operations/内容运营与发布规则.md` |
+| 经营观察采集 | `docs/operations/经营观察信息源与覆盖合同.md` |
+| 当前产品方案 | `docs/iterations/current.md` |
+| 未确认产品候选 | `docs/iterations/candidates/` |
 
-## 最小执行门禁
+## 四、不可违反的强制边界
 
-- 产品优化 DRAFT 只进入 `docs/iterations/candidates/`；未确认前不得修改 `current.md`、代码、版本或发布状态。
-- 当前版本只由 `docs/iterations/current.md` 定义；已完成版本进入 `docs/iterations/history/`。
-- Engineering 实施中发现的跨范围问题、运营工具/CLI/Skill 缺陷和新的产品优化先创建候选 ID；候选初始为 `status: pending`、`executionAuthorization: pending`，并先同步到 canonical `main`，由产品与视觉 task 评审后决定是否转化为产品设计方案。产品与视觉验收已提交本地版本时发现的问题不走普通候选，直接定义下一版本并写入 `current.md`。
-- 候选只属于产品设计前阶段：产品与视觉确认并纳入正式设计方案后，必须在同一产品设计版本中记录来源并立即移入 `docs/iterations/history/candidates/` 归档；不得继续留在活动 candidates，也不得以长期 `confirmed` 状态等待 Engineering。`closed` 候选同样移入归档并保留关闭理由；只有未确认的 `pending`/DRAFT 留在活动 candidates。
-- 运营工具、CLI 或 Skill 出现缺陷时必须立即停止该次运营操作，只登记候选并通知产品与视觉；禁止内容 task 或其他 task 为自己创建工程分支、修改 main 或绕过产品版本门禁。
-- 日常内容更新和 Ops 运行记录只写被忽略的 `.content-workspace/`；不能创建第二个 tracked backlog。内容运营规则见 `docs/operations/内容运营与发布规则.md`。
-- 新采集、候选、draft、审核和 recovery 仍是运营数据，不进入产品版本。产品 publish 只消费已完成产品/视觉验收的现有 local commit/tag；内容 publish 使用独立内容身份，不递增产品版本、不回写 package/VERSION/current/history、不创建产品 tag。产品工程实现与内容独立发布能力分别遵守各自版本合同。
-- Publish 是线上发布执行器，不是版本创建器：版本创建只发生在 Engineering 本地提交闭环；publish 前后都必须围绕同一 HEAD/tag，构建后再次检查 tracked dirty paths，任何失败不得写入完成声明或继续后续阶段。
-- main 只作为干净产品集成/发布基线；产品 DRAFT 与 Engineering 可使用有界 worktree，内容 task 只调用内容规则允许的 CLI（CLI 内部临时 worktree 不属于产品工程分支），禁止共享脏工作区。内容 task 不得以内容发布为由修改产品版本或创建产品分支。
-- 任何 branch/worktree/并行 task 都必须得到用户明确授权，并在启动时记录目的、范围、责任 task、canonical HEAD 与清理条件；未获明确授权不得创建或复用。
-- 自动化、cron、scheduled task 与普通 task 一样属于受控资源；普通执行、审核、发布或“继续工作”指令不包含创建权限。经营观察只能复用 `docs/operations/经营观察信息源与覆盖合同.md` 登记的唯一 `xingbuild` 调度器；内容 task 和自动化运行 task 不得创建、复制、更新或替代它。
-- task 创建与 task 交接是两种不同动作：普通“执行”、版本推进或规则更新不等于创建 Engineering/内容/Ops task。交接只能发送给用户已明确指定且已存在的目标 task；找不到、无法确认或目标 task 不存在时，必须向用户报告并等待确认，不得自行创建、猜测、替代、轮询或保持后台等待。
-- task 归档前必须确认 canonical 已同步、所有修改已分类、官方工作区 clean，并清理本 task 创建的临时 worktree；未确认归属的脏改不得删除或混入版本。
-- 产品预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不换端口、不终止未知进程。
-- 详细迭代、分支、端口、验证、回退和发布规则只以 `docs/rules/iteration-and-release.md` 为准。
+- 每个文件、版本和发布动作只有一个执行 owner；其他 task 只提供事实、验收或有界检查点。
+- Engineering 只实现已经写入 `current.md` 的正式产品方案；内容 task 只消费既有页面能力，不修改产品版本、IA、schema、组件或视觉合同；Ops 不写稿、不审核、不发布。
+- `current.md` 只保存当前可执行产品方案；Engineering 形成 local commit/tag/clean 后一次性写 history。产品/视觉验收、publish 授权和线上状态是外部事件，不回写已打 tag 的 current/history。
+- 提交前的普通工程缺陷由 Engineering 在当前版本内修复；提交后的产品/视觉验收问题直接定义下一版本并写入 `current.md`，不修改旧版本、不重新创建普通候选。
+- 活动 candidates 只保存未确认 `pending`/`DRAFT`；候选纳入正式设计方案或关闭时，必须移入 `docs/iterations/history/candidates/`，不能长期保留 `confirmed`。
+- 内容 draft/review/recovery、Ops 运行记录和内容发布包只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。
+- 产品 publish 只消费已完成产品/视觉验收的现有 clean HEAD/tag 和预生成 `dist/client`；不得自动递增版本、回写版本文件、commit、tag、修复脏改或运行网站业务逻辑。
+- 生成器只在源/方案变化后显式运行并把生成物纳入同一 local commit；构建后的 tracked dirty、身份不一致或产物缺失必须停止。
+- EdgeOne 生产目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`；目标合同变化必须形成明确治理版本并同步验证，禁止环境变量静默覆盖。
+- 任何 branch/worktree、并行 task、automation/cron/scheduled task 都是受控资源；未经用户明确授权不得创建、复制、更新、暂停、删除或替代。经营观察只能复用运营合同登记的唯一 scheduler。
+- task 创建、交接、执行、版本推进和 publish 授权是不同动作。找不到已存在的目标 task、身份无法确认、责任不清或回传工具不可调用时，立即报告阻断，不得猜测、替代、创建、轮询或后台等待。
+- 跨 task 交接必须显式写 `sourceThreadId`、`targetThreadId`、`returnThreadId`；source 只作溯源，目标 task 到里程碑后向精确 return 地址一次回传。
+- 预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不得静默换端口或终止未知进程。
 
-## 原型与视觉实施
+## 五、验证与沟通
 
-- 重大视觉修改且视觉事实源不明确时，先使用 Product Design 的 `get-context`；不要用临时截图或页面私有样式替代已确认设计。
-- 保持 `.openai/hosting.json`、`worker/index.js`、`scripts/prepare-sites-build.mjs` 和 Sites 测试完整；交付 Sites 前运行 `npm run build` 与 `npm run test:sites`。
-- 生成器命令（`architecture:views`、`framework:data`、`framework:layout`、`article:figures`）只在源/产品方案变更后、local commit 前显式运行；`npm run build`、`release:check` 与 publish 构建只读消费已提交生成物，不回写 tracked `src/generated/` 或 `public/`。
-- 业务验证和构建必须在 publish 前通过 `release:prepare`/`release:build` 完成；publish/unified product 只做既有 `dist/client` 的身份校验、线上传输、部署和公网 manifest 验证，不包含网站业务逻辑。
-- 内容发布不调用产品 `release:preflight`、产品 closeout 或产品 tag 门禁；其内容校验、内容身份、部署和公网内容验收以 `docs/operations/内容运营与发布规则.md` 为准。内容独立发布能力未完成前，内容 task 只能确认和预览，不能绕过工程能力上线。
-- 内容发布固定使用 `content:prepare` → `content:build` → 独立 transport；发布包只写 ignored `.content-workspace/releases/`，临时 staging copy 构建，canonical `main` 不写 tracked 内容。
-- 发布阶段统一遵守四阶段：`release:prepare` → `release:build` → `release:closeout-check`/`release:preflight` → transport-only publish；失败进入 `docs/rules/iteration-and-release.md` 的 Publish Incident 决策门。
-- EdgeOne publish 目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`，不得用环境变量静默覆盖。
+- 代码、文档、数据口径、测试和真实运行结果必须形成闭环；完成前执行与风险相匹配的检查。
+- 每次责任 task 收口报告本责任域的本地/线上状态、URL、已确定项、未确定项、候选状态、阻断和下一动作；不要把报告写回已打 tag 的事实文件。
+- 规则以中文为主；命令、路径、字段、枚举、API 和必要技术名保留英文并在首次出现时给出简短中文含义。
+- task 消息只传候选/方案 ID、正式路径、版本/commit、证据、阻断 ID 和下一动作；消息不能替代项目文件、候选或 history。
 
-## 协作语言
-
-规则以中文为主；命令、文件名、字段、枚举、API 和必要技术名保留英文，并在首次出现时给出简短中文含义。task 消息只传候选 ID/文件路径、版本/commit、证据、阻断 ID 和下一动作，不传完整历史或媒体；消息不能替代候选文件。
+详细内容和任务读取矩阵统一以 [`00-baseline-index.md`](docs/rules/00-baseline-index.md) 为准。

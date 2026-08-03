@@ -40,7 +40,15 @@
 - [xingbuild 网站产品架构与视觉系统总案](product/xingbuild%20网站产品架构与视觉系统总案.md)
 - 版本当前状态只看 [当前迭代](iterations/current.md)；未确认候选只看 `iterations/candidates/`；候选转化/关闭证据只看 `iterations/history/candidates/`；完成版本结果只看 `iterations/history/`。
 
-产品与视觉 task、Engineering 和内容 task 都必须先读取这份主文档。它是当前唯一的产品/视觉入口；旧版本方案不能与本文并列作为现行事实源。
+产品与视觉 task、Engineering 和内容 task 按 [`rules/00-baseline-index.md`](rules/00-baseline-index.md) 的任务矩阵读取这份主文档。它是当前唯一的产品/视觉入口；旧版本方案不能与本文并列作为现行事实源。
+
+## 产品工程协作基线
+
+- [基线索引](rules/00-baseline-index.md)：优先级、五层结构和读取矩阵
+- [职责与内部工作流](rules/responsibility-and-workflows.md)：责任域、候选分流和产品工程闭环
+- [跨 task 协作工作流](rules/collaboration-workflow.md)：source/target/return、ACK 和一次性回传
+- [迭代与发布规则](rules/iteration-and-release.md)：产品版本、验证、Git、EdgeOne 和回退
+- [Engineering 架构与原则](rules/engineering-architecture-and-principles.md)：工程目录、生成物和 transport 边界
 
 ## 历史设计与未确认草案
 

@@ -6,7 +6,11 @@ const requiredFiles = [
   "AGENTS.md",
   "VERSION.md",
   "docs/iterations/current.md",
+  "docs/rules/00-baseline-index.md",
+  "docs/rules/responsibility-and-workflows.md",
+  "docs/rules/collaboration-workflow.md",
   "docs/rules/iteration-and-release.md",
+  "docs/rules/engineering-architecture-and-principles.md",
   "src/App.jsx",
   "src/content/siteContent.js",
   "src/content/showcaseRepository.js",
@@ -76,6 +80,8 @@ const requiredFiles = [
   "tests/framework-experience.test.mjs",
   "tests/content-publish.test.mjs",
   "tests/ops-scheduling-governance.test.mjs",
+  "tests/task-handoff-governance.test.mjs",
+  "tests/baseline-governance.test.mjs",
 ];
 
 for (const file of requiredFiles) {

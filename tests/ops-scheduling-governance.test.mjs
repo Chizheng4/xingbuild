@@ -16,16 +16,16 @@ test("经营观察只有登记的 xingbuild scheduler 与固定 task 身份", as
 });
 
 test("内容 task 只能请求既有 Ops task，不得管理调度资源", async () => {
-  const [contentRules, agents, releaseRules] = await Promise.all([
+  const [contentRules, agents, responsibilityRules] = await Promise.all([
     read("docs/operations/内容运营与发布规则.md"),
     read("AGENTS.md"),
-    read("docs/rules/iteration-and-release.md"),
+    read("docs/rules/responsibility-and-workflows.md"),
   ]);
   assert.match(contentRules, /不得执行定时采集/);
   assert.match(contentRules, /不得创建、复制、更新或替代.*自动化、cron、scheduled task/);
   assert.match(contentRules, /只能把按需采集请求交给已登记的 Ops 长期责任 task/);
-  assert.match(agents, /自动化、cron、scheduled task 与普通 task 一样属于受控资源/);
-  assert.match(releaseRules, /内容 task 不得创建或管理经营观察调度/);
+  assert.match(agents, /automation\/cron\/scheduled task 都是受控资源/);
+  assert.match(responsibilityRules, /内容 task 和运行 task 不得创建、复制、更新或替代它/);
 });
 
 test("调度异常只进入人工阻断，不自动修复或替代", async () => {

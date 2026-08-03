@@ -15,8 +15,11 @@
 | 文档或目录 | 责任 | 与本文件的关系 |
 | --- | --- | --- |
 | `docs/product/xingbuild 网站产品架构与视觉系统总案.md` | 产品目标、信息架构、页面责任、内容对象、视觉系统、展示能力 | 唯一现行产品/视觉主文档 |
-| `AGENTS.md` | 项目边界、协作、语言和执行规则 | 只引用本文件，不复制产品/视觉正文 |
-| `docs/rules/iteration-and-release.md` | 版本、task、内容发布、Git 和部署规则 | 工程流程事实源，不由本文替代 |
+| `AGENTS.md` | 项目边界和强制入口 | 只引用本文件，不复制产品/视觉正文 |
+| `docs/rules/00-baseline-index.md` | 规则优先级、五层结构和按任务类型读取 | 不复制任何规则正文 |
+| `docs/rules/iteration-and-release.md` | 产品版本、Git、部署和回退规则 | 工程发布事实源，不由本文替代 |
+| `docs/rules/responsibility-and-workflows.md` | 责任域与内部产品工程流程 | 只维护责任和分流，不由本文替代 |
+| `docs/rules/collaboration-workflow.md` | 跨 task 一次性交接和回传 | 只维护协作消息，不由本文替代 |
 | `docs/iterations/current.md` | 唯一当前工程迭代指针 | 只记录正在实施的版本 |
 | `docs/iterations/candidates/` | 产品设计前的未确认候选入口 | 只保留 pending/DRAFT，不定义 Engineering 授权 |
 | `docs/iterations/history/candidates/` | 已转化或已关闭候选的历史归档 | 只保留来源、转化/关闭结果和证据，不参与当前决策 |
@@ -30,7 +33,7 @@
 
 1. 上游事实仍以 career、Robotaxi 的权威源为准；
 2. 网站产品与视觉决策以本文为准；
-3. 工程执行和发布门禁以 `docs/rules/iteration-and-release.md` 为准；
+3. 工程执行和发布门禁以 `docs/rules/iteration-and-release.md` 为准；责任与协作按 `docs/rules/00-baseline-index.md` 路由；
 4. 版本实施状态以代码、`current.md`、Git 和真实部署证据为准；
 5. 历史方案不得覆盖本文已经确认的当前决策。
 
@@ -282,7 +285,7 @@ subject · eventAt
 - 有长文时在同一块内嵌 `ArticlePreview`；普通 Brief 不单独创建详情页；
 - 来源是末行弱信息，不能被视觉强调掩盖正文。
 
-内容、审核、来源和发布边界遵循 `docs/rules/iteration-and-release.md` 与 `docs/operations/`，本文不复制操作命令。
+内容、审核、来源和发布边界遵循 [`docs/operations/内容运营与发布规则.md`](../operations/内容运营与发布规则.md)，产品工程版本边界遵循 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md)；本文不复制操作命令。
 
 ### 5.2 EvergreenArticlePublication（常青长文）
 
@@ -600,11 +603,11 @@ sourcePath / renderer / layoutPreset / alt / caption
 | 新增或改变 VisualizationHost/renderer adapter | 是 |
 | 修改 Robotaxi 嵌入安全、权限或公开演示能力 | 是 |
 
-工作流、发布命令和串行交接继续遵守 `docs/rules/iteration-and-release.md`。产品方案可以并行形成 `DRAFT`，但不能修改当前版本或合入主线；当前版本收口后由产品 task 检查候选入口并交 Engineering。
+产品方案、串行交接和发布命令按 `docs/rules/00-baseline-index.md` 路由：候选和产品设计遵守职责规则，跨 task 遵守协作规则，版本收口和发布遵守迭代规则。产品方案可以并行形成 `DRAFT`，但不能修改当前版本或合入主线；当前版本收口后由产品 task 检查候选入口并交 Engineering。
 
 ## 11. 产品变化的分流原则
 
-本文件只维护“网站产品应该是什么”。项目通用的版本启动、DRAFT 门禁、问题登记、候选转产品方案并归档、跨 task 交接、串行实现、验证、提交/tag、发布和资源规则，唯一以 [`docs/rules/iteration-and-release.md`](../rules/iteration-and-release.md) 为准；活动候选以 `docs/iterations/candidates/` 为准；转化/关闭记录以 `docs/iterations/history/candidates/` 为准；当前实施状态以 `docs/iterations/current.md` 为准。
+本文件只维护“网站产品应该是什么”。项目通用的规则按 [`docs/rules/00-baseline-index.md`](../rules/00-baseline-index.md) 路由：职责与候选分流以 `responsibility-and-workflows.md` 为准，跨 task 以 `collaboration-workflow.md` 为准，版本启动、验证、提交/tag、发布和资源以 `iteration-and-release.md` 为准；活动候选以 `docs/iterations/candidates/` 为准；转化/关闭记录以 `docs/iterations/history/candidates/` 为准；当前实施状态以 `docs/iterations/current.md` 为准。
 
 产品侧只保留以下分流：
 

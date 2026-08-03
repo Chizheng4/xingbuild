@@ -1,3 +1,9 @@
+## v0.24.19 — 产品工程协作治理基线结构化
+
+- 状态：已完成五层规则与 Agent 入口治理的本地实现，待 Engineering 自 QA、local commit/tag/clean 和产品/视觉验收；未 push、publish、部署或公网验收。
+- 范围：新增统一基线索引、职责/内部流程、跨 task 协作和 Engineering 架构正文；明确 `sourceThreadId`、`targetThreadId`、`returnThreadId` 分离、一次回传、长任务 ACK 与禁止轮询；将迭代与发布规则收敛为产品版本闭环；保留产品总案和内容/Ops 独立合同。
+- 不做：不修改 v0.24.18 tag、产品 UI/IA/schema、内容、上游事实、产品总案、内容运营合同或 publish 业务逻辑；不创建并行 task、branch、worktree 或 automation。
+
 ## v0.24.18 — 无状态产品工程迭代闭环
 
 - 状态：本版本采用 current→Engineering→local commit/tag→history→验收→publish 的无状态闭环；未 push、publish、部署或公网验收。
