@@ -66,7 +66,7 @@
 
 `publish-xingbuild.command` 只发布已完成产品/视觉验收的现有产品 local commit/tag；不自动递增版本、不修改版本记录、不 commit/tag。`publish-content.command`、`publish-article.command` 和 `publish-practice.command` 属于独立内容运营入口，使用内容发布身份，不创建或更新产品版本。内容独立发布能力完成前，内容 task 只能完成审核、确认和预览，不得绕过工程实现上线。入口授权和故障边界见 [内容运营与发布规则](operations/内容运营与发布规则.md) 与 [迭代与发布规则](rules/iteration-and-release.md)。
 
-内容发布先执行 `content:prepare`、`content:build`，在 ignored `.content-workspace/releases/` 形成独立发布包；transport 入口只消费该包，不读取产品 HEAD/tag 或产品 closeout/preflight。
+内容发布先执行 `content:prepare`、`content:build`，显式选择含实际 source bundle/sourceDirectory/hash 的 immutable `baseSiteArtifact`，从 ignored `.content-workspace/content` 叠加完整独立内容快照，在 ignored `.content-workspace/releases/` 形成发布包；transport 入口只消费该包，不读取产品 HEAD/tag 或产品 closeout/preflight。
 
 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 仅在产品方案变更后、local commit 前显式运行并将生成物一并提交。
 

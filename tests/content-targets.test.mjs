@@ -19,7 +19,7 @@ import {
 } from "../scripts/lib/content-targets.mjs";
 
 const root = new URL("../", import.meta.url).pathname;
-const targetId = "products.robotaxi.module.current-simulation.action.href";
+const targetId = "products.robotaxi.module.robotaxi-operations-current-simulation.action.href";
 
 test("registry integrity fixes Robotaxi targets to safe product fields and routes", async () => {
   const registry = await readContentTargetRegistry({ rootDirectory: root });
@@ -36,26 +36,28 @@ test("registry integrity fixes Robotaxi targets to safe product fields and route
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], editable: false }] }), /Robotaxi product target contract/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], projectionRoutes: ["/wrong"] }] }), /Robotaxi product target contract/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
-  for (const target of registry.targets.filter((entry) => entry.kind === "media-content")) {
+  const mediaTemplates = registry.templates.filter((entry) => entry.kind === "media-content");
+  assert.ok(mediaTemplates.length > 0);
+  for (const target of mediaTemplates) {
     assert.equal(target.scope, "field");
     assert.equal(target.valueType, "string");
     assert.equal(target.editable, true);
     assert.deepEqual(target.projectionRoutes, ["/products"]);
-    assert.match(target.sourcePath, /^content\/(media\/robotaxi\/manifest|products\/robotaxi)\.json$/);
   }
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, { ...registry.targets.find((entry) => entry.kind === "media-content"), targetId: "media.robotaxi.asset.invalid-source.type", fieldPath: "assets[id=invalid-source].type", sourcePath: "content/media/other/manifest.json" }] }), /Robotaxi media target contract/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, { ...registry.targets.find((entry) => entry.kind === "media-content"), targetId: "media.robotaxi.asset.unknown.type", fieldPath: "assets[id=unknown].type", valueType: "object" }] }), /duplicate targetId|Robotaxi media target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, templates: [...registry.templates, { ...mediaTemplates[0], sourcePathTemplate: "content/media/other/manifest.json" }] }), /Robotaxi media template contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, templates: [...registry.templates, { ...mediaTemplates[0], valueType: "object" }] }), /template contract/);
 });
 
 test("registry exposes unified media type and empty-binding targets without guessing", async () => {
   const registry = await readContentTargetRegistry({ rootDirectory: root });
-  const typeTarget = registry.targets.find((entry) => entry.targetId.endsWith("asset.robotaxi-evidence-grid-simulation-operations-map-v1.type"));
-  const bindingTarget = registry.targets.find((entry) => entry.targetId === "media.robotaxi.module.current-simulation.mediaId");
+  const { resolveContentTarget } = await import("../scripts/lib/content-targets.mjs");
+  const typeTarget = await resolveContentTarget("media.robotaxi.asset.robotaxi-evidence-grid-simulation-operations-map-v1.type", { rootDirectory: root });
+  const bindingTarget = await resolveContentTarget("media.robotaxi.module.robotaxi-operations-current-simulation.mediaId", { rootDirectory: root });
   assert.equal(typeTarget.constraints.enum.join(","), "image,video");
   assert.equal(bindingTarget.fieldPath, "modules[id=robotaxi-operations-current-simulation].mediaId");
   const card = await createContentTargetCard(typeTarget.targetId, { rootDirectory: root });
-  assert.equal(card.current, "image");
-  assert.equal(card.beforeHash, hashValue("image"));
+  assert.equal(card.current, null);
+  assert.equal(card.beforeHash, hashValue(null));
 });
 
 test("content:target emits one locating card and writes an ignored ChangeSet", async () => {
@@ -79,7 +81,7 @@ test("content:target emits one locating card and writes an ignored ChangeSet", a
 });
 
 test("registry resolves Robotaxi fields and creates an ignored ChangeSet", async () => {
-  const source = JSON.parse(await readFile(`${root}/content/products/robotaxi.json`, "utf8"));
+  const source = JSON.parse(await readFile(`${root}/.content-workspace/content/products/robotaxi.json`, "utf8"));
   const before = readFieldValue(source, "modules[id=robotaxi-operations-current-simulation].action.href");
   const changeSet = await createContentChangeSet({
     targetId,
@@ -105,12 +107,12 @@ test("registry resolves Robotaxi fields and creates an ignored ChangeSet", async
 });
 
 test("ChangeSet overlays one field without replacing module order or other content", async () => {
-  const source = JSON.parse(await readFile(`${root}/content/products/robotaxi.json`, "utf8"));
+  const source = JSON.parse(await readFile(`${root}/.content-workspace/content/products/robotaxi.json`, "utf8"));
   const fieldPath = "modules[id=robotaxi-operations-current-simulation].shortDescription";
   const before = readFieldValue(source, fieldPath);
   const changeSet = {
     changeId: "test-single-field",
-    targetId: "products.robotaxi.module.current-simulation.shortDescription",
+    targetId: "products.robotaxi.module.robotaxi-operations-current-simulation.shortDescription",
     scope: "field",
     sourcePath: "content/products/robotaxi.json",
     fieldPath,
@@ -153,25 +155,25 @@ test("content capability construction remains separated from daily content use",
 
 test("Practice prepare consumes a ChangeSet in staging and keeps canonical content untouched", async () => {
   const fixtureRoot = await mkdtemp(path.join("/tmp", "xingbuild-content-targets-"));
-  const sourceFile = path.join(fixtureRoot, "content/products/robotaxi.json");
+  const sourceFile = path.join(fixtureRoot, ".content-workspace/content/products/robotaxi.json");
   const source = { id: "robotaxi", route: "/products", navLabel: "Robotaxi", title: "标题", intro: "简介", boundary: "边界", modules: [{ id: "robotaxi-operations-current-simulation", group: "运营中控台", label: "模块", shortDescription: "说明", loopRelation: "运营中控台", mediaId: "robotaxi-media", action: { href: "https://robotaxi.xingbuild.top/" } }] };
   const registry = await readFile(`${root}/content/registry/content-targets.json`, "utf8");
   const mediaHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   const manifest = { id: "robotaxi-approved-media", version: "v1", directory: "/media/robotaxi", reviewStatus: "approved", publicStatus: "public", approvalRecord: { approvalId: "approval", approvalStatus: "approved", authority: "user", approvedAt: "2026-08-01", scope: "test" }, currentPublication: { status: "active", effectiveAt: "2026-08-01", authority: "user", reason: "test" }, provenance: { repository: "Robotaxi", manifestPath: "manifest.json", version: "v1", commit: "abcdef0", sourceDraftManifestSha256: "a".repeat(64) }, assets: [{ id: "robotaxi-media", type: "image", src: "/media/robotaxi/approved.png", altZh: "已批准媒体", ratio: "16:10", assetSha256: mediaHash, reviewStatus: "approved", publicStatus: "public", provenance: { mediaRole: "current_system_evidence", stateBoundary: "测试边界", robotaxiVersion: "v1", commit: "abcdef0", approvalStatus: "approved" } }] };
   await mkdir(path.join(fixtureRoot, "content/registry"), { recursive: true });
   await mkdir(path.dirname(sourceFile), { recursive: true });
-  await mkdir(path.join(fixtureRoot, "content/media/robotaxi"), { recursive: true });
+  await mkdir(path.join(fixtureRoot, ".content-workspace/content/media/robotaxi"), { recursive: true });
   await mkdir(path.join(fixtureRoot, "public/media/robotaxi"), { recursive: true });
   await mkdir(path.join(fixtureRoot, "dist/client"), { recursive: true });
   await writeFile(path.join(fixtureRoot, "content/registry/content-targets.json"), registry);
   await writeFile(sourceFile, `${JSON.stringify(source, null, 2)}\n`);
-  await writeFile(path.join(fixtureRoot, "content/media/robotaxi/manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(path.join(fixtureRoot, ".content-workspace/content/media/robotaxi/manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   await writeFile(path.join(fixtureRoot, "public/media/robotaxi/approved.png"), Buffer.alloc(0));
   await writeFile(path.join(fixtureRoot, "dist/client/release.json"), JSON.stringify({ version: "v0.24.19", commit: "1d93c6f3124ce9fb53b9e61c577d6a6ffd208832" }));
   const fieldPath = "modules[id=robotaxi-operations-current-simulation].label";
   const before = readFieldValue(source, fieldPath);
   const changeSet = await createContentChangeSet({
-    targetId: "products.robotaxi.module.current-simulation.label",
+    targetId: "products.robotaxi.module.robotaxi-operations-current-simulation.label",
     after: `${before}（定位测试）`,
     sourceRefs: ["robotaxi:test-source"],
     boundary: "仅验证 Practice 字段级 staging overlay。",
@@ -183,8 +185,9 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
   let prepared;
   let rollbackPrepared;
   let rollbackWritten;
+  const baseSiteArtifact = JSON.parse(await readFile(path.join(root, "dist/client/base-site-artifact.json"), "utf8"));
   try {
-    prepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: written.file, sourceRoot: fixtureRoot });
+    prepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: written.file, baseSiteArtifact, sourceRoot: fixtureRoot });
     const staged = JSON.parse(await readFile(prepared.sourceFile, "utf8"));
     assert.equal(readFieldValue(staged, fieldPath), changeSet.after);
     assert.equal(readFieldValue(JSON.parse(await readFile(sourceFile, "utf8")), fieldPath), before);
@@ -195,7 +198,7 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
     assert.equal(linked.releasePackage, prepared.releasePackage);
     rollbackWritten = await createRollbackChangeSet(written.file, { rootDirectory: fixtureRoot });
     assert.equal(rollbackWritten.rollbackOf.contentReleaseId, prepared.contentReleaseId);
-    rollbackPrepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, sourceRoot: fixtureRoot });
+    rollbackPrepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, baseSiteArtifact, sourceRoot: fixtureRoot });
     const recovered = JSON.parse(await readFile(rollbackPrepared.sourceFile, "utf8"));
     assert.equal(readFieldValue(recovered, fieldPath), before);
     assert.equal(rollbackPrepared.rollbackOf.changeId, changeSet.changeId);
@@ -203,7 +206,7 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
     drifted.modules[0].label = "canonical 漂移";
     await writeFile(sourceFile, `${JSON.stringify(drifted, null, 2)}\n`);
     await assert.rejects(
-      prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, sourceRoot: fixtureRoot }),
+      prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, baseSiteArtifact, sourceRoot: fixtureRoot }),
       /rollback canonical baseline drift/,
     );
     assert.equal(readFieldValue(JSON.parse(await readFile(sourceFile, "utf8")), fieldPath), "canonical 漂移");

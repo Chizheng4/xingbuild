@@ -1,4 +1,10 @@
 
+## v0.24.24 — 内容源与不可变产品基座解耦
+
+- 状态：本版本实现实际 source bundle 基座、独立内容根与稳定能力模板；待本地 commit/tag/clean 后产品/视觉验收，未 push、publish、部署或公网验收。
+- 范围：内容 staging 只从显式 immutable `baseSiteArtifact` 叠加独立内容快照；日常内容/媒体不再作为产品 Git 输入；registry 不枚举当前 asset/module ID。
+- 不做：不改 UI、IA、schema、路由、页面结构、视觉系统、上游事实、产品 publish 逻辑或 v0.24.23 tag；不创建 branch/worktree/task/automation。
+
 ## v0.24.23 — 统一媒体合同与独立内容基座
 
 - 状态：本版本实现 image/video MediaAsset、空媒体模块、媒体字段级 ChangeSet/recovery 与 immutable `baseSiteArtifact` 内容发布基座；待本地 commit/tag/clean 后产品/视觉验收，未 push、publish、部署或公网验收。

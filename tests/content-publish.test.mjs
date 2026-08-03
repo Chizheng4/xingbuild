@@ -12,13 +12,15 @@ import { publish } from "../scripts/unified-publish.mjs";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname);
 const target = "enterprise-operating-system";
+const artifactPath = path.join(root, "dist", "client", "base-site-artifact.json");
+const preparedArtifact = JSON.parse(await readFile(artifactPath, "utf8"));
 
 async function pathExists(file) {
   try { await access(file); return true; } catch { return false; }
 }
 
 test("content preparation creates an independent identity without product release files", async () => {
-  const prepared = await prepareContentRelease({ kind: "article", target, sourceRoot: root });
+  const prepared = await prepareContentRelease({ kind: "article", target, baseSiteArtifact: preparedArtifact, sourceRoot: root });
   try {
     assert.match(prepared.contentReleaseId, /^article-enterprise-operating-system-[a-f0-9]{16}$/);
     assert.equal(prepared.baseProductVersion.startsWith("v"), true);
@@ -36,7 +38,7 @@ test("content preparation creates an independent identity without product releas
   }
 });
 
-test("content baseSiteArtifact is explicit, immutable and independently hashed", () => {
+test("content baseSiteArtifact requires an explicit immutable source bundle", () => {
   const artifact = {
     baseSiteArtifactId: "site-v0.21.0-abc123",
     productVersion: "v0.21.0",
@@ -45,19 +47,12 @@ test("content baseSiteArtifact is explicit, immutable and independently hashed",
     artifactContentHash: hashArtifactValue({ files: ["dist/client/index.html"] }),
     sourceDeploymentId: "prepared-site-001",
   };
-  assert.equal(validateBaseSiteArtifact(artifact), artifact);
-  assert.throws(() => validateBaseSiteArtifact({ ...artifact, releaseManifestHash: "not-a-hash" }), /SHA-256/);
+  assert.throws(() => validateBaseSiteArtifact(artifact), /sourceDirectory/);
+  assert.throws(() => validateBaseSiteArtifact({ ...artifact, sourceDirectory: "/tmp/source", sourceBundle: [], sourceBundleHash: "a".repeat(64) }), /sourceBundle/);
 });
 
 test("content preparation accepts an explicit baseSiteArtifact without reading product release identity", async () => {
-  const artifact = {
-    baseSiteArtifactId: "site-v0.24.22-fixed",
-    productVersion: "v0.24.22",
-    productCommit: "97d095ca5d9c5e6a6cbe92940b188af58f298c80",
-    releaseManifestHash: "a".repeat(64),
-    artifactContentHash: "b".repeat(64),
-    sourceDeploymentId: "prepared-dist-v0.24.22",
-  };
+  const artifact = preparedArtifact;
   const prepared = await prepareContentRelease({ kind: "article", target, baseSiteArtifact: artifact, sourceRoot: root });
   try {
     assert.equal(prepared.baseSiteArtifactId, artifact.baseSiteArtifactId);
@@ -68,7 +63,7 @@ test("content preparation accepts an explicit baseSiteArtifact without reading p
 });
 
 test("content build uses a staging copy and emits an independent content manifest", async () => {
-  const prepared = await prepareContentRelease({ kind: "article", target, sourceRoot: root });
+  const prepared = await prepareContentRelease({ kind: "article", target, baseSiteArtifact: preparedArtifact, sourceRoot: root });
   try {
     const built = await buildContentRelease({ packageInfo: prepared, sourceRoot: root });
     const manifest = JSON.parse(await readFile(path.join(built.client, "content-manifest.json"), "utf8"));

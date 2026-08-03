@@ -41,7 +41,7 @@
 - `current.md` 只保存当前可执行产品方案；Engineering 形成 local commit/tag/clean 后一次性写 history。产品/视觉验收、publish 授权和线上状态是外部事件，不回写已打 tag 的 current/history。
 - 提交前的普通工程缺陷由 Engineering 在当前版本内修复；提交后的产品/视觉验收问题直接定义下一版本并写入 `current.md`，不修改旧版本、不重新创建普通候选。
 - 活动 candidates 只保存未确认 `pending`/`DRAFT`；候选纳入正式设计方案或关闭时，必须移入 `docs/iterations/history/candidates/`，不能长期保留 `confirmed`。
-- 内容 draft/review/recovery、Ops 运行记录和内容发布包只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。
+- 内容正文/媒体默认位于被忽略 `.content-workspace/content`；draft/review/recovery、Ops 运行记录和内容发布包只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。内容构建必须显式消费含 source bundle/hash 的 immutable `baseSiteArtifact`。
 - 产品 publish 只消费已完成产品/视觉验收的现有 clean HEAD/tag 和预生成 `dist/client`；不得自动递增版本、回写版本文件、commit、tag、修复脏改或运行网站业务逻辑。
 - 生成器只在源/方案变化后显式运行并把生成物纳入同一 local commit；构建后的 tracked dirty、身份不一致或产物缺失必须停止。
 - EdgeOne 生产目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`；目标合同变化必须形成明确治理版本并同步验证，禁止环境变量静默覆盖。

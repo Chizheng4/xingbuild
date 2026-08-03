@@ -20,11 +20,11 @@ const requiredFiles = [
   "src/content/sourceUrls.js",
   "src/lib/visitQualification.js",
   "content/schema/observation.schema.json",
-  "content/products/robotaxi.json",
-  "content/business-observations/enterprise-operating-framework.json",
-  "content/articles/enterprise-operating-system.json",
-  "content/profile/about.json",
-  "content/media/robotaxi/manifest.json",
+  ".content-workspace/content/products/robotaxi.json",
+  ".content-workspace/content/business-observations/enterprise-operating-framework.json",
+  ".content-workspace/content/articles/enterprise-operating-system.json",
+  ".content-workspace/content/profile/about.json",
+  ".content-workspace/content/media/robotaxi/manifest.json",
   "src/styles.css",
   "src/styles/tokens.css",
   "src/styles/foundations.css",
@@ -70,6 +70,7 @@ const requiredFiles = [
   "scripts/lib/unified-release.mjs",
   "scripts/lib/content-release-lease.mjs",
   "scripts/lib/content-targets.mjs",
+  "scripts/lib/content-root.mjs",
   "scripts/lib/base-site-artifact.mjs",
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
@@ -139,15 +140,15 @@ assert(
 );
 const showcaseRepository = await readFile(new URL("../src/content/showcaseRepository.js", import.meta.url), "utf8");
 const profileRepository = await readFile(new URL("../src/content/profileRepository.js", import.meta.url), "utf8");
-assert(showcaseRepository.includes("content/products/robotaxi.json"), "Robotaxi must use the controlled product content source");
-assert(showcaseRepository.includes("content/business-observations/enterprise-operating-framework.json"), "framework must use the controlled business-observation source");
-assert(profileRepository.includes("content/profile/about.json"), "profile must use the controlled profile content source");
+assert(showcaseRepository.includes(".content-workspace/content/products/robotaxi.json"), "Robotaxi must use the independent product content source");
+assert(showcaseRepository.includes(".content-workspace/content/business-observations/enterprise-operating-framework.json"), "framework must use the independent business-observation source");
+assert(profileRepository.includes(".content-workspace/content/profile/about.json"), "profile must use the independent profile content source");
 assert(!siteContent.includes("export const observations"), "observations must not be inlined in site content");
 assert(!siteContent.includes("export const practices"), "practices must use the controlled content repository");
 assert(observationRepository.includes("import.meta.glob"), "published observations must use the repository");
-assert(practiceRepository.includes("content/products/robotaxi.json"), "practice content must use the repository");
+assert(practiceRepository.includes(".content-workspace/content/products/robotaxi.json"), "practice content must use the repository");
 const evergreenRepository = await readFile(new URL("../src/content/evergreenArticleRepository.js", import.meta.url), "utf8");
-assert(evergreenRepository.includes("content/articles/enterprise-operating-system.json"), "framework article must use the evergreen content source");
+assert(evergreenRepository.includes(".content-workspace/content/articles/enterprise-operating-system.json"), "framework article must use the evergreen content source");
 const pageDefinitions = await readFile(new URL("../src/content/pageDefinitions.js", import.meta.url), "utf8");
 const compositionRenderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
 assert(pageDefinitions.includes("pageDefinitionRegistry"), "page definitions must expose a controlled registry");

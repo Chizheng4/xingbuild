@@ -86,7 +86,7 @@ transport 顺序固定：
 
 ## 7. 内容运营边界
 
-内容 Observation、Article、Practice 和不改变页面能力的 B 端产品内容不进入产品版本；它们使用独立 `contentReleaseId`、immutable `baseSiteArtifact`、ignored `.content-workspace/` 和独立 transport。内容 task 不读取当前产品 HEAD/tag、`current.md`、closeout/preflight 作为内容门禁，也不创建产品 commit/tag；详细阶段、日志和基座字段以内容运营规则为准。
+内容 Observation、Article、Practice 和不改变页面能力的 B 端产品内容不进入产品版本；它们使用独立 `contentReleaseId`、包含实际 source bundle/sourceDirectory/hash 的 immutable `baseSiteArtifact`、ignored `.content-workspace/` 和独立 transport。内容 task 不读取当前产品 HEAD/tag、`current.md`、closeout/preflight 作为内容门禁，也不从当前 dist 隐式选基座、不创建产品 commit/tag；详细阶段、日志和基座字段以内容运营规则为准。
 
 详细内容准备、审核、构建、发布、失败保留 draft/review/recovery 和公网内容验收只以 [`docs/operations/内容运营与发布规则.md`](../operations/内容运营与发布规则.md) 为准。经营观察定时/按需采集只以 [`docs/operations/经营观察信息源与覆盖合同.md`](../operations/经营观察信息源与覆盖合同.md) 为准；内容 task 不得创建、复制或替代 scheduler。
 

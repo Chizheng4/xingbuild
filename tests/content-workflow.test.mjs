@@ -552,8 +552,8 @@ test("content deployment hard-fails when remote main moves after verification", 
 test("approved target media requires scoped files and matching SHA-256", async () => {
   const contentRoot = await mkdtemp(path.join(os.tmpdir(), "xingbuild-content-media-"));
   const slug = "new-item";
-  const publicDirectory = path.join(contentRoot, "public", "media", slug);
-  const manifestDirectory = path.join(contentRoot, "content", "media", slug);
+  const publicDirectory = path.join(contentRoot, ".content-workspace", "content", "media", slug);
+  const manifestDirectory = path.join(contentRoot, ".content-workspace", "content", "media", slug);
   await mkdir(publicDirectory, { recursive: true });
   await mkdir(manifestDirectory, { recursive: true });
   const publicFile = path.join(publicDirectory, "figure.png");
@@ -661,7 +661,7 @@ test("production source and bundle contracts exclude local drafts", async () => 
   const gitignore = await readFile(path.join(root, ".gitignore"), "utf8");
   const prepareBuild = await readFile(path.join(root, "scripts", "prepare-sites-build.mjs"), "utf8");
   assert.match(repository, /content\/observations\/\*\.json/);
-  assert.doesNotMatch(repository, /\.content-workspace/);
+  assert.match(repository, /\.content-workspace\/content\/observations/);
   assert.match(vite, /apply: "serve"/);
   assert.match(gitignore, /\.content-workspace\//);
   assert.match(prepareBuild, /Production build contains workspace path/);

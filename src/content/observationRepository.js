@@ -5,7 +5,7 @@ import {
 } from "./observationQueries.js";
 import { projectObservationBrief } from "./briefProjection.js";
 
-const modules = import.meta.glob("../../content/observations/*.json", {
+const modules = import.meta.glob("../../.content-workspace/content/observations/*.json", {
   eager: true,
   import: "default",
 });

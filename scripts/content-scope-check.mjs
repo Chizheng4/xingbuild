@@ -10,6 +10,7 @@ import {
   readPublishedObservations,
   validateObservation,
 } from "./lib/observation-content.mjs";
+import { contentRootDirectory } from "./lib/content-root.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -25,7 +26,7 @@ export function validateContentScope(files, { slug } = {}) {
 
 export async function validateApprovedMedia(manifestPath, { files, slug, rootDirectory = root }) {
   if (!manifestPath) return [];
-  const manifest = await readJson(path.join(rootDirectory, manifestPath));
+  const manifest = await readJson(path.join(contentRootDirectory({ sourceRoot: rootDirectory }), manifestPath.slice("content/".length)));
   const errors = [];
   if (manifest.reviewStatus !== "approved") errors.push("target media manifest reviewStatus must be approved");
   if (manifest.publicStatus !== "public") errors.push("target media manifest publicStatus must be public");
@@ -52,12 +53,18 @@ export async function validateApprovedMedia(manifestPath, { files, slug, rootDir
       continue;
     }
     try {
-      if (await hashFile(path.join(rootDirectory, publicFile)) !== asset.assetSha256) errors.push(`media asset ${label} SHA-256 mismatch`);
+      const independentFile = path.join(contentRootDirectory({ sourceRoot: rootDirectory }), "media", asset.src.slice("/media/".length));
+      const file = await pathExists(independentFile) ? independentFile : path.join(rootDirectory, publicFile);
+      if (await hashFile(file) !== asset.assetSha256) errors.push(`media asset ${label} SHA-256 mismatch`);
     } catch {
       errors.push(`media asset ${label} file is missing: ${publicFile}`);
     }
   }
   return errors;
+}
+
+async function pathExists(file) {
+  try { await import("node:fs/promises").then(({ access }) => access(file)); return true; } catch { return false; }
 }
 
 async function main() {

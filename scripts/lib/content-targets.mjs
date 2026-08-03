@@ -2,11 +2,12 @@ import { createHash } from "node:crypto";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
+import { contentRootDirectory } from "./content-root.mjs";
 
 export const contentTargetsPath = "content/registry/content-targets.json";
 export const changesDirectory = ".content-workspace/changes";
 const targetIdPattern = /^products\.robotaxi\.(title|intro|boundary|module\.[a-z0-9-]+\.(label|shortDescription|loopRelation|action\.href))$/;
-const mediaTargetIdPattern = /^media\.robotaxi\.(asset\.[a-z0-9-]+\.(type|src|archivePath|altZh|ratio|assetSha256)|module\.[a-z0-9-]+\.mediaId)$/;
+const mediaTargetIdPattern = /^media\.robotaxi\.(asset\.[a-z0-9-]+\.(type|src|ratio)|module\.[a-z0-9-]+\.mediaId)$/;
 
 function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -39,22 +40,9 @@ export function validateContentTargetRegistry(registry) {
     if (!hasText(target?.targetId) || ids.has(target.targetId)) throw new Error(`content target registry has duplicate targetId: ${target?.targetId || "missing"}`);
     ids.add(target.targetId);
     if (target.scope !== "field" || !safeRelativePath(target.sourcePath, { allowSrc: false })) throw new Error(`content target registry has unsafe target source: ${target.targetId}`);
-    if (target.kind === "product-content") {
+    if (target.kind === "product-content" && target.targetId.startsWith("products.robotaxi.")) {
       if (target.editable !== true || target.scope !== "field" || target.valueType !== "string" || target.sourcePath !== "content/products/robotaxi.json" || JSON.stringify(target.projectionRoutes) !== JSON.stringify(["/products"]) || !targetIdPattern.test(target.targetId || "")) {
         throw new Error(`Robotaxi product target contract is invalid: ${target.targetId}`);
-      }
-    }
-    if (target.kind === "media-content") {
-      const validSource = target.sourcePath === "content/media/robotaxi/manifest.json" || target.sourcePath === "content/products/robotaxi.json";
-      const assetMatch = /^media\.robotaxi\.asset\.([a-z0-9-]+)\.(type|src|archivePath|altZh|ratio|assetSha256)$/.exec(target.targetId || "");
-      const moduleMatch = /^media\.robotaxi\.module\.([a-z0-9-]+)\.mediaId$/.exec(target.targetId || "");
-      const fieldMatchesIdentity = assetMatch
-        ? target.sourcePath === "content/media/robotaxi/manifest.json" && target.fieldPath === `assets[id=${assetMatch[1]}].${assetMatch[2]}`
-        : moduleMatch
-          ? target.sourcePath === "content/products/robotaxi.json" && new RegExp(`^modules\\[id=[a-z0-9-]*-${moduleMatch[1]}\\]\\.mediaId$`).test(target.fieldPath)
-          : false;
-      if (target.editable !== true || target.scope !== "field" || target.valueType !== "string" || !validSource || JSON.stringify(target.projectionRoutes) !== JSON.stringify(["/products"]) || !mediaTargetIdPattern.test(target.targetId || "") || !fieldMatchesIdentity) {
-        throw new Error(`Robotaxi media target contract is invalid: ${target.targetId}`);
       }
     }
     parseFieldPath(target.fieldPath);
@@ -64,7 +52,10 @@ export function validateContentTargetRegistry(registry) {
   }
   for (const template of registry.templates) {
     if (!safeRelativePath(template?.sourcePathTemplate, { allowSrc: false })) throw new Error("content target registry has unsafe template source");
-    parseFieldPath(template.fieldPath);
+    if (!hasText(template.targetIdPattern) || !hasText(template.fieldPathTemplate || template.fieldPath) || template.scope !== "field" || template.editable !== true || template.valueType !== "string") throw new Error("content target registry template contract is invalid");
+    if (template.kind === "product-content" && !template.targetIdPattern.startsWith("products.robotaxi.module.")) throw new Error("Robotaxi product template contract is invalid");
+    if (template.kind === "media-content" && (!template.targetIdPattern.startsWith("media.robotaxi.") || !["content/media/robotaxi/manifest.json", "content/products/robotaxi.json"].includes(template.sourcePathTemplate))) throw new Error("Robotaxi media template contract is invalid");
+    parseFieldPath(String(template.fieldPathTemplate || template.fieldPath).replace(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g, "sample-id"));
   }
   for (const excluded of registry.excluded) {
     if (excluded.sourcePath && !safeRelativePath(excluded.sourcePath)) throw new Error("content target registry has unsafe excluded source");
@@ -80,6 +71,15 @@ async function exists(file) {
   try { await access(file); return true; } catch { return false; }
 }
 
+export function resolveContentSourceFile(sourcePath, { rootDirectory = projectRoot } = {}) {
+  if (typeof sourcePath !== "string") throw new Error("content sourcePath is required");
+  const normalized = path.posix.normalize(sourcePath);
+  if (normalized.startsWith("content/") && !normalized.startsWith("content/registry/")) {
+    return path.join(contentRootDirectory({ sourceRoot: rootDirectory }), normalized.slice("content/".length));
+  }
+  return path.join(rootDirectory, normalized);
+}
+
 export async function readContentTargetRegistry({ rootDirectory = projectRoot } = {}) {
   const file = path.join(rootDirectory, contentTargetsPath);
   return validateContentTargetRegistry(JSON.parse(await readFile(file, "utf8")));
@@ -91,12 +91,23 @@ function targetAllowed(target) {
       || (target?.kind === "media-content" && mediaTargetIdPattern.test(target.targetId || "")));
 }
 
+function instantiateTemplate(template, targetId) {
+  const names = [...String(template.targetIdPattern).matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g)].map((match) => match[1]);
+  const pattern = new RegExp(`^${String(template.targetIdPattern).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\{[a-zA-Z][a-zA-Z0-9_]*\\\}/g, "([a-z0-9-]+)")}$`);
+  const match = pattern.exec(targetId);
+  if (!match) return null;
+  const values = Object.fromEntries(names.map((name, index) => [name, match[index + 1]]));
+  const replace = (value) => String(value).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (_, name) => values[name]);
+  return { ...template, targetId, sourcePath: replace(template.sourcePathTemplate), fieldPath: replace(template.fieldPathTemplate || template.fieldPath), projectionRoutes: (template.projectionRoutes || []).map(replace) };
+}
+
 export async function resolveContentTarget(targetId, { rootDirectory = projectRoot } = {}) {
   if (!hasText(targetId)) throw new Error("content targetId is required");
   const registry = await readContentTargetRegistry({ rootDirectory });
-  const target = (registry.targets || []).find((entry) => entry.targetId === targetId);
+  const target = (registry.targets || []).find((entry) => entry.targetId === targetId)
+    || (registry.templates || []).map((entry) => instantiateTemplate(entry, targetId)).find(Boolean);
   if (!target) throw new Error(`content target is not registered: ${targetId}`);
-  if (!targetAllowed(target)) throw new Error(`content target is outside the approved Robotaxi field scope: ${targetId}`);
+  if (!target.editable || target.scope !== "field" || !["product-content", "media-content", "observation", "article", "profile"].includes(target.kind)) throw new Error(`content target is outside the approved field scope: ${targetId}`);
   if (target.sourcePath.startsWith("src/") || target.fieldPath.includes("[") && !target.fieldPath.includes("[id=")) {
     throw new Error(`content target has an unsafe source or field path: ${targetId}`);
   }
@@ -105,9 +116,13 @@ export async function resolveContentTarget(targetId, { rootDirectory = projectRo
 
 export async function createContentTargetCard(targetId, { rootDirectory = projectRoot } = {}) {
   const target = await resolveContentTarget(targetId, { rootDirectory });
-  const document = JSON.parse(await readFile(path.join(rootDirectory, target.sourcePath), "utf8"));
-  const current = readFieldValue(document, target.fieldPath);
-  if (typeof current !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
+  const document = JSON.parse(await readFile(resolveContentSourceFile(target.sourcePath, { rootDirectory }), "utf8"));
+  let current;
+  try { current = readFieldValue(document, target.fieldPath); } catch (error) {
+    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) current = null;
+    else throw error;
+  }
+  if (current !== null && typeof current !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
   return {
     targetId: target.targetId,
     scope: target.scope,
@@ -160,8 +175,12 @@ export function writeFieldValue(document, fieldPath, value) {
     const part = parts[index];
     if (part && typeof part === "object" && "id" in part) {
       if (!Array.isArray(cursor)) throw new Error(`fieldPath selector is not applied to an array: ${fieldPath}`);
-      const next = cursor.find((entry) => entry?.id === part.id);
-      if (!next) throw new Error(`fieldPath selector does not resolve: ${fieldPath}`);
+      let next = cursor.find((entry) => entry?.id === part.id);
+      if (!next) {
+        if (!String(fieldPath).startsWith("assets[id=")) throw new Error(`fieldPath selector does not resolve: ${fieldPath}`);
+        next = { id: part.id };
+        cursor.push(next);
+      }
       cursor = next;
     } else {
       cursor = cursor?.[part];
@@ -176,6 +195,7 @@ export function writeFieldValue(document, fieldPath, value) {
 }
 
 function validateAfter(target, after) {
+  if (after === null && target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) return;
   if (typeof after !== "string") throw new Error("ChangeSet after must be a string field value");
   const constraints = target.constraints || {};
   if (constraints.nonEmpty && !hasText(after)) throw new Error(`${target.targetId} after must be non-empty`);
@@ -205,10 +225,14 @@ export async function createContentChangeSet({
   if (!hasText(boundary)) throw new Error("ChangeSet boundary is required");
   if (!hasText(authority)) throw new Error("ChangeSet authority is required");
   validateAfter(target, after);
-  const sourceFile = path.join(rootDirectory, target.sourcePath);
+  const sourceFile = resolveContentSourceFile(target.sourcePath, { rootDirectory });
   const document = JSON.parse(await readFile(sourceFile, "utf8"));
-  const before = readFieldValue(document, target.fieldPath);
-  if (typeof before !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
+  let before;
+  try { before = readFieldValue(document, target.fieldPath); } catch (error) {
+    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) before = null;
+    else throw error;
+  }
+  if (before !== null && typeof before !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
   const actualBeforeHash = hashValue(before);
   if (beforeHash && beforeHash !== actualBeforeHash) throw new Error(`ChangeSet beforeHash conflict for ${targetId}`);
   const nextChangeId = changeId || `change-${targetId.replace(/[^a-zA-Z0-9-]/g, "-")}-${hashValue(after).slice(0, 16)}`;
@@ -352,7 +376,34 @@ export async function readContentChangeSet(changeSetPath, { rootDirectory = proj
 
 export function applyContentChangeSet(document, changeSet) {
   const target = changeSet.target || changeSet;
-  const before = readFieldValue(document, target.fieldPath);
+  let before;
+  try { before = readFieldValue(document, target.fieldPath); } catch (error) {
+    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) before = null;
+    else throw error;
+  }
   if (hashValue(before) !== changeSet.beforeHash) throw new Error(`ChangeSet beforeHash conflict for ${changeSet.targetId}`);
+  if (changeSet.after === null && target.fieldPath.startsWith("assets[id=")) return removeFieldValue(document, target.fieldPath);
   return writeFieldValue(document, target.fieldPath, changeSet.after);
+}
+
+export function removeFieldValue(document, fieldPath) {
+  const parts = parseFieldPath(fieldPath);
+  const result = structuredClone(document);
+  let cursor = result;
+  let selectedArray = null;
+  let selectedIndex = -1;
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    const part = parts[index];
+    if (part && typeof part === "object" && "id" in part) {
+      if (!Array.isArray(cursor)) throw new Error(`fieldPath selector is not applied to an array: ${fieldPath}`);
+      selectedArray = cursor;
+      selectedIndex = cursor.findIndex((entry) => entry?.id === part.id);
+      if (selectedIndex < 0) return result;
+      cursor = cursor[selectedIndex];
+    } else cursor = cursor?.[part];
+  }
+  const last = parts.at(-1);
+  if (cursor && typeof cursor === "object" && !Array.isArray(cursor)) delete cursor[last];
+  if (selectedArray && selectedIndex >= 0 && Object.keys(selectedArray[selectedIndex]).length === 1 && Object.prototype.hasOwnProperty.call(selectedArray[selectedIndex], "id")) selectedArray.splice(selectedIndex, 1);
+  return result;
 }

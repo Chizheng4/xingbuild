@@ -1,5 +1,5 @@
-import robotaxiPractice from "../../content/products/robotaxi.json" with { type: "json" };
-import robotaxiMediaManifest from "../../content/media/robotaxi/manifest.json" with { type: "json" };
+import robotaxiPractice from "../../.content-workspace/content/products/robotaxi.json" with { type: "json" };
+import robotaxiMediaManifest from "../../.content-workspace/content/media/robotaxi/manifest.json" with { type: "json" };
 import { isPublicPracticeMedia } from "./practiceMediaLifecycle.js";
 
 export function projectPractice(practice, manifest) {

@@ -1,4 +1,4 @@
-import enterpriseOperatingSystem from "../../content/articles/enterprise-operating-system.json" with { type: "json" };
+import enterpriseOperatingSystem from "../../.content-workspace/content/articles/enterprise-operating-system.json" with { type: "json" };
 
 export const evergreenArticles = [enterpriseOperatingSystem];
 

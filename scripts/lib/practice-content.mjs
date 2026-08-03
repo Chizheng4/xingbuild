@@ -1,7 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { projectRoot } from "./observation-content.mjs";
+import { contentRootDirectory } from "./content-root.mjs";
 import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.js";
 
 
@@ -21,6 +22,10 @@ export const supportedPracticeIds = new Set(["robotaxi"]);
 
 function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
+}
+
+async function fileExists(file) {
+  try { await access(file); return true; } catch { return false; }
 }
 
 function isObject(value) {
@@ -98,9 +103,10 @@ export function assertSupportedPracticeId(practiceId) {
 
 export function practiceContentPaths(practiceId, { rootDirectory = projectRoot } = {}) {
   assertSupportedPracticeId(practiceId);
+  const contentRoot = contentRootDirectory({ sourceRoot: rootDirectory });
   return {
-    practiceFile: path.join(rootDirectory, "content", "products", `${practiceId}.json`),
-    manifestFile: path.join(rootDirectory, "content", "media", practiceId, "manifest.json"),
+    practiceFile: path.join(contentRoot, "products", `${practiceId}.json`),
+    manifestFile: path.join(contentRoot, "media", practiceId, "manifest.json"),
     practicePath: `content/products/${practiceId}.json`,
     manifestPath: `content/media/${practiceId}/manifest.json`,
   };
@@ -321,7 +327,14 @@ export async function assertPracticeContent(practiceId, { rootDirectory = projec
     : validatePracticeBundle(practice, manifest);
   errors.push(...await validatePracticeMediaFiles(manifest, {
     practice: publishable ? practice : undefined,
-    readBytes: (location) => readFile(path.join(rootDirectory, location)),
+    readBytes: async (location) => {
+      const file = location.startsWith("content/")
+        ? path.join(contentRootDirectory({ sourceRoot: rootDirectory }), location.slice("content/".length))
+        : location.startsWith("public/media/") && await fileExists(path.join(contentRootDirectory({ sourceRoot: rootDirectory }), "media", location.slice("public/media/".length)))
+          ? path.join(contentRootDirectory({ sourceRoot: rootDirectory }), "media", location.slice("public/media/".length))
+          : path.join(rootDirectory, location);
+      return readFile(file);
+    },
   }));
   if (errors.length) throw new Error(errors.map((error) => `- ${error}`).join("\n"));
   return { practice, manifest };

@@ -3,10 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { diagramFigureAssets } from "../../src/content/diagramFigureAssets.js";
+import { contentRootDirectory } from "./content-root.mjs";
 
 export const articleSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const articleDirectory = path.join(root, "content/articles");
+const articleDirectory = path.join(contentRootDirectory({ sourceRoot: root }), "articles");
 const publicDirectory = path.join(root, "public");
 
 export async function readPublishedArticles() {

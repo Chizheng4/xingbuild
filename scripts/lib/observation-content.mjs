@@ -4,16 +4,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { classifySourceUrl } from "../../src/content/sourceUrls.js";
 import { validateBriefDefinition } from "../../src/content/briefProjection.js";
+import { contentRootDirectory } from "./content-root.mjs";
 
 export const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-const contentRoot = process.env.XINGBUILD_CONTENT_ROOT
-  ? path.resolve(process.env.XINGBUILD_CONTENT_ROOT)
-  : projectRoot;
-export const publishedDirectory = path.join(contentRoot, "content", "observations");
-export const workspaceDirectory = path.join(contentRoot, ".content-workspace");
+const contentRoot = contentRootDirectory({ sourceRoot: projectRoot });
+export const publishedDirectory = path.join(contentRoot, "observations");
+const workspaceRoot = process.env.XINGBUILD_CONTENT_ROOT ? path.resolve(process.env.XINGBUILD_CONTENT_ROOT) : projectRoot;
+export const workspaceDirectory = path.join(workspaceRoot, ".content-workspace");
 export const candidatesDirectory = path.join(workspaceDirectory, "candidates");
 export const importsDirectory = path.join(workspaceDirectory, "imports");
 export const draftsDirectory = path.join(workspaceDirectory, "drafts");

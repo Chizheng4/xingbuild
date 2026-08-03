@@ -6,28 +6,26 @@ import { countCompleteBriefs } from "../src/content/briefRail.js";
 import { selectObservationBriefs as selectBriefs } from "../src/content/observationQueries.js";
 import { findPractice, projectPractice } from "../src/content/practiceRepository.js";
 
-test("practice preserves superseded Robotaxi media records without projecting them publicly", async () => {
+test("practice projects only the approved independent Robotaxi media record", async () => {
   const { practice, manifest } = await assertCurrentPracticeContent();
   assert.equal(practice.id, "robotaxi");
-  assert.equal(manifest.reviewStatus, "superseded");
-  assert.equal(manifest.publicStatus, "internal");
-  assert.equal(manifest.currentPublication.status, "suspended");
+  assert.equal(manifest.reviewStatus, "approved");
+  assert.equal(manifest.publicStatus, "public");
+  assert.equal(manifest.currentPublication.status, "active");
   assert.equal(manifest.approvalRecord.approvalStatus, "approved");
-  assert.equal(manifest.provenance.commit, "1e01d4998f21212f4c716522fbb1f880fbee73b8");
   assert.deepEqual(practice.modules.map((module) => module.id), [
     "robotaxi-operations-current-simulation",
     "robotaxi-operations-city-spatial-progress",
     "robotaxi-operating-model",
     "robotaxi-operating-metrics-overview",
   ]);
-  assert.deepEqual(practice.modules.map((module) => module.group), ["运营中控台", "运营中控台", "经营模型", "经营总览"]);
-  assert.equal(manifest.assets.length, 4);
-  assert.ok(manifest.assets.every((asset) => asset.type === "image" && asset.ratio === "16:10"));
-  assert.ok(manifest.assets.every((asset) => asset.archivePath?.startsWith("content/media/robotaxi/archive/")));
-  assert.deepEqual(manifest.assets.map((asset) => asset.provenance.approvalStatus), ["paused", "revoked", "paused", "paused"]);
+  assert.equal(practice.modules.every((module) => module.group), true);
+  assert.equal(manifest.assets.length, 1);
+  assert.ok(manifest.assets.every((asset) => ["image", "video"].includes(asset.type) && asset.ratio));
+  assert.ok(manifest.assets.every((asset) => asset.provenance.approvalStatus === "approved"));
   assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
   assert.equal(findPractice("robotaxi").modules.length, practice.modules.length);
-  assert.ok(findPractice("robotaxi").modules.every((module) => module.media === undefined));
+  assert.equal(findPractice("robotaxi").modules.filter((module) => module.media).length, 1);
 });
 
 test("practice media keeps reader interaction separate from internal provenance", () => {

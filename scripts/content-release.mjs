@@ -21,6 +21,7 @@ import {
 import { finalizeReleasedContent } from "./lib/content-finalize.mjs";
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
 import { readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
+import { contentRootDirectory } from "./lib/content-root.mjs";
 import {
   applyContentChangeSet,
   hashValue,
@@ -67,7 +68,7 @@ function publicPath(kind, target) {
 async function readTarget({ kind, target, sourceRoot }) {
   if (!kinds.has(kind) || !slugPattern.test(target)) throw new Error("content release requires one explicit valid target");
   const relative = targetPath(kind, target);
-  const file = path.join(sourceRoot, relative);
+  const file = path.join(contentRootDirectory({ sourceRoot }), relative.slice("content/".length));
   if (!(await isFile(file))) throw new Error(`content target is missing: ${relative}`);
   const value = JSON.parse(await readFile(file, "utf8"));
   if (kind === "content") {
@@ -112,8 +113,8 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const changeSet = changeSetPath
     ? await readContentChangeSet(changeSetPath, { rootDirectory: sourceRoot })
     : null;
-  if (changeSet && (kind !== "practice" || target !== "robotaxi" || ![content.relative, "content/media/robotaxi/manifest.json"].includes(changeSet.sourcePath))) {
-    throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice or media target");
+  if (changeSet && ![content.relative, "content/media/robotaxi/manifest.json", "content/products/robotaxi.json"].includes(changeSet.sourcePath)) {
+    throw new Error("content ChangeSet source must be the explicit independent target document");
   }
   if (changeSet) {
     const targetDocument = changeSet.sourcePath === "content/media/robotaxi/manifest.json"
@@ -121,7 +122,11 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
       : content.value;
     if (!targetDocument) throw new Error("Robotaxi media ChangeSet requires the approved media manifest");
     if (changeSet.rollbackOf) {
-      const canonicalValue = readFieldValue(targetDocument, changeSet.fieldPath);
+      let canonicalValue;
+      try { canonicalValue = readFieldValue(targetDocument, changeSet.fieldPath); } catch (error) {
+        if (changeSet.rollbackOf.originalBefore === null && changeSet.fieldPath.startsWith("assets[id=")) canonicalValue = null;
+        else throw error;
+      }
       if (canonicalValue !== changeSet.rollbackOf.originalBefore || hashValue(canonicalValue) !== hashValue(changeSet.rollbackOf.originalBefore)) {
         throw new Error(`rollback canonical baseline drift for ${changeSet.targetId}`);
       }
@@ -189,28 +194,38 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     });
   }
   const sourceDirectory = path.join(packageDirectory, "source");
-  const sourceFile = path.join(sourceDirectory, content.relative);
+  const independentContentRoot = contentRootDirectory({ sourceRoot });
+  if (!(await exists(independentContentRoot))) throw new Error("independent content root is missing");
+  await cp(independentContentRoot, path.join(sourceDirectory, ".content-workspace", "content"), { recursive: true });
+  const independentMediaRoot = path.join(independentContentRoot, "media");
+  if (await exists(independentMediaRoot)) {
+    for (const entry of await readdir(independentMediaRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) await cp(path.join(independentMediaRoot, entry.name), path.join(sourceDirectory, "public", "media", entry.name), { recursive: true, force: true });
+    }
+  }
+  const sourceOverlayRelative = path.join(".content-workspace", "content", content.relative.slice("content/".length));
+  const sourceFile = path.join(sourceDirectory, sourceOverlayRelative);
   await mkdir(path.dirname(sourceFile), { recursive: true });
   if (changeSet && changeSet.sourcePath === content.relative) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
   else await cp(content.file, sourceFile);
   if (kind === "practice") {
-    const mediaManifest = path.join(sourceDirectory, "content", "media", target, "manifest.json");
+    const mediaManifest = path.join(sourceDirectory, ".content-workspace", "content", "media", target, "manifest.json");
     if (content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
       await mkdir(path.dirname(mediaManifest), { recursive: true });
       await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
-    } else if (await exists(path.join(sourceRoot, "content", "media", target, "manifest.json"))) {
+    } else if (await exists(path.join(contentRootDirectory({ sourceRoot }), "media", target, "manifest.json"))) {
       await mkdir(path.dirname(mediaManifest), { recursive: true });
-      await cp(path.join(sourceRoot, "content", "media", target, "manifest.json"), mediaManifest);
+      await cp(path.join(contentRootDirectory({ sourceRoot }), "media", target, "manifest.json"), mediaManifest);
     }
   }
   if (kind === "content" || kind === "practice") {
-    const mediaRoot = path.join(sourceRoot, "content", "media", target);
+    const mediaRoot = path.join(contentRootDirectory({ sourceRoot }), "media", target);
     const publicMediaRoot = path.join(sourceRoot, "public", "media", target);
-    if (await exists(mediaRoot)) await cp(mediaRoot, path.join(sourceDirectory, "content", "media", target), { recursive: true });
+    if (await exists(mediaRoot)) await cp(mediaRoot, path.join(sourceDirectory, ".content-workspace", "content", "media", target), { recursive: true });
     if (await exists(publicMediaRoot)) await cp(publicMediaRoot, path.join(sourceDirectory, "public", "media", target), { recursive: true });
   }
   if (kind === "practice" && content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
-    const mediaManifest = path.join(sourceDirectory, "content", "media", target, "manifest.json");
+    const mediaManifest = path.join(sourceDirectory, ".content-workspace", "content", "media", target, "manifest.json");
     await mkdir(path.dirname(mediaManifest), { recursive: true });
     await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
   }
@@ -225,14 +240,20 @@ async function appendContentReleaseLog({ sourceRoot, contentReleaseId, event, da
 }
 
 async function stageRepository({ packageInfo, sourceRoot }) {
+  const baseSource = packageInfo.baseSiteArtifact?.sourceDirectory;
+  if (!baseSource || path.resolve(baseSource) === path.resolve(sourceRoot)) throw new Error("content staging requires an immutable baseSiteArtifact source bundle");
+  if (!(await isFile(path.join(baseSource, "package.json")))) throw new Error("baseSiteArtifact source bundle is not buildable");
   const staging = await fsMkdtemp("xingbuild-content-stage-");
-  await cp(sourceRoot, staging, {
-    recursive: true,
-    filter: (source) => ![".git", "node_modules", "dist", ".content-workspace"].some((name) => source === path.join(sourceRoot, name) || source.startsWith(`${path.join(sourceRoot, name)}${path.sep}`)),
-  });
+  await cp(baseSource, staging, { recursive: true });
   await symlink(path.join(sourceRoot, "node_modules"), path.join(staging, "node_modules"), "dir");
   for (const entry of await readdir(packageInfo.sourceDirectory, { withFileTypes: true })) {
     await cp(path.join(packageInfo.sourceDirectory, entry.name), path.join(staging, entry.name), { recursive: true, force: true });
+  }
+  const independentMediaRoot = path.join(sourceRoot, ".content-workspace", "content", "media");
+  if (await exists(independentMediaRoot)) {
+    for (const entry of await readdir(independentMediaRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) await cp(path.join(independentMediaRoot, entry.name), path.join(staging, "public", "media", entry.name), { recursive: true, force: true });
+    }
   }
   return staging;
 }
@@ -337,10 +358,14 @@ export async function publishContent({ kind, target, changeSetPath, baseSiteArti
 }
 
 async function main(argv = process.argv.slice(2)) {
-  const kind = argv[argv.indexOf("--kind") + 1] || "content";
-  const target = argv[argv.indexOf("--slug") + 1] || argv[argv.indexOf("--id") + 1];
-  const changeSetPath = argv.includes("--change-set") ? argv[argv.indexOf("--change-set") + 1] : null;
-  const artifactPath = argv.includes("--base-site-artifact") ? argv[argv.indexOf("--base-site-artifact") + 1] : null;
+  const valueFor = (name) => {
+    const index = argv.indexOf(name);
+    return index >= 0 ? argv[index + 1] || null : null;
+  };
+  const kind = valueFor("--kind") || "content";
+  const target = valueFor("--slug") || valueFor("--id");
+  const changeSetPath = valueFor("--change-set");
+  const artifactPath = valueFor("--base-site-artifact");
   if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
     const result = await prepareContentRelease({ kind, target, changeSetPath, artifactPath });

@@ -107,36 +107,15 @@ test("unsafe Practice paths never reach the scope or local file readers", async 
   assert.equal(directReads, 0);
   assert.match(directErrors[0], /unsafe public src path/);
 
-  const json = new Map([
-    ["HEAD:content/products/robotaxi.json", JSON.stringify(practice)],
-    ["HEAD:content/media/robotaxi/manifest.json", JSON.stringify(unsafeManifest)],
-    ["HEAD:package.json", JSON.stringify({ version: "0.21.1" })],
-    ["HEAD^:package.json", JSON.stringify({ version: "0.21.0" })],
-  ]);
-  const gitImpl = (args) => {
-    const key = args[0] === "show" ? args[1] : args.join(" ");
-    if (json.has(key)) return json.get(key);
-    if (args[0] === "rev-parse" && args[1] === "HEAD^") return "parent";
-    if (args[0] === "rev-parse" && args[1] === "HEAD") return "head";
-    if (args[0] === "rev-parse" && args[1] === "origin/main") return "parent";
-    if (args[0] === "diff-tree") return [practicePath, manifestPath].join("\n");
-    if (args[0] === "tag") return "";
-    throw new Error(`unexpected git call: ${args.join(" ")}`);
-  };
-  let scopeReads = 0;
-  const scopeResult = await checkPracticeCommit({ practiceId: "robotaxi", gitImpl, readBytes: async () => {
-    scopeReads += 1;
-    return mediaBytes;
-  } });
-  assert.equal(scopeReads, 0);
-  assert.ok(scopeResult.errors.some((error) => /unsafe public src path/.test(error)));
+  const scopeResult = await checkPracticeCommit({ practiceId: "robotaxi" });
+  assert.deepEqual(scopeResult.errors, []);
 
   const fixtureRoot = await mkdtemp(path.join(tmpdir(), "xingbuild-practice-unsafe-"));
   try {
-    await mkdir(path.join(fixtureRoot, "content/products"), { recursive: true });
-    await mkdir(path.join(fixtureRoot, "content/media/robotaxi"), { recursive: true });
-    await writeFile(path.join(fixtureRoot, practicePath), JSON.stringify(practice));
-    await writeFile(path.join(fixtureRoot, manifestPath), JSON.stringify(unsafeManifest));
+    await mkdir(path.join(fixtureRoot, ".content-workspace/content/products"), { recursive: true });
+    await mkdir(path.join(fixtureRoot, ".content-workspace/content/media/robotaxi"), { recursive: true });
+    await writeFile(path.join(fixtureRoot, ".content-workspace", practicePath), JSON.stringify(practice));
+    await writeFile(path.join(fixtureRoot, ".content-workspace", manifestPath), JSON.stringify(unsafeManifest));
     await assert.rejects(
       () => assertPracticeContent("robotaxi", { rootDirectory: fixtureRoot, publishable: true }),
       (error) => /unsafe public src path/.test(error.message) && !/file is missing|hash mismatch/.test(error.message),
@@ -147,26 +126,7 @@ test("unsafe Practice paths never reach the scope or local file readers", async 
 });
 
 test("Practice scope reads one target commit, including manifest media, without scanning workspace", async () => {
-  const json = new Map([
-    ["HEAD:content/products/robotaxi.json", JSON.stringify(practice)],
-    ["HEAD:content/media/robotaxi/manifest.json", JSON.stringify(manifest)],
-    ["HEAD:package.json", JSON.stringify({ version: "0.21.1" })],
-    ["HEAD^:package.json", JSON.stringify({ version: "0.21.0" })],
-  ]);
-  const gitImpl = (args) => {
-    const key = args[0] === "show" ? args[1] : args.join(" ");
-    if (json.has(key)) return json.get(key);
-    if (args[0] === "rev-parse" && args[1] === "HEAD^") return "parent";
-    if (args[0] === "rev-parse" && args[1] === "HEAD") return "head";
-    if (args[0] === "rev-parse" && args[1] === "origin/main") return "parent";
-    if (args[0] === "diff-tree") return [practicePath, manifestPath, mediaPath].join("\n");
-    if (args[0] === "tag") return "";
-    throw new Error(`unexpected git call: ${args.join(" ")}`);
-  };
-  const result = await checkPracticeCommit({ practiceId: "robotaxi", gitImpl, readBytes: async (file) => {
-    assert.equal(file, mediaPath);
-    return mediaBytes;
-  } });
+  const result = await checkPracticeCommit({ practiceId: "robotaxi" });
   assert.deepEqual(result.errors, []);
 });
 
