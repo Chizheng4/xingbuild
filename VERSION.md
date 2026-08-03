@@ -1,3 +1,9 @@
+## v0.24.21 — 内容目标入口与可验证恢复包
+
+- 状态：本版本补齐非发布 `content:target` 定位卡/ChangeSet 入口、原始变更事实关联和逆向 recovery package；未 push、publish、部署或公网验收。
+- 范围：仅增强既有 registry、字段级 ChangeSet 与内容 prepare/build/transport；增加 registry 完整性与路径边界门禁，不扩大 UI、IA、schema、页面或内容白名单。
+- 不做：不修改 v0.24.20 tag，不改 UI、IA、schema、路由、组件、CSS、交互、上游事实、Practice video 或产品发布逻辑。
+
 ## v0.24.20 — 声明式 B 端内容定位与字段级 ChangeSet
 
 - 状态：本版本完成 registry 消费、Robotaxi 字段级 ChangeSet、Practice staging overlay 与独立内容边界；未 push、publish、部署或公网验收。

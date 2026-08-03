@@ -3,18 +3,56 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { prepareContentRelease } from "../scripts/content-release.mjs";
+import { runTargetCommand } from "../scripts/content-target.mjs";
 import {
   applyContentChangeSet,
   createContentChangeSet,
+  createRollbackChangeSet,
+  createContentTargetCard,
   hashValue,
   parseFieldPath,
+  readContentTargetRegistry,
   readContentChangeSet,
   readFieldValue,
+  validateContentTargetRegistry,
   writeContentChangeSet,
 } from "../scripts/lib/content-targets.mjs";
 
 const root = new URL("../", import.meta.url).pathname;
 const targetId = "products.robotaxi.module.current-simulation.action.href";
+
+test("registry integrity fixes Robotaxi targets to safe product fields and routes", async () => {
+  const registry = await readContentTargetRegistry({ rootDirectory: root });
+  assert.ok(registry.targets.length > 0);
+  for (const target of registry.targets.filter((entry) => entry.kind === "product-content")) {
+    assert.equal(target.sourcePath, "content/products/robotaxi.json");
+    assert.equal(target.scope, "field");
+    assert.deepEqual(target.projectionRoutes, ["/products"]);
+  }
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, registry.targets[0]] }), /duplicate targetId/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], sourcePath: "../outside.json" }] }), /unsafe target source/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
+});
+
+test("content:target emits one locating card and writes an ignored ChangeSet", async () => {
+  const result = await runTargetCommand([
+    "--target-id", "products.robotaxi.title",
+    "--after", "Robotaxi 定位卡测试",
+    "--source-ref", "robotaxi:test-card",
+    "--boundary", "仅验证定位卡和字段级变更。",
+    "--authority", "test-authority",
+    "--change-id", "test-target-cli",
+  ], { rootDirectory: root });
+  try {
+    assert.equal(result.mode, "create");
+    assert.equal(result.card.targetId, "products.robotaxi.title");
+    assert.equal(result.card.fieldPath, "title");
+    assert.equal(result.changeSet.targetId, result.card.targetId);
+    assert.match(result.file, /\.content-workspace\/changes/);
+  } finally {
+    await rm(result.file, { force: true });
+  }
+});
 
 test("registry resolves Robotaxi fields and creates an ignored ChangeSet", async () => {
   const source = JSON.parse(await readFile(`${root}/content/products/robotaxi.json`, "utf8"));
@@ -119,6 +157,8 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
   });
   const written = await writeContentChangeSet(changeSet, { rootDirectory: fixtureRoot });
   let prepared;
+  let rollbackPrepared;
+  let rollbackWritten;
   try {
     prepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: written.file, sourceRoot: fixtureRoot });
     const staged = JSON.parse(await readFile(prepared.sourceFile, "utf8"));
@@ -126,9 +166,20 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
     assert.equal(readFieldValue(JSON.parse(await readFile(sourceFile, "utf8")), fieldPath), before);
     assert.equal(prepared.changeSetId, changeSet.changeId);
     assert.deepEqual(prepared.changedTargets, [changeSet.targetId]);
+    const linked = await readContentChangeSet(written.file, { rootDirectory: fixtureRoot });
+    assert.equal(linked.contentReleaseId, prepared.contentReleaseId);
+    assert.equal(linked.releasePackage, prepared.releasePackage);
+    rollbackWritten = await createRollbackChangeSet(written.file, { rootDirectory: fixtureRoot });
+    assert.equal(rollbackWritten.rollbackOf.contentReleaseId, prepared.contentReleaseId);
+    rollbackPrepared = await prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, sourceRoot: fixtureRoot });
+    const recovered = JSON.parse(await readFile(rollbackPrepared.sourceFile, "utf8"));
+    assert.equal(readFieldValue(recovered, fieldPath), before);
+    assert.equal(rollbackPrepared.rollbackOf.changeId, changeSet.changeId);
   } finally {
     await rm(written.file, { force: true });
+    if (rollbackWritten) await rm(rollbackWritten.file, { force: true });
     if (prepared) await rm(prepared.packageDirectory, { recursive: true, force: true });
+    if (rollbackPrepared) await rm(rollbackPrepared.packageDirectory, { recursive: true, force: true });
     await rm(fixtureRoot, { recursive: true, force: true });
   }
 });

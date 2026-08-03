@@ -19,6 +19,40 @@ export function hashValue(value) {
   return createHash("sha256").update(canonical(value)).digest("hex");
 }
 
+function safeRelativePath(value, { allowSrc = true } = {}) {
+  if (!hasText(value) || path.isAbsolute(value) || value.includes("\\")) return false;
+  const normalized = path.posix.normalize(value);
+  if (normalized === "." || normalized.startsWith("../") || normalized.includes("/../")) return false;
+  return allowSrc || !normalized.startsWith("src/");
+}
+
+export function validateContentTargetRegistry(registry) {
+  if (!registry || registry.registryId !== "xingbuild-content-targets" || registry.schemaVersion !== 1) {
+    throw new Error("content target registry identity or schemaVersion is invalid");
+  }
+  if (!Array.isArray(registry.targets) || !Array.isArray(registry.templates) || !Array.isArray(registry.excluded)) {
+    throw new Error("content target registry must contain targets, templates and excluded arrays");
+  }
+  const ids = new Set();
+  for (const target of registry.targets) {
+    if (!hasText(target?.targetId) || ids.has(target.targetId)) throw new Error(`content target registry has duplicate targetId: ${target?.targetId || "missing"}`);
+    ids.add(target.targetId);
+    if (target.scope !== "field" || !safeRelativePath(target.sourcePath, { allowSrc: false })) throw new Error(`content target registry has unsafe target source: ${target.targetId}`);
+    parseFieldPath(target.fieldPath);
+    if (!Array.isArray(target.projectionRoutes) || target.projectionRoutes.length === 0 || target.projectionRoutes.some((route) => !hasText(route) || !route.startsWith("/"))) {
+      throw new Error(`content target registry has invalid projection routes: ${target.targetId}`);
+    }
+  }
+  for (const template of registry.templates) {
+    if (!safeRelativePath(template?.sourcePathTemplate, { allowSrc: false })) throw new Error("content target registry has unsafe template source");
+    parseFieldPath(template.fieldPath);
+  }
+  for (const excluded of registry.excluded) {
+    if (excluded.sourcePath && !safeRelativePath(excluded.sourcePath)) throw new Error("content target registry has unsafe excluded source");
+  }
+  return registry;
+}
+
 export function changeFileName(changeId) {
   return `${String(changeId).replace(/[^a-zA-Z0-9._-]/g, "_")}.json`;
 }
@@ -29,7 +63,7 @@ async function exists(file) {
 
 export async function readContentTargetRegistry({ rootDirectory = projectRoot } = {}) {
   const file = path.join(rootDirectory, contentTargetsPath);
-  return JSON.parse(await readFile(file, "utf8"));
+  return validateContentTargetRegistry(JSON.parse(await readFile(file, "utf8")));
 }
 
 function targetAllowed(target) {
@@ -46,6 +80,26 @@ export async function resolveContentTarget(targetId, { rootDirectory = projectRo
     throw new Error(`content target has an unsafe source or field path: ${targetId}`);
   }
   return target;
+}
+
+export async function createContentTargetCard(targetId, { rootDirectory = projectRoot } = {}) {
+  const target = await resolveContentTarget(targetId, { rootDirectory });
+  const document = JSON.parse(await readFile(path.join(rootDirectory, target.sourcePath), "utf8"));
+  const current = readFieldValue(document, target.fieldPath);
+  if (typeof current !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
+  return {
+    targetId: target.targetId,
+    scope: target.scope,
+    kind: target.kind,
+    sourcePath: target.sourcePath,
+    fieldPath: target.fieldPath,
+    current,
+    beforeHash: hashValue(current),
+    affectedRoutes: [...target.projectionRoutes],
+    constraints: { ...(target.constraints || {}) },
+    requires: [...(target.requires || [])],
+    boundary: "仅允许该注册字段的字段级内容变更。",
+  };
 }
 
 export function parseFieldPath(fieldPath) {
@@ -150,7 +204,12 @@ export async function createContentChangeSet({
     boundary,
     authority,
     baseProductVersion: null,
-    rollbackReleaseId: null,
+    recovery: {
+      type: "field-reverse",
+      rollbackChangeId: `${nextChangeId}-rollback`,
+      originalBefore: before,
+      originalAfter: after,
+    },
   };
   return { ...changeSet, target };
 }
@@ -168,6 +227,20 @@ export function validateContentChangeSet(changeSet, { target } = {}) {
   if (!hasText(changeSet.boundary) || !hasText(changeSet.authority)) throw new Error("ChangeSet boundary and authority are required");
   if (Array.isArray(changeSet.after) || (changeSet.after && typeof changeSet.after === "object")) throw new Error("ChangeSet cannot replace an array or object");
   validateAfter(target, changeSet.after);
+  if (changeSet.recovery) {
+    if (changeSet.recovery.type !== "field-reverse" || !hasText(changeSet.recovery.rollbackChangeId) || changeSet.recovery.originalBefore !== changeSet.before || changeSet.recovery.originalAfter !== changeSet.after) {
+      throw new Error("ChangeSet recovery descriptor is invalid");
+    }
+  }
+  if (changeSet.contentReleaseId !== undefined && !hasText(changeSet.contentReleaseId)) throw new Error("ChangeSet contentReleaseId is invalid");
+  if (changeSet.releasePackage !== undefined && (!hasText(changeSet.releasePackage) || !changeSet.releasePackage.startsWith(`${path.posix.normalize(".content-workspace/releases")}/`))) {
+    throw new Error("ChangeSet releasePackage must stay inside .content-workspace/releases");
+  }
+  if (changeSet.rollbackOf) {
+    if (!hasText(changeSet.rollbackOf.changeId) || !hasText(changeSet.rollbackOf.contentReleaseId) || !hasText(changeSet.rollbackOf.releasePackage) || changeSet.rollbackOf.originalBefore !== changeSet.after || changeSet.rollbackOf.originalAfter !== changeSet.before) {
+      throw new Error("rollback ChangeSet must link its source content release and preimage");
+    }
+  }
   return changeSet;
 }
 
@@ -185,6 +258,63 @@ export async function writeContentChangeSet(changeSet, { rootDirectory = project
     await writeFile(file, `${JSON.stringify(persisted, null, 2)}\n`);
   }
   return { ...changeSet, file };
+}
+
+export async function linkContentChangeSetRelease(changeSetPath, { contentReleaseId, releasePackage, rootDirectory = projectRoot } = {}) {
+  const changeSet = await readContentChangeSet(changeSetPath, { rootDirectory });
+  if (!hasText(contentReleaseId) || !hasText(releasePackage)) throw new Error("content release association requires contentReleaseId and releasePackage");
+  const relativePackage = path.posix.normalize(releasePackage.split(path.sep).join("/"));
+  if (!relativePackage.startsWith(".content-workspace/releases/")) throw new Error("content release package must stay inside .content-workspace/releases");
+  const persisted = {
+    ...changeSet,
+    target: undefined,
+    file: undefined,
+    contentReleaseId,
+    releasePackage: relativePackage,
+    recovery: {
+      ...changeSet.recovery,
+      contentReleaseId,
+      releasePackage: relativePackage,
+    },
+  };
+  const { target: _target, file: _file, ...json } = persisted;
+  await writeFile(changeSet.file, `${JSON.stringify(json, null, 2)}\n`);
+  return { ...changeSet, ...json, target: changeSet.target, file: changeSet.file };
+}
+
+export async function createRollbackChangeSet(changeSetPath, { rootDirectory = projectRoot, changeId } = {}) {
+  const original = await readContentChangeSet(changeSetPath, { rootDirectory });
+  if (!hasText(original.contentReleaseId) || !hasText(original.releasePackage)) {
+    throw new Error("rollback requires a prepared contentReleaseId and releasePackage association");
+  }
+  const rollback = {
+    changeId: changeId || original.recovery?.rollbackChangeId || `${original.changeId}-rollback`,
+    targetId: original.targetId,
+    scope: "field",
+    sourcePath: original.sourcePath,
+    fieldPath: original.fieldPath,
+    beforeHash: hashValue(original.after),
+    before: original.after,
+    after: original.before,
+    affectedRoutes: [...original.affectedRoutes],
+    sourceRefs: [...original.sourceRefs, `rollback:${original.changeId}`],
+    boundary: original.boundary,
+    authority: original.authority,
+    rollbackOf: {
+      changeId: original.changeId,
+      contentReleaseId: original.contentReleaseId,
+      releasePackage: original.releasePackage,
+      originalBefore: original.before,
+      originalAfter: original.after,
+    },
+    recovery: {
+      type: "field-reverse",
+      rollbackChangeId: `${original.changeId}-rollback-rollback`,
+      originalBefore: original.after,
+      originalAfter: original.before,
+    },
+  };
+  return writeContentChangeSet(rollback, { rootDirectory });
 }
 
 export async function readContentChangeSet(changeSetPath, { rootDirectory = projectRoot } = {}) {

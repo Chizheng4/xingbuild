@@ -23,7 +23,9 @@ import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/
 import {
   applyContentChangeSet,
   hashValue,
+  linkContentChangeSetRelease,
   readContentChangeSet,
+  writeFieldValue,
 } from "./lib/content-targets.mjs";
 
 export const root = projectRoot;
@@ -112,6 +114,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
     throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice target");
   }
   if (changeSet) {
+    if (changeSet.rollbackOf) content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.before);
     content.value = applyContentChangeSet(content.value, changeSet);
     if (content.practiceBundle) {
       const errors = validatePublishablePracticeBundle(content.value, content.practiceBundle.manifest, { expectedId: target });
@@ -143,6 +146,8 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
     targetPath: publicPath(kind, target),
     changeSetId: changeSet?.changeId || null,
     changedTargets: changeSet ? [changeSet.targetId] : [],
+    releasePackage: path.posix.join(".content-workspace/releases", contentReleaseId),
+    rollbackOf: changeSet?.rollbackOf || null,
   };
   await mkdir(packageDirectory, { recursive: true });
   const manifestPath = path.join(packageDirectory, "content-release.json");
@@ -153,6 +158,13 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
     }
   } else {
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
+  if (changeSet) {
+    await linkContentChangeSetRelease(changeSet.file, {
+      contentReleaseId,
+      releasePackage: manifest.releasePackage,
+      rootDirectory: sourceRoot,
+    });
   }
   const sourceDirectory = path.join(packageDirectory, "source");
   const sourceFile = path.join(sourceDirectory, content.relative);
