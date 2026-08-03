@@ -30,4 +30,4 @@ B端产品 / 经营观察 / 关于我
 
 ## 发布边界
 
-生产发布使用 `./publish-xingbuild.command`，目标是 EdgeOne Makers 项目 `xingbuild-nochina`。发布、域名、GitHub 推送和公网验证必须继续按照项目规则分别确认。
+生产发布使用 `./publish-xingbuild.command`，只传输预生成且身份匹配的 `dist/client`，不执行 build 或业务 QA；目标是固定 EdgeOne Makers 项目 `xingbuild-nochina`。发布、域名、GitHub 推送和公网验证必须继续按照项目规则分别确认。

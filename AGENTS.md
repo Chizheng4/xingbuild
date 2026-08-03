@@ -51,6 +51,8 @@
 - 保持 `.openai/hosting.json`、`worker/index.js`、`scripts/prepare-sites-build.mjs` 和 Sites 测试完整；交付 Sites 前运行 `npm run build` 与 `npm run test:sites`。
 - 生成器命令（`architecture:views`、`framework:data`、`framework:layout`、`article:figures`）只在源/产品方案变更后、local commit 前显式运行；`npm run build`、`release:check` 与 publish 构建只读消费已提交生成物，不回写 tracked `src/generated/` 或 `public/`。
 - 业务验证和构建必须在 publish 前通过 `release:prepare`/`release:build` 完成；publish/unified product 只做既有 `dist/client` 的身份校验、线上传输、部署和公网 manifest 验证，不包含网站业务逻辑。
+- 发布阶段统一遵守四阶段：`release:prepare` → `release:build` → `release:closeout-check`/`release:preflight` → transport-only publish；失败进入 `docs/rules/iteration-and-release.md` 的 Publish Incident 决策门。
+- EdgeOne publish 目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`，不得用环境变量静默覆盖。
 
 ## 协作语言
 

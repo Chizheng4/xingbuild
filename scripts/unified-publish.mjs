@@ -10,8 +10,10 @@ import { assertVersionState } from "./lib/version-state.mjs";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
-export const edgeoneProject = process.env.XINGBUILD_EDGEONE_PROJECT || "xingbuild-nochina";
-export const publicUrl = process.env.XINGBUILD_PUBLIC_URL || "https://xingbuild.top/";
+export const edgeoneProject = "xingbuild-nochina";
+export const edgeoneProjectId = "makers-ze0f6txvlhco";
+export const publicUrl = "https://xingbuild.top/";
+export const edgeoneDomain = "xingbuild.top";
 const edgeone = path.join(root, "node_modules", ".bin", "edgeone");
 
 export function git(args, cwd = root) {
@@ -39,6 +41,45 @@ export function assertPublishAuthorization(options = {}) {
   if (!isPublishAuthorized(options)) {
     throw new Error("publish authorization is required (--authorize-publish or XINGBUILD_PUBLISH_AUTHORIZATION=confirmed)");
   }
+}
+
+export function assertFixedPublishTarget(env = process.env) {
+  const unsupportedOverrides = [
+    "XINGBUILD_EDGEONE_PROJECT",
+    "XINGBUILD_EDGEONE_PROJECT_ID",
+    "XINGBUILD_PUBLIC_URL",
+  ];
+  const override = unsupportedOverrides.find((name) => env[name]);
+  if (override) throw new Error(`${override} is not supported; publish target is fixed by the version contract`);
+  if (new URL(publicUrl).hostname !== edgeoneDomain) throw new Error(`publish domain mismatch: ${publicUrl}`);
+}
+
+export async function readFixedEdgeoneTarget(sourceCwd = root) {
+  const projectFile = path.join(sourceCwd, ".edgeone", "project.json");
+  if (!(await exists(projectFile))) throw new Error("missing .edgeone/project.json for fixed EdgeOne target");
+  const project = JSON.parse(await readFile(projectFile, "utf8"));
+  if (project.Name !== edgeoneProject || project.ProjectId !== edgeoneProjectId) {
+    throw new Error(`EdgeOne target mismatch: expected ${edgeoneProject}/${edgeoneProjectId}`);
+  }
+  return { name: edgeoneProject, projectId: edgeoneProjectId, domain: edgeoneDomain };
+}
+
+function runCapture(command, args, cwd, { env = process.env } = {}) {
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", env });
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+  process.stdout.write(output);
+  if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed with status ${result.status ?? "unknown"}`);
+  return output;
+}
+
+export function readDeploymentResult(output) {
+  const line = output.split(/\r?\n/).map((value) => value.trim()).reverse().find((value) => value.startsWith("{") && value.endsWith("}"));
+  if (!line) throw new Error("EdgeOne deployment did not return a machine-readable result");
+  const result = JSON.parse(line);
+  if (result.status !== "success" || result.projectId !== edgeoneProjectId) {
+    throw new Error(`EdgeOne deployment identity mismatch: expected ${edgeoneProjectId}`);
+  }
+  return result;
 }
 
 export async function readAcceptedVersion(sourceCwd = root) {
@@ -107,25 +148,37 @@ function targetConfig(kind, target, version, commit) {
 }
 
 export async function publish({ kind, target, argv = process.argv.slice(2), env = process.env } = {}) {
-  const source = await collectPublishContext(root);
-  const prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head, kind, target });
-  run("npm", ["run", "release:preflight"], root, { env: { ...env, XINGBUILD_RELEASE_WORKTREE: "1" } });
-  assertPublishAuthorization({ argv, env });
-  if (!(await exists(edgeone))) throw new Error("EdgeOne CLI is not installed in the project");
-  configureNetwork();
-  run(edgeone, ["whoami"], root);
+  let phase = "source";
+  let source;
+  let prepared;
+  let edgeoneTarget;
   let lease;
   try {
+    assertFixedPublishTarget(env);
+    source = await collectPublishContext(root);
+    phase = "prepared-dist";
+    prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head, kind, target });
+    phase = "preflight";
+    run("npm", ["run", "release:preflight"], root, { env: { ...env, XINGBUILD_RELEASE_WORKTREE: "1" } });
+    phase = "authorization";
+    assertPublishAuthorization({ argv, env });
+    if (!(await exists(edgeone))) throw new Error("EdgeOne CLI is not installed in the project");
+    edgeoneTarget = await readFixedEdgeoneTarget(root);
+    configureNetwork();
+    run(edgeone, ["whoami"], root);
     lease = kind === "product" ? null : await acquireContentReleaseLease({ slug: `${kind}:${target}`, worktree: root, head: source.head });
+    phase = "transport-push";
     run("git", ["push", "origin", "HEAD:main"], root);
     run("git", ["push", "origin", source.tag], root);
     const remote = git(["ls-remote", "origin", "refs/heads/main"], root).split(/\s+/)[0];
     if (remote !== source.head) throw new Error(`remote main is ${remote}; expected ${source.head}`);
-    run(edgeone, ["makers", "deploy", prepared.client, "--name", edgeoneProject, "--env", "production"], root);
+    phase = "transport-deploy";
+    const deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", prepared.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root));
+    phase = "public-verify";
     run(targetConfig(kind, target, source.version, source.head).verify[0], targetConfig(kind, target, source.version, source.head).verify[1], root, { env });
-    return { ...source, kind, target, dist: prepared.client, online: true };
+    return { ...source, kind, target, dist: prepared.client, edgeoneTarget, deployment, online: true };
   } catch (error) {
-    error.publishContext = { ...source, dist: prepared.client };
+    error.publishContext = { ...(source || {}), dist: prepared?.client, phase, edgeoneTarget };
     throw error;
   } finally {
     if (lease) await releaseContentReleaseLease({});

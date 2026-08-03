@@ -161,11 +161,11 @@ stateDiagram-v2
 - 产品/视觉验收通过后，Engineering 等待用户 publish 指令；未 publish 时线上可以落后于本地版本，但不得声称已上线。
 - 用户明确要求 publish 后，Engineering 执行线上发布；成功后线上 `release.json`、`content-manifest.json`、版本号和最终提交必须与本地提交版本一致。
 - 每次交接和收口必须报告：本地版本状态与 `http://127.0.0.1:4317/`、线上版本状态与 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界；无候选也必须明确报告等待用户下一步。
-- `current.md` 只保留当前唯一版本、阶段、证据、阻断 ID、下一动作和发布授权；不建立复杂状态机。
+- `current.md` 只保留当前唯一版本与不可变 local version identity facts；产品/视觉验收、publish 授权和线上状态均为提交后的外部事件，不得回写已打 tag 的 current/history。
 
 #### 2.4.2 Git 回退与资源安全
 
-- 未 push 的本地版本问题：只在 Engineering 隔离 worktree 中修正或放弃，不操作用户主工作区。
+- 未 push 的本地版本问题：官方 direct-local `main` 是默认修正基线；若已 commit/tag，任何修正都必须进入下一版本，不强制创建 worktree，也不改写旧 tag。
 - 已 push 未部署的问题：用新修正 commit，不改写远端历史、不移动已创建 tag。
 - 已部署的问题：使用上一个已验证 commit/tag 重新发布，保留问题版本和回退证据。
 - `main` 只作为干净集成/发布基线；DRAFT、Engineering 和内容发布不得共享脏工作区。
@@ -195,22 +195,23 @@ stateDiagram-v2
 
 ### 3.3 日常观察内容发布
 
-日常 Observation 的准备和审核不是产品版本；正式生产发布是统一版本的 patch 发布。一次成功发布必须将批准内容、版本记录、Git 提交、annotated tag、线上 release manifest 和内容 manifest 收口为同一版本身份。
+日常 Observation 的准备和审核不是产品版本；正式生产发布只消费已经形成并验收的统一版本。内容准备、构建、transport 和 finalize 是四个不同阶段，不能在 transport 阶段创建版本或执行业务 QA。
 
-- 内容准备和审核不要求版本号；正式 publish 必须生成或确认目标 patch 版本、更新 `VERSION.md`/`current.md`，并执行完整统一版本验收；
+- 内容准备和审核只产生 ignored workspace 事实；若内容改变产品能力或公开对象合同，必须先形成正式产品版本方案；
 - 编辑准备固定为 candidate → draft → 本地直接预览 → 人工事实审核及内容 SHA-256 → promote；日常终端以 `npm run content:approve -- --slug <slug> --authority <authority>` 在共享 JS 能力层受控聚合 review + promote；
-- 生产发布固定为 checks → 独立内容 commit → `publish-content.command --slug <slug>` → push → EdgeOne → 公网验收；
+- 准备阶段执行目标内容检查、审核和必要素材生成；构建阶段执行 `npm run release:prepare` 与 `npm run release:build`，并将产物与统一版本 commit/tag 收口；
+- transport 阶段只校验既有 clean `main`、HEAD/tag、预生成 `dist/client` manifest 和精确目标 slug，然后在明确授权后 push、部署和公网验证；
+- finalize 仅在公网验证成功后精确清理目标 slug 的 draft/review/recovery，不回写已打 tag 的 `current.md`/history；
 - 人工审核 sidecar 至少保存 slug、`status=approved`、reviewedAt、authority 和 contentHash；draft 改动后 hash 不匹配必须失败；
 - promote 只接受目标 slug 的有效 draft 和匹配审核记录，保留原 draft、审核记录与精确恢复副本，不让后续失败形成不可解释半状态；
 - `content:approve` 要求唯一非空 slug 与 authority；成功只新增目标 review、recovery 与 production 并保留 draft，任一步失败精确回滚本次新增文件，不覆盖既有 draft、review 或 production；
 - push、部署或公网验收任一步失败时，目标 draft、review 与 recovery 必须全部保留，以支持同一 HEAD 重试；
 - 只有 `verify-content-release` 公网验收成功后，才精确 finalize 目标 slug：删除该 slug 的 draft、review 与 recovery 三份临时事实，不使用通配且不触碰任何无关 workspace 文件；
-- 必须通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
+- 必须在 transport 前通过目标 schema/事实边界/来源/Brief 合同、`content:check`、slug scope check、build 和 Sites test；
 - 必须保留来源、逐条 `sourceRefs`、证据性质和边界；
 - 必须形成统一版本 Git 提交；范围可以包含目标公开内容、必要 approved media 和统一版本记录，不能产生 content-only tag；
-- 正式内容发布必须从最新 `origin/main` 创建唯一干净发布 worktree，在 release lease 内生成目标 patch 版本、更新版本记录、创建 annotated tag、push、部署和公网验收；不得使用产品版本不变的旁路。
-- 内容 task 不创建、不管理产品 Engineering 的 branch/worktree，也不把 CLI 的内部临时内容 worktree当作工程迭代；若发布工具自身失败，立即停止本次发布并登记候选，不在 main 或隔离分支中自行修复。
-- 部署前必须再次确认远端 HEAD 仍是目标内容提交；主线在 lease 外推进时，内容发布器自动 fast-forward、重建并重新校验目标 slug，不发布旧构建；push 后的部署或公网验收重试保持同一 HEAD。
+- 内容 task 不创建、不管理产品 Engineering 的 branch/worktree，也不把 CLI 的内部临时内容 worktree 当作工程迭代；若发布工具自身失败，立即停止本次发布并进入 Publish Incident 决策门，不在 main 或隔离分支中自行修复。
+- transport 前确认远端 HEAD 与已验证 HEAD 一致；不自动 fast-forward、重建版本、commit、tag 或重试后继续 push/deploy。
 - 无关 slug 的 ignored candidate/import/draft/review 可以并存且不得阻断；目标 slug 的 candidate/import 冲突、审核缺失/hash 不符或重复 production 必须失败；
 - `content:approve` 不扫描、不删除也不修改无关 workspace；目标已有 review、recovery、production 或 candidate/import 冲突时硬失败，不得用该机械命令代替人工选题、写稿、事实审核、内容提交或发布授权；
 - 用户在项目规则或当前任务明确授权“直接发布”后，内容 task 可按合同自动执行，不再为每条内容重复等待；事实审核、目标 slug、范围和公网门禁不变。
@@ -255,6 +256,7 @@ localSubmission: pending | complete
 - 当前状态。
 
 本地提交后由 Engineering 形成版本记录并将完整迭代记录一次性写入 `docs/iterations/history/v{版本号}.md`；该历史文件随后不可回写。产品/视觉验收证据写入 `docs/qa/`，线上发布证据由 release manifest、部署记录和公网验收记录承担；`current.md` 保留当前唯一版本和下一动作。
+`docs/qa/` 只追加提交后的外部 QA、发布证据或 Publish Incident，不得通过 QA 结论回写已打 tag 的 `current.md`、history、VERSION 或 Git 身份。
 
 ## 5. 标准启动
 
@@ -272,19 +274,14 @@ localSubmission: pending | complete
 
 ## 6. 完成与发布前检查
 
-任何准备交付或发布的版本必须执行：
+Engineering 只按四个阶段收口，不把旧的 `release:check` 或发布构建沙箱作为 publish 门槛：
 
-```bash
-npm run release:check
-```
+1. 准备：`npm run release:prepare`，完成产品、内容、文章和实践业务检查；
+2. 构建：`npm run release:build`，消费已提交生成物并生成 `dist/client`，记录 Sites 测试实际结果；
+3. 本地收口：暂存预计范围，执行 `npm run release:closeout-check`，提交并创建 annotated tag，再执行 `npm run release:preflight`；
+4. 线上 transport：用户明确授权后执行 publish，只消费第三阶段形成的 clean HEAD/tag 与预生成 manifest，完成 push、EdgeOne deploy 和公网验证。
 
-在提交本轮版本前，先暂存预计提交范围并执行：
-
-```bash
-npm run release:closeout-check
-```
-
-它会阻止未暂存修改或未追踪文件跨入本次收口。通过后再提交与打标签。
+`npm run release:check` 仅作为兼容性/诊断命令，不由 publish 调用，也不替代四阶段合同。任何阶段失败都停止并进入 Publish Incident 决策门，不自动 patch、重试或继续后续阶段。
 
 版本收口同时必须完成候选生命周期核对：活动 `docs/iterations/candidates/` 只允许保留 `pending`/DRAFT；任何已纳入方案或已关闭候选必须位于 `docs/iterations/history/candidates/`，并保留来源、方案/历史版本和关闭证据。没有验收修复且活动候选为空时，归档完成后保留当前版本作为基线并停止；有 pending 候选则向用户报告待确认项，不得自行启动下一版本。
 
@@ -296,17 +293,17 @@ npm run release:preflight
 
 它只核对 `main`、工作区为空、`package.json`/`VERSION.md`/当前迭代版本一致、`HEAD` 标签一致和预期 `origin`；不联网、不构建、不部署。只有该命令通过，版本才是“可发布”，不能把“已提交并打标签”误报为“工作区干净或可发布”。若存在下一轮未提交工作，必须先由负责人决定提交、暂存隔离或延后发布，不能混入当前稳定版本。
 
-检查包括：
+准备与构建阶段包括：
 
 - 必需项目文件和内容入口存在；
 - 包版本与当前版本记录一致；
 - 生产构建成功；
-- Sites/Worker 兼容测试通过；
+- Sites/Worker 兼容测试；
 - 生成可部署静态产物。
 
 涉及视觉或响应式变化时，还必须进行桌面和手机真实页面验证。构建成功不等于视觉验收完成。
 
-日常内容发布执行更窄的内容专项门槛：
+日常内容准备执行更窄的内容专项门槛：
 
 ```bash
 npm run content:check
@@ -317,9 +314,9 @@ npm run test:sites
 
 内容专项验证聚焦 schema、枚举、来源引用、事实边界、草稿隔离、目标文章与相关集合，不替代首次建立或修改内容系统时的产品版本完整验收。
 
-构建纯度规则：`npm run build`、`npm run release:check` 和统一 publish 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 是显式源变更/素材生成命令，只能在产品方案变更后、local commit 前运行，并将生成物纳入同一提交；构建后的 tracked dirty 检查仍是硬门禁。
+构建纯度规则：`npm run build`、`npm run release:prepare`/`release:build` 只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 是显式源变更/素材生成命令，只能在产品方案变更后、local commit 前运行，并将生成物纳入同一提交；构建后的 tracked dirty 检查仍是硬门禁。
 
-发布职责拆分：publish 前必须由 `npm run release:prepare` 与 `npm run release:build` 完成业务验证、构建和 Sites 测试；`publish-xingbuild.command`/`unified-publish.mjs --kind product` 只读取 clean main 的既有 HEAD+annotated tag，校验预先生成的 `dist/client/release.json` 与 `content-manifest.json`，再执行授权后的 push、EdgeOne deploy 和公网 manifest 验证。Transport 阶段不得运行 `release:check`、`release:build`、`build`、生成器或内容/文章/实践业务 QA；dist 缺失或身份不匹配立即失败。
+发布职责拆分：publish 前必须由 `release:prepare` 与 `release:build` 完成业务验证、构建和 Sites 测试；`publish-xingbuild.command`/`unified-publish.mjs --kind product` 只读取 clean main 的既有 HEAD+annotated tag，校验预先生成的 `dist/client/release.json` 与 `content-manifest.json`，再执行授权后的 push、EdgeOne deploy 和公网 manifest 验证。Transport 阶段不得运行 `release:check`、`release:build`、`build`、生成器或内容/文章/实践业务 QA；dist 缺失或身份不匹配立即失败。
 
 ## 7. EdgeOne 发布
 
@@ -336,19 +333,18 @@ npm run test:sites
 - 本地提交不等于推送 GitHub，也不等于发布线上；
 - GitHub 仓库创建、首次推送、EdgeOne 发布、域名绑定和 DNS 修改需要用户明确授权；
 - 常规情况下由用户双击发布命令；
-- 只有 `current.md` 明确标记“直接上线”，或用户在当前任务明确要求“直接发布”时，Engineering 才能代为执行线上发布。
+- 只有用户在当前任务明确要求“直接发布”时，Engineering 才能代为执行线上发布；`current.md` 不保存 publish 授权事件。
 
-发布命令只消费已完成产品/视觉验收的现有 local commit/tag，按以下顺序执行：
+发布命令只消费已完成产品/视觉验收的现有 local commit/tag，按以下 transport 顺序执行：
 
 1. 读取 source cwd、`current.md`、`VERSION.md`、package、history、HEAD 和 annotated tag，确认不可变版本身份一致；产品/视觉验收不从 current/history 推导；
 2. 确认 source cwd 为官方 direct-local clean `main`，并记录 source HEAD；
-3. 使用精确 HEAD 的内部只读构建沙箱（不形成工程分支），执行 `check`、content/article/practice scope、`release:check` 和 Sites 测试；
-4. 构建后再次检查 source 与构建沙箱的 tracked dirty paths；任何变化立即失败并报告精确路径；
-5. 执行 `release:preflight`，确认版本记录、HEAD、annotated tag 和工作区一致；
-6. 只有用户明确 publish 授权后，才 push 同一 HEAD 与同名 tag；
-7. 将同一构建产物部署到 EdgeOne `xingbuild-nochina`；
-8. 使用同一 version/commit 访问公网并校验 `release.json`、`content-manifest.json` 和核心页面；
-9. 只有公网验证成功才报告线上统一版本；失败时保留未发布/部分完成事实，不写完成声明、不继续后续阶段。
+3. 校验预生成的 `dist/client/release.json` 与 `content-manifest.json`；缺失或 version/commit 不匹配立即停止，publish 不 build；
+4. 执行 `release:preflight`，确认版本记录、HEAD、annotated tag 和工作区一致；
+5. 只有用户明确 publish 授权后，才 push 同一 HEAD 与同名 tag；
+6. 将同一 `dist/client` 部署到固定 EdgeOne `name=xingbuild-nochina`、`projectId=makers-ze0f6txvlhco`、`domain=xingbuild.top`，部署结果身份不匹配立即失败；
+7. 使用同一 version/commit 访问固定公网域名并校验 `release.json`、`content-manifest.json` 和核心页面；
+8. 只有公网验证成功才报告线上统一版本；失败时保留未发布/部分完成事实，不写完成声明、不继续后续阶段。
 
 双击 `publish-xingbuild.command` 本身就是明确的生产发布动作，入口将该动作显式传给统一脚本；直接调用统一脚本时必须传 `--authorize-publish` 或设置 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`。它不创建新版本；一次执行可完成 GitHub 同步和 EdgeOne 生产发布，两者仍须分别报告。GitHub 推送成功而 EdgeOne 失败时，必须报告“代码已同步、网站未上线”，不得把部分成功描述为正式发布。
 
@@ -365,18 +361,36 @@ publish 禁止：`incrementPatch`、写 package/VERSION/current/history、`git c
 该命令必须参与统一版本收口，并且必须：
 
 1. 缺失或非法 slug 立即失败，不从 HEAD 猜测目标；
-2. 从已验收的精确 HEAD 创建内部只读内容构建沙箱，确认目标 production 为完整 published Observation，审核 hash 与保留 draft 一致；不得创建工程分支、版本提交或 tag；
-3. 只检查目标 slug 的 candidate/import 冲突；无关 ignored workspace 内容可以并存；
-4. 在短时 release lease（发布租约）内确认精确 HEAD 只包含目标 Observation 与必要 approved media；source 或远端主线变化时停止，不自动 fast-forward、commit 或重建版本；
-5. 执行目标检查、全量 content check、生产构建和 Sites 测试，并拒绝任何 workspace 路径进入生产 source/bundle；
-6. 部署前再次确认远端 main 仍等于已验证 HEAD；若不一致则停止并按 lease 重建，绝不部署旧 HEAD；
-7. 部署既有 `xingbuild-nochina` 项目；
-8. 以目标 slug URL、统一版本和同一最终 commit 完成公网验证，分别报告版本、tag、push、部署和公网结果；
-9. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，同一 HEAD 的 retry 成功后仍执行 finalize。
+2. 准备阶段确认目标 production、审核 hash 与保留 draft 一致，并完成目标 scope/build/test；
+3. transport 只读取已生成且身份匹配的 `dist/client`，不创建工程分支、版本提交或 tag；
+4. 只检查目标 slug 的 candidate/import 冲突；无关 ignored workspace 内容可以并存；
+5. 部署前确认远端 main 仍等于已验证 HEAD；不自动 fast-forward、commit、tag、重建或重试后继续发布；
+6. 部署既有固定 EdgeOne 目标；
+7. 以目标 slug URL、统一版本和同一最终 commit 完成公网验证，分别报告版本、tag、push、部署和公网结果；
+8. 仅在公网验证成功后精确 finalize 目标 slug 的 draft/review/recovery；失败时三者完整保留，进入 Publish Incident 决策门。
 
 脚本存在不构成发布授权。GitHub 同步、EdgeOne 部署和公网验收仍需分别报告。
 
-### 7.2 轻量访问概览
+### 7.2 Publish Incident 发布故障决策门
+
+任一 prepare、build、closeout、preflight 或 transport 阶段失败，立即停止；禁止失败后自动 patch、重试、继续 push/deploy 或写入完成历史。Engineering 只提交一份最小故障检查点（可写入对应版本 `docs/qa/` 证据，不回写已打 tag 的 `current.md`/history）：
+
+```text
+Publish Incident
+失败阶段：prepare | build | closeout | preflight | transport-push | transport-deploy | public-verify
+事实证据：命令、HEAD/tag、工作区 dirty paths、manifest、远端/EdgeOne/公网响应
+根因分类：产品验收问题 | 工程实现 | CLI/工具 | prepare/build | transport | 环境
+影响：已完成与未完成的阶段、线上是否变化
+方案：可选修复或回退路径
+推荐：唯一推荐动作及理由
+owner：唯一执行责任人/task
+授权：已有授权、缺失授权或需用户重新授权
+下一动作：停止条件解除前不得继续发布
+```
+
+路由固定为：产品验收问题进入下一版本；工程实现问题在当前未提交版本内修复；CLI/工具问题登记候选评审；prepare/build 问题回准备阶段修复；transport 问题修发布执行器；环境问题由环境责任人解除。push 已成功而 deploy/verify 失败时，只报告“代码已同步、网站未上线”，不得描述为完整发布。
+
+### 7.3 轻量访问概览
 
 - xingbuild 只在 `https://xingbuild.top/`（以及正式支持并重定向到同站的 `www` 别名）页面 visible 累计 15 秒后，以 `site_code=XINGBUILD` 调用同源 `POST /api/visits/qualify`；隐藏时间暂停累计，每次页面加载最多触发一次。
 - 本站 origin 的 localStorage 独立保存 `visitor_seed`，不得使用父域 Cookie、共享种子或服务端网络信息关联 Robotaxi 匿名身份。父域 `xingbuild_visit_excluded=1` 只表达本设备排除。
@@ -404,6 +418,7 @@ publish 禁止：`incrementPatch`、写 package/VERSION/current/history、`git c
 - 正式域名：`xingbuild.top`
 
 项目名是发布目标合同。不得为了命名简洁改回 `xingbuild`，否则 CLI 可能创建或更新另一个项目。
+代码不接受 `XINGBUILD_EDGEONE_PROJECT`、`XINGBUILD_EDGEONE_PROJECT_ID` 或 `XINGBUILD_PUBLIC_URL` 覆盖；未声明的环境变量不得静默改变发布目标。未来目标变更必须作为明确发布目标合同写入新版本并同步验证。
 
 ## 8. 发布状态
 

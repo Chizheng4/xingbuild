@@ -740,6 +740,10 @@ test("product and content publish scripts share the unified release contract", a
   assert.match(unified, /readPreparedDist/);
   assert.match(unified, /content-manifest\.json/);
   assert.match(unified, /makers.*deploy/);
+  assert.match(unified, /--json/);
+  assert.match(unified, /transport-push|transport-deploy|public-verify/);
+  assert.match(unified, /makers-ze0f6txvlhco/);
+  assert.match(unified, /xingbuild\.top/);
   assert.match(unified, /git.*push/);
   assert.match(unified, /--authorize-publish/);
   assert.doesNotMatch(unified, /release:check|test:sites|npm run build|architecture:views|article:figures/);
@@ -748,6 +752,24 @@ test("product and content publish scripts share the unified release contract", a
   assert.doesNotMatch(unified, /git\(\["commit"/);
   assert.doesNotMatch(unified, /git\(\["tag",[^\n]*-a/);
   assert.doesNotMatch(content, /find \.content-workspace/);
+});
+
+test("release rules separate prepare/build/closeout/preflight/transport and incident decisions", async () => {
+  const rules = await readFile(path.join(root, "docs", "rules", "iteration-and-release.md"), "utf8");
+  assert.match(rules, /release:prepare/);
+  assert.match(rules, /release:build/);
+  assert.match(rules, /release:closeout-check/);
+  assert.match(rules, /release:preflight/);
+  assert.match(rules, /Publish Incident/);
+  for (const field of ["失败阶段", "事实证据", "根因分类", "影响", "方案", "推荐", "owner", "授权", "下一动作"]) {
+    assert.match(rules, new RegExp(field));
+  }
+  for (const category of ["产品验收问题", "工程实现", "CLI/工具", "prepare/build", "transport", "环境"]) {
+    assert.match(rules, new RegExp(category));
+  }
+  assert.doesNotMatch(rules, /使用精确 HEAD 的内部只读构建沙箱/);
+  assert.doesNotMatch(rules, /生成目标 patch 版本、更新版本记录、创建 annotated tag、push/);
+  assert.doesNotMatch(rules, /current\.md.*发布授权；/);
 });
 
 test("release build consumes committed generated outputs without invoking generators", async () => {

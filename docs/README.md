@@ -60,4 +60,4 @@
 
 构建只读消费已提交的 `src/generated/` 与 `public/` 生成物，不调用会回写 tracked 输出的生成器。`architecture:views`、`framework:data`、`framework:layout`、`article:figures` 仅在产品方案变更后、local commit 前显式运行并将生成物一并提交。
 
-发布前运行 `npm run release:prepare`、`npm run release:build` 完成业务检查、构建和 Sites 测试；publish 只传输预先生成且身份匹配的 `dist/client`，不再运行业务 QA 或 build。
+发布按四阶段执行：`npm run release:prepare` → `npm run release:build` → `npm run release:closeout-check`/`npm run release:preflight` → transport-only publish。publish 只传输预先生成且身份匹配的 `dist/client`，不运行业务 QA 或 build；失败进入 Publish Incident 决策门。EdgeOne 目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`。

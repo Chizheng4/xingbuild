@@ -5,7 +5,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   assertPublishAuthorization,
+  assertFixedPublishTarget,
+  edgeoneProject,
+  edgeoneProjectId,
+  edgeoneDomain,
   isPublishAuthorized,
+  readDeploymentResult,
+  readFixedEdgeoneTarget,
   readPreparedDist,
   trackedDirtyPaths,
 } from "../scripts/unified-publish.mjs";
@@ -16,6 +22,23 @@ test("unified publish authorization is explicit and independent from version ide
   assert.equal(isPublishAuthorized({ argv: ["--authorize-publish"], env: {} }), true);
   assert.equal(isPublishAuthorized({ argv: [], env: { XINGBUILD_PUBLISH_AUTHORIZATION: "confirmed" } }), true);
   assert.throws(() => assertPublishAuthorization({ argv: [], env: {} }), /publish authorization is required/);
+});
+
+test("transport target is fixed and rejects undeclared overrides", async () => {
+  assert.equal(edgeoneProject, "xingbuild-nochina");
+  assert.equal(edgeoneProjectId, "makers-ze0f6txvlhco");
+  assert.equal(edgeoneDomain, "xingbuild.top");
+  assert.doesNotThrow(() => assertFixedPublishTarget({}));
+  assert.throws(
+    () => assertFixedPublishTarget({ XINGBUILD_EDGEONE_PROJECT: "other" }),
+    /XINGBUILD_EDGEONE_PROJECT is not supported/,
+  );
+  const target = await readFixedEdgeoneTarget(process.cwd());
+  assert.deepEqual(target, { name: edgeoneProject, projectId: edgeoneProjectId, domain: edgeoneDomain });
+  assert.throws(
+    () => readDeploymentResult(JSON.stringify({ status: "success", projectId: "other" })),
+    /deployment identity mismatch/,
+  );
 });
 
 test("unified publish treats tracked build output as a hard failure", () => {

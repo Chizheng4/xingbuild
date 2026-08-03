@@ -1,3 +1,9 @@
+## v0.24.14 — 发布 transport 目标与故障决策门治理
+
+- 状态：Engineering 在 direct-local main 完成发布规则定点修正、自 QA 与本地收口；提交后的产品/视觉验收、publish 授权和线上状态仍为外部事件。
+- 范围：统一 prepare/build/closeout/preflight/transport 四阶段；publish 只消费既有 HEAD/tag 与预生成 manifest；固定 EdgeOne 目标；新增 Publish Incident 失败停止与路由合同。
+- 不做：不修改 UI、IA、schema、内容或上游事实；不回写 v0.24.13，不移动既有 tag；不在本版本 push/publish/deploy。
+
 ## v0.24.13 — transport 合同测试收口
 
 - 状态：Engineering 修正 transport-only 发布合同的 Practice/范围测试断言并完成自 QA；v0.24.12 tag 保留不动。
