@@ -22,10 +22,10 @@
 - 内容与发布：负责事实审核、Brief/Article/Practice 结构、B 端产品页面内容和独立内容发布；不修改产品版本或视觉合同。详细合同只见 `docs/operations/内容运营与发布规则.md`。
 - Ops：只生成可信证据候选、去重和覆盖记录；不写公开正文、不审核、不发布。经营观察唯一调度入口是已登记的 `xingbuild` 自动化；运行 task 是执行记录，不是新的调度器。
 - 每个文件、版本和发布动作只有一个执行 owner；其他 task 只提供事实、验收或短检查点。
-- Engineering 完成本地实现与自 QA 后，形成一个“本地提交版本”（版本号/名称/说明、代码提交、tag、版本记录和 clean 工作区），再交产品与视觉 task 验收；本地提交后任何修改都属于下一版本。
+- Engineering 完成本地实现与自 QA 后，形成一个“本地提交版本”（版本号/名称/说明、代码提交、annotated tag、history 和 clean 工作区），再交产品与视觉 task 验收；本地提交后任何修改都属于下一版本。
 - 产品与视觉 task 验收本地提交版本；验收发现产品、视觉、对象边界或验收合同问题时，直接定义下一个 patch/小迭代/大迭代并写入 `current.md`，不重新创建普通候选。
 - 产品与视觉验收通过后，只有用户明确要求 publish 时，Engineering 才执行线上发布；publish 成功后线上版本必须与本地提交版本的版本号和最终提交一致。
-- `current.md`/history 只维护不可变的 local version identity facts（至少 `localSubmission`、版本号、HEAD、annotated tag、clean 状态）；产品/视觉验收、publish 授权和线上状态是提交后的外部 QA/发布事件，不得回写已打 tag 的 current/history。
+- `current.md` 只维护当前可执行产品方案；history 只在 Engineering 形成 local commit/tag/clean 后保存不可变版本事实（版本号、commit、annotated tag、clean、父版本和范围）。产品/视觉验收、publish 授权和线上状态是外部事件，不得写入 current/history。
 - 每次 Engineering 或产品与视觉 task 收口都必须报告：本地版本状态、线上版本状态、本地 URL、线上 URL、已确定项、未确定项、候选状态、阻断和下一动作；无候选也必须明确报告等待用户下一步。
 
 ## 最小执行门禁

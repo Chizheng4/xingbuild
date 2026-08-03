@@ -1,3 +1,9 @@
+## v0.24.18 — 无状态产品工程迭代闭环
+
+- 状态：本版本采用 current→Engineering→local commit/tag→history→验收→publish 的无状态闭环；未 push、publish、部署或公网验收。
+- 范围：移除 current/history 生命周期状态字段；closeout/preflight 直接从 Git、版本文件和工作区推导本地事实；history 在 local commit/tag/clean 后一次性生成。
+- 不做：不修改 v0.24.17 tag、UI、IA、schema、内容、上游事实或独立内容发布合同。
+
 ## v0.24.17 — Ops 定时采集与内容 task 唯一职责治理
 
 - 状态：Engineering 已完成唯一调度身份与 task 责任治理、自 QA；待本地 commit/tag 后产品/视觉验收，未 push、publish、部署或公网验收。

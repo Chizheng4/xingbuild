@@ -1,4 +1,10 @@
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
+export const FORBIDDEN_VERSION_STATE_FIELDS = ["localSubmission", "productVisualAcceptance", "publishAuthorization", "onlineRelease"];
+
+export function assertNoVersionStateFields(currentText = "") {
+  const found = FORBIDDEN_VERSION_STATE_FIELDS.filter((field) => new RegExp(`^${field}:`, "m").test(currentText));
+  if (found.length) throw new Error(`current.md must not store lifecycle state fields: ${found.join(", ")}`);
+}
 
 export function parseCurrentIterationVersion(currentIteration = "") {
   return currentIteration.match(/## 当前(?:唯一|目标)版本[：:]?\s*(?:\n\s*)?`(v\d+\.\d+\.\d+)`/)?.[1];

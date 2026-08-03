@@ -5,7 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { formatVersion, parseCurrentVersion } from "./lib/unified-release.mjs";
-import { assertVersionState } from "./lib/version-state.mjs";
+import { assertNoVersionStateFields } from "./lib/release-readiness.mjs";
 import {
   assertFixedPublishTarget,
   assertPublishAuthorization,
@@ -64,12 +64,12 @@ export async function readAcceptedVersion(sourceCwd = root) {
   const packageLock = JSON.parse(await readFile(path.join(sourceCwd, "package-lock.json"), "utf8"));
   const versionText = await readFile(path.join(sourceCwd, "VERSION.md"), "utf8");
   const currentText = await readFile(path.join(sourceCwd, "docs/iterations/current.md"), "utf8");
+  assertNoVersionStateFields(currentText);
   const version = formatVersion(packageJson.version);
   const expectedNumber = version.slice(1);
   if (packageLock.version !== expectedNumber || packageLock.packages?.[""]?.version !== expectedNumber) throw new Error("package.json and package-lock.json versions are not aligned");
   if (!versionText.includes(`## ${version}`)) throw new Error(`VERSION.md does not record ${version}`);
   if (parseCurrentVersion(currentText) !== version) throw new Error(`current.md does not record ${version}`);
-  assertVersionState({ currentText, phase: "publish", headTagged: true, clean: true });
   const historyFile = path.join(sourceCwd, "docs/iterations/history", `${version}.md`);
   if (!(await exists(historyFile))) throw new Error(`missing history record for ${version}`);
   return { version, historyFile };

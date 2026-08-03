@@ -44,7 +44,6 @@ test("content build uses a staging copy and emits an independent content manifes
     assert.equal(manifest.publishedArticleSlugs[0], target);
     assert.equal(release.version, prepared.baseProductVersion);
     assert.equal(release.commit, prepared.baseProductCommit);
-    assert.equal((await readFile(path.join(root, "package.json"), "utf8")).includes('"version": "0.24.16"'), true);
   } finally {
     await rm(prepared.packageDirectory, { recursive: true, force: true });
   }

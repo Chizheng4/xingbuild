@@ -163,7 +163,7 @@ stateDiagram-v2
 - 产品/视觉验收通过后，Engineering 等待用户 publish 指令；未 publish 时线上可以落后于本地版本，但不得声称已上线。
 - 用户明确要求产品 publish 后，Engineering 执行线上发布；成功后线上 `release.json`、产品版本号和最终提交必须与本地提交版本一致。内容 manifest 使用独立内容身份。
 - 每次交接和收口必须报告：本地版本状态与 `http://127.0.0.1:4317/`、线上版本状态与 `https://xingbuild.top/`、已确定项、未确定项、候选状态、阻断 ID、下一动作和授权边界；无候选也必须明确报告等待用户下一步。
-- `current.md` 只保留当前唯一版本与不可变 local version identity facts；产品/视觉验收、publish 授权和线上状态均为提交后的外部事件，不得回写已打 tag 的 current/history。
+- `current.md` 只保留当前唯一版本方案；local version identity facts 在 Engineering 形成 commit/tag/clean 后写入对应 history。产品/视觉验收、publish 授权和线上状态均为提交后的外部事件，不得回写已打 tag 的 current/history。
 
 #### 2.4.2 Git 回退与资源安全
 
@@ -239,13 +239,7 @@ Supersede 只处理未发布草稿：必须显式提供 old slug、canonical slu
 
 唯一当前指针：`docs/iterations/current.md`。
 
-`current.md`/history 只记录提交时冻结的本地版本身份事实；唯一允许的机器状态字段为：
-
-```text
-localSubmission: pending | complete
-```
-
-`localSubmission: complete` 只在 Engineering 本地 commit/tag/clean 形成时写入并冻结。产品/视觉验收是提交后的外部 QA/协作事件，publish 授权只接受显式 `--authorize-publish` 或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`，线上状态只由 release manifest、部署记录和公网验证承担；这些事件不得回写已打 tag 的 current/history。closeout/preflight 只校验不可变本地身份事实，不能把事件状态写入版本文件。
+`current.md` 只记录当前可执行产品方案，不保存 pending/complete 或验收、授权、线上状态字段。Engineering 在 local commit/tag/clean 形成后一次性生成不可变 `history/v{版本号}.md`，记录版本号、commit、annotated tag、clean、父版本、范围和验收合同。产品/视觉验收是提交后的外部 QA/协作事件，publish 授权只接受显式 `--authorize-publish` 或 `XINGBUILD_PUBLISH_AUTHORIZATION=confirmed`，线上状态只由 release manifest、部署记录和公网验证承担；这些事件不得写入 current/history。closeout/preflight 直接从 package、VERSION、current 版本号、Git HEAD、annotated tag 和 clean 工作区推导本地版本事实。
 
 未确认的产品优化和运营转入的产品候选统一位于活动 `docs/iterations/candidates/`；候选目录不是当前版本，也不要求 Engineering 等待。产品 task 在当前版本结束后把候选转化为一个正式设计方案并立即归档来源候选；版本顺序不读取 roadmap 或 task 历史。
 

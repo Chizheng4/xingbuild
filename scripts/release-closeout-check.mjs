@@ -3,8 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import process from "node:process";
-import { evaluateCloseoutReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
-import { evaluateVersionState } from "./lib/version-state.mjs";
+import { assertNoVersionStateFields, evaluateCloseoutReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -16,6 +15,7 @@ const currentIteration = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),
   "utf8",
 );
+assertNoVersionStateFields(currentIteration);
 const result = evaluateCloseoutReadiness({
   branch: git("branch", "--show-current"),
   allowReleaseWorktree: process.env.XINGBUILD_RELEASE_WORKTREE === "1",
@@ -26,17 +26,6 @@ const result = evaluateCloseoutReadiness({
   versionRecord: versionRecord.match(/^##\s+(v\d+\.\d+\.\d+)\b/m)?.[1],
   currentVersion: parseCurrentIterationVersion(currentIteration),
 });
-const stateResult = evaluateVersionState({
-  currentText: currentIteration,
-  phase: "closeout",
-  headTagged: false,
-  clean: false,
-  staged: git("diff", "--cached", "--name-only").trim() !== "",
-  expectedVersion: `v${packageJson.version}`,
-});
-result.blockers.push(...stateResult.blockers);
-result.ready = result.ready && stateResult.ready;
-
 if (!result.ready) {
   console.error(`版本收口未就绪：${result.version}`);
   for (const blocker of result.blockers) console.error(`- ${blocker}`);

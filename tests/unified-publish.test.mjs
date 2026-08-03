@@ -15,7 +15,7 @@ import {
   readPreparedDist,
   trackedDirtyPaths,
 } from "../scripts/unified-publish.mjs";
-import { evaluateVersionState, parseVersionState } from "../scripts/lib/version-state.mjs";
+import { assertNoVersionStateFields } from "../scripts/lib/release-readiness.mjs";
 
 test("unified publish authorization is explicit and independent from version identity", () => {
   assert.equal(isPublishAuthorized({ argv: [], env: {} }), false);
@@ -50,15 +50,11 @@ test("unified publish treats tracked build output as a hard failure", () => {
   assert.deepEqual(trackedDirtyPaths("\n"), []);
 });
 
-test("current stores only immutable local version identity facts", () => {
-  const complete = "状态：Engineering 已完成本地 commit/tag；提交后事件由外部记录。\nlocalSubmission: complete";
-  assert.equal(parseVersionState(complete).valid, true);
-  assert.equal(evaluateVersionState({ currentText: complete, phase: "preflight", headTagged: true, clean: true }).ready, true);
-  const mutable = `${complete}\nproductVisualAcceptance: pending\npublishAuthorization: pending\nonlineRelease: pending`;
-  assert.equal(parseVersionState(mutable).valid, false);
-  assert.equal(evaluateVersionState({ currentText: mutable, phase: "preflight", headTagged: true, clean: true }).ready, false);
-  const contradictory = "状态：等待本地 commit/tag。\nlocalSubmission: complete";
-  assert.equal(evaluateVersionState({ currentText: contradictory, phase: "preflight", headTagged: true, clean: true }).ready, false);
+test("current stores no lifecycle state fields", () => {
+  assert.doesNotThrow(() => assertNoVersionStateFields("## 当前唯一版本：`v0.24.18`\n\n## 本版本目标\n"));
+  for (const field of ["localSubmission", "productVisualAcceptance", "publishAuthorization", "onlineRelease"]) {
+    assert.throws(() => assertNoVersionStateFields(`${field}: pending`), /must not store lifecycle state fields/);
+  }
 });
 
 test("transport accepts only a prepared dist matching the exact version and HEAD", async () => {
