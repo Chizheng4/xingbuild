@@ -7,6 +7,7 @@ import {
   prepareContentRelease,
   verifyContentPackageOnce,
 } from "../scripts/content-release.mjs";
+import { hashArtifactValue, validateBaseSiteArtifact } from "../scripts/lib/base-site-artifact.mjs";
 import { publish } from "../scripts/unified-publish.mjs";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname);
@@ -28,6 +29,39 @@ test("content preparation creates an independent identity without product releas
     }
     assert.equal(await pathExists(path.join(prepared.packageDirectory, "package.json")), false);
     assert.equal(await pathExists(path.join(prepared.packageDirectory, "VERSION.md")), false);
+    assert.equal(prepared.baseSiteArtifactId, prepared.baseSiteArtifact.baseSiteArtifactId);
+    assert.equal(prepared.baseSiteArtifact.productVersion, prepared.baseProductVersion);
+  } finally {
+    await rm(prepared.packageDirectory, { recursive: true, force: true });
+  }
+});
+
+test("content baseSiteArtifact is explicit, immutable and independently hashed", () => {
+  const artifact = {
+    baseSiteArtifactId: "site-v0.21.0-abc123",
+    productVersion: "v0.21.0",
+    productCommit: "abc1234",
+    releaseManifestHash: hashArtifactValue({ release: "v0.21.0" }),
+    artifactContentHash: hashArtifactValue({ files: ["dist/client/index.html"] }),
+    sourceDeploymentId: "prepared-site-001",
+  };
+  assert.equal(validateBaseSiteArtifact(artifact), artifact);
+  assert.throws(() => validateBaseSiteArtifact({ ...artifact, releaseManifestHash: "not-a-hash" }), /SHA-256/);
+});
+
+test("content preparation accepts an explicit baseSiteArtifact without reading product release identity", async () => {
+  const artifact = {
+    baseSiteArtifactId: "site-v0.24.22-fixed",
+    productVersion: "v0.24.22",
+    productCommit: "97d095ca5d9c5e6a6cbe92940b188af58f298c80",
+    releaseManifestHash: "a".repeat(64),
+    artifactContentHash: "b".repeat(64),
+    sourceDeploymentId: "prepared-dist-v0.24.22",
+  };
+  const prepared = await prepareContentRelease({ kind: "article", target, baseSiteArtifact: artifact, sourceRoot: root });
+  try {
+    assert.equal(prepared.baseSiteArtifactId, artifact.baseSiteArtifactId);
+    assert.equal(prepared.baseProductCommit, artifact.productCommit);
   } finally {
     await rm(prepared.packageDirectory, { recursive: true, force: true });
   }

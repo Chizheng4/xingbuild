@@ -13,25 +13,27 @@ export function PracticeHeader({ practice, headingLevel = 1, headingId }) {
 }
 
 export function PracticeModule({ module, headingLevel = 2 }) {
-  if (!module.media?.src) return null;
   const Heading = `h${headingLevel}`;
+  const description = <><Heading>{module.label}</Heading><p>{module.shortDescription}</p></>;
+  if (!module.media?.src) {
+    return <section className="showcase-layout practice-module"><div className="showcase-layout__description">{description}</div></section>;
+  }
   return (
     <ShowcaseLayout
       className="practice-module"
-      description={<><Heading>{module.label}</Heading><p>{module.shortDescription}</p></>}
+      description={description}
       stage={<SystemStage media={module.media} action={module.action} />}
     />
   );
 }
 
 export function PracticeModuleList({ modules, headingLevel = 2 }) {
-  const visibleModules = modules.filter((module) => module.media?.src);
-  if (!visibleModules.length) return null;
-  return <section className="practice-module-list">{visibleModules.map((module) => <PracticeModule key={module.id} module={module} headingLevel={headingLevel} />)}</section>;
+  if (!modules.length) return null;
+  return <section className="practice-module-list">{modules.map((module) => <PracticeModule key={module.id} module={module} headingLevel={headingLevel} />)}</section>;
 }
 
 export function PracticePresentation({ practice, headingLevel = 1, headingId }) {
-  const hasModules = practice.modules.some((module) => module.media?.src);
+  const hasModules = practice.modules.length > 0;
   return (
     <div className="practice-presentation">
       <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} />

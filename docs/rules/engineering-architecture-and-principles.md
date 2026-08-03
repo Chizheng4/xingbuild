@@ -31,7 +31,7 @@ flowchart LR
 - Engineering 只实现 `current.md` 的正式方案；产品目标、对象边界、视觉合同或上游事实不成立时停止并回到责任 task。
 - 生成器 `architecture:views`、`framework:data`、`framework:layout`、`article:figures` 只在源/方案变化后显式运行；构建和发布不无条件调用会回写 tracked 输出的生成器。
 - `npm run release:prepare` / `release:build` 负责业务准备、构建和验证；`publish-xingbuild.command` / `unified-publish --kind product` 只校验已存在的 clean HEAD/tag 与 `dist/client`，然后按授权执行 push、deploy、公网验证，不包含网站业务逻辑。
-- 产品 publish 与内容 publish 是两个独立责任边界：产品 publish 消费产品版本身份；内容 publish 消费独立 `contentReleaseId` 和 ignored 发布包，不修改产品版本文件、commit/tag 或产品 current/history。
+- 产品 publish 与内容 publish 是两个独立责任边界：产品 publish 消费产品版本身份；内容 publish 消费独立 `contentReleaseId`、immutable `baseSiteArtifact` 和 ignored 发布包，不读取当前产品 HEAD/tag/current/preflight，不修改产品版本文件、commit/tag 或产品 current/history。
 - 任一构建后 tracked dirty、版本身份不一致、产物缺失或发布目标不明确，必须停止并形成 Publish Incident；不得自动 patch、commit、tag、重试或继续后续阶段。
 
 ## 三、代码与事实边界

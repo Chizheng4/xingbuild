@@ -9,8 +9,7 @@ export function projectPractice(practice, manifest) {
   return {
     ...practice,
     modules: practice.modules
-      .filter((module) => mediaById.has(module.mediaId))
-      .map(({ mediaId, ...module }) => ({ ...module, media: mediaById.get(mediaId) })),
+      .map(({ mediaId, ...module }) => ({ ...module, media: mediaId ? mediaById.get(mediaId) : undefined })),
   };
 }
 

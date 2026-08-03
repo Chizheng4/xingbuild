@@ -26,7 +26,8 @@ test("practice preserves superseded Robotaxi media records without projecting th
   assert.ok(manifest.assets.every((asset) => asset.archivePath?.startsWith("content/media/robotaxi/archive/")));
   assert.deepEqual(manifest.assets.map((asset) => asset.provenance.approvalStatus), ["paused", "revoked", "paused", "paused"]);
   assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
-  assert.deepEqual(findPractice("robotaxi").modules, []);
+  assert.equal(findPractice("robotaxi").modules.length, practice.modules.length);
+  assert.ok(findPractice("robotaxi").modules.every((module) => module.media === undefined));
 });
 
 test("practice media keeps reader interaction separate from internal provenance", () => {
@@ -93,7 +94,7 @@ test("practice media keeps reader interaction separate from internal provenance"
   };
   assert.deepEqual(validatePracticeBundle(practice, manifest), []);
   assert.equal(projectPractice(practice, manifest).modules.length, 1);
-  assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], ratio: "4:3" }] }).length);
+  assert.deepEqual(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], ratio: "4:3" }] }), []);
   assert.ok(validatePracticeBundle(practice, { ...manifest, reviewStatus: "draft" }).length);
   assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], assetSha256: "not-a-hash" }] }).length);
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], action: { href: "javascript:alert(1)" } }] }, manifest).length);
@@ -114,7 +115,8 @@ test("practice media keeps reader interaction separate from internal provenance"
   ]) {
     const candidate = { ...manifest, ...change };
     assert.deepEqual(validatePracticeBundle(practice, candidate), []);
-    assert.deepEqual(projectPractice(practice, candidate).modules, []);
+    assert.equal(projectPractice(practice, candidate).modules.length, 1);
+    assert.equal(projectPractice(practice, candidate).modules[0].media, undefined);
   }
 
 });

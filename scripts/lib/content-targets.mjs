@@ -6,6 +6,7 @@ import { projectRoot } from "./observation-content.mjs";
 export const contentTargetsPath = "content/registry/content-targets.json";
 export const changesDirectory = ".content-workspace/changes";
 const targetIdPattern = /^products\.robotaxi\.(title|intro|boundary|module\.[a-z0-9-]+\.(label|shortDescription|loopRelation|action\.href))$/;
+const mediaTargetIdPattern = /^media\.robotaxi\.(asset\.[a-z0-9-]+\.(type|src|archivePath|altZh|ratio|assetSha256)|module\.[a-z0-9-]+\.mediaId)$/;
 
 function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -43,6 +44,19 @@ export function validateContentTargetRegistry(registry) {
         throw new Error(`Robotaxi product target contract is invalid: ${target.targetId}`);
       }
     }
+    if (target.kind === "media-content") {
+      const validSource = target.sourcePath === "content/media/robotaxi/manifest.json" || target.sourcePath === "content/products/robotaxi.json";
+      const assetMatch = /^media\.robotaxi\.asset\.([a-z0-9-]+)\.(type|src|archivePath|altZh|ratio|assetSha256)$/.exec(target.targetId || "");
+      const moduleMatch = /^media\.robotaxi\.module\.([a-z0-9-]+)\.mediaId$/.exec(target.targetId || "");
+      const fieldMatchesIdentity = assetMatch
+        ? target.sourcePath === "content/media/robotaxi/manifest.json" && target.fieldPath === `assets[id=${assetMatch[1]}].${assetMatch[2]}`
+        : moduleMatch
+          ? target.sourcePath === "content/products/robotaxi.json" && new RegExp(`^modules\\[id=[a-z0-9-]*-${moduleMatch[1]}\\]\\.mediaId$`).test(target.fieldPath)
+          : false;
+      if (target.editable !== true || target.scope !== "field" || target.valueType !== "string" || !validSource || JSON.stringify(target.projectionRoutes) !== JSON.stringify(["/products"]) || !mediaTargetIdPattern.test(target.targetId || "") || !fieldMatchesIdentity) {
+        throw new Error(`Robotaxi media target contract is invalid: ${target.targetId}`);
+      }
+    }
     parseFieldPath(target.fieldPath);
     if (!Array.isArray(target.projectionRoutes) || target.projectionRoutes.length === 0 || target.projectionRoutes.some((route) => !hasText(route) || !route.startsWith("/"))) {
       throw new Error(`content target registry has invalid projection routes: ${target.targetId}`);
@@ -72,7 +86,9 @@ export async function readContentTargetRegistry({ rootDirectory = projectRoot } 
 }
 
 function targetAllowed(target) {
-  return target?.editable === true && target?.kind === "product-content" && targetIdPattern.test(target.targetId || "");
+  return target?.editable === true
+    && ((target?.kind === "product-content" && targetIdPattern.test(target.targetId || ""))
+      || (target?.kind === "media-content" && mediaTargetIdPattern.test(target.targetId || "")));
 }
 
 export async function resolveContentTarget(targetId, { rootDirectory = projectRoot } = {}) {
@@ -169,6 +185,7 @@ function validateAfter(target, after) {
     try { url = new URL(after); } catch { throw new Error(`${target.targetId} after must be a valid HTTPS URL`); }
     if (url.protocol !== "https:") throw new Error(`${target.targetId} after must use HTTPS`);
   }
+  if (Array.isArray(constraints.enum) && !constraints.enum.includes(after)) throw new Error(`${target.targetId} after is outside the registered enum`);
 }
 
 export async function createContentChangeSet({

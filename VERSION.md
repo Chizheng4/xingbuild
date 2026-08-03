@@ -1,3 +1,10 @@
+
+## v0.24.23 — 统一媒体合同与独立内容基座
+
+- 状态：本版本实现 image/video MediaAsset、空媒体模块、媒体字段级 ChangeSet/recovery 与 immutable `baseSiteArtifact` 内容发布基座；待本地 commit/tag/clean 后产品/视觉验收，未 push、publish、部署或公网验收。
+- 范围：内容 prepare/build/transport 使用独立 `contentReleaseId`、manifest/log 和 ignored package，不读取当前产品 HEAD/tag/current/preflight，不污染产品版本身份；保留产品 publish transport-only。
+- 不做：不修改 UI、IA、schema、路由、页面结构、视觉系统、上游事实、Practice video 特例或 v0.24.22 tag；不创建 branch/worktree/task/automation。
+
 ## v0.24.22 — Registry 固定合同与 rollback 基线漂移门禁
 
 - 状态：本版本固定 Robotaxi registry 来源/路由/类型合同，并在 rollback 前校验 canonical 原始 before 基线；未 push、publish、部署或公网验收。

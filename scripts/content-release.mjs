@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { access, cp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { access, appendFile, cp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -20,6 +20,7 @@ import {
 } from "./lib/observation-content.mjs";
 import { finalizeReleasedContent } from "./lib/content-finalize.mjs";
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
+import { readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import {
   applyContentChangeSet,
   hashValue,
@@ -106,36 +107,47 @@ function sourceIds(value) {
   return Array.isArray(value?.sources) ? value.sources.map((source) => typeof source === "string" ? source : source.id).filter(Boolean) : [];
 }
 
-export async function prepareContentRelease({ kind, target, changeSetPath, sourceRoot = root } = {}) {
+export async function prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, sourceRoot = root } = {}) {
   const content = await readTarget({ kind, target, sourceRoot });
   const changeSet = changeSetPath
     ? await readContentChangeSet(changeSetPath, { rootDirectory: sourceRoot })
     : null;
-  if (changeSet && (kind !== "practice" || target !== "robotaxi" || changeSet.sourcePath !== content.relative)) {
-    throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice target");
+  if (changeSet && (kind !== "practice" || target !== "robotaxi" || ![content.relative, "content/media/robotaxi/manifest.json"].includes(changeSet.sourcePath))) {
+    throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice or media target");
   }
   if (changeSet) {
+    const targetDocument = changeSet.sourcePath === "content/media/robotaxi/manifest.json"
+      ? content.practiceBundle?.manifest
+      : content.value;
+    if (!targetDocument) throw new Error("Robotaxi media ChangeSet requires the approved media manifest");
     if (changeSet.rollbackOf) {
-      const canonicalValue = readFieldValue(content.value, changeSet.fieldPath);
+      const canonicalValue = readFieldValue(targetDocument, changeSet.fieldPath);
       if (canonicalValue !== changeSet.rollbackOf.originalBefore || hashValue(canonicalValue) !== hashValue(changeSet.rollbackOf.originalBefore)) {
         throw new Error(`rollback canonical baseline drift for ${changeSet.targetId}`);
       }
-      content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
+      if (changeSet.sourcePath === "content/media/robotaxi/manifest.json") {
+        content.practiceBundle.manifest = writeFieldValue(content.practiceBundle.manifest, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
+      } else {
+        content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
+      }
     }
-    content.value = applyContentChangeSet(content.value, changeSet);
+    if (changeSet.sourcePath === "content/media/robotaxi/manifest.json") {
+      content.practiceBundle.manifest = applyContentChangeSet(content.practiceBundle.manifest, changeSet);
+    } else {
+      content.value = applyContentChangeSet(content.value, changeSet);
+    }
     if (content.practiceBundle) {
       const errors = validatePublishablePracticeBundle(content.value, content.practiceBundle.manifest, { expectedId: target });
       if (errors.length) throw new Error(`Practice ChangeSet validation failed: ${errors.join("; ")}`);
     }
   }
   const review = await readReview({ kind, target, sourceRoot, content });
-  const contentHash = changeSet ? hashValue(content.value) : await hashFile(content.file);
-  const preparedProductRelease = path.join(sourceRoot, "dist", "client", "release.json");
-  if (!(await isFile(preparedProductRelease))) throw new Error("prepared product dist/client/release.json is required before content build");
-  const productRelease = JSON.parse(await readFile(preparedProductRelease, "utf8"));
-  if (typeof productRelease.version !== "string" || typeof productRelease.commit !== "string") throw new Error("prepared product release.json has invalid identity");
-  const baseProductVersion = productRelease.version;
-  const baseProductCommit = productRelease.commit;
+  const contentHash = changeSet
+    ? hashValue({ value: content.value, media: content.practiceBundle?.manifest || null })
+    : await hashFile(content.file);
+  const immutableArtifact = validateBaseSiteArtifact(await readBaseSiteArtifact({ sourceRoot, baseSiteArtifact, artifactPath }));
+  const baseProductVersion = immutableArtifact.productVersion;
+  const baseProductCommit = immutableArtifact.productCommit;
   const contentReleaseId = `${kind}-${target}-${contentHash.slice(0, 16)}`;
   const packageDirectory = path.join(sourceRoot, ".content-workspace", "releases", contentReleaseId);
   const manifest = {
@@ -144,10 +156,13 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
     target,
     contentHash,
     sources: sourceIds(content.value),
+    sourceRefs: changeSet?.sourceRefs || sourceIds(content.value),
     reviewedAt: review.reviewedAt,
     publishedAt: content.value.publishedAt || content.value.updatedAt || null,
     deploymentId: null,
     publicVerify: null,
+    baseSiteArtifactId: immutableArtifact.baseSiteArtifactId,
+    baseSiteArtifact: immutableArtifact,
     baseProductVersion,
     baseProductCommit,
     targetPath: publicPath(kind, target),
@@ -176,15 +191,37 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
   const sourceDirectory = path.join(packageDirectory, "source");
   const sourceFile = path.join(sourceDirectory, content.relative);
   await mkdir(path.dirname(sourceFile), { recursive: true });
-  if (changeSet) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
+  if (changeSet && changeSet.sourcePath === content.relative) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
   else await cp(content.file, sourceFile);
+  if (kind === "practice") {
+    const mediaManifest = path.join(sourceDirectory, "content", "media", target, "manifest.json");
+    if (content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
+      await mkdir(path.dirname(mediaManifest), { recursive: true });
+      await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
+    } else if (await exists(path.join(sourceRoot, "content", "media", target, "manifest.json"))) {
+      await mkdir(path.dirname(mediaManifest), { recursive: true });
+      await cp(path.join(sourceRoot, "content", "media", target, "manifest.json"), mediaManifest);
+    }
+  }
   if (kind === "content" || kind === "practice") {
     const mediaRoot = path.join(sourceRoot, "content", "media", target);
     const publicMediaRoot = path.join(sourceRoot, "public", "media", target);
     if (await exists(mediaRoot)) await cp(mediaRoot, path.join(sourceDirectory, "content", "media", target), { recursive: true });
     if (await exists(publicMediaRoot)) await cp(publicMediaRoot, path.join(sourceDirectory, "public", "media", target), { recursive: true });
   }
-  return { ...manifest, packageDirectory, manifestPath, sourceDirectory, sourceFile };
+  if (kind === "practice" && content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
+    const mediaManifest = path.join(sourceDirectory, "content", "media", target, "manifest.json");
+    await mkdir(path.dirname(mediaManifest), { recursive: true });
+    await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
+  }
+  await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact.baseSiteArtifactId, changeSetId: changeSet?.changeId || null } });
+  return { ...manifest, packageDirectory, manifestPath, sourceDirectory, sourceFile, sourceRoot };
+}
+
+async function appendContentReleaseLog({ sourceRoot, contentReleaseId, event, data = {} }) {
+  const logDirectory = path.join(sourceRoot, ".content-workspace", "logs");
+  await mkdir(logDirectory, { recursive: true });
+  await appendFile(path.join(logDirectory, `${contentReleaseId}.jsonl`), `${JSON.stringify({ event, contentReleaseId, at: new Date().toISOString(), ...data })}\n`);
 }
 
 async function stageRepository({ packageInfo, sourceRoot }) {
@@ -211,8 +248,8 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
   try {
     run("npm", ["run", "build"], staging, {
       ...process.env,
-      XINGBUILD_PRODUCT_COMMIT: packageInfo.baseProductCommit,
-      XINGBUILD_PRODUCT_VERSION: packageInfo.baseProductVersion,
+      XINGBUILD_PRODUCT_COMMIT: packageInfo.baseSiteArtifact.productCommit,
+      XINGBUILD_PRODUCT_VERSION: packageInfo.baseSiteArtifact.productVersion,
       XINGBUILD_CONTENT_BUILD: "1",
     });
     const client = path.join(staging, "dist", "client");
@@ -227,6 +264,7 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
     await mkdir(path.dirname(packageClient), { recursive: true });
     await cp(client, packageClient, { recursive: true });
     await writeFile(packageInfo.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    await appendContentReleaseLog({ sourceRoot, contentReleaseId: packageInfo.contentReleaseId, event: "built", data: { baseSiteArtifactId: packageInfo.baseSiteArtifactId } });
     return { ...packageInfo, client: packageClient, manifest };
   } finally {
     await rm(staging, { recursive: true, force: true });
@@ -248,6 +286,15 @@ export async function verifyContentPackageOnce({ baseUrl = publicUrl, manifest, 
   if (publicManifest.contentReleaseId !== manifest.contentReleaseId || publicManifest.target !== manifest.target || publicManifest.contentHash !== manifest.contentHash) {
     throw new Error("public content manifest does not match the prepared content identity");
   }
+  if (manifest.baseSiteArtifactId && publicManifest.baseSiteArtifactId !== manifest.baseSiteArtifactId) {
+    throw new Error("public content manifest does not match the immutable baseSiteArtifact");
+  }
+  if (manifest.baseSiteArtifact) {
+    const publicRelease = await releaseResponse.json();
+    if (publicRelease.version !== manifest.baseSiteArtifact.productVersion || publicRelease.commit !== manifest.baseSiteArtifact.productCommit) {
+      throw new Error("public release does not match the immutable baseSiteArtifact");
+    }
+  }
   const page = await pageResponse.text();
   const target = await targetResponse.text();
   if (!page.includes("<title>xingbuild") || !target.includes("<title>xingbuild")) throw new Error("public content pages do not identify xingbuild");
@@ -261,6 +308,11 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   if (!(await exists(edgeone))) throw new Error("EdgeOne CLI is not installed in the project");
   const manifest = JSON.parse(await readFile(packageInfo.manifestPath, "utf8"));
   if (manifest.contentReleaseId !== packageInfo.contentReleaseId || manifest.contentHash !== packageInfo.contentHash) throw new Error("content release package identity mismatch");
+  validateBaseSiteArtifact(manifest.baseSiteArtifact);
+  if (manifest.baseSiteArtifactId !== manifest.baseSiteArtifact.baseSiteArtifactId) throw new Error("content release baseSiteArtifact identity mismatch");
+  if (manifest.baseSiteArtifact.productVersion !== packageInfo.baseSiteArtifact.productVersion || manifest.baseSiteArtifact.productCommit !== packageInfo.baseSiteArtifact.productCommit) {
+    throw new Error("content release baseSiteArtifact version/commit mismatch");
+  }
   const edgeoneTarget = await readFixedEdgeoneTarget(root);
   run(edgeone, ["whoami"], root, env);
   const deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", packageInfo.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
@@ -269,12 +321,17 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   const publicVerify = await verifyContentPackageOnce({ manifest: deployed });
   const completed = { ...deployed, publicVerify: { ...publicVerify, verifiedAt: new Date().toISOString() } };
   await writeFile(packageInfo.manifestPath, `${JSON.stringify(completed, null, 2)}\n`);
-  if (packageInfo.kind === "content") await finalizeReleasedContent(packageInfo.target, { rootDirectory: root });
+  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "transported", data: { deploymentId: completed.deploymentId } });
+  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "public-verify", data: { publicUrl: completed.publicVerify.publicUrl } });
+  if (packageInfo.kind === "content") {
+    await finalizeReleasedContent(packageInfo.target, { rootDirectory: root });
+    await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "finalized", data: { target: packageInfo.target } });
+  }
   return { ...completed, deployment, edgeoneTarget, publicVerify };
 }
 
-export async function publishContent({ kind, target, changeSetPath, argv = process.argv.slice(2), env = process.env } = {}) {
-  const prepared = await prepareContentRelease({ kind, target, changeSetPath });
+export async function publishContent({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, argv = process.argv.slice(2), env = process.env } = {}) {
+  const prepared = await prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath });
   const built = await buildContentRelease({ packageInfo: prepared });
   return transportContentRelease({ packageInfo: built, argv, env });
 }
@@ -283,18 +340,19 @@ async function main(argv = process.argv.slice(2)) {
   const kind = argv[argv.indexOf("--kind") + 1] || "content";
   const target = argv[argv.indexOf("--slug") + 1] || argv[argv.indexOf("--id") + 1];
   const changeSetPath = argv.includes("--change-set") ? argv[argv.indexOf("--change-set") + 1] : null;
+  const artifactPath = argv.includes("--base-site-artifact") ? argv[argv.indexOf("--base-site-artifact") + 1] : null;
   if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
-    const result = await prepareContentRelease({ kind, target, changeSetPath });
+    const result = await prepareContentRelease({ kind, target, changeSetPath, artifactPath });
     console.log(`Content release prepared: ${result.contentReleaseId}`);
     return;
   }
   if (argv.includes("--build")) {
-    const result = await buildContentRelease({ packageInfo: await prepareContentRelease({ kind, target, changeSetPath }) });
+    const result = await buildContentRelease({ packageInfo: await prepareContentRelease({ kind, target, changeSetPath, artifactPath }) });
     console.log(`Content release built: ${result.contentReleaseId}`);
     return;
   }
-  const result = await publishContent({ kind, target, changeSetPath, argv });
+  const result = await publishContent({ kind, target, changeSetPath, artifactPath, argv });
   console.log(`Content release completed: ${result.contentReleaseId} ${result.target}`);
 }
 

@@ -70,6 +70,7 @@ const requiredFiles = [
   "scripts/lib/unified-release.mjs",
   "scripts/lib/content-release-lease.mjs",
   "scripts/lib/content-targets.mjs",
+  "scripts/lib/base-site-artifact.mjs",
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
   "scripts/lib/content-release-readiness.mjs",

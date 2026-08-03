@@ -36,6 +36,26 @@ test("registry integrity fixes Robotaxi targets to safe product fields and route
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], editable: false }] }), /Robotaxi product target contract/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], projectionRoutes: ["/wrong"] }] }), /Robotaxi product target contract/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
+  for (const target of registry.targets.filter((entry) => entry.kind === "media-content")) {
+    assert.equal(target.scope, "field");
+    assert.equal(target.valueType, "string");
+    assert.equal(target.editable, true);
+    assert.deepEqual(target.projectionRoutes, ["/products"]);
+    assert.match(target.sourcePath, /^content\/(media\/robotaxi\/manifest|products\/robotaxi)\.json$/);
+  }
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, { ...registry.targets.find((entry) => entry.kind === "media-content"), targetId: "media.robotaxi.asset.invalid-source.type", fieldPath: "assets[id=invalid-source].type", sourcePath: "content/media/other/manifest.json" }] }), /Robotaxi media target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, { ...registry.targets.find((entry) => entry.kind === "media-content"), targetId: "media.robotaxi.asset.unknown.type", fieldPath: "assets[id=unknown].type", valueType: "object" }] }), /duplicate targetId|Robotaxi media target contract/);
+});
+
+test("registry exposes unified media type and empty-binding targets without guessing", async () => {
+  const registry = await readContentTargetRegistry({ rootDirectory: root });
+  const typeTarget = registry.targets.find((entry) => entry.targetId.endsWith("asset.robotaxi-evidence-grid-simulation-operations-map-v1.type"));
+  const bindingTarget = registry.targets.find((entry) => entry.targetId === "media.robotaxi.module.current-simulation.mediaId");
+  assert.equal(typeTarget.constraints.enum.join(","), "image,video");
+  assert.equal(bindingTarget.fieldPath, "modules[id=robotaxi-operations-current-simulation].mediaId");
+  const card = await createContentTargetCard(typeTarget.targetId, { rootDirectory: root });
+  assert.equal(card.current, "image");
+  assert.equal(card.beforeHash, hashValue("image"));
 });
 
 test("content:target emits one locating card and writes an ignored ChangeSet", async () => {

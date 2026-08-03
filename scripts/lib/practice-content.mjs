@@ -14,6 +14,7 @@ const manifestPublicStatuses = new Set(["public", "internal"]);
 const publicationStatuses = new Set(["active", "suspended"]);
 const assetReviewStatuses = new Set(["approved", "pending_review", "revoked"]);
 const assetApprovalStatuses = new Set(["approved", "paused", "revoked"]);
+export const mediaAssetTypes = new Set(["image", "video"]);
 
 export const practiceIdPattern = slugPattern;
 export const supportedPracticeIds = new Set(["robotaxi"]);
@@ -252,7 +253,7 @@ export function validatePracticeBundle(practice, manifest) {
       errors.push(`${field} must be an object`);
       continue;
     }
-    const allowed = new Set(["id", "type", "src", "archivePath", "altZh", "ratio", "assetSha256", "reviewStatus", "publicStatus", "provenance", "reviewRecord"]);
+    const allowed = new Set(["id", "type", "src", "archivePath", "altZh", "ratio", "assetSha256", "reviewStatus", "publicStatus", "provenance", "reviewRecord", "mime", "duration", "poster"]);
     for (const key of Object.keys(asset)) if (!allowed.has(key)) errors.push(`${field}.${key} is not allowed`);
     for (const key of ["id", "type", "altZh", "ratio", "assetSha256", "reviewStatus", "publicStatus"]) {
       if (!hasText(asset[key])) errors.push(`${field}.${key} must be a non-empty string`);
@@ -263,8 +264,11 @@ export function validatePracticeBundle(practice, manifest) {
     if (asset.archivePath !== undefined && !isNormalizedArchivePath(asset.archivePath, practice.id)) errors.push(`${field}.archivePath must stay safely under content/media/${practice.id}/archive`);
     if (isPublicMediaAsset(manifest, asset) && asset.archivePath !== undefined) errors.push(`${field}.archivePath is only for non-public media`);
     if (!isPublicMediaAsset(manifest, asset) && !hasText(asset.archivePath)) errors.push(`${field}.archivePath must preserve non-public media`);
-    if (asset.type !== "image") errors.push(`${field}.type must be image`);
-    if (asset.ratio !== "16:10") errors.push(`${field}.ratio must be 16:10`);
+    if (!mediaAssetTypes.has(asset.type)) errors.push(`${field}.type must be image or video`);
+    if (!/^\d+(?:\.\d+)?:\d+(?:\.\d+)?$/.test(asset.ratio || "")) errors.push(`${field}.ratio must declare a numeric width:height ratio`);
+    if (asset.mime !== undefined && (!hasText(asset.mime) || !["image/", "video/"].some((prefix) => asset.mime.startsWith(prefix)))) errors.push(`${field}.mime must be an image/* or video/* MIME type`);
+    if (asset.type === "video" && asset.mime !== undefined && !asset.mime.startsWith("video/")) errors.push(`${field}.mime must match video type`);
+    if (asset.type === "image" && asset.mime !== undefined && !asset.mime.startsWith("image/")) errors.push(`${field}.mime must match image type`);
     if (!sha256Pattern.test(asset.assetSha256 || "")) errors.push(`${field}.assetSha256 must be a SHA-256 hash`);
     if (!assetReviewStatuses.has(asset.reviewStatus)) errors.push(`${field}.reviewStatus is invalid`);
     if (!manifestPublicStatuses.has(asset.publicStatus)) errors.push(`${field}.publicStatus is invalid`);
@@ -290,13 +294,16 @@ export function validatePracticeBundle(practice, manifest) {
     }
     const allowed = new Set(["id", "group", "label", "shortDescription", "loopRelation", "mediaId", "action"]);
     for (const key of Object.keys(module)) if (!allowed.has(key)) errors.push(`${field}.${key} is not allowed`);
-    for (const key of ["id", "group", "label", "shortDescription", "loopRelation", "mediaId"]) {
+    for (const key of ["id", "group", "label", "shortDescription", "loopRelation"]) {
       if (!hasText(module[key])) errors.push(`${field}.${key} must be a non-empty string`);
     }
     if (!slugPattern.test(module.id || "")) errors.push(`${field}.id must be kebab-case`);
     if (moduleIds.has(module.id)) errors.push(`duplicate practice module id: ${module.id}`);
     moduleIds.add(module.id);
-    if (!assets.has(module.mediaId)) errors.push(`${field}.mediaId references missing media record`);
+    if (module.mediaId !== undefined) {
+      if (!hasText(module.mediaId)) errors.push(`${field}.mediaId must be a non-empty string when provided`);
+      else if (!assets.has(module.mediaId)) errors.push(`${field}.mediaId references missing media record`);
+    }
     validateAction(errors, module.action, `${field}.action`);
   }
   return errors;

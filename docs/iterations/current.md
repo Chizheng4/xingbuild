@@ -1,36 +1,50 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.22`
+## 当前唯一版本：`v0.24.23`
 
 ## 本版本目标
 
-在不扩大 v0.24.21 内容目标与恢复能力的前提下，补齐两个安全门禁：registry 对 Robotaxi 产品目标执行固定来源/路由/类型合同；rollback 在恢复前验证 canonical 基线仍是原始 `before`，再重建已发布值并执行 `beforeHash` 校验，禁止用写入动作掩盖内容漂移。该能力建设属于产品工程版本；日常内容修改继续使用独立 `contentReleaseId`，不进入产品版本。
+把产品能力与内容运营彻底分成两个责任平面：一次性建设通用的 image/video 媒体合同、空媒体模块语义、媒体 ChangeSet/recovery 和 immutable `baseSiteArtifact` 内容发布基座；能力完成后，内容 task 只通过独立内容文档、`contentReleaseId` 和发布日志管理日常内容，不读取当前产品 HEAD/tag、`current.md` 或产品 preflight，不进入产品版本闭环。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/声明式内容定位与快速内容发布方案.md`。
-- 父版本：`v0.24.21` / `c11025c4b089ce2b3f573794a026901a07305379`；既有 tag 不修改。
+- 正式设计：`docs/design/v0.24.23 统一媒体独立运营能力与内容发布架构方案.md`。
+- 父版本：`v0.24.22` / `97d095ca5d9c5e6a6cbe92940b188af58f298c80`；既有 tag/history 不修改。
 
 ## 本版本范围
 
-- `validateContentTargetRegistry` 对 `kind=product-content` 的 Robotaxi target 强制校验：`editable=true`、`scope=field`、`valueType=string`、`sourcePath=content/products/robotaxi.json`、`projectionRoutes=["/products"]`、登记 ID 与安全字段路径；任何路径或路由漂移硬停止。
-- `resolveContentTarget` 与 ChangeSet 读取继续只消费通过上述完整性门禁的登记目标，不允许通过篡改 registry 绕过字段白名单。
-- rollback prepare 在构造已发布值前，先校验 canonical 当前字段的 hash/值等于原始 ChangeSet 的 `originalBefore`；不匹配立即停止，不写入覆盖；通过后才重建原始 `originalAfter` 并让逆向 ChangeSet 的 `beforeHash` 真正校验。
-- 增加 registry 篡改、Robotaxi 类型/路径/路由漂移、rollback canonical 漂移与成功恢复的专项测试；继续复用既有 `content:target`、`content:prepare`、`content:build` 和独立 transport。
+- 统一 `MediaAsset` 的 `image|video` 合同，移除 Practice `type=image` 与固定 `16:10` 限制，校验类型、路径、hash、审核、公开状态、来源和 provenance；视频不建立一次性 MP4 旁路。
+- 允许模块没有 `mediaId`：无媒体模块不渲染媒体区域、不生成占位内容；已有 `ShowcaseLayout → PracticePage → SystemStage` 继续复用。
+- 扩展 registry 与 ChangeSet，支持已登记媒体对象、模块媒体绑定、before/after/hash、来源边界和逆向 recovery；禁止整文件覆盖、未登记媒体和伪造审批。
+- 引入明确 immutable `baseSiteArtifact` 内容构建输入，内容发布不依赖当前产品 HEAD/tag、`current.md`、`release:preflight` 或产品版本推进；基座只作部署来源证明，不替代产品 publish 身份。
+- 内容 release package 独立记录 `contentReleaseId`、contentHash、sourceRefs、baseSiteArtifactId、deploymentId、publicVerify 和 recovery 证据；不修改产品版本文件、commit/tag、history 或产品发布状态。
+- 更新 `docs/operations/内容运营与发布规则.md`、`docs/rules/iteration-and-release.md`、`docs/rules/engineering-architecture-and-principles.md` 中与本能力直接相关的独立运营、基座输入、工具边界和日志事实；不复制正文、不改无关规则。
+- 增加正向/反向专项：产品迭代并行发布 MP4、image/video、空模块、媒体状态/hash/provenance、基座身份、ChangeSet、recovery、失败保留和产品版本不污染。
 
 ## 明确不做
 
-- 不修改 UI、IA、页面结构、schema、路由、组件、CSS、交互、Practice video、媒体合同或上游事实。
-- 不扩大任何内容字段白名单，不新增 CMS、账号/RBAC、实时数据库或第二套内容发布引擎。
-- 不改变内容独立发布身份，不写入产品版本以外的运营状态。
-- 不创建、删除、暂停或替代 task、branch、worktree、automation 或 scheduler；不修改 v0.24.21 tag/history。
+- 不重做页面 IA、路由、页面组合、组件布局或视觉系统；不修改上游 Robotaxi 事实。
+- 不为本次 MP4 建立特例，不增加人工 CMS、RBAC、第二套产品版本或第二个 scheduler。
+- 不把内容文档、内容发布日志或内容状态写入产品 Git、`current.md`、产品 history 或产品 tag。
+- 不由内容 task 修改 `src/`、产品 schema、组件或 Engineering 工具；能力缺口必须通过产品候选进入本版本。
+- 不创建 branch、worktree、并行 task、automation 或 scheduler；不在能力验收前发布当前 MP4。
+
+## 产品/内容责任边界
+
+```text
+产品/Engineering：页面能力、媒体合同、校验器、ChangeSet 消费、baseSiteArtifact 与发布工具
+内容 task：内容文档、正文/媒体选择、来源、确认、独立 contentRelease 与公网内容验收
+Ops：来源覆盖、证据候选和运行记录
+产品候选：只有页面能力、媒体合同、工具或 transport 缺口进入
+```
 
 ## 验收合同
 
-- 任意 Robotaxi registry target 的来源、路由、类型或字段路径被篡改时，定位卡、ChangeSet、prepare 和 recovery 均硬停止。
-- rollback 只在 canonical 基线与原始 `before` 一致时生成恢复包；基线漂移不产生包、不覆盖文件、不继续发布。
-- 正向与逆向 ChangeSet 只写 ignored `.content-workspace/`，canonical 内容、产品版本身份和产品 manifest 不变。
-- `npm run check`、内容/Practice/ChangeSet/registry/recovery 专项、`release:prepare`、closeout、preflight、`git diff --check` 通过；完整 Sites 测试若仍只有既有 Mermaid/Puppeteer macOS I/O，记录为环境阻断。
-- Engineering 完成本地 commit/tag/clean 与 history 后，交产品/视觉验收；未验收、未授权前不 push/publish/deploy。
+- 产品主线存在未提交修改或正在形成新产品版本时，仍可用明确稳定 `baseSiteArtifactId` 独立发布已审核 MP4；不读取当前 HEAD/tag 作为内容门禁。
+- image 与 video 均通过统一媒体合同、hash、审批、provenance、独立 build、transport 和公网 verify；未提供媒体的模块保持为空。
+- 未登记 target、非法 type/MIME、路径越界、hash 不匹配、来源缺失、审批/公开状态错误、媒体绑定缺失、基座错误或基座漂移必须硬失败。
+- 正向发布可由原始 before/after 生成 recovery；build、deploy、public verify 任一失败只保留内容 recovery 与工具日志，不污染产品版本事实。
+- `npm run check`、`release:prepare`、内容/媒体/ChangeSet/recovery 专项、closeout、preflight、`git diff --check` 通过；已有环境 I/O 只能作为明确阻断记录。
+- Engineering 完成本地 commit/tag/clean 与 history 后，交产品/视觉验收能力；能力通过并经用户授权发布产品能力后，内容 task 才恢复本轮 MP4 独立发布。
 
 责任 task：产品与视觉主线负责方案和验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6e0a85` 负责实现、自 QA、本地版本收口。
