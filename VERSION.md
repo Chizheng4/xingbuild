@@ -1,3 +1,9 @@
+## v0.24.22 — Registry 固定合同与 rollback 基线漂移门禁
+
+- 状态：本版本固定 Robotaxi registry 来源/路由/类型合同，并在 rollback 前校验 canonical 原始 before 基线；未 push、publish、部署或公网验收。
+- 范围：仅 registry 完整性和 ChangeSet recovery 校验；不改变 v0.24.21 tag，不扩大内容字段或页面能力。
+- 不做：不改 UI、IA、schema、路由、组件、CSS、交互、上游事实、Practice video、内容事实或产品发布逻辑。
+
 ## v0.24.21 — 内容目标入口与可验证恢复包
 
 - 状态：本版本补齐非发布 `content:target` 定位卡/ChangeSet 入口、原始变更事实关联和逆向 recovery package；未 push、publish、部署或公网验收。

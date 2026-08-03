@@ -84,7 +84,7 @@
       "sourcePath": "content/products/robotaxi.json",
       "fieldPath": "modules[id=robotaxi-operations-current-simulation].action.href",
       "projectionRoutes": ["/products"],
-      "valueType": "uri",
+      "valueType": "string",
       "editable": true,
       "constraints": {"httpsOnly": true},
       "requires": ["user-confirmation", "link-check"]

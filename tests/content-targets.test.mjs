@@ -31,6 +31,10 @@ test("registry integrity fixes Robotaxi targets to safe product fields and route
   }
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, registry.targets[0]] }), /duplicate targetId/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], sourcePath: "../outside.json" }] }), /unsafe target source/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], sourcePath: "content/articles/enterprise-operating-system.json" }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], valueType: "object" }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], editable: false }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], projectionRoutes: ["/wrong"] }] }), /Robotaxi product target contract/);
   assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
 });
 
@@ -175,6 +179,14 @@ test("Practice prepare consumes a ChangeSet in staging and keeps canonical conte
     const recovered = JSON.parse(await readFile(rollbackPrepared.sourceFile, "utf8"));
     assert.equal(readFieldValue(recovered, fieldPath), before);
     assert.equal(rollbackPrepared.rollbackOf.changeId, changeSet.changeId);
+    const drifted = structuredClone(source);
+    drifted.modules[0].label = "canonical 漂移";
+    await writeFile(sourceFile, `${JSON.stringify(drifted, null, 2)}\n`);
+    await assert.rejects(
+      prepareContentRelease({ kind: "practice", target: "robotaxi", changeSetPath: rollbackWritten.file, sourceRoot: fixtureRoot }),
+      /rollback canonical baseline drift/,
+    );
+    assert.equal(readFieldValue(JSON.parse(await readFile(sourceFile, "utf8")), fieldPath), "canonical 漂移");
   } finally {
     await rm(written.file, { force: true });
     if (rollbackWritten) await rm(rollbackWritten.file, { force: true });

@@ -38,6 +38,11 @@ export function validateContentTargetRegistry(registry) {
     if (!hasText(target?.targetId) || ids.has(target.targetId)) throw new Error(`content target registry has duplicate targetId: ${target?.targetId || "missing"}`);
     ids.add(target.targetId);
     if (target.scope !== "field" || !safeRelativePath(target.sourcePath, { allowSrc: false })) throw new Error(`content target registry has unsafe target source: ${target.targetId}`);
+    if (target.kind === "product-content") {
+      if (target.editable !== true || target.scope !== "field" || target.valueType !== "string" || target.sourcePath !== "content/products/robotaxi.json" || JSON.stringify(target.projectionRoutes) !== JSON.stringify(["/products"]) || !targetIdPattern.test(target.targetId || "")) {
+        throw new Error(`Robotaxi product target contract is invalid: ${target.targetId}`);
+      }
+    }
     parseFieldPath(target.fieldPath);
     if (!Array.isArray(target.projectionRoutes) || target.projectionRoutes.length === 0 || target.projectionRoutes.some((route) => !hasText(route) || !route.startsWith("/"))) {
       throw new Error(`content target registry has invalid projection routes: ${target.targetId}`);

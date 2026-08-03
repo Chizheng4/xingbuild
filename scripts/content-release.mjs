@@ -25,6 +25,7 @@ import {
   hashValue,
   linkContentChangeSetRelease,
   readContentChangeSet,
+  readFieldValue,
   writeFieldValue,
 } from "./lib/content-targets.mjs";
 
@@ -114,7 +115,13 @@ export async function prepareContentRelease({ kind, target, changeSetPath, sourc
     throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice target");
   }
   if (changeSet) {
-    if (changeSet.rollbackOf) content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.before);
+    if (changeSet.rollbackOf) {
+      const canonicalValue = readFieldValue(content.value, changeSet.fieldPath);
+      if (canonicalValue !== changeSet.rollbackOf.originalBefore || hashValue(canonicalValue) !== hashValue(changeSet.rollbackOf.originalBefore)) {
+        throw new Error(`rollback canonical baseline drift for ${changeSet.targetId}`);
+      }
+      content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
+    }
     content.value = applyContentChangeSet(content.value, changeSet);
     if (content.practiceBundle) {
       const errors = validatePublishablePracticeBundle(content.value, content.practiceBundle.manifest, { expectedId: target });
