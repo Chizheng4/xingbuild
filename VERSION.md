@@ -1,3 +1,9 @@
+## v0.24.17 — Ops 定时采集与内容 task 唯一职责治理
+
+- 状态：Engineering 已完成唯一调度身份与 task 责任治理、自 QA；待本地 commit/tag 后产品/视觉验收，未 push、publish、部署或公网验收。
+- 范围：登记唯一 `xingbuild` 调度器、Ops 长期责任 task、运行 task 与内容接收 task；明确自动化资源创建门禁；禁止内容 task 创建、复制或替代定时采集；保留现有内容独立发布身份。
+- 不做：不删除或暂停既有 task/自动化；不修改 UI、IA、schema、内容、上游事实、产品发布逻辑或 v0.24.16 tag。
+
 ## v0.24.16 — 内容运营独立发布治理
 
 - 状态：Engineering 在 direct-local main 完成内容独立发布引擎、临时 staging 构建与产品/内容发布边界收口；待本地 commit/tag 后产品与视觉验收，未 push、publish、部署或公网验收。

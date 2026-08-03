@@ -75,6 +75,7 @@ const requiredFiles = [
   "tests/framework-layout.test.mjs",
   "tests/framework-experience.test.mjs",
   "tests/content-publish.test.mjs",
+  "tests/ops-scheduling-governance.test.mjs",
 ];
 
 for (const file of requiredFiles) {
