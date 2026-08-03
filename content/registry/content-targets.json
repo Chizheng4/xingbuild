@@ -1,0 +1,190 @@
+{
+  "registryId": "xingbuild-content-targets",
+  "schemaVersion": 1,
+  "purpose": "机器可读的内容定位与编辑白名单；不复制正文，不授权产品工程修改。",
+  "fieldPathSyntax": "顶层字段使用 field；数组项使用 arrayPath[id=value].field；不使用易变文本或 DOM selector。",
+  "independentRelease": true,
+  "targets": [
+    {
+      "targetId": "products.robotaxi.title",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "title",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true, "maxLength": 80},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.intro",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "intro",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true, "maxLength": 180},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.boundary",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "boundary",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.module.current-simulation.label",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "modules[id=robotaxi-operations-current-simulation].label",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true, "maxLength": 80},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.module.current-simulation.shortDescription",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "modules[id=robotaxi-operations-current-simulation].shortDescription",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true, "maxLength": 220},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.module.current-simulation.loopRelation",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "modules[id=robotaxi-operations-current-simulation].loopRelation",
+      "projectionRoutes": ["/products"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "robotaxi-fact-boundary"]
+    },
+    {
+      "targetId": "products.robotaxi.module.current-simulation.action.href",
+      "scope": "field",
+      "kind": "product-content",
+      "sourcePath": "content/products/robotaxi.json",
+      "fieldPath": "modules[id=robotaxi-operations-current-simulation].action.href",
+      "projectionRoutes": ["/products"],
+      "valueType": "uri",
+      "editable": true,
+      "constraints": {"httpsOnly": true},
+      "requires": ["user-confirmation", "link-check"]
+    },
+    {
+      "targetId": "articles.enterprise-operating-system.title",
+      "scope": "field",
+      "kind": "article",
+      "sourcePath": "content/articles/enterprise-operating-system.json",
+      "fieldPath": "title",
+      "projectionRoutes": ["/business-observations"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    },
+    {
+      "targetId": "articles.enterprise-operating-system.summary",
+      "scope": "field",
+      "kind": "article",
+      "sourcePath": "content/articles/enterprise-operating-system.json",
+      "fieldPath": "summary",
+      "projectionRoutes": ["/business-observations"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    },
+    {
+      "targetId": "profile.about.title",
+      "scope": "field",
+      "kind": "profile",
+      "sourcePath": "content/profile/about.json",
+      "fieldPath": "title",
+      "projectionRoutes": ["/about"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    },
+    {
+      "targetId": "profile.about.summary",
+      "scope": "field",
+      "kind": "profile",
+      "sourcePath": "content/profile/about.json",
+      "fieldPath": "summary",
+      "projectionRoutes": ["/about"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    }
+  ],
+  "templates": [
+    {
+      "targetIdPattern": "observations.{slug}.title",
+      "scope": "field",
+      "kind": "observation",
+      "sourcePathTemplate": "content/observations/{slug}.json",
+      "fieldPath": "title",
+      "projectionRoutes": ["/observations/{slug}"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    },
+    {
+      "targetIdPattern": "observations.{slug}.summary",
+      "scope": "field",
+      "kind": "observation",
+      "sourcePathTemplate": "content/observations/{slug}.json",
+      "fieldPath": "summary",
+      "projectionRoutes": ["/observations/{slug}"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    },
+    {
+      "targetIdPattern": "observations.{slug}.evidenceBoundary",
+      "scope": "field",
+      "kind": "observation",
+      "sourcePathTemplate": "content/observations/{slug}.json",
+      "fieldPath": "evidenceBoundary",
+      "projectionRoutes": ["/observations/{slug}"],
+      "valueType": "string",
+      "editable": true,
+      "constraints": {"nonEmpty": true},
+      "requires": ["user-confirmation", "source-boundary"]
+    }
+  ],
+  "excluded": [
+    {
+      "targetId": "home.*",
+      "sourcePath": "src/content/siteContent.js",
+      "reason": "首页主文案尚未外部化为独立内容对象；内容 task 不得直接修改 src/。"
+    },
+    {
+      "targetId": "*.(route|schema|component|css|interaction|source|mediaApproval)",
+      "reason": "属于产品工程、事实来源或媒体审核边界，不是普通内容字段。"
+    }
+  ]
+}
