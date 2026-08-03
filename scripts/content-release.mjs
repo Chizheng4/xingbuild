@@ -19,7 +19,12 @@ import {
   projectRoot,
 } from "./lib/observation-content.mjs";
 import { finalizeReleasedContent } from "./lib/content-finalize.mjs";
-import { assertPracticeContent } from "./lib/practice-content.mjs";
+import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
+import {
+  applyContentChangeSet,
+  hashValue,
+  readContentChangeSet,
+} from "./lib/content-targets.mjs";
 
 export const root = projectRoot;
 const edgeone = path.join(root, "node_modules", ".bin", "edgeone");
@@ -69,6 +74,7 @@ async function readTarget({ kind, target, sourceRoot }) {
   } else {
     const bundle = await assertPracticeContent(target, { rootDirectory: sourceRoot, publishable: true });
     if (bundle.practice.id !== target) throw new Error(`practice target mismatch: ${target}`);
+    return { relative, file, value, practiceBundle: bundle };
   }
   return { relative, file, value };
 }
@@ -97,10 +103,23 @@ function sourceIds(value) {
   return Array.isArray(value?.sources) ? value.sources.map((source) => typeof source === "string" ? source : source.id).filter(Boolean) : [];
 }
 
-export async function prepareContentRelease({ kind, target, sourceRoot = root } = {}) {
+export async function prepareContentRelease({ kind, target, changeSetPath, sourceRoot = root } = {}) {
   const content = await readTarget({ kind, target, sourceRoot });
+  const changeSet = changeSetPath
+    ? await readContentChangeSet(changeSetPath, { rootDirectory: sourceRoot })
+    : null;
+  if (changeSet && (kind !== "practice" || target !== "robotaxi" || changeSet.sourcePath !== content.relative)) {
+    throw new Error("Robotaxi field ChangeSet can only overlay the registered Practice target");
+  }
+  if (changeSet) {
+    content.value = applyContentChangeSet(content.value, changeSet);
+    if (content.practiceBundle) {
+      const errors = validatePublishablePracticeBundle(content.value, content.practiceBundle.manifest, { expectedId: target });
+      if (errors.length) throw new Error(`Practice ChangeSet validation failed: ${errors.join("; ")}`);
+    }
+  }
   const review = await readReview({ kind, target, sourceRoot, content });
-  const contentHash = await hashFile(content.file);
+  const contentHash = changeSet ? hashValue(content.value) : await hashFile(content.file);
   const preparedProductRelease = path.join(sourceRoot, "dist", "client", "release.json");
   if (!(await isFile(preparedProductRelease))) throw new Error("prepared product dist/client/release.json is required before content build");
   const productRelease = JSON.parse(await readFile(preparedProductRelease, "utf8"));
@@ -122,6 +141,8 @@ export async function prepareContentRelease({ kind, target, sourceRoot = root } 
     baseProductVersion,
     baseProductCommit,
     targetPath: publicPath(kind, target),
+    changeSetId: changeSet?.changeId || null,
+    changedTargets: changeSet ? [changeSet.targetId] : [],
   };
   await mkdir(packageDirectory, { recursive: true });
   const manifestPath = path.join(packageDirectory, "content-release.json");
@@ -136,7 +157,8 @@ export async function prepareContentRelease({ kind, target, sourceRoot = root } 
   const sourceDirectory = path.join(packageDirectory, "source");
   const sourceFile = path.join(sourceDirectory, content.relative);
   await mkdir(path.dirname(sourceFile), { recursive: true });
-  await cp(content.file, sourceFile);
+  if (changeSet) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
+  else await cp(content.file, sourceFile);
   if (kind === "content" || kind === "practice") {
     const mediaRoot = path.join(sourceRoot, "content", "media", target);
     const publicMediaRoot = path.join(sourceRoot, "public", "media", target);
@@ -232,8 +254,8 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   return { ...completed, deployment, edgeoneTarget, publicVerify };
 }
 
-export async function publishContent({ kind, target, argv = process.argv.slice(2), env = process.env } = {}) {
-  const prepared = await prepareContentRelease({ kind, target });
+export async function publishContent({ kind, target, changeSetPath, argv = process.argv.slice(2), env = process.env } = {}) {
+  const prepared = await prepareContentRelease({ kind, target, changeSetPath });
   const built = await buildContentRelease({ packageInfo: prepared });
   return transportContentRelease({ packageInfo: built, argv, env });
 }
@@ -241,18 +263,19 @@ export async function publishContent({ kind, target, argv = process.argv.slice(2
 async function main(argv = process.argv.slice(2)) {
   const kind = argv[argv.indexOf("--kind") + 1] || "content";
   const target = argv[argv.indexOf("--slug") + 1] || argv[argv.indexOf("--id") + 1];
-  if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice> --slug <slug>|--id <id> [--authorize-publish]");
+  const changeSetPath = argv.includes("--change-set") ? argv[argv.indexOf("--change-set") + 1] : null;
+  if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
-    const result = await prepareContentRelease({ kind, target });
+    const result = await prepareContentRelease({ kind, target, changeSetPath });
     console.log(`Content release prepared: ${result.contentReleaseId}`);
     return;
   }
   if (argv.includes("--build")) {
-    const result = await buildContentRelease({ packageInfo: await prepareContentRelease({ kind, target }) });
+    const result = await buildContentRelease({ packageInfo: await prepareContentRelease({ kind, target, changeSetPath }) });
     console.log(`Content release built: ${result.contentReleaseId}`);
     return;
   }
-  const result = await publishContent({ kind, target, argv });
+  const result = await publishContent({ kind, target, changeSetPath, argv });
   console.log(`Content release completed: ${result.contentReleaseId} ${result.target}`);
 }
 

@@ -1,3 +1,9 @@
+## v0.24.20 — 声明式 B 端内容定位与字段级 ChangeSet
+
+- 状态：本版本完成 registry 消费、Robotaxi 字段级 ChangeSet、Practice staging overlay 与独立内容边界；未 push、publish、部署或公网验收。
+- 范围：仅支持已登记 `products.robotaxi` 字段；ChangeSet 写入 ignored `.content-workspace/changes/`，复用现有内容 prepare/build/Practice 校验/独立 transport。
+- 不做：不修改 UI、IA、schema、路由、组件、CSS、交互、上游事实、产品发布逻辑、产品版本外内容或 v0.24.19 tag。
+
 ## v0.24.19 — 产品工程协作治理基线结构化
 
 - 状态：已完成五层规则与 Agent 入口治理的本地实现，待 Engineering 自 QA、local commit/tag/clean 和产品/视觉验收；未 push、publish、部署或公网验收。

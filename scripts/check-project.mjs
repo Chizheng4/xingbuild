@@ -68,6 +68,7 @@ const requiredFiles = [
   "scripts/unified-publish.mjs",
   "scripts/lib/unified-release.mjs",
   "scripts/lib/content-release-lease.mjs",
+  "scripts/lib/content-targets.mjs",
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
   "scripts/lib/content-release-readiness.mjs",
@@ -82,6 +83,7 @@ const requiredFiles = [
   "tests/ops-scheduling-governance.test.mjs",
   "tests/task-handoff-governance.test.mjs",
   "tests/baseline-governance.test.mjs",
+  "tests/content-targets.test.mjs",
 ];
 
 for (const file of requiredFiles) {
