@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.24.36",
+  "version": "0.24.37",
   "private": true,
   "type": "module",
   "scripts": {

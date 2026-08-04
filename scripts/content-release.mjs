@@ -433,8 +433,17 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   try {
     if (manifest.state === "released" && manifest.publicVerify) return { ...manifest, edgeoneTarget: await readFixedEdgeoneTarget(root), publicVerify: manifest.publicVerify };
     const edgeoneTarget = await readFixedEdgeoneTarget(root);
+    const currentProductClient = path.join(root, "dist", "client");
+    const currentRelease = JSON.parse(await readFile(path.join(currentProductClient, "release.json"), "utf8"));
+    if (manifest.baseProductVersion !== currentRelease.version || manifest.baseProductCommit !== currentRelease.commit) {
+      throw new Error("content package base product does not match current product release");
+    }
+    const currentArtifact = JSON.parse(await readFile(path.join(currentProductClient, "base-site-artifact.json"), "utf8"));
+    if (manifest.baseSiteArtifactId !== currentArtifact.baseSiteArtifactId) {
+      throw new Error("content package baseSiteArtifact does not match current product artifact");
+    }
     const publication = await createSitePublication({
-      productClient: packageInfo.client,
+      productClient: currentProductClient,
       releasesRoot: path.join(root, ".content-workspace", "releases"),
       outputRoot: path.join(packageInfo.packageDirectory, "site-publication"),
       additionalContentManifest: manifest,

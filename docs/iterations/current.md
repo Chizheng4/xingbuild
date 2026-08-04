@@ -1,21 +1,22 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.36`
+## 当前唯一版本：`v0.24.37`
 
 ## 本版本目标
 
-修正首次候选合并快照：候选在首次部署前即加入 activeContentReleaseIds，部署后再写回 deploymentId 并完成 combined verify，避免实际只部署旧 active 集合导致候选必然校验失败。
+修正内容 transport 的产品基座绑定：内容合并快照必须使用当前线上产品 immutable base，禁止旧内容 package 的产品 dist 污染当前产品身份。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.36 首次候选合并快照修正方案.md`。
+- 正式设计：`docs/design/v0.24.37 内容 transport 当前产品基座绑定方案.md`。
+- 继承设计：`docs/design/v0.24.36 首次候选合并快照修正方案.md`。
 - 继承设计：`docs/design/v0.24.35 合并快照公网验证修正方案.md`。
 - 继承设计：`docs/design/v0.24.34 内容恢复 CLI 暴露方案.md`。
 - 继承设计：`docs/design/v0.24.33 内容增量 transport 接口方案.md`。
 - 继承设计：`docs/design/v0.24.31 内容生命周期事实源读取修正方案.md`、`docs/design/v0.24.30 统一站点发布快照与内容保留方案.md`。
 - 继承设计：`docs/design/v0.24.29 产品发布门禁与内容基座解耦方案.md`、`docs/design/v0.24.28 持续自动闭环与协作身份治理方案.md`、`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
 - 产品候选：`XBUILD-CONTENT-RELEASE-003`（已纳入 v0.24.27，保留历史证据）。
-- 父版本：`v0.24.35` / `74abf68a5dda75a7210cb56230b4387aa6e10556`；既有 tag/history 不修改。
+- 父版本：`v0.24.36` / `73c28fcb652f5fbef08c900091895f4a610fe319`；既有 tag/history 不修改。
 
 ## 本版本范围
 

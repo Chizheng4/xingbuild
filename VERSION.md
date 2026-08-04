@@ -1,4 +1,9 @@
 
+## v0.24.37 — 内容 transport 当前产品基座绑定
+
+- 内容 transport 只使用当前产品 immutable client；旧 package 基座与当前 release/artifact 不一致时部署前硬失败。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.36 — 首次候选合并快照修正
 
 - 首次候选在 deployment 前按 contentReleaseId/contentHash/target/baseArtifact 加入合并快照，部署后回写 deploymentId 再验证与 finalize。
