@@ -1,4 +1,9 @@
 
+## v0.24.28 — 持续自动闭环与协作身份治理
+
+- 收口持续自动闭环、活动 task 身份注册、Xing 称呼与图形优先输出基线。
+- 产品与独立内容发布保持边界；本地版本，未 push/publish/deploy。
+
 ## v0.24.27 — 内容发布状态机与幂等恢复
 
 - 状态：Engineering 实现独立 contentRelease 状态机、lease/幂等 resume、有界公网验证和独立 finalize；待本地 commit/tag/clean、产品/视觉验收与用户授权，未再次 publish。

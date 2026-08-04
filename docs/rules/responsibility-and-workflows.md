@@ -12,10 +12,10 @@
 | 责任域 | 负责 | 不负责 |
 | --- | --- | --- |
 | 产品与视觉 | 产品总案、IA、页面能力、视觉合同、候选评审、正式方案、`current.md`、产品/视觉验收 | 日常选题、逐条事实审核、产品代码提交、线上 transport |
-| Engineering | 读取 `current.md` 实现产品能力，测试、自 QA、版本记录、commit/tag/clean；用户明确 publish 后执行 transport 和公网验证 | 自行改变产品目标、越过方案、把内容发布当产品版本、擅自创建 task/分支/worktree |
+| Engineering | 读取 `current.md` 实现产品能力，测试、自 QA、版本记录、commit/tag/clean；产品/视觉验收通过后按 Xing 的持续授权直接执行 transport 和公网验证 | 自行改变产品目标、越过方案、把内容发布当产品版本、擅自创建 task/分支/worktree |
 | 内容与发布 | Brief/Article/Practice、B 端产品页面内容、事实审核、独立内容发布和内容公网验收 | 修改页面能力、IA、schema、组件、视觉 token、产品版本、产品 tag |
 | Ops | 来源覆盖、可信证据候选、去重和运行记录 | 写公开正文、人工审核、发布、创建或复制 scheduler |
-| 用户 | 产品方向、关键未决项、生产 publish 授权和不可逆外部决策 | 不替代执行 owner 的实现和验证 |
+| Xing | 产品方向、关键未决项、持续发布授权的暂停/撤销和其他不可逆外部决策 | 不替代执行 owner 的实现和验证 |
 
 每个文件、版本和发布动作只有一个执行 owner；其他 task 只提供事实、验收或有界检查点。
 
@@ -29,7 +29,7 @@ flowchart LR
     D --> E["产品/视觉：提交后验收"]
     E -->|有产品/视觉问题| F["下一版本方案\n直接写入 current"]
     F --> B
-    E -->|通过| G["用户明确 publish"]
+    E -->|通过| G["既有持续发布授权"]
     G --> H["Engineering：transport + 公网证据"]
 ```
 
@@ -37,7 +37,8 @@ flowchart LR
 - Engineering 在本地形成 commit/tag/clean 后一次性写入对应 history；已打 tag 的 current/history 不因验收或线上事件回写。
 - 提交前发现普通工程缺陷，Engineering 在当前版本内修复并重新自 QA；发现产品目标、对象边界或验收合同不成立，停止越界并回到产品/视觉确认。
 - 提交后产品/视觉验收发现问题，直接定义下一个 patch/小迭代/大迭代并写入 current，不重新创建普通候选，也不改旧版本。
-- 产品/视觉验收通过后，只有用户明确要求 publish，Engineering 才执行线上 transport；线上版本必须与同一 local HEAD/tag 对齐。
+- Xing 已授予产品闭环持续发布授权；产品/视觉验收通过后 Engineering 直接执行线上 transport，不再逐次询问。Xing 明确暂停或撤销时，立即停止后续 publish；线上版本必须与同一 local HEAD/tag 对齐。
+- 默认自动闭环：在方案、验收和既有授权均满足时，各责任 task 继续完成本责任域的 prepare、build、transport、verify、finalize；只有 Xing 明确暂停、停止、撤销或要求人工接管时才停。硬失败、身份不一致和安全边界仍立即停止并上报。
 
 ## 三、候选分流与归档
 

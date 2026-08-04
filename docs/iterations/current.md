@@ -1,28 +1,28 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.27`
+## 当前唯一版本：`v0.24.28`
 
 ## 本版本目标
 
-修复 v0.24.26 内容发布运行暴露的状态机、幂等、恢复和生命周期路径根因；同时收口活动 task 注册、Xing 称呼和图形优先输出基线。
+在 v0.24.27 内容发布状态机基础上，完成持续自动闭环、活动 task 身份注册、Xing 称呼和图形优先输出基线收口；产品发布与独立内容发布保持边界并可自动完成。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
-- 产品候选：`XBUILD-CONTENT-RELEASE-003`。
-- 父版本：`v0.24.26` / `70847cdf6df0820458c32e2f6df19f6aea7711e8`；既有 tag/history 不修改。
+- 正式设计：`docs/design/v0.24.28 持续自动闭环与协作身份治理方案.md`。
+- 继承设计：`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
+- 产品候选：`XBUILD-CONTENT-RELEASE-003`（已纳入 v0.24.27，保留历史证据）。
+- 父版本：`v0.24.27` / `42c125d3a4ba867e78c32756489614e368e8760c`；既有 tag/history 不修改。
 
 ## 本版本范围
 
-- 独立内容 release 使用 `prepared → built → transported → verifying → finalized → released` 可恢复状态机。
-- 同一 `contentReleaseId/contentHash/baseSiteArtifactId` 的 package/deployment 具备 lease、幂等和 resume，不重复部署。
-- publicVerify 支持有界传播等待和身份绑定校验；finalize 使用独立 content root，原子完成且保留 recovery/log/package。
-- 30 条 observations 串行发布，单目标失败不得污染其他目标或产品版本。
-- 活动 task 身份、Xing 称呼和图形优先输出基线已登记并纳入本次治理收口。
+- 继承 v0.24.27 的独立内容 release 状态机、幂等、恢复和 30 条 observations 串行隔离能力。
+- 活动 task 身份、Xing 称呼、图形优先输出和持续自动闭环规则进入统一基线。
+- 产品/视觉验收通过后自动执行产品 transport；内容 Approved 且有批次授权后自动执行独立内容闭环。
+- 任何硬失败保留 recovery/package/log 并停止，不因自动授权而绕过身份、clean、审核或公网验证。
 
 ## 明确不做
 
-- 不修改上游事实、已发布 v0.24.26 或内容正文/来源/status/publishedAt。
+- 不修改上游事实、已发布 v0.24.27 或内容正文/来源/status/publishedAt。
 - 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag。
 - 不创建并行 task、branch、worktree 或 automation。
 

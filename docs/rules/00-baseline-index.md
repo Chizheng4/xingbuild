@@ -73,4 +73,4 @@ AGENTS.md → 00-baseline-index.md → 任务类型对应规则 → current/cand
 
 ## 五、基线变更
 
-基线变化属于产品工程治理版本，必须按 2.3 的版本闭环完成：写入当前正式方案 → Engineering 自 QA → local commit/tag/clean → history → 产品/视觉验收 → 用户明确 publish。内容运营和 Ops 的独立规则变化不制造产品版本，除非它改变产品能力或产品工程合同。
+基线变化属于产品工程治理版本，必须按 2.3 的版本闭环完成：写入当前正式方案 → Engineering 自 QA → local commit/tag/clean → history → 产品/视觉验收 → 按 Xing 持续授权直接 publish。Xing 明确暂停/撤销时才停止；内容运营和 Ops 的独立规则变化不制造产品版本，除非它改变产品能力或产品工程合同。

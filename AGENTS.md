@@ -43,11 +43,11 @@
 - 提交前的普通工程缺陷由 Engineering 在当前版本内修复；提交后的产品/视觉验收问题直接定义下一版本并写入 `current.md`，不修改旧版本、不重新创建普通候选。
 - 活动 candidates 只保存未确认 `pending`/`DRAFT`；候选纳入正式设计方案或关闭时，必须移入 `docs/iterations/history/candidates/`，不能长期保留 `confirmed`。
 - 内容正文/媒体默认位于被忽略 `.content-workspace/content`；draft/review/recovery、Ops 运行记录和内容发布包只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。内容构建必须显式消费含 source bundle/hash 的 immutable `baseSiteArtifact`。
-- 产品 publish 只消费已完成产品/视觉验收的现有 clean HEAD/tag 和预生成 `dist/client`；不得自动递增版本、回写版本文件、commit、tag、修复脏改或运行网站业务逻辑。
+- 产品 publish 只消费已完成产品/视觉验收的现有 clean HEAD/tag 和预生成 `dist/client`；Xing 已授予持续发布授权，验收通过后 Engineering 直接执行；Xing 明确暂停/撤销时立即停止。不得自动递增版本、回写版本文件、commit、tag、修复脏改或运行网站业务逻辑。
 - 生成器只在源/方案变化后显式运行并把生成物纳入同一 local commit；构建后的 tracked dirty、身份不一致或产物缺失必须停止。
 - EdgeOne 生产目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`；目标合同变化必须形成明确治理版本并同步验证，禁止环境变量静默覆盖。
 - 任何 branch/worktree、并行 task、automation/cron/scheduled task 都是受控资源；未经用户明确授权不得创建、复制、更新、暂停、删除或替代。经营观察只能复用运营合同登记的唯一 scheduler。
-- task 创建、交接、执行、版本推进和 publish 授权是不同动作。找不到已存在的目标 task、身份无法确认、责任不清或回传工具不可调用时，立即报告阻断，不得猜测、替代、创建、轮询或后台等待。
+- task 创建、交接、执行、版本推进和 publish 授权是不同动作；本项目产品闭环已获得持续 publish 授权，除非 Xing 明确暂停、停止、撤销或要求人工接管，不因每个版本重复询问并自动完成闭环。找不到已存在的目标 task、身份无法确认、责任不清或回传工具不可调用时，立即报告阻断，不得猜测、替代、创建、轮询或后台等待。
 - 跨 task 交接前必须读取并核验 `docs/rules/task-registry.md`；task 归档、重建、宿主或回传地址变化后先更新注册表。注册表未核验不得发送。
 - 跨 task 交接必须显式写 `sourceThreadId`、`targetThreadId`、`returnThreadId`；source 只作溯源，目标 task 到里程碑后向精确 return 地址一次回传。
 - 预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不得静默换端口或终止未知进程。

@@ -12,8 +12,8 @@ flowchart LR
     D --> E["产品/视觉验收"]
     E -->|有问题| F["下一版本方案\ncurrent.md"]
     F --> B
-    E -->|通过| G["用户明确 publish"]
-    G --> H["push → EdgeOne → 公网验证"]
+    E -->|通过| G["既有发布授权生效"]
+    G --> H["Engineering：push → EdgeOne → 公网验证"]
 ```
 
 版本号用于可辨识的产品能力、页面结构、内容模型、视觉系统、作品详情、共享展示能力或发布架构变化；局部快速修订可合并后形成一个稳定版本，不为每次对话或未完成试验增加版本。
@@ -77,7 +77,7 @@ transport 顺序固定：
 2. 确认官方 direct-local clean `main`，记录 source HEAD；
 3. 校验 `dist/client/release.json` 与版本/commit 匹配；
 4. 执行 `release:preflight`；
-5. 只有用户明确要求 publish 或入口显式传 `--authorize-publish` 后，才 push 同一 HEAD 和同名 tag；
+5. Xing 已授予产品闭环持续发布授权；产品/视觉验收通过后，Engineering 直接使用显式 `--authorize-publish` 执行，不再逐次向 Xing 询问；除非 Xing 明确暂停、停止、撤销或要求人工接管，否则自动完成后续 push、deploy、public verify；硬失败仍立即停止；
 6. 将同一 `dist/client` 部署到固定 EdgeOne 目标：`name=xingbuild-nochina`、`projectId=makers-ze0f6txvlhco`、`domain=xingbuild.top`；
 7. 访问固定公网域名，验证 `release.json` 和核心页面；
 8. 只有公网验证成功才报告线上统一产品版本。
