@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.24.28",
+  "version": "0.24.29",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,8 @@
     "test:sites": "node --test tests/*.test.mjs",
     "check": "node scripts/check-project.mjs",
     "release:prepare": "npm run check && npm run content:check && npm run article:check && npm run practice:check",
-    "release:build": "npm run release:prepare && npm run build && npm run test:sites",
+    "release:build": "npm run release:prepare && npm run build",
+    "release:qa": "npm run test:sites",
     "content:import": "node scripts/content-import.mjs",
     "content:check": "node scripts/content-check.mjs",
     "content:preview": "node scripts/content-preview.mjs",

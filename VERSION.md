@@ -1,4 +1,10 @@
 
+## v0.24.29 — 产品发布门禁与内容基座解耦
+
+- 分离确定性产品构建门禁与环境型 Mermaid/Puppeteer QA；环境 incident 独立记录，不降低身份、clean、manifest、公网门禁。
+- 明确内容可复用已登记兼容 immutable baseSiteArtifact，不等待未上线产品版本。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.28 — 持续自动闭环与协作身份治理
 
 - 收口持续自动闭环、活动 task 身份注册、Xing 称呼与图形优先输出基线。

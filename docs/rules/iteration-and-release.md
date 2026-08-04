@@ -52,7 +52,7 @@ Engineering 按以下顺序形成一个本地提交版本：
 
 Engineering 同一轮一次性更新 `VERSION.md`、`current.md` 和 `docs/iterations/history/v{版本号}.md`；history 记录版本号、commit、annotated tag、clean、父版本、范围和验收合同，提交后不可回写。
 
-生成器 `architecture:views`、`framework:data`、`framework:layout`、`article:figures` 只在源/方案变化后、local commit 前显式运行并把输出纳入同一提交。`build`、`release:prepare`、`release:build`、`release:check` 和 publish 不无条件调用会回写 tracked 输出的生成器；构建后 tracked dirty 是硬阻断。
+生成器 `architecture:views`、`framework:data`、`framework:layout`、`article:figures` 只在源/方案变化后、local commit 前显式运行并把输出纳入同一提交。`build`、`release:prepare`、`release:build`、`release:check` 和 publish 不无条件调用会回写 tracked 输出的生成器；构建后 tracked dirty 是硬阻断。`release:build` 只负责确定性构建与身份产物；`release:qa` 保留 Mermaid/Puppeteer、桌面/手机等环境型 QA，环境 incident 单独记录，不得伪装成产品实现失败。
 
 ## 5. 本地预览与验证
 

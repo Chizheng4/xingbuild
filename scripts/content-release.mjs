@@ -19,7 +19,7 @@ import {
   projectRoot,
 } from "./lib/observation-content.mjs";
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
-import { readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
+import { assertBaseSiteArtifactCompatible, readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import { contentRootDirectory } from "./lib/content-root.mjs";
 import {
   acquireContentReleasePackageLease,
@@ -204,7 +204,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const contentHash = changeSet
     ? hashValue({ value: content.value, media: content.practiceBundle?.manifest || null })
     : await hashFile(content.file);
-  const immutableArtifact = validateBaseSiteArtifact(await readBaseSiteArtifact({ sourceRoot, baseSiteArtifact, artifactPath }));
+  const immutableArtifact = assertBaseSiteArtifactCompatible(await readBaseSiteArtifact({ sourceRoot, baseSiteArtifact, artifactPath }));
   const baseProductVersion = immutableArtifact.productVersion;
   const baseProductCommit = immutableArtifact.productCommit;
   const contentReleaseId = `${kind}-${target}-${contentHash.slice(0, 16)}`;

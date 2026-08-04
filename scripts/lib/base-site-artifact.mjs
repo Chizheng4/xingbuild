@@ -107,6 +107,18 @@ export function validateBaseSiteArtifact(artifact, { sourceRoot } = {}) {
   return artifact;
 }
 
+export function assertBaseSiteArtifactCompatible(artifact, { requiredCapabilities = [] } = {}) {
+  validateBaseSiteArtifact(artifact);
+  if (!Array.isArray(requiredCapabilities) || requiredCapabilities.some((value) => typeof value !== "string" || value.trim() === "")) {
+    throw new Error("required baseSiteArtifact capabilities must be non-empty strings");
+  }
+  const capabilities = Array.isArray(artifact.capabilities) ? new Set(artifact.capabilities) : null;
+  if (capabilities && requiredCapabilities.some((value) => !capabilities.has(value))) {
+    throw new Error("baseSiteArtifact capabilities are incompatible with content target");
+  }
+  return artifact;
+}
+
 export async function createBaseSiteArtifact({ sourceRoot, productVersion, productCommit, release, contentManifest, sourceDeploymentId = "prepared-dist" } = {}) {
   if (!hasText(sourceRoot) || !path.isAbsolute(sourceRoot)) throw new Error("baseSiteArtifact sourceRoot must be absolute");
   if (!versionPattern.test(productVersion || "") || !commitPattern.test(productCommit || "")) throw new Error("baseSiteArtifact product identity is invalid");
