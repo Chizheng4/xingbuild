@@ -9,10 +9,18 @@ export async function readActiveContentReleases(releasesRoot) {
   const active = [];
   for (const entry of await readdir(releasesRoot, { withFileTypes: true }).catch(() => [])) {
     if (!entry.isDirectory()) continue;
+    const releasePath = path.join(releasesRoot, entry.name, "content-release.json");
     const manifestPath = path.join(releasesRoot, entry.name, "dist", "client", "content-manifest.json");
     try {
+      const release = JSON.parse(await readFile(releasePath, "utf8"));
       const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-      if (manifest.state === "released" && manifest.contentReleaseId && manifest.deploymentId && manifest.publicVerify) active.push(manifest);
+      const identityMatches = manifest.contentReleaseId === release.contentReleaseId
+        && (!release.contentHash || manifest.contentHash === release.contentHash)
+        && (!release.target || manifest.target === release.target)
+        && (!release.baseSiteArtifactId || manifest.baseSiteArtifactId === release.baseSiteArtifactId);
+      if (release.state === "released" && release.contentReleaseId && release.deploymentId && release.publicVerify && identityMatches) {
+        active.push({ ...manifest, deploymentId: release.deploymentId, publicVerify: release.publicVerify, contentReleaseId: release.contentReleaseId });
+      }
     } catch { /* incomplete packages are not active */ }
   }
   return active.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));

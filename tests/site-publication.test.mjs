@@ -3,7 +3,8 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { assertSitePublicationEvidence, createSitePublication } from "../scripts/lib/site-publication.mjs";
+import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases } from "../scripts/lib/site-publication.mjs";
+import { fileURLToPath } from "node:url";
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "xingbuild-publication-"));
@@ -14,6 +15,7 @@ async function fixture() {
   await writeFile(path.join(product, "release.json"), JSON.stringify({ version: "v0.24.30", commit: "a".repeat(40) }));
   await writeFile(path.join(product, "content-manifest.json"), JSON.stringify({ version: "v0.24.30", commit: "a".repeat(40), publishedSlugs: [], publishedArticleSlugs: [] }));
   await writeFile(path.join(releases, "content-a", "dist", "client", "content-manifest.json"), JSON.stringify({ state: "released", contentReleaseId: "content-a", deploymentId: "dep-a", publicVerify: { ok: true }, publishedSlugs: ["a"], publishedArticleSlugs: [] }));
+  await writeFile(path.join(releases, "content-a", "content-release.json"), JSON.stringify({ state: "released", contentReleaseId: "content-a", deploymentId: "dep-a", publicVerify: { ok: true } }));
   return { root, product, releases, output: path.join(root, "snapshot") };
 }
 
@@ -28,4 +30,11 @@ test("site publication requires deployment and both public verification records"
   assert.throws(() => assertSitePublicationEvidence({ deployment: null, productVerify: {}, contentVerify: {}, publicVerify: {} }), /deployment JSON/);
   assert.throws(() => assertSitePublicationEvidence({ deployment: { deploymentId: "dep" }, productVerify: {}, contentVerify: {}, publicVerify: {} }), /public verification/);
   assert.equal(assertSitePublicationEvidence({ deployment: { deploymentId: "dep" }, productVerify: { ok: true }, contentVerify: { ok: true }, publicVerify: { ok: true } }), true);
+});
+
+test("workspace released lifecycle facts retain all eight previously published packages", async () => {
+  const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const active = await readActiveContentReleases(path.join(root, ".content-workspace", "releases"));
+  assert.equal(active.length, 8);
+  assert.ok(active.every((item) => item.deploymentId && item.publicVerify && item.baseSiteArtifactId === "v0.24.26-70847cdf6df0"));
 });

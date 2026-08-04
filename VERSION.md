@@ -1,4 +1,10 @@
 
+## v0.24.31 — 内容生命周期事实源读取修正
+
+- 以 content-release.json 作为 active 生命周期事实，dist manifest 仅做身份、hash、target 与 base artifact 校验。
+- 保留 8 个已成功内容 release，不重新发布、不修改内容事实。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.30 — 统一站点发布快照与内容保留
 
 - 产品与 active content releases 合并为单一 sitePublication 快照，防止互相覆盖。
