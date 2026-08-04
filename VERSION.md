@@ -1,4 +1,10 @@
 
+## v0.24.38 — 内容 deployment 恢复与传播验证
+
+- 持久化 deployment JSON/site-publication，已有 deployment resume 只验证不重复上传。
+- 公网验证记录 elapsed/attempts，传播超限保持 recoverable。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.37 — 内容 transport 当前产品基座绑定
 
 - 内容 transport 只使用当前产品 immutable client；旧 package 基座与当前 release/artifact 不一致时部署前硬失败。

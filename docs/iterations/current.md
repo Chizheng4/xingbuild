@@ -1,14 +1,15 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.37`
+## 当前唯一版本：`v0.24.38`
 
 ## 本版本目标
 
-修正内容 transport 的产品基座绑定：内容合并快照必须使用当前线上产品 immutable base，禁止旧内容 package 的产品 dist 污染当前产品身份。
+修正内容 deployment 恢复与传播验证：持久化 deploymentId，resume 只做 verify/finalize，不重复部署；公网传播采用有界退避窗口。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.37 内容 transport 当前产品基座绑定方案.md`。
+- 正式设计：`docs/design/v0.24.38 内容 deployment 恢复与传播验证方案.md`。
+- 继承设计：`docs/design/v0.24.37 内容 transport 当前产品基座绑定方案.md`。
 - 继承设计：`docs/design/v0.24.36 首次候选合并快照修正方案.md`。
 - 继承设计：`docs/design/v0.24.35 合并快照公网验证修正方案.md`。
 - 继承设计：`docs/design/v0.24.34 内容恢复 CLI 暴露方案.md`。
@@ -16,7 +17,7 @@
 - 继承设计：`docs/design/v0.24.31 内容生命周期事实源读取修正方案.md`、`docs/design/v0.24.30 统一站点发布快照与内容保留方案.md`。
 - 继承设计：`docs/design/v0.24.29 产品发布门禁与内容基座解耦方案.md`、`docs/design/v0.24.28 持续自动闭环与协作身份治理方案.md`、`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
 - 产品候选：`XBUILD-CONTENT-RELEASE-003`（已纳入 v0.24.27，保留历史证据）。
-- 父版本：`v0.24.36` / `73c28fcb652f5fbef08c900091895f4a610fe319`；既有 tag/history 不修改。
+- 父版本：`v0.24.37` / `bd97ed78b8cb30cb906689a131a8c612890bdc69`；既有 tag/history 不修改。
 
 ## 本版本范围
 

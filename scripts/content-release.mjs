@@ -403,16 +403,19 @@ export async function verifyContentPackageOnce({ baseUrl = publicUrl, manifest, 
 
 export async function verifyContentPackage({ manifest, baseUrl = publicUrl, fetchImpl = fetch, maxAttempts = 5, delayMs = 1000, sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
   let lastError;
+  const startedAt = Date.now();
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      return await verifyContentPackageOnce({ baseUrl, manifest, fetchImpl });
+      return { ...(await verifyContentPackageOnce({ baseUrl, manifest, fetchImpl })), elapsedMs: Date.now() - startedAt, attempts: attempt };
     } catch (error) {
       lastError = error;
       if (attempt === maxAttempts) break;
       await sleepImpl(delayMs * attempt);
     }
   }
-  throw new Error(`content public verification exhausted ${maxAttempts} attempts: ${lastError?.message || "unknown error"}`);
+  const error = new Error(`content public verification exhausted ${maxAttempts} attempts after ${Date.now() - startedAt}ms: ${lastError?.message || "unknown error"}`);
+  error.recoverable = true;
+  throw error;
 }
 
 export async function transportContentRelease({ packageInfo, argv = process.argv.slice(2), env = process.env } = {}) {
@@ -442,12 +445,17 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     if (manifest.baseSiteArtifactId !== currentArtifact.baseSiteArtifactId) {
       throw new Error("content package baseSiteArtifact does not match current product artifact");
     }
-    const publication = await createSitePublication({
+    let publication = await createSitePublication({
       productClient: currentProductClient,
       releasesRoot: path.join(root, ".content-workspace", "releases"),
       outputRoot: path.join(packageInfo.packageDirectory, "site-publication"),
       additionalContentManifest: manifest,
     });
+    const publicationRecordPath = path.join(packageInfo.packageDirectory, "site-publication.json");
+    try {
+      const persisted = JSON.parse(await readFile(publicationRecordPath, "utf8"));
+      if (persisted.sitePublicationId === publication.sitePublicationId && persisted.deploymentId) publication = { ...publication, ...persisted, client: publication.client };
+    } catch { /* first execution */ }
     publicationLease = await acquireSitePublicationLease({ publicationDirectory: publication.client, sitePublicationId: publication.sitePublicationId });
     await validateUploadQuota(publication.client);
     let deployed = manifest;
@@ -455,10 +463,14 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     if (!publication.deploymentId) {
       run(edgeone, ["whoami"], root, env);
       deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", publication.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
+      await writeJsonAtomically(publicationRecordPath, { ...publication, deploymentId: deployment.deploymentId || deployment.id || null, deployment, persistedAt: new Date().toISOString() });
       deployed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", { sitePublicationId: publication.sitePublicationId, deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString(), attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
+    } else {
+      deployment = publication.deployment || { deploymentId: publication.deploymentId };
+      deployed = { ...manifest, deploymentId: publication.deploymentId, sitePublicationId: publication.sitePublicationId };
     }
     const verifying = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { deploymentId: deployed.deploymentId, recoverable: false });
-    const publicVerify = await verifyContentPackage({ manifest: verifying });
+    const publicVerify = await verifyContentPackage({ manifest: { ...verifying, activeContentReleaseIds: publication.contentReleaseIds } });
     const verified = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { publicVerify: { ...publicVerify, verifiedAt: new Date().toISOString() }, recoverable: false, failure: null });
     const finalized = await finalizeContentRelease({ ...packageInfo, ...verified });
     const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { completionPath: finalized.completionPath, recoverable: false });
