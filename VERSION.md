@@ -1,4 +1,10 @@
 
+## v0.24.30 — 统一站点发布快照与内容保留
+
+- 产品与 active content releases 合并为单一 sitePublication 快照，防止互相覆盖。
+- deployment JSON 与产品/内容公网验证均为 released 必需证据。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.29 — 产品发布门禁与内容基座解耦
 
 - 分离确定性产品构建门禁与环境型 Mermaid/Puppeteer QA；环境 incident 独立记录，不降低身份、clean、manifest、公网门禁。
