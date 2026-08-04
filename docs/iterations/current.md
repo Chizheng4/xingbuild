@@ -1,53 +1,48 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.25.3`
+## 当前唯一版本：`v0.25.4`
 
 ## 正式方案
 
-`docs/design/v0.25.3 Practice 页面能力与媒体投影修复方案.md`
+`docs/design/v0.25.4 全站视觉结构与媒体交互方案.md`
 
 ## 目标
 
-在已发布的 v0.25.2 产品基座上，修复 Practice 页面 Hero 展示合同与独立媒体的运行时投影契约。内容仍保持独立发布身份；本版本只建设页面能力、媒体目标映射和真实投影验收。
-
-```mermaid
-flowchart LR
-    A["已登记媒体目标"] --> B["manifest"]
-    B --> C["Practice reader"]
-    C --> D["module media"]
-    D --> E["/products DOM"]
-```
+统一 Home、Products、Business Observations、About、Observations 五类页面组合的视觉结构，并建设 MediaAction：内容只更新字段；产品能力统一负责字体、段落、留白、媒体和响应式。图片/视频有登记 action 时，点击只跳转 Robotaxi 运营平台入口；视频不自动播放，不显示播放器控制，不执行播放/暂停。
 
 ## 产品—内容兼容声明
 
 ```yaml
 contentImpact: compatible
 affectedTargets: [practice-robotaxi]
-affectedRoutes: [/products]
-affectedFields: [PracticeHeader, practice media projection]
-compatibilityEvidence: v0.25.3-practice-runtime-projection-contract
+affectedRoutes: [/, /products, /business-observations, /about, /observations]
+affectedFields: [page compositions, visual primitives, media action]
+compatibilityEvidence: v0.25.4-visual-structure-media-action-contract
 ```
 
 ## 范围
 
-- Hero 标题/说明居中并支持受控语义换行。
-- CTA 仅在登记、安全和可达合同成立时实现。
-- 统一 manifest、target/practice 登记关系与 runtime reader 的媒体投影。
-- 增加 reader、构建产物和真实 `/products` DOM 的视频投影测试。
+- 统一 `SiteShell → PageComposition → Visual primitives` 的排版、留白、层级、媒体比例、焦点、错误和空状态。
+- 实现 MediaAction，复用现有 `media` 与已登记 `action.href`。
+- 视频无 `autoplay`、无原生 `controls`（有 action 时）、点击不播放/暂停，只跳转。
+- 覆盖桌面、窄屏、390px 移动、200% 缩放、键盘和 Reduced Motion。
+- 使用 Playwright 截图/DOM 回归与 axe-core 辅助检查；不新增第二套样式系统。
 
 ## 明确不做
 
-- 不修改正文、来源、审核、媒体事实、publishedAt、IA、路由、上游事实或内容发布身份。
-- 不让内容 task 修改 `src/`、scripts、产品版本、current/history、commit/tag；不让产品 task 把内容变成产品版本。
-- 不创建并行 task、branch、worktree 或 automation；不重发已发布内容。
+- 不修改内容正文、审核、媒体事实、content release、上游事实或产品/内容身份边界。
+- 不新增页面、路由、业务 schema、Storybook、BackstopJS 或并行视觉系统。
+- 不让内容 task 修改 `src/`、CSS、产品版本、current/history、commit/tag；不重发既有内容。
+- 不创建 branch、worktree、替代 task 或并行发布。
 
 ## 验收合同
 
-1. Hero 桌面/移动端居中、语义换行稳定且无溢出。
-2. `findPractice("robotaxi")` 映射出已审核视频，`/products` DOM 存在 video。
-3. manifest、target、reader、构建产物和 DOM 身份一致；漂移硬失败。
-4. 其余三个模块保持空 media，不生成占位媒体。
-5. 内容关闭构建不包含独立内容正文/媒体。
-6. `npm run check`、`release:prepare`、专项测试、closeout、preflight 和真实页面验收通过。
+1. 五类页面组合视觉层级一致，主角、Proof 和 Action 清晰。
+2. 内容字段增长不会破坏字体、段落、留白、阅读宽度和响应式结构。
+3. `/products` 带 action 媒体点击只跳转 Robotaxi，不播放、不暂停、无原生 controls。
+4. 视频 `autoplay=false`；链接、键盘、焦点、accessible name 和安全属性正确。
+5. 五条核心路由在桌面、窄屏、390px、200% 缩放无横向溢出。
+6. 空内容、媒体缺失、失败和 Reduced Motion 均有合法降级。
+7. Playwright 截图/DOM、键盘、控制台、axe-core 辅助检查以及项目 release checks 全部通过。
 
-责任 task：产品与视觉主线负责方案与验收；Engineering 主线 `019fcbf2-20e3-7d51-a4de-87ad7c94b190` 负责实现、自 QA、本地版本收口；内容及发布 task 只提供已批准内容事实并在能力上线后独立验收，不修改工具。
+责任 task：产品/视觉主线维护方案并验收；Engineering 主线 `019fcbf2-20e3-7d51-a4de-87ad7c94b190` 负责实现、自 QA、本地 commit/tag/clean 和发布；内容及发布主线只在产品上线后核验既有内容，不重发、不改产品文件。

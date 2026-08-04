@@ -141,6 +141,22 @@ test("Practice CTA accepts only the registered safe external product host", () =
   assert.equal(safePracticeAction({ href: "https://example.com/" }), null);
 });
 
+test("MediaAction keeps navigation separate from video playback and exposes fallbacks", async () => {
+  const systemStage = await readFile(new URL("../src/components/showcase/SystemStage.jsx", import.meta.url), "utf8");
+  const practicePage = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+  assert.match(practicePage, /<SystemStage media=\{module\.media\} action=\{module\.action\}/);
+  assert.doesNotMatch(practicePage, /practice-module__action/);
+  assert.match(systemStage, /safePracticeAction\(action\)/);
+  assert.match(systemStage, /controls=\{!safeAction\}/);
+  assert.match(systemStage, /preload="metadata"/);
+  assert.doesNotMatch(systemStage, /autoPlay|autoplay/);
+  assert.match(systemStage, /target="_blank" rel="noreferrer"/);
+  assert.match(systemStage, /aria-label=\{`查看产品演示：\$\{label\}`\}/);
+  assert.match(systemStage, /onError=\{\(\) => setStatus\("failed"\)\}/);
+  assert.match(systemStage, /MediaFallback/);
+  assert.match(systemStage, /媒体加载中/);
+});
+
 test("brief reading source belongs to published observations, not an independent JS list", async () => {
   const observationsPage = await readFile(new URL("../src/pages/ObservationsPage.jsx", import.meta.url), "utf8");
   const homePage = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");

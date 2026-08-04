@@ -29,7 +29,7 @@ function HomeComposition({ content }) {
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/" />
     : undefined;
   return (
-    <LayoutShell className="home-page">
+    <LayoutShell className="page-composition page-composition--home home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.site.homeTitle}</h1></section>
       <TwoColumnLayout renderRail={renderRail}>
         <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" /></section>
@@ -46,7 +46,7 @@ function ShowcaseComposition({ content }) {
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/products" />
     : undefined;
   return (
-    <LayoutShell className="practice-page">
+    <LayoutShell className="page-composition page-composition--showcase practice-page">
       <TwoColumnLayout renderRail={renderRail}>{practice ? <PracticePresentation practice={practice} /> : <EmptyContentState />}</TwoColumnLayout>
     </LayoutShell>
   );
@@ -57,7 +57,7 @@ function CollectionComposition({ content, location }) {
   const origin = safeReturnTo(new URLSearchParams(location?.search || "").get("origin"), "");
   const returnTo = observationCollectionHref(origin);
   return (
-    <LayoutShell className="observations-page">
+    <LayoutShell className="page-composition page-composition--collection observations-page">
       <CollectionLayout>
         <ReturnNavigation
           href={origin || "/business-observations"}
@@ -78,7 +78,7 @@ function CollectionComposition({ content, location }) {
 function ProfileReading({ profile: about }) {
   if (!about) return <EmptyContentState />;
   return (
-    <LayoutShell className="about-page">
+    <LayoutShell className="page-composition page-composition--reading about-page">
       <ReadingShell>
         <header className="reading-shell__header"><h1>{about.title}</h1><p>{about.summary}</p></header>
         <RichDocument blocks={about.blocks} />
@@ -93,7 +93,7 @@ function ArticleReading({ article, briefs }) {
     ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/business-observations" />
     : undefined;
   return (
-    <LayoutShell className="framework-page">
+    <LayoutShell className="page-composition page-composition--reading framework-page">
       <TwoColumnLayout renderRail={renderRail}><EvergreenArticle article={article} /></TwoColumnLayout>
     </LayoutShell>
   );

@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.25.3",
+  "version": "0.25.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
+    "axe-core": "^4.10.3",
     "edgeone": "1.6.17"
   }
 }

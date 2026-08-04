@@ -1,4 +1,11 @@
 
+## v0.25.4 — 全站视觉结构与媒体交互
+
+- Home、Showcase、Reading、Collection 页面组合统一使用共享视觉结构、文本增长、焦点、空状态和媒体降级合同。
+- MediaAction 复用既有媒体与登记 action：整块媒体安全跳转 Robotaxi，视频不自动播放、不显示 controls，键盘与 accessible name 完整。
+- 无 action 媒体保持只读展示；媒体缺失或失败提供同源可读 fallback，Reduced Motion 关闭非必要过渡。
+- 产品能力版本；不修改或重发独立内容。
+
 ## v0.25.3 — Practice 页面能力与媒体投影修复
 
 - `/products` Practice Hero 居中并使用受控文本换行，保持移动端无溢出。

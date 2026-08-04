@@ -65,3 +65,13 @@ test("showcase and observation components preserve data-driven reader anatomy", 
   assert.match(components, /rich-document > \* \+ h2 \{ margin-top: 2rem/);
   assert.doesNotMatch(components, /\.brief-item \{[^}]*border:/s);
 });
+
+test("shared composition and MediaAction styles survive growth, focus and reduced motion", () => {
+  assert.match(layout, /\.page-composition :is\(h1, h2, h3, p, li, a\)[^}]*overflow-wrap: anywhere/);
+  assert.match(layout, /\.page-composition :is\(h1, h2\)[^}]*text-wrap: balance/);
+  assert.match(layout, /\.system-stage\.is-interactive:focus-visible/);
+  assert.match(layout, /pointer-events: none/);
+  assert.match(layout, /\.system-stage__fallback/);
+  assert.match(layout, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(layout, /transition: all/);
+});

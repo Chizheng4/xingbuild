@@ -74,3 +74,13 @@ test("missing profile content resolves to null without dereferencing the absent 
   const content = resolvePageContent({ contentRefs: { profile: { type: "profile", id: "about" } } });
   assert.deepEqual(content, { profile: null });
 });
+
+test("all public page compositions opt into one shared visual structure", () => {
+  for (const marker of [
+    "page-composition--home",
+    "page-composition--showcase",
+    "page-composition--collection",
+    "page-composition--reading",
+  ]) assert.match(renderer, new RegExp(marker));
+  assert.match(renderer, /content-empty-state/);
+});
