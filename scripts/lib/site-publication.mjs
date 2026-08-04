@@ -62,7 +62,7 @@ export async function readActiveContentReleases(releasesRoot) {
 export async function createSitePublication({ productClient, releasesRoot, outputRoot, additionalContentManifest = null } = {}) {
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
   const activeContentReleases = await readActiveContentReleases(releasesRoot);
-  if (additionalContentManifest?.contentReleaseId && additionalContentManifest.deploymentId) {
+  if (additionalContentManifest?.contentReleaseId && additionalContentManifest.contentHash && additionalContentManifest.target && additionalContentManifest.baseSiteArtifactId) {
     activeContentReleases.push(additionalContentManifest);
   }
   const contentManifest = {

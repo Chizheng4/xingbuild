@@ -47,7 +47,7 @@ test("incremental content publication merges eight active releases with one cand
     productClient: product,
     releasesRoot: path.join(root, ".content-workspace", "releases"),
     outputRoot: output,
-    additionalContentManifest: { contentReleaseId: "candidate-one", deploymentId: "candidate-deployment", publicVerify: { ok: true }, publishedSlugs: ["candidate-one"], publishedArticleSlugs: [] },
+    additionalContentManifest: { contentReleaseId: "candidate-one", contentHash: "a".repeat(64), target: "candidate-one", baseSiteArtifactId: "base", publishedSlugs: ["candidate-one"], publishedArticleSlugs: [] },
   });
   assert.equal(publication.contentReleaseIds.length, 9);
   assert.ok(publication.contentManifest.publishedSlugs.includes("candidate-one"));
