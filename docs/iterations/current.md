@@ -1,35 +1,38 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.26`
+## 当前唯一版本：`v0.24.27`
 
 ## 本版本目标
 
-修复 v0.24.25 验收后的两项根因：空内容时 `/about` 解析崩溃；独立内容 CLI 无法覆盖 profile 与 businessObservation。产品内容边界保持解耦，内容恢复继续独立运营。
+修复 v0.24.26 内容发布运行暴露的状态机、幂等、恢复和生命周期路径根因；同时收口活动 task 注册、Xing 称呼和图形优先输出基线。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.26 空内容安全与完整内容目标能力方案.md`。
-- 父版本：`v0.24.25` / `c83900f7b06106af9392c05359cac4a70fc2a2fd`；既有 tag/history 不修改。
+- 正式设计：`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
+- 产品候选：`XBUILD-CONTENT-RELEASE-003`。
+- 父版本：`v0.24.26` / `70847cdf6df0820458c32e2f6df19f6aea7711e8`；既有 tag/history 不修改。
 
 ## 本版本范围
 
-- 所有 page content resolver 对缺失对象安全返回 null/空集合；五个公共路由无内容时仍保留网站名、导航、页脚和合法空状态。
-- 独立内容目标支持 profile、businessObservation、content、article、practice；每个目标独立生成 contentReleaseId、contentHash、baseSiteArtifactId、deployment、publicVerify。
-- 产品 build 继续只消费产品能力与稳定产品源，不读取或复制 `.content-workspace/content`；产品 manifest 不写入内容发布身份。
-- 初始内容恢复按仓库实测：profile 1、product 1、businessObservation 1、article 1、observations 30、Robotaxi 媒体 manifest/MP4 1。
+- 独立内容 release 使用 `prepared → built → transported → verifying → finalized → released` 可恢复状态机。
+- 同一 `contentReleaseId/contentHash/baseSiteArtifactId` 的 package/deployment 具备 lease、幂等和 resume，不重复部署。
+- publicVerify 支持有界传播等待和身份绑定校验；finalize 使用独立 content root，原子完成且保留 recovery/log/package。
+- 30 条 observations 串行发布，单目标失败不得污染其他目标或产品版本。
+- 活动 task 身份、Xing 称呼和图形优先输出基线已登记并纳入本次治理收口。
 
 ## 明确不做
 
-- 不修改上游事实、已发布 v0.24.25 或内容 task 文件。
+- 不修改上游事实、已发布 v0.24.26 或内容正文/来源/status/publishedAt。
 - 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag。
 - 不创建并行 task、branch、worktree 或 automation。
 
 ## 验收合同
 
-- 空内容 build 后 `/`、`/products`、`/business-observations`、`/observations`、`/about` 均无运行时错误。
-- 产品 dist 不含独立内容正文与运营媒体；产品 manifest 无内容发布身份。
-- 五类独立内容目标均可 prepare/build/transport/finalize；内容失败不污染产品版本。
-- 产品/内容 transport 只验证自身身份和证据，不调用对方业务逻辑。
+- 公网传播延迟可在同一 release 上等待/重试并成功收口。
+- transport 成功、finalize 中断后可恢复，不出现 publication file missing。
+- 同一 release 重试不产生重复 deployment；失败保留 package/recovery/log。
+- 产品 dist 不含独立内容，产品与内容 transport 只验证自身身份和证据。
+- `npm run check`、内容发布专项、release prepare/closeout/preflight、diff-check 通过。
 - `npm run check`、相关内容/发布专项、`release:prepare`、closeout、preflight、`git diff --check` 通过；既有环境 I/O 单独记录。
 
 责任 task：产品与视觉主线负责方案和验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6e0a85` 负责实现、自 QA、本地版本收口。

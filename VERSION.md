@@ -1,4 +1,10 @@
 
+## v0.24.27 — 内容发布状态机与幂等恢复
+
+- 状态：Engineering 实现独立 contentRelease 状态机、lease/幂等 resume、有界公网验证和独立 finalize；待本地 commit/tag/clean、产品/视觉验收与用户授权，未再次 publish。
+- 范围：`prepared → built → transported → verifying → finalized → released` 与 failed/recoverable/rolled-back 事实；同一内容包/基座不重复部署；失败保留所有 ignored 生命周期证据；30 条 observations 串行失败隔离。
+- 不做：不修改正文、来源、status、publishedAt、UI、IA、schema、路由、上游事实或 v0.24.26 tag/history；不创建 branch、worktree、task、automation。
+
 ## v0.24.26 — 空内容安全与完整内容目标能力
 
 - 状态：Engineering 完成空内容解析安全与 profile/businessObservation 独立内容目标能力，待本地 commit/tag/clean、产品/视觉验收与用户授权；未 push、publish、部署或公网验收。

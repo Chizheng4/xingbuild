@@ -18,10 +18,17 @@ import {
   isFile,
   projectRoot,
 } from "./lib/observation-content.mjs";
-import { finalizeReleasedContent } from "./lib/content-finalize.mjs";
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
 import { readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import { contentRootDirectory } from "./lib/content-root.mjs";
+import {
+  acquireContentReleasePackageLease,
+  assertContentReleaseTransition,
+  canResumeState,
+  contentReleaseIdempotencyKey,
+  releaseContentReleasePackageLease,
+  writeJsonAtomically,
+} from "./lib/content-release-state.mjs";
 import {
   applyContentChangeSet,
   hashValue,
@@ -114,6 +121,47 @@ function sourceIds(value) {
   return Array.isArray(value?.sources) ? value.sources.map((source) => typeof source === "string" ? source : source.id).filter(Boolean) : [];
 }
 
+async function updateReleaseState(packageInfo, state, extra = {}) {
+  const manifestPath = packageInfo.manifestPath || path.join(packageInfo.packageDirectory, "content-release.json");
+  const current = JSON.parse(await readFile(manifestPath, "utf8"));
+  assertContentReleaseTransition(current.state || "prepared", state);
+  const next = { ...current, ...extra, state, stateUpdatedAt: new Date().toISOString() };
+  await writeJsonAtomically(manifestPath, next);
+  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: next.contentReleaseId, event: "state", data: { from: current.state || "prepared", to: state, ...extra } });
+  return next;
+}
+
+async function markReleaseFailure(packageInfo, error) {
+  try {
+    const manifestPath = packageInfo.manifestPath || path.join(packageInfo.packageDirectory, "content-release.json");
+    const current = JSON.parse(await readFile(manifestPath, "utf8"));
+    const state = current.state === "released" ? "released" : "recoverable";
+    const next = { ...current, state, failure: { message: error.message, at: new Date().toISOString() }, recoverable: state === "recoverable" };
+    await writeJsonAtomically(manifestPath, next);
+    await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: next.contentReleaseId, event: "failed", data: next.failure });
+  } catch { /* preserve the original failure */ }
+}
+
+export async function finalizeContentRelease(packageInfo) {
+  const contentRoot = contentRootDirectory({ sourceRoot: packageInfo.sourceRoot || root });
+  const sourceFile = path.join(contentRoot, packageInfo.kind === "content" ? "observations" : packageInfo.kind === "article" ? "articles" : packageInfo.kind === "profile" ? "profile" : packageInfo.kind === "businessObservation" ? "business-observations" : "products", `${packageInfo.target}.json`);
+  if (!(await isFile(sourceFile))) throw new Error(`independent content target is missing during finalize: ${packageInfo.target}`);
+  const completion = {
+    contentReleaseId: packageInfo.contentReleaseId,
+    contentHash: packageInfo.contentHash,
+    baseSiteArtifactId: packageInfo.baseSiteArtifactId,
+    kind: packageInfo.kind,
+    target: packageInfo.target,
+    sourcePath: path.relative(packageInfo.sourceRoot || root, sourceFile),
+    finalizedAt: new Date().toISOString(),
+  };
+  const completionPath = path.join(packageInfo.packageDirectory, "completion.json");
+  await writeJsonAtomically(completionPath, completion);
+  const factPath = path.join(contentRoot, "finalized", packageInfo.kind, `${packageInfo.target}.json`);
+  await writeJsonAtomically(factPath, completion);
+  return { completionPath, factPath };
+}
+
 export async function prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, sourceRoot = root } = {}) {
   const content = await readTarget({ kind, target, sourceRoot });
   const changeSet = changeSetPath
@@ -161,6 +209,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const baseProductCommit = immutableArtifact.productCommit;
   const contentReleaseId = `${kind}-${target}-${contentHash.slice(0, 16)}`;
   const packageDirectory = path.join(sourceRoot, ".content-workspace", "releases", contentReleaseId);
+  const idempotencyKey = contentReleaseIdempotencyKey({ contentReleaseId, contentHash, baseSiteArtifactId: immutableArtifact.baseSiteArtifactId });
   const manifest = {
     contentReleaseId,
     kind,
@@ -181,6 +230,11 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     changedTargets: changeSet ? [changeSet.targetId] : [],
     releasePackage: path.posix.join(".content-workspace/releases", contentReleaseId),
     rollbackOf: changeSet?.rollbackOf || null,
+    state: "prepared",
+    idempotencyKey,
+    attempts: 0,
+    recoverable: false,
+    failure: null,
   };
   await mkdir(packageDirectory, { recursive: true });
   const manifestPath = path.join(packageDirectory, "content-release.json");
@@ -189,6 +243,11 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     if (existing.contentHash !== contentHash || existing.target !== target || existing.kind !== kind) {
       throw new Error(`content release package identity conflict: ${contentReleaseId}`);
     }
+    if (existing.baseSiteArtifactId !== immutableArtifact.baseSiteArtifactId || (existing.idempotencyKey && existing.idempotencyKey !== idempotencyKey)) {
+      throw new Error(`content release immutable identity conflict: ${contentReleaseId}`);
+    }
+    Object.assign(manifest, existing, { idempotencyKey, state: existing.state || "prepared", attempts: existing.attempts || 0, recoverable: existing.recoverable || false, failure: existing.failure || null });
+    await writeJsonAtomically(manifestPath, manifest);
   } else {
     await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
@@ -235,7 +294,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     await mkdir(path.dirname(mediaManifest), { recursive: true });
     await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
   }
-  await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact.baseSiteArtifactId, changeSetId: changeSet?.changeId || null } });
+  if (manifest.state === "prepared") await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact.baseSiteArtifactId, changeSetId: changeSet?.changeId || null } });
   return { ...manifest, packageDirectory, manifestPath, sourceDirectory, sourceFile, sourceRoot };
 }
 
@@ -271,6 +330,11 @@ async function fsMkdtemp(prefix) {
 
 export async function buildContentRelease({ packageInfo, sourceRoot = root } = {}) {
   if (!packageInfo?.packageDirectory) throw new Error("content build requires a prepared content package");
+  const existingManifest = JSON.parse(await readFile(packageInfo.manifestPath, "utf8"));
+  const existingClient = path.join(packageInfo.packageDirectory, "dist", "client");
+  if (canResumeState(existingManifest.state, "built") && await exists(path.join(existingClient, "content-manifest.json"))) {
+    return { ...packageInfo, ...existingManifest, client: existingClient, manifest: existingManifest };
+  }
   const staging = await stageRepository({ packageInfo, sourceRoot });
   try {
     run("npm", ["run", "build"], staging, {
@@ -281,7 +345,7 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
     });
     const client = path.join(staging, "dist", "client");
     const manifest = {
-      ...JSON.parse(await readFile(packageInfo.manifestPath, "utf8")),
+      ...existingManifest,
       publishedSlugs: packageInfo.kind === "content" ? [packageInfo.target] : [],
       publishedArticleSlugs: packageInfo.kind === "article" ? [packageInfo.target] : [],
       practiceIds: packageInfo.kind === "practice" ? [packageInfo.target] : [],
@@ -293,8 +357,9 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
     await mkdir(path.dirname(packageClient), { recursive: true });
     await cp(client, packageClient, { recursive: true });
     await writeFile(packageInfo.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "built", { attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
     await appendContentReleaseLog({ sourceRoot, contentReleaseId: packageInfo.contentReleaseId, event: "built", data: { baseSiteArtifactId: packageInfo.baseSiteArtifactId } });
-    return { ...packageInfo, client: packageClient, manifest };
+    return { ...packageInfo, ...manifest, client: packageClient, manifest: { ...manifest, state: "built" } };
   } finally {
     await rm(staging, { recursive: true, force: true });
   }
@@ -330,6 +395,20 @@ export async function verifyContentPackageOnce({ baseUrl = publicUrl, manifest, 
   return { contentReleaseId: manifest.contentReleaseId, target: manifest.target, publicUrl: new URL(manifest.targetPath, publicBase).href };
 }
 
+export async function verifyContentPackage({ manifest, baseUrl = publicUrl, fetchImpl = fetch, maxAttempts = 5, delayMs = 1000, sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await verifyContentPackageOnce({ baseUrl, manifest, fetchImpl });
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxAttempts) break;
+      await sleepImpl(delayMs * attempt);
+    }
+  }
+  throw new Error(`content public verification exhausted ${maxAttempts} attempts: ${lastError?.message || "unknown error"}`);
+}
+
 export async function transportContentRelease({ packageInfo, argv = process.argv.slice(2), env = process.env } = {}) {
   assertFixedPublishTarget(env);
   assertPublishAuthorization({ argv, env });
@@ -342,21 +421,40 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   if (manifest.baseSiteArtifact.productVersion !== packageInfo.baseSiteArtifact.productVersion || manifest.baseSiteArtifact.productCommit !== packageInfo.baseSiteArtifact.productCommit) {
     throw new Error("content release baseSiteArtifact version/commit mismatch");
   }
-  const edgeoneTarget = await readFixedEdgeoneTarget(root);
-  run(edgeone, ["whoami"], root, env);
-  const deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", packageInfo.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
-  const deployed = { ...manifest, deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString() };
-  await writeFile(packageInfo.manifestPath, `${JSON.stringify(deployed, null, 2)}\n`);
-  const publicVerify = await verifyContentPackageOnce({ manifest: deployed });
-  const completed = { ...deployed, publicVerify: { ...publicVerify, verifiedAt: new Date().toISOString() } };
-  await writeFile(packageInfo.manifestPath, `${JSON.stringify(completed, null, 2)}\n`);
-  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "transported", data: { deploymentId: completed.deploymentId } });
-  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "public-verify", data: { publicUrl: completed.publicVerify.publicUrl } });
-  if (packageInfo.kind === "content") {
-    await finalizeReleasedContent(packageInfo.target, { rootDirectory: root });
+  const idempotencyKey = manifest.idempotencyKey || contentReleaseIdempotencyKey({ contentReleaseId: manifest.contentReleaseId, contentHash: manifest.contentHash, baseSiteArtifactId: manifest.baseSiteArtifactId });
+  const lease = await acquireContentReleasePackageLease({ packageDirectory: packageInfo.packageDirectory, idempotencyKey, contentReleaseId: manifest.contentReleaseId });
+  try {
+    if (manifest.state === "released" && manifest.publicVerify) return { ...manifest, edgeoneTarget: await readFixedEdgeoneTarget(root), publicVerify: manifest.publicVerify };
+    const edgeoneTarget = await readFixedEdgeoneTarget(root);
+    let deployed = manifest;
+    let deployment = null;
+    if (!manifest.deploymentId) {
+      run(edgeone, ["whoami"], root, env);
+      deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", packageInfo.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
+      deployed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", { deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString(), attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
+    }
+    const verifying = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { deploymentId: deployed.deploymentId, recoverable: false });
+    const publicVerify = await verifyContentPackage({ manifest: verifying });
+    const verified = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { publicVerify: { ...publicVerify, verifiedAt: new Date().toISOString() }, recoverable: false, failure: null });
+    const finalized = await finalizeContentRelease({ ...packageInfo, ...verified });
+    const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { completionPath: finalized.completionPath, recoverable: false });
+    const completed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "released", { publicVerify: finalizedManifest.publicVerify, recoverable: false, failure: null });
+    await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "released", data: { deploymentId: completed.deploymentId } });
+    return { ...completed, deployment, edgeoneTarget, publicVerify: completed.publicVerify };
+  } catch (error) {
+    await markReleaseFailure(packageInfo, error);
+    throw error;
+  } finally {
+    await releaseContentReleasePackageLease(lease);
   }
-  await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "finalized", data: { target: packageInfo.target, kind: packageInfo.kind } });
-  return { ...completed, deployment, edgeoneTarget, publicVerify };
+}
+
+export async function resumeContentRelease({ packageDirectory, argv = ["--authorize-publish"], env = process.env } = {}) {
+  if (!packageDirectory) throw new Error("content release resume requires packageDirectory");
+  const manifestPath = path.join(packageDirectory, "content-release.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  if (!manifest.contentReleaseId || !manifest.contentHash || !manifest.baseSiteArtifactId) throw new Error("content release resume requires immutable package identity");
+  return transportContentRelease({ packageInfo: { ...manifest, manifestPath, packageDirectory, client: path.join(packageDirectory, "dist", "client"), sourceRoot: root }, argv, env });
 }
 
 export async function publishContent({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, argv = process.argv.slice(2), env = process.env } = {}) {

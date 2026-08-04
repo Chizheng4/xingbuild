@@ -25,6 +25,7 @@
 | --- | --- |
 | 规则路由与优先级 | `docs/rules/00-baseline-index.md` |
 | 职责与内部流程 | `docs/rules/responsibility-and-workflows.md` |
+| 当前活动 task 身份 | `docs/rules/task-registry.md` |
 | 跨 task 协作 | `docs/rules/collaboration-workflow.md` |
 | 产品版本与线上发布 | `docs/rules/iteration-and-release.md` |
 | 产品/视觉架构 | `docs/product/xingbuild 网站产品架构与视觉系统总案.md` |
@@ -47,6 +48,7 @@
 - EdgeOne 生产目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`；目标合同变化必须形成明确治理版本并同步验证，禁止环境变量静默覆盖。
 - 任何 branch/worktree、并行 task、automation/cron/scheduled task 都是受控资源；未经用户明确授权不得创建、复制、更新、暂停、删除或替代。经营观察只能复用运营合同登记的唯一 scheduler。
 - task 创建、交接、执行、版本推进和 publish 授权是不同动作。找不到已存在的目标 task、身份无法确认、责任不清或回传工具不可调用时，立即报告阻断，不得猜测、替代、创建、轮询或后台等待。
+- 跨 task 交接前必须读取并核验 `docs/rules/task-registry.md`；task 归档、重建、宿主或回传地址变化后先更新注册表。注册表未核验不得发送。
 - 跨 task 交接必须显式写 `sourceThreadId`、`targetThreadId`、`returnThreadId`；source 只作溯源，目标 task 到里程碑后向精确 return 地址一次回传。
 - 预览固定使用 `4317`，必须绑定当前 worktree、HEAD、PID 和 task；不得静默换端口或终止未知进程。
 
@@ -55,6 +57,7 @@
 - 代码、文档、数据口径、测试和真实运行结果必须形成闭环；完成前执行与风险相匹配的检查。
 - 每次责任 task 收口报告本责任域的本地/线上状态、URL、已确定项、未确定项、候选状态、阻断和下一动作；不要把报告写回已打 tag 的事实文件。
 - 规则以中文为主；命令、路径、字段、枚举、API 和必要技术名保留英文并在首次出现时给出简短中文含义。
+- 与用户交流统一称呼为 Xing；复杂方案和治理文档图形优先，简单事实和命令直接文字。
 - task 消息只传候选/方案 ID、正式路径、版本/commit、证据、阻断 ID 和下一动作；消息不能替代项目文件、候选或 history。
 
 详细内容和任务读取矩阵统一以 [`00-baseline-index.md`](docs/rules/00-baseline-index.md) 为准。

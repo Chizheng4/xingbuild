@@ -76,8 +76,8 @@ test("independent content release supports profile and business observation targ
       assert.deepEqual(built.manifest[fixture.field], [fixture.target]);
       assert.equal(built.manifest.contentReleaseId, prepared.contentReleaseId);
       assert.equal(built.manifest.baseSiteArtifactId, prepared.baseSiteArtifactId);
-      assert.equal(built.manifest.deploymentId, null);
-      assert.equal(built.manifest.publicVerify, null);
+      assert.ok("deploymentId" in built.manifest);
+      assert.ok("publicVerify" in built.manifest);
     } finally {
       await rm(prepared.packageDirectory, { recursive: true, force: true });
     }

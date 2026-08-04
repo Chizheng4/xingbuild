@@ -1,6 +1,11 @@
 # xingbuild 职责边界与内部工作流
 
-状态：生效。本文是 2.1 职责和内部流程唯一正文；跨 task 消息规则见 [`collaboration-workflow.md`](collaboration-workflow.md)，产品版本与发布规则见 [`iteration-and-release.md`](iteration-and-release.md)。
+状态：生效。本文是 2.1 职责和内部流程唯一正文；活动 task 身份见 [`task-registry.md`](task-registry.md)，跨 task 消息规则见 [`collaboration-workflow.md`](collaboration-workflow.md)，产品版本与发布规则见 [`iteration-and-release.md`](iteration-and-release.md)。
+
+## 零、称呼与输出习惯
+
+- 与用户交流统一称呼为 **Xing**。
+- 产品方案、架构、流程、治理和收口文档以图形为主；先给最小流程图、关系图或状态图，再补必要文字。简单事实、命令和单项结果直接文字。
 
 ## 一、责任域
 
@@ -61,6 +66,7 @@ stateDiagram-v2
 - 自动化、cron、scheduled task 是受控资源。经营观察只复用经营观察合同登记的唯一 scheduler；内容 task 和运行 task 不得创建、复制、更新或替代它。
 - 任务创建、交接、执行、版本推进和发布授权是不同动作；普通“执行/继续”不自动获得创建权限。
 - 找不到已存在的目标 task、目标身份无法确认、工具不可调用或责任归属不明时，立即报告用户并停止该跨 task 动作；不得猜测、替代、轮询或后台等待。
+- 跨 task 动作前先读取 [`task-registry.md`](task-registry.md) 核验当前 threadId、hostId 和 returnThreadId；task 归档、重建、宿主或回传地址变化后先更新注册表。
 
 ## 五、内容与 Ops 独立运营
 

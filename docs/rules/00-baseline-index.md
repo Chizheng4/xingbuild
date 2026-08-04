@@ -20,7 +20,7 @@ flowchart TD
 
 | 层 | 唯一问题 | 事实源 |
 | --- | --- | --- |
-| 2.1 | 谁负责什么，内部如何分流和收口？ | [`responsibility-and-workflows.md`](responsibility-and-workflows.md) |
+| 2.1 | 谁负责什么，内部如何分流和收口？ | [`responsibility-and-workflows.md`](responsibility-and-workflows.md)；动态 task 身份见 [`task-registry.md`](task-registry.md) |
 | 2.2 | 已存在的 task 如何一次性交接和回传？ | [`collaboration-workflow.md`](collaboration-workflow.md) |
 | 2.3 | 产品版本如何从方案走到线上证据？ | [`iteration-and-release.md`](iteration-and-release.md) |
 | 2.4 | 网站应该是什么，页面和视觉能力边界是什么？ | [`../product/xingbuild 网站产品架构与视觉系统总案.md`](../product/xingbuild%20网站产品架构与视觉系统总案.md) |
@@ -54,6 +54,8 @@ flowchart TD
 ```text
 AGENTS.md → 00-baseline-index.md → 任务类型对应规则 → current/candidates/代码证据
 ```
+
+涉及跨 task 交接时，在对应规则之后必须读取 `task-registry.md`；它只提供当前通信身份，不替代职责或协作正文。
 
 不因“完整理解”而读取冷档案、无关项目或历史 task；缺少关键事实时只报告缺口。
 
