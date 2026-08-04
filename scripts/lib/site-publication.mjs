@@ -1,9 +1,22 @@
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
+import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
 }
+
+export function sitePublicationIdempotencyKey({ sitePublicationId: id } = {}) {
+  if (typeof id !== "string" || !id) throw new Error("sitePublicationId is required");
+  return createHash("sha256").update(id).digest("hex");
+}
+
+export async function acquireSitePublicationLease({ publicationDirectory, sitePublicationId: id, now, ttlMs } = {}) {
+  return acquireContentReleasePackageLease({ packageDirectory: publicationDirectory, idempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: id }), contentReleaseId: id, now, ttlMs });
+}
+
+export const releaseSitePublicationLease = releaseContentReleasePackageLease;
 
 export async function readActiveContentReleases(releasesRoot) {
   const active = [];
@@ -45,6 +58,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     productCommit: productRelease.commit,
     contentReleaseIds: contentManifest.activeContentReleaseIds,
     contentManifest,
+    publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: contentManifest.activeContentReleaseIds }) }),
     deploymentId: null,
     publicVerify: null,
   };

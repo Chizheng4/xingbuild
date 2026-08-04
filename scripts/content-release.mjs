@@ -21,7 +21,7 @@ import {
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
 import { assertBaseSiteArtifactCompatible, readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import { contentRootDirectory } from "./lib/content-root.mjs";
-import { createSitePublication } from "./lib/site-publication.mjs";
+import { acquireSitePublicationLease, createSitePublication, releaseSitePublicationLease } from "./lib/site-publication.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -424,6 +424,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   }
   const idempotencyKey = manifest.idempotencyKey || contentReleaseIdempotencyKey({ contentReleaseId: manifest.contentReleaseId, contentHash: manifest.contentHash, baseSiteArtifactId: manifest.baseSiteArtifactId });
   const lease = await acquireContentReleasePackageLease({ packageDirectory: packageInfo.packageDirectory, idempotencyKey, contentReleaseId: manifest.contentReleaseId });
+  let publicationLease = null;
   try {
     if (manifest.state === "released" && manifest.publicVerify) return { ...manifest, edgeoneTarget: await readFixedEdgeoneTarget(root), publicVerify: manifest.publicVerify };
     const edgeoneTarget = await readFixedEdgeoneTarget(root);
@@ -433,9 +434,10 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
       outputRoot: path.join(packageInfo.packageDirectory, "site-publication"),
       additionalContentManifest: manifest,
     });
+    publicationLease = await acquireSitePublicationLease({ publicationDirectory: publication.client, sitePublicationId: publication.sitePublicationId });
     let deployed = manifest;
     let deployment = null;
-    if (!manifest.deploymentId) {
+    if (!publication.deploymentId) {
       run(edgeone, ["whoami"], root, env);
       deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", publication.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
       deployed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", { deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString(), attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
@@ -453,6 +455,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     throw error;
   } finally {
     await releaseContentReleasePackageLease(lease);
+    if (publicationLease) await releaseSitePublicationLease(publicationLease);
   }
 }
 

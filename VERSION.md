@@ -1,4 +1,10 @@
 
+## v0.24.33 — 内容增量 transport 接口
+
+- 内容 transport 生成新的 active+candidate sitePublication identity 与独立 deployment，不复用旧 candidate deployment。
+- lease/idempotency 绑定合并 publication，combined verify 成功后才 finalize。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.32 — 内容增量合并发布恢复
 
 - 内容新增/恢复通过统一 sitePublication 合并 8 个 active 与当前 candidate，禁止孤立覆盖。

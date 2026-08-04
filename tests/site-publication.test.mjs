@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases } from "../scripts/lib/site-publication.mjs";
+import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases, sitePublicationId, sitePublicationIdempotencyKey } from "../scripts/lib/site-publication.mjs";
 import { fileURLToPath } from "node:url";
 
 async function fixture() {
@@ -51,4 +51,10 @@ test("incremental content publication merges eight active releases with one cand
   });
   assert.equal(publication.contentReleaseIds.length, 9);
   assert.ok(publication.contentManifest.publishedSlugs.includes("candidate-one"));
+});
+
+test("incremental publication identity is stable and distinct from candidate deployment", () => {
+  const id = sitePublicationId({ productVersion: "v0.24.32", productCommit: "a".repeat(40), contentReleaseIds: ["a", "b"] });
+  assert.equal(id, sitePublicationId({ productVersion: "v0.24.32", productCommit: "a".repeat(40), contentReleaseIds: ["a", "b"] }));
+  assert.equal(sitePublicationIdempotencyKey({ sitePublicationId: id }).length, 64);
 });
