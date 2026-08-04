@@ -1,4 +1,10 @@
 
+## v0.25.1 — 内容批次发布与 active 身份一致性
+
+- 引入确定性 ContentBatchPlan，按文件数、单文件/总大小、target 与媒体路径冲突分片；每条 intent 只进入一个分片并保留独立证据。
+- active 读取要求 package 根生命周期、包内 manifest、completion 与 immutable baseSiteArtifact 身份一致；失败保留 recovery，不发布产品版本。
+- 本地版本，未 push、publish、deploy，待产品/视觉验收。
+
 ## v0.25.0 — 产品、内容与站点发布三层架构重建
 
 - 以 `SitePublication` 为唯一物理站点发布对象；产品 `ProductRelease` 与内容 `ContentReleaseIntent` 保持独立身份和生命周期。

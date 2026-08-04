@@ -20,6 +20,7 @@ import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/
 import { assertBaseSiteArtifactCompatible, readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import { contentRootDirectory } from "./lib/content-root.mjs";
 import { createSitePublication, validateUploadQuota } from "./lib/site-publication.mjs";
+import { planContentBatch } from "./lib/content-batch.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
 import {
   acquireContentReleasePackageLease,
@@ -300,6 +301,12 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   }
   if (manifest.state === "prepared") await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact?.baseSiteArtifactId || null, changeSetId: changeSet?.changeId || null, intent: "independent-content" } });
   return { ...manifest, packageDirectory, manifestPath, sourceDirectory, sourceFile, sourceRoot };
+}
+
+// Batch planning is intentionally separate from transport: callers can inspect
+// the deterministic plan before creating any SitePublication or deployment.
+export function prepareContentBatch(intents, constraints) {
+  return planContentBatch(intents, constraints);
 }
 
 async function appendContentReleaseLog({ sourceRoot, contentReleaseId, event, data = {} }) {

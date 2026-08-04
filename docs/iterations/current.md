@@ -1,25 +1,23 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.25.0`
+## 当前唯一版本：`v0.25.1`
 
-## 本版本目标
+## 正式方案
 
-以 `SitePublication` 为唯一站点发布对象，彻底分离产品能力、内容运营和物理站点部署：产品与内容保持独立身份，由本地单一协调器生成整站快照、串行部署、保存 deployment、等待传播、精确公网验证并最终收口。
+`docs/design/v0.25.1 内容批次发布与 active 身份一致性能力.md`
+
+## 目标
+
+将内容的逐条身份与站点的物理发布粒度分离：内容仍逐条审核、hash、验收和 finalize；工具在平台约束内自动生成最大安全批次/分片，减少重复构建、上传、deployment、传播等待和公网验证，同时修复已发布内容因 package 身份不一致而从 active 集合丢失的问题。
 
 ```mermaid
 flowchart LR
-    P[ProductRelease\n产品版本] --> S[SitePublication\n唯一站点快照]
-    C[ContentReleaseIntent\n独立内容意图] --> S
-    S --> D[唯一 EdgeOne deployment]
-    D --> V[release.json + content-manifest\n页面/媒体公网证据]
-    V --> R[released 或 recoverable\n同 deployment resume]
+    I["已批准 ContentReleaseIntent 集合"] --> P["Batch Planner\n身份对账 + 约束计算"]
+    P --> S["最大安全分片"]
+    S --> D["SitePublication\n每分片一次 deployment"]
+    D --> V["逐目标 combined verify"]
+    V --> F["逐条保留证据并 finalize"]
 ```
-
-## 正式设计与父版本
-
-- 正式设计：`docs/design/v0.25.0 产品内容站点发布三层架构.md`。
-- 父版本：`v0.24.37` / `bd97ed78b8cb30cb906689a131a8c612890bdc69`；v0.24.38 未形成正式 tag，不单独发布；既有 tag/history 不修改。
-- 保留兼容入口：`publish-xingbuild.command`、`content-release` 与 `publish-content.command`，它们只提交意图给 Site Publication Coordinator。
 
 ## 产品—内容兼容声明
 
@@ -28,33 +26,31 @@ contentImpact: compatible
 affectedTargets: []
 affectedRoutes: []
 affectedFields: []
-compatibilityEvidence: v0.25.0-site-publication-coordinator-tests
+compatibilityEvidence: v0.25.1-batch-publication-and-active-identity-tests
 ```
 
-## 本版本范围
+## 范围
 
-- `ProductRelease` 只记录产品 version/commit/annotatedTag/productArtifactId/clean。
-- `ContentReleaseIntent` 只记录目标、正文/媒体 hash、来源、审核、requiredCapabilities 和 ChangeSet；不读取旧产品 dist 作为发布输入。
-- `SitePublication` 合并当前产品 immutable artifact 与所有 active 内容及 candidate，持久化 snapshotHash、deployment JSON、publicVerify、failure/recoveryId。
-- 产品和内容 transport 共用同一物理站点，但严格串行；产品发布中内容只能 prepared/queued，内容发布中产品不部署。
-- Deploy Success 只是中间事件；只有 deployment JSON、产品身份、内容 active/candidate、目标页面/媒体和 SitePublication finalized 全部成立，工具才返回成功。
-- 传播延迟由协调器使用有界退避等待；超时保留 recoverable 和同一 deploymentId，resume 不创建重复部署。
-- 产品变更若 `contentImpact` 为 breaking/migration-required/unknown，发布前硬阻断并形成 Product Incident；内容发现异常只上报产品问题，不由内容 task 修改产品。
+- 建设通用 `ContentBatchPlan`，不把内容正文或事实身份合并。
+- 按文件数、单文件大小、总大小、目标冲突和媒体路径约束自动确定最大安全批次；超限确定性分片。
+- 以 `productVersion + commit + sourceBundleHash` 缓存 immutable `ProductArtifact`，不为内容递增产品版本。
+- 修复 `content-release.json`、包内 `content-manifest.json`、completion 和 active 读取器的 immutable 身份原子一致性。
+- 每个物理分片只创建一次 `SitePublication`/deployment；combined verify 通过后逐条幂等 finalize。
+- 保留现有单条内容发布与 resume 入口作为紧急/低频 fallback。
 
 ## 明确不做
 
-- 不修改上游事实、v0.24.37 tag/history、既有内容正文/来源/status/publishedAt。
-- 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag；不让产品 task 把独立内容变成产品版本。
-- 不允许产品或内容入口直接调用 EdgeOne；只有 Site Publication Coordinator 可以部署。
-- 不创建并行 task、branch、worktree 或 automation；本轮不 push/publish/deploy。
+- 不修改正文、来源、审核、媒体事实、publishedAt、UI、IA、路由、schema、组件、CSS 或上游事实。
+- 不让内容 task 修改 `src/`、scripts、产品版本、current/history、commit/tag；不让产品 task 把内容变成产品版本。
+- 不创建并行 task、branch、worktree 或 automation；内容批次能力完成前不重复发布已有内容。
 
 ## 验收合同
 
-- 产品功能发布不丢失 active 内容；内容发布不改变产品版本。
-- 产品变更影响内容时，兼容性声明缺失或非 compatible 立即阻断。
-- 任一物理站点部署只能对应一个 SitePublication；两个 transport 不并行。
-- 缺 deployment JSON、身份不匹配、页面/媒体未传播或 active 集合不完整时，工具返回失败 + Incident/recoveryId，不报告成功。
-- resume 复用已保存 deploymentId；失败不改变既有 active 内容，finalize 只在完整公网证据之后发生。
-- `npm run check`、`release:prepare`、`release:build`、专项测试、closeout、preflight、`git diff --check` 通过；环境 I/O 单独记录。
+1. 30 条已批准内容在约束允许时只产生一次或少量分片 deployment；超限时所有条目恰好覆盖一次。
+2. 每条内容仍可查询 `contentReleaseId`、contentHash、review、deployment、publicVerify 和 finalize。
+3. 任一分片失败保留 recovery，不 finalize，不影响既有 active；resume 不重复 deployment。
+4. 后续内容发布不丢失已 released active 内容；覆盖 stale `baseSiteArtifactId` 回归场景。
+5. 产品 version/commit/tag 不因内容批次改变；单条 fallback 仍可用。
+6. `npm run check`、`release:prepare`、专项测试、closeout、preflight 和真实公网批次验证通过。
 
-责任 task：产品与视觉主线负责方案和验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6a0a85` 负责实现、自 QA、本地版本收口。
+责任 task：产品与视觉主线负责方案与验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6a0a85` 负责实现、自 QA、本地版本收口；内容及发布 task 负责提供已批准 intents 和运营验收，不修改工具。

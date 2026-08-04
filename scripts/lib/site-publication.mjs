@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
+import { writeJsonAtomically } from "./content-release-state.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
@@ -49,11 +50,15 @@ export async function readActiveContentReleases(releasesRoot) {
     try {
       const release = JSON.parse(await readFile(releasePath, "utf8"));
       const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+      const completion = JSON.parse(await readFile(path.join(path.dirname(releasePath), "completion.json"), "utf8"));
       const identityMatches = manifest.contentReleaseId === release.contentReleaseId
         && (!release.contentHash || manifest.contentHash === release.contentHash)
         && (!release.target || manifest.target === release.target)
         && (!release.baseSiteArtifactId || manifest.baseSiteArtifactId === release.baseSiteArtifactId);
-      if (release.state === "released" && release.contentReleaseId && release.deploymentId && release.publicVerify && identityMatches) {
+      const completionMatches = completion.contentReleaseId === release.contentReleaseId
+        && completion.contentHash === release.contentHash
+        && completion.baseSiteArtifactId === release.baseSiteArtifactId;
+      if (release.state === "released" && release.contentReleaseId && release.deploymentId && release.publicVerify && identityMatches && completionMatches) {
         const sourceDirectory = path.join(path.dirname(releasePath), "source");
         active.push({
           ...manifest,
@@ -201,7 +206,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     await mkdir(outputRoot, { recursive: true });
     await cp(productClient, outputRoot, { recursive: true });
   }
-  await writeFile(path.join(outputRoot, "content-manifest.json"), `${JSON.stringify(contentManifest, null, 2)}\n`);
+  await writeJsonAtomically(path.join(outputRoot, "content-manifest.json"), contentManifest);
   const persistedIdentityMatches = existingPublication?.sitePublicationId === publication.sitePublicationId;
   const persisted = {
     ...publication,
@@ -211,7 +216,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     assembledAt: new Date().toISOString(),
   };
   delete persisted.client;
-  await writeFile(path.join(outputRoot, "site-publication.json"), `${JSON.stringify(persisted, null, 2)}\n`);
+  await writeJsonAtomically(path.join(outputRoot, "site-publication.json"), persisted);
   return { ...persisted, client: outputRoot, activeContentReleases };
 }
 
