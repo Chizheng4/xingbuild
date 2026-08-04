@@ -1,33 +1,34 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.34`
+## 当前唯一版本：`v0.24.35`
 
 ## 本版本目标
 
-补齐 v0.24.33 未暴露的内容恢复 CLI：让内容 task 可直接调用既有 incremental transport，完成 active+candidate 合并恢复。
+修正 v0.24.34 合并快照公网验证：识别 activeContentReleaseIds 集合，避免用单条 contentReleaseId 规则误判 8+1 快照。
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.34 内容恢复 CLI 暴露方案.md`。
+- 正式设计：`docs/design/v0.24.35 合并快照公网验证修正方案.md`。
+- 继承设计：`docs/design/v0.24.34 内容恢复 CLI 暴露方案.md`。
 - 继承设计：`docs/design/v0.24.33 内容增量 transport 接口方案.md`。
 - 继承设计：`docs/design/v0.24.31 内容生命周期事实源读取修正方案.md`、`docs/design/v0.24.30 统一站点发布快照与内容保留方案.md`。
 - 继承设计：`docs/design/v0.24.29 产品发布门禁与内容基座解耦方案.md`、`docs/design/v0.24.28 持续自动闭环与协作身份治理方案.md`、`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
 - 产品候选：`XBUILD-CONTENT-RELEASE-003`（已纳入 v0.24.27，保留历史证据）。
-- 父版本：`v0.24.33` / `43c8166cb52ebc2dfa249bddac219fbcc414deef`；既有 tag/history 不修改。
+- 父版本：`v0.24.34` / `982085a56cb2e33d122cdf6cdd7b2574a12a057e`；既有 tag/history 不修改。
 
 ## 本版本范围
 
 - 继承 v0.24.28 的 task 身份、Xing 称呼、图形优先输出和持续自动闭环规则。
 - 产品确定性发布门禁与环境型浏览器 QA 分层；不删除 QA，不绕过身份/clean/manifest/公网门禁。
 - 产品与内容继续通过统一 sitePublication 快照合并部署，保留 active content。
-- 内容新增/恢复必须通过标准 `--resume --package` CLI 调用 incremental transport，合并当前 active 集合后生成新 deployment。
+- 内容新增/恢复必须通过标准 `--resume --package` CLI 调用 incremental transport，合并当前 active 集合后生成新 deployment；verifier 按合并 manifest 合同验证 active 集合。
 - EdgeOne deployment 使用持久状态与 resume，不以固定 30 秒执行窗口判定失败；上传前执行文件数、最大单文件和总大小配额预检。
 - active 生命周期只读 content-release.json；dist manifest 只做身份/hash/目标证据。
 - deployment JSON 与公网 product/content verify 均为 released 必需证据。
 
 ## 明确不做
 
-- 不修改上游事实、已发布 v0.24.33 或内容正文/来源/status/publishedAt。
+- 不修改上游事实、已发布 v0.24.34 或内容正文/来源/status/publishedAt。
 - 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag。
 - 不创建并行 task、branch、worktree 或 automation。
 

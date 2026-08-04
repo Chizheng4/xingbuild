@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { finalizeContentRelease, verifyContentPackage } from "../scripts/content-release.mjs";
+import { finalizeContentRelease, verifyContentPackage, verifyContentPackageOnce } from "../scripts/content-release.mjs";
 import {
   CONTENT_RELEASE_STATES,
   acquireContentReleasePackageLease,
@@ -45,6 +45,18 @@ test("public verification retries bounded propagation without changing identity"
   const result = await verifyContentPackage({ manifest, baseUrl: "https://example.test/", fetchImpl, maxAttempts: 3, delayMs: 0 });
   assert.equal(result.contentReleaseId, manifest.contentReleaseId);
   assert.ok(calls >= 5);
+});
+
+test("combined public verification retains active releases and candidate", async () => {
+  const manifest = { contentReleaseId: "candidate", contentHash: "a".repeat(64), target: "candidate", targetPath: "/observations/candidate", activeContentReleaseIds: ["active-a", "active-b", "candidate"] };
+  const fetchImpl = async (url) => {
+    const pathname = new URL(url).pathname;
+    if (pathname === "/content-manifest.json") return new Response(JSON.stringify({ activeContentReleaseIds: ["active-a", "active-b", "candidate"], publishedSlugs: ["candidate"], baseSiteArtifactId: "base" }), { status: 200 });
+    if (pathname === "/release.json") return new Response(JSON.stringify({ version: "v0.24.32", commit: "commit" }), { status: 200 });
+    return new Response("<title>xingbuild</title>", { status: 200 });
+  };
+  const result = await verifyContentPackageOnce({ manifest, fetchImpl });
+  assert.deepEqual(result.activeContentReleaseIds, manifest.activeContentReleaseIds);
 });
 
 test("finalize writes an independent atomic completion fact and preserves lifecycle evidence", async () => {

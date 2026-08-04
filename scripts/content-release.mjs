@@ -378,7 +378,12 @@ export async function verifyContentPackageOnce({ baseUrl = publicUrl, manifest, 
     throw new Error(`content public verification HTTP page=${pageResponse.status} release=${releaseResponse.status} manifest=${manifestResponse.status} target=${targetResponse.status}`);
   }
   const publicManifest = await manifestResponse.json();
-  if (publicManifest.contentReleaseId !== manifest.contentReleaseId || publicManifest.target !== manifest.target || publicManifest.contentHash !== manifest.contentHash) {
+  if (Array.isArray(manifest.activeContentReleaseIds)) {
+    const actual = new Set(publicManifest.activeContentReleaseIds || []);
+    const expected = new Set(manifest.activeContentReleaseIds);
+    if (!actual.has(manifest.contentReleaseId) || [...expected].some((id) => !actual.has(id))) throw new Error("public combined manifest does not retain active content releases and candidate");
+    if (manifest.target && !publicManifest.publishedSlugs?.includes(manifest.target) && !publicManifest.publishedArticleSlugs?.includes(manifest.target)) throw new Error("public combined manifest does not contain candidate target");
+  } else if (publicManifest.contentReleaseId !== manifest.contentReleaseId || publicManifest.target !== manifest.target || publicManifest.contentHash !== manifest.contentHash) {
     throw new Error("public content manifest does not match the prepared content identity");
   }
   if (manifest.baseSiteArtifactId && publicManifest.baseSiteArtifactId !== manifest.baseSiteArtifactId) {
@@ -393,7 +398,7 @@ export async function verifyContentPackageOnce({ baseUrl = publicUrl, manifest, 
   const page = await pageResponse.text();
   const target = await targetResponse.text();
   if (!page.includes("<title>xingbuild") || !target.includes("<title>xingbuild")) throw new Error("public content pages do not identify xingbuild");
-  return { contentReleaseId: manifest.contentReleaseId, target: manifest.target, publicUrl: new URL(manifest.targetPath, publicBase).href };
+  return { contentReleaseId: manifest.contentReleaseId, activeContentReleaseIds: manifest.activeContentReleaseIds || [], target: manifest.target, publicUrl: new URL(manifest.targetPath, publicBase).href };
 }
 
 export async function verifyContentPackage({ manifest, baseUrl = publicUrl, fetchImpl = fetch, maxAttempts = 5, delayMs = 1000, sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {

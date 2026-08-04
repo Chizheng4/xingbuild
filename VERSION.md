@@ -1,4 +1,9 @@
 
+## v0.24.35 — 合并快照公网验证修正
+
+- 单条内容保持精确 contentReleaseId；合并快照验证 activeContentReleaseIds、candidate、基座、产品身份与候选页面。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.34 — 内容恢复 CLI 与异步 transport 配额门禁
 
 - 暴露 `--resume --package` CLI，保存 deploymentId 并支持同一 package resume。
