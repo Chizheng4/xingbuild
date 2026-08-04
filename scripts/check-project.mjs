@@ -16,6 +16,7 @@ const requiredFiles = [
   "src/content/showcaseRepository.js",
   "src/content/profileRepository.js",
   "src/content/practiceRepository.js",
+  "src/content/practiceAction.js",
   "src/content/observationRepository.js",
   "src/content/sourceUrls.js",
   "src/lib/visitQualification.js",

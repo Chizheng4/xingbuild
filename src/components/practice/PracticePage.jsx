@@ -1,5 +1,6 @@
 import { LayoutShell, ShowcaseLayout, TwoColumnLayout } from "../site/LayoutShell";
 import { SystemStage } from "../showcase/SystemStage";
+import { safePracticeAction } from "../../content/practiceAction";
 
 export function PracticeHeader({ practice, headingLevel = 1, headingId }) {
   const Heading = `h${headingLevel}`;
@@ -14,7 +15,14 @@ export function PracticeHeader({ practice, headingLevel = 1, headingId }) {
 
 export function PracticeModule({ module, headingLevel = 2 }) {
   const Heading = `h${headingLevel}`;
-  const description = <><Heading>{module.label}</Heading><p>{module.shortDescription}</p></>;
+  const action = safePracticeAction(module.action);
+  const description = (
+    <>
+      <Heading>{module.label}</Heading>
+      <p>{module.shortDescription}</p>
+      {action ? <a className="practice-module__action" href={action.href} target="_blank" rel="noreferrer">查看产品演示</a> : null}
+    </>
+  );
   if (!module.media?.src) {
     return <section className="showcase-layout practice-module"><div className="showcase-layout__description">{description}</div></section>;
   }
@@ -22,7 +30,7 @@ export function PracticeModule({ module, headingLevel = 2 }) {
     <ShowcaseLayout
       className="practice-module"
       description={description}
-      stage={<SystemStage media={module.media} action={module.action} />}
+      stage={<SystemStage media={module.media} />}
     />
   );
 }

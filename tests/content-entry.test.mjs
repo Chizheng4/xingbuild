@@ -4,7 +4,8 @@ import test from "node:test";
 import { assertCurrentPracticeContent, validatePracticeBundle } from "../scripts/lib/practice-content.mjs";
 import { countCompleteBriefs } from "../src/content/briefRail.js";
 import { selectObservationBriefs as selectBriefs } from "../src/content/observationQueries.js";
-import { findPractice, projectPractice } from "../src/content/practiceRepository.js";
+import { findPractice, practiceIdForMediaManifest, projectPractice } from "../src/content/practiceRepository.js";
+import { safePracticeAction } from "../src/content/practiceAction.js";
 
 test("practice projects only the approved independent Robotaxi media record", async () => {
   const { practice, manifest } = await assertCurrentPracticeContent();
@@ -24,6 +25,10 @@ test("practice projects only the approved independent Robotaxi media record", as
   assert.ok(manifest.assets.every((asset) => ["image", "video"].includes(asset.type) && asset.ratio));
   assert.ok(manifest.assets.every((asset) => asset.provenance.approvalStatus === "approved"));
   assert.ok(practice.modules.every((module) => module.action?.href === "https://robotaxi.xingbuild.top/"));
+  const projected = projectPractice(practice, manifest);
+  assert.equal(projected.modules[0].media?.type, "video");
+  assert.equal(projected.modules[0].media?.src, "/media/robotaxi/robotaxi-evidence-fleet-operations-console-v1.mp4");
+  assert.deepEqual(projected.modules.slice(1).map((module) => module.media), [undefined, undefined, undefined]);
   assert.equal(findPractice("robotaxi"), undefined, "product-mode repository must not read independent content");
 });
 
@@ -95,6 +100,7 @@ test("practice media keeps reader interaction separate from internal provenance"
   assert.ok(validatePracticeBundle(practice, { ...manifest, reviewStatus: "draft" }).length);
   assert.ok(validatePracticeBundle(practice, { ...manifest, assets: [{ ...manifest.assets[0], assetSha256: "not-a-hash" }] }).length);
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], action: { href: "javascript:alert(1)" } }] }, manifest).length);
+  assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], action: { href: "https://example.com/" } }] }, manifest).length);
   assert.ok(validatePracticeBundle({ ...practice, modules: [{ ...practice.modules[0], group: "" }] }, manifest).length);
 
   const archivedAsset = {
@@ -122,6 +128,17 @@ test("practice headings advance from the presentation root rather than using a f
   const practicePage = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
   assert.match(practicePage, /headingLevel=\{headingLevel \+ 1\}/);
   assert.match(practicePage, /const Heading = `h\$\{headingLevel\}`/);
+});
+
+test("media manifest directory is the single registered practice mapping", () => {
+  assert.equal(practiceIdForMediaManifest({ directory: "/media/robotaxi" }), "robotaxi");
+  assert.equal(practiceIdForMediaManifest({ directory: "/unsafe/robotaxi" }), undefined);
+});
+
+test("Practice CTA accepts only the registered safe external product host", () => {
+  assert.deepEqual(safePracticeAction({ href: "https://robotaxi.xingbuild.top/" }), { href: "https://robotaxi.xingbuild.top/" });
+  assert.equal(safePracticeAction({ href: "javascript:alert(1)" }), null);
+  assert.equal(safePracticeAction({ href: "https://example.com/" }), null);
 });
 
 test("brief reading source belongs to published observations, not an independent JS list", async () => {

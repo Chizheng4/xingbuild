@@ -8,8 +8,15 @@ const mediaManifestModules = contentBuildEnabled
   ? import.meta.glob("../../.content-workspace/content/media/*/manifest.json", { eager: true, import: "default" })
   : {};
 
+export function practiceIdForMediaManifest(manifest) {
+  const match = /^\/media\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(manifest?.directory || "");
+  return match?.[1];
+}
+
 const mediaManifestByPracticeId = new Map(
-  Object.values(mediaManifestModules).map((manifest) => [manifest.practiceId, manifest]),
+  Object.values(mediaManifestModules)
+    .map((manifest) => [practiceIdForMediaManifest(manifest), manifest])
+    .filter(([practiceId]) => practiceId),
 );
 
 export function projectPractice(practice, manifest) {

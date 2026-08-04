@@ -8,6 +8,7 @@ import { isPublicPracticeMedia } from "../../src/content/practiceMediaLifecycle.
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const absoluteHttpsPattern = /^https:\/\/[^\s]+$/;
+const practiceActionHost = "robotaxi.xingbuild.top";
 const sha256Pattern = /^[a-f0-9]{64}$/;
 const approvedMediaRoles = new Set(["current_system_evidence", "in_progress_context"]);
 const manifestReviewStatuses = new Set(["approved", "superseded"]);
@@ -49,6 +50,7 @@ function validateAction(errors, action, field) {
     if (parsed.username || parsed.password) {
       errors.push(`${field}.href must not include credentials`);
     }
+    if (parsed.hostname !== practiceActionHost) errors.push(`${field}.href must use the registered ${practiceActionHost} host`);
   } catch {
     errors.push(`${field}.href must be a valid URL`);
   }

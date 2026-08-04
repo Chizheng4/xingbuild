@@ -1,4 +1,11 @@
 
+## v0.25.3 — Practice 页面能力与媒体投影修复
+
+- `/products` Practice Hero 居中并使用受控文本换行，保持移动端无溢出。
+- runtime reader 由既有 manifest `directory` 登记关系解析 Practice 身份，使已审核 Robotaxi 视频投影到首个模块，其余模块 media 为空。
+- CTA 仅接受已登记的安全 HTTPS 产品域名，并与视频 controls 分离，保持键盘可达。
+- 产品模式继续关闭独立内容读取；本地产品能力版本，不执行内容发布。
+
 ## v0.25.2 — 内容发布包身份重建与幂等恢复
 
 - 在同一逻辑 `ContentReleaseIntent` 下生成由 content/source/base/contract tuple 决定的 immutable `ContentPackageRevision`，保留旧包、recovery 与 lineage。
