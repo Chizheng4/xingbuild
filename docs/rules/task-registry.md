@@ -7,7 +7,8 @@
 | 职责 | threadId | hostId | returnThreadId | 状态 | 最后核验 |
 | --- | --- | --- | --- | --- | --- |
 | 产品/视觉主线 | `019fc260-e14e-7211-97f1-44e075d0cc0f` | `local` | `019fc260-e14e-7211-97f1-44e075d0cc0f` | active | 2026-08-04 |
-| Engineering 主线 | `019fc263-abf9-7732-84ef-73914e6a0a85` | `local` | `019fc260-e14e-7211-97f1-44e075d0cc0f` | active | 2026-08-04 |
+| Engineering 主线（旧，归档） | `019fc263-abf9-7732-84ef-73914e6a0a85` | `local` | `019fc260-e14e-7211-97f1-44e075d0cc0f` | archived | 2026-08-04 |
+| Engineering 主线 | `019fcbf2-20e3-7d51-a4de-87ad7c94b190` | `local` | `019fc260-e14e-7211-97f1-44e075d0cc0f` | active | 2026-08-04 |
 | 内容及发布主线 | `019fa166-9645-7532-87f6-99ae4cf9508a` | `local` | `019fc260-e14e-7211-97f1-44e075d0cc0f` | active | 2026-08-04 |
 | Ops 采集主线 | `019fb57b-e90e-75a3-8898-ce3803d6c1fa` | `unverified` | `unverified` | needs-verification | 未核验 |
 

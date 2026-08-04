@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { finalizeContentRelease, verifyContentPackage, verifyContentPackageOnce } from "../scripts/content-release.mjs";
+import { assertContentPackageIdentity, finalizeContentRelease, verifyContentPackage, verifyContentPackageOnce } from "../scripts/content-release.mjs";
 import {
   CONTENT_RELEASE_STATES,
   acquireContentReleasePackageLease,
@@ -29,6 +29,13 @@ test("content release lease and idempotency key are stable for resume", async ()
   const second = await acquireContentReleasePackageLease({ packageDirectory, idempotencyKey: key });
   assert.equal(first.lease.idempotencyKey, second.lease.idempotencyKey);
   await releaseContentReleasePackageLease(second);
+});
+
+test("legacy resume hard fails an embedded base artifact mismatch and revision drift", () => {
+  const base = { contentReleaseId: "content-a", contentHash: "a".repeat(64), baseSiteArtifactId: "current", baseSiteArtifact: { baseSiteArtifactId: "stale" } };
+  assert.throws(() => assertContentPackageIdentity(base, base), /reconcile is required/);
+  const revision = { ...base, baseSiteArtifact: { baseSiteArtifactId: "current" }, packageRevisionId: "revision-a" };
+  assert.throws(() => assertContentPackageIdentity({ ...revision, packageRevisionId: "revision-b" }, revision), /revision identity mismatch/);
 });
 
 test("public verification retries bounded propagation without changing identity", async () => {

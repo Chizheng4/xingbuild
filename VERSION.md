@@ -1,4 +1,11 @@
 
+## v0.25.2 — 内容发布包身份重建与幂等恢复
+
+- 在同一逻辑 `ContentReleaseIntent` 下生成由 content/source/base/contract tuple 决定的 immutable `ContentPackageRevision`，保留旧包、recovery 与 lineage。
+- `--reconcile` 在 prepare 前校验 canonical/draft/recovery、approved review、hash、target 与 immutable base artifact；同 tuple 幂等复用 revision 与 `ContentBatchPlan`。
+- active 读取按逻辑 release 去重，失败 revision 不污染既有集合；released revision 才替代旧物理包，resume 与 SitePublication 绑定 revision 身份。
+- 本地产品能力版本；不执行内容 transport 或产品 publish，待产品/视觉验收。
+
 ## v0.25.1 — 内容批次发布与 active 身份一致性
 
 - 引入确定性 ContentBatchPlan，按文件数、单文件/总大小、target 与媒体路径冲突分片；每条 intent 只进入一个分片并保留独立证据。

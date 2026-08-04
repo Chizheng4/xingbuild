@@ -73,6 +73,7 @@ const requiredFiles = [
   "scripts/lib/content-finalize.mjs",
   "scripts/lib/content-approval.mjs",
   "scripts/lib/content-release-readiness.mjs",
+  "scripts/lib/content-package-reconcile.mjs",
   "tests/product-content-isolation.test.mjs",
   "scripts/verify-public-release.mjs",
   "edgeone.json",
@@ -86,6 +87,7 @@ const requiredFiles = [
   "tests/task-handoff-governance.test.mjs",
   "tests/baseline-governance.test.mjs",
   "tests/content-targets.test.mjs",
+  "tests/content-package-reconcile.test.mjs",
 ];
 
 for (const file of requiredFiles) {

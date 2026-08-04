@@ -1,22 +1,25 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.25.1`
+## 当前唯一版本：`v0.25.2`
 
 ## 正式方案
 
-`docs/design/v0.25.1 内容批次发布与 active 身份一致性能力.md`
+`docs/design/v0.25.2 内容发布包身份重建与幂等恢复能力.md`
 
 ## 目标
 
-将内容的逐条身份与站点的物理发布粒度分离：内容仍逐条审核、hash、验收和 finalize；工具在平台约束内自动生成最大安全批次/分片，减少重复构建、上传、deployment、传播等待和公网验证，同时修复已发布内容因 package 身份不一致而从 active 集合丢失的问题。
+在 v0.25.1 批次发布能力上补齐旧包身份安全重建：内容仍逐条审核、hash、验收和 finalize；工具在不改变逻辑 `contentReleaseId` 或正文事实的前提下，生成当前 immutable 产品基座的物理 package revision，复用批次、lease、combined verify 和恢复能力。
 
 ```mermaid
 flowchart LR
-    I["已批准 ContentReleaseIntent 集合"] --> P["Batch Planner\n身份对账 + 约束计算"]
+    I["已批准 ContentReleaseIntent"] --> R{"包身份匹配?"}
+    R -->|否| X["Reconcile\n来源/审核/hash 校验"]
+    R -->|是| P["Batch Planner"]
+    X --> P
     P --> S["最大安全分片"]
     S --> D["SitePublication\n每分片一次 deployment"]
-    D --> V["逐目标 combined verify"]
-    V --> F["逐条保留证据并 finalize"]
+    D --> V["combined verify"]
+    V --> F["逐条幂等 finalize"]
 ```
 
 ## 产品—内容兼容声明
@@ -26,17 +29,17 @@ contentImpact: compatible
 affectedTargets: []
 affectedRoutes: []
 affectedFields: []
-compatibilityEvidence: v0.25.1-batch-publication-and-active-identity-tests
+compatibilityEvidence: v0.25.2-reconcile-package-lineage-tests
 ```
 
 ## 范围
 
-- 建设通用 `ContentBatchPlan`，不把内容正文或事实身份合并。
-- 按文件数、单文件大小、总大小、目标冲突和媒体路径约束自动确定最大安全批次；超限确定性分片。
-- 以 `productVersion + commit + sourceBundleHash` 缓存 immutable `ProductArtifact`，不为内容递增产品版本。
-- 修复 `content-release.json`、包内 `content-manifest.json`、completion 和 active 读取器的 immutable 身份原子一致性。
-- 每个物理分片只创建一次 `SitePublication`/deployment；combined verify 通过后逐条幂等 finalize。
-- 保留现有单条内容发布与 resume 入口作为紧急/低频 fallback。
+- 增加唯一 `content-release` reconcile 入口，区分逻辑内容身份和物理 package revision。
+- 校验 canonical/draft/recovery、sourceHash、contentHash、target、approved review 和 immutable baseSiteArtifact。
+- 保留 supersedes/recovery lineage；同一 reconcile 幂等，不重复 package、deployment 或 finalize。
+- 将新 revision 交给既有 `ContentBatchPlan`、SitePublication、combined verify 和 resume。
+- 覆盖 stale package 的 nhtsa 场景及 30 条 active 内容保留。
+- 将内容日常可变台账隔离到被忽略 `.content-workspace/operations/content-publishing-ledger.md`；tracked 运营文档只保留稳定入口，内容运行变更不得阻断产品版本收口。
 
 ## 明确不做
 
@@ -46,11 +49,11 @@ compatibilityEvidence: v0.25.1-batch-publication-and-active-identity-tests
 
 ## 验收合同
 
-1. 30 条已批准内容在约束允许时只产生一次或少量分片 deployment；超限时所有条目恰好覆盖一次。
-2. 每条内容仍可查询 `contentReleaseId`、contentHash、review、deployment、publicVerify 和 finalize。
-3. 任一分片失败保留 recovery，不 finalize，不影响既有 active；resume 不重复 deployment。
-4. 后续内容发布不丢失已 released active 内容；覆盖 stale `baseSiteArtifactId` 回归场景。
-5. 产品 version/commit/tag 不因内容批次改变；单条 fallback 仍可用。
-6. `npm run check`、`release:prepare`、专项测试、closeout、preflight 和真实公网批次验证通过。
+1. nhtsa 场景生成一个新的 immutable package revision，逻辑 `contentReleaseId` 不变，旧包/recovery 保留。
+2. 重复 reconcile 返回同一 revision/sitePublication，不重复 deployment。
+3. 29 条现有 active 内容保持不变，nhtsa 公网验证后成为第 30 条。
+4. source/hash/target/review/base artifact 漂移均在 prepare 前硬失败。
+5. 失败不污染 active，resume 复用同一 publication/deployment。
+6. `npm run check`、`release:prepare`、专项测试、closeout、preflight 和真实公网恢复验证通过。
 
-责任 task：产品与视觉主线负责方案与验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6a0a85` 负责实现、自 QA、本地版本收口；内容及发布 task 负责提供已批准 intents 和运营验收，不修改工具。
+责任 task：产品与视觉主线负责方案与验收；Engineering 主线 `019fcbf2-20e3-7d51-a4de-87ad7c94b190` 负责实现、自 QA、本地版本收口；内容及发布 task 负责提供已批准 intents、调用 reconcile 和运营验收，不修改工具。

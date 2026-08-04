@@ -42,38 +42,44 @@ export async function validateUploadQuota(directory, { maxFiles = 10000, maxFile
 }
 
 export async function readActiveContentReleases(releasesRoot) {
-  const active = [];
-  for (const entry of await readdir(releasesRoot, { withFileTypes: true }).catch(() => [])) {
-    if (!entry.isDirectory()) continue;
-    const releasePath = path.join(releasesRoot, entry.name, "content-release.json");
-    const manifestPath = path.join(releasesRoot, entry.name, "dist", "client", "content-manifest.json");
+  const activeById = new Map();
+  async function readCandidate(packageDirectory) {
+    const releasePath = path.join(packageDirectory, "content-release.json");
+    const manifestPath = path.join(packageDirectory, "dist", "client", "content-manifest.json");
     try {
       const release = JSON.parse(await readFile(releasePath, "utf8"));
       const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-      const completion = JSON.parse(await readFile(path.join(path.dirname(releasePath), "completion.json"), "utf8"));
+      const completion = JSON.parse(await readFile(path.join(packageDirectory, "completion.json"), "utf8"));
       const identityMatches = manifest.contentReleaseId === release.contentReleaseId
         && (!release.contentHash || manifest.contentHash === release.contentHash)
         && (!release.target || manifest.target === release.target)
-        && (!release.baseSiteArtifactId || manifest.baseSiteArtifactId === release.baseSiteArtifactId);
+        && (!release.baseSiteArtifactId || manifest.baseSiteArtifactId === release.baseSiteArtifactId)
+        && (!release.packageRevisionId || manifest.packageRevisionId === release.packageRevisionId);
       const completionMatches = completion.contentReleaseId === release.contentReleaseId
         && completion.contentHash === release.contentHash
-        && completion.baseSiteArtifactId === release.baseSiteArtifactId;
-      if (release.state === "released" && release.contentReleaseId && release.deploymentId && release.publicVerify && identityMatches && completionMatches) {
-        const sourceDirectory = path.join(path.dirname(releasePath), "source");
-        active.push({
-          ...manifest,
-          ...release,
-          deploymentId: release.deploymentId,
-          publicVerify: release.publicVerify,
-          contentReleaseId: release.contentReleaseId,
-          packageDirectory: path.dirname(releasePath),
-          sourceDirectory,
-          mediaPaths: await collectMediaPaths(sourceDirectory),
-        });
+        && completion.baseSiteArtifactId === release.baseSiteArtifactId
+        && (!release.packageRevisionId || completion.packageRevisionId === release.packageRevisionId);
+      if (release.state !== "released" || !release.contentReleaseId || !release.deploymentId || !release.publicVerify || !identityMatches || !completionMatches) return;
+      const sourceDirectory = path.join(packageDirectory, "source");
+      const candidate = { ...manifest, ...release, packageDirectory, sourceDirectory, mediaPaths: await collectMediaPaths(sourceDirectory) };
+      const current = activeById.get(release.contentReleaseId);
+      const candidateTime = candidate.stateUpdatedAt || candidate.reconciledAt || "";
+      const currentTime = current?.stateUpdatedAt || current?.reconciledAt || "";
+      if (!current || (candidate.packageRevisionId && !current.packageRevisionId) || (candidate.packageRevisionId && current.packageRevisionId && candidateTime > currentTime)) {
+        activeById.set(release.contentReleaseId, candidate);
       }
     } catch { /* incomplete packages are not active */ }
   }
-  return active.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
+  for (const entry of await readdir(releasesRoot, { withFileTypes: true }).catch(() => [])) {
+    if (!entry.isDirectory()) continue;
+    const packageDirectory = path.join(releasesRoot, entry.name);
+    await readCandidate(packageDirectory);
+    const revisionsRoot = path.join(packageDirectory, "revisions");
+    for (const revision of await readdir(revisionsRoot, { withFileTypes: true }).catch(() => [])) {
+      if (revision.isDirectory()) await readCandidate(path.join(revisionsRoot, revision.name));
+    }
+  }
+  return [...activeById.values()].sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
 }
 
 async function overlayDirectory(source, destination) {
@@ -185,8 +191,9 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     candidateTargetPath: candidate?.targetPath || null,
   };
   const snapshotHash = createHash("sha256").update(JSON.stringify({ productRelease, productArtifactId: productArtifact?.baseSiteArtifactId || null, contentManifest })).digest("hex");
+  const publicationContentIdentities = activeContentReleases.map((item) => item.packageRevisionId ? `${item.contentReleaseId}@${item.packageRevisionId}` : item.contentReleaseId);
   const publication = {
-    sitePublicationId: sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: contentManifest.activeContentReleaseIds }),
+    sitePublicationId: sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: publicationContentIdentities }),
     productVersion: productRelease.version,
     productCommit: productRelease.commit,
     productArtifactId: productArtifact?.baseSiteArtifactId || null,
@@ -195,7 +202,8 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     targetPath: candidate?.targetPath || null,
     contentManifest,
     snapshotHash,
-    publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: contentManifest.activeContentReleaseIds }) }),
+    contentPackageRevisionIds: activeContentReleases.map((item) => item.packageRevisionId).filter(Boolean),
+    publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: publicationContentIdentities }) }),
     deploymentId: null,
     publicVerify: null,
   };

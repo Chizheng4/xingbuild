@@ -21,6 +21,7 @@ import { assertBaseSiteArtifactCompatible, readBaseSiteArtifact, validateBaseSit
 import { contentRootDirectory } from "./lib/content-root.mjs";
 import { createSitePublication, validateUploadQuota } from "./lib/site-publication.mjs";
 import { planContentBatch } from "./lib/content-batch.mjs";
+import { reconcileContentPackage } from "./lib/content-package-reconcile.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
 import {
   acquireContentReleasePackageLease,
@@ -151,6 +152,7 @@ export async function finalizeContentRelease(packageInfo) {
     contentReleaseId: packageInfo.contentReleaseId,
     contentHash: packageInfo.contentHash,
     baseSiteArtifactId: packageInfo.baseSiteArtifactId,
+    packageRevisionId: packageInfo.packageRevisionId || null,
     kind: packageInfo.kind,
     target: packageInfo.target,
     sourcePath: path.relative(packageInfo.sourceRoot || root, sourceFile),
@@ -446,17 +448,28 @@ export async function verifyContentPackage({ manifest, baseUrl = publicUrl, fetc
   throw error;
 }
 
+export function assertContentPackageIdentity(packageInfo, manifest) {
+  if (manifest.contentReleaseId !== packageInfo.contentReleaseId || manifest.contentHash !== packageInfo.contentHash) throw new Error("content release package identity mismatch");
+  if (manifest.baseSiteArtifact && manifest.baseSiteArtifact.baseSiteArtifactId !== manifest.baseSiteArtifactId) throw new Error("content release embedded baseSiteArtifact identity mismatch; reconcile is required");
+  if (manifest.packageRevisionId && manifest.packageRevisionId !== packageInfo.packageRevisionId) throw new Error("content package revision identity mismatch");
+  return true;
+}
+
 export async function transportContentRelease({ packageInfo, argv = process.argv.slice(2), env = process.env } = {}) {
+  const manifest = JSON.parse(await readFile(packageInfo.manifestPath, "utf8"));
+  assertContentPackageIdentity(packageInfo, manifest);
   assertFixedPublishTarget(env);
   assertPublishAuthorization({ argv, env });
-  const manifest = JSON.parse(await readFile(packageInfo.manifestPath, "utf8"));
-  if (manifest.contentReleaseId !== packageInfo.contentReleaseId || manifest.contentHash !== packageInfo.contentHash) throw new Error("content release package identity mismatch");
   const idempotencyKey = manifest.idempotencyKey || contentReleaseIdempotencyKey({ contentReleaseId: manifest.contentReleaseId, contentHash: manifest.contentHash, baseSiteArtifactId: manifest.baseSiteArtifactId });
   const lease = await acquireContentReleasePackageLease({ packageDirectory: packageInfo.packageDirectory, idempotencyKey, contentReleaseId: manifest.contentReleaseId });
   try {
     if (manifest.state === "released" && manifest.publicVerify) return { ...manifest, publicVerify: manifest.publicVerify };
     const currentProductClient = path.join(root, "dist", "client");
     const currentRelease = JSON.parse(await readFile(path.join(currentProductClient, "release.json"), "utf8"));
+    const currentArtifact = JSON.parse(await readFile(path.join(currentProductClient, "base-site-artifact.json"), "utf8"));
+    if (manifest.baseSiteArtifactId && manifest.baseSiteArtifactId !== currentArtifact.baseSiteArtifactId) {
+      throw new Error("content package baseSiteArtifact is not the current immutable product artifact; reconcile is required");
+    }
     const publication = await createSitePublication({
       productClient: currentProductClient,
       releasesRoot: path.join(root, ".content-workspace", "releases"),
@@ -524,6 +537,15 @@ async function main(argv = process.argv.slice(2)) {
   const changeSetPath = valueFor("--change-set");
   const artifactPath = valueFor("--base-site-artifact");
   const packageDirectory = valueFor("--package");
+  const contentReleaseId = valueFor("--release");
+  if (argv.includes("--reconcile")) {
+    if (!contentReleaseId || !artifactPath) throw new Error("Usage: node scripts/content-release.mjs --reconcile --release <contentReleaseId> --base-site-artifact <immutableBaseSiteArtifactId>");
+    const reconciled = await reconcileContentPackage({ sourceRoot: root, contentReleaseId, baseSiteArtifactId: artifactPath });
+    const plan = prepareContentBatch([{ ...reconciled, review: { approved: true }, fileCount: 1, totalBytes: 0, maxFileBytes: 0 }]);
+    await writeJsonAtomically(path.join(reconciled.packageDirectory, "content-batch-plan.json"), plan);
+    console.log(JSON.stringify({ contentReleaseId: reconciled.contentReleaseId, packageRevisionId: reconciled.packageRevisionId, packageDirectory: reconciled.packageDirectory, planId: plan.planId, reused: reconciled.reused }));
+    return;
+  }
   if (argv.includes("--resume")) {
     if (!packageDirectory) throw new Error("Usage: node scripts/content-release.mjs --resume --package <dir> [--authorize-publish]");
     const result = await resumeContentRelease({ packageDirectory, argv });

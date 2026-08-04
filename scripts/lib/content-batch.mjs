@@ -11,7 +11,7 @@ function intentDescriptor(intent) {
   const target = text(intent.target || intent.slug, "target");
   const type = text(intent.kind || intent.type, "content type");
   if (!intent.review && !intent.reviewedAt) throw new Error(`content intent ${id} is not reviewed`);
-  if (!intent.changeSet && !intent.changeSetId && !intent.changeSetHash) throw new Error(`content intent ${id} is missing ChangeSet identity`);
+  if (!intent.changeSet && !intent.changeSetId && !intent.changeSetHash && !intent.packageRevisionId) throw new Error(`content intent ${id} is missing ChangeSet or package revision identity`);
   const mediaPaths = [...new Set((intent.mediaPaths || intent.media || []).map((item) => typeof item === "string" ? item : item?.path).filter(Boolean))].sort();
   const files = Number(intent.fileCount ?? intent.files?.length ?? 1);
   const bytes = Number(intent.totalBytes ?? intent.bytes ?? 0);
