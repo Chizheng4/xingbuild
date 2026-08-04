@@ -38,3 +38,17 @@ test("workspace released lifecycle facts retain all eight previously published p
   assert.equal(active.length, 8);
   assert.ok(active.every((item) => item.deploymentId && item.publicVerify && item.baseSiteArtifactId === "v0.24.26-70847cdf6df0"));
 });
+
+test("incremental content publication merges eight active releases with one candidate", async () => {
+  const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const product = path.join(root, "dist", "client");
+  const output = path.join(root, ".content-workspace", "site-publications", "test-8-plus-1");
+  const publication = await createSitePublication({
+    productClient: product,
+    releasesRoot: path.join(root, ".content-workspace", "releases"),
+    outputRoot: output,
+    additionalContentManifest: { contentReleaseId: "candidate-one", deploymentId: "candidate-deployment", publicVerify: { ok: true }, publishedSlugs: ["candidate-one"], publishedArticleSlugs: [] },
+  });
+  assert.equal(publication.contentReleaseIds.length, 9);
+  assert.ok(publication.contentManifest.publishedSlugs.includes("candidate-one"));
+});

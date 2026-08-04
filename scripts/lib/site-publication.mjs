@@ -26,9 +26,12 @@ export async function readActiveContentReleases(releasesRoot) {
   return active.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
 }
 
-export async function createSitePublication({ productClient, releasesRoot, outputRoot } = {}) {
+export async function createSitePublication({ productClient, releasesRoot, outputRoot, additionalContentManifest = null } = {}) {
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
   const activeContentReleases = await readActiveContentReleases(releasesRoot);
+  if (additionalContentManifest?.contentReleaseId && additionalContentManifest.deploymentId) {
+    activeContentReleases.push(additionalContentManifest);
+  }
   const contentManifest = {
     version: productRelease.version,
     commit: productRelease.commit,

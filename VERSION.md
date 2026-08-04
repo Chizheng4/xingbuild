@@ -1,4 +1,10 @@
 
+## v0.24.32 — 内容增量合并发布恢复
+
+- 内容新增/恢复通过统一 sitePublication 合并 8 个 active 与当前 candidate，禁止孤立覆盖。
+- 失败保留 active 与 recovery，复用 lease/idempotency。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.31 — 内容生命周期事实源读取修正
 
 - 以 content-release.json 作为 active 生命周期事实，dist manifest 仅做身份、hash、target 与 base artifact 校验。
