@@ -1,4 +1,11 @@
 
+## v0.25.0 — 产品、内容与站点发布三层架构重建
+
+- 以 `SitePublication` 为唯一物理站点发布对象；产品 `ProductRelease` 与内容 `ContentReleaseIntent` 保持独立身份和生命周期。
+- 产品与内容 transport 统一通过唯一 Coordinator 合并快照、取得 lease、保存 deployment JSON、等待传播、精确公网验证和可恢复 finalize。
+- Deploy Success 不再等同于网站发布成功；缺少完整公网证据时返回 Incident/recoveryId，resume 复用同一 deployment，不重复部署。
+- 本地治理版本，未 push、publish、deploy；线上继续冻结 v0.24.37。
+
 ## v0.24.38 — 内容 deployment 恢复与传播验证
 
 - 持久化 deployment JSON/site-publication，已有 deployment resume 只验证不重复上传。
@@ -199,7 +206,6 @@
 
 ## v0.24.0 — 统一版本发布
 - 状态：统一版本发布；内容、产品、Git、tag 与公网 manifest 共用同一版本身份。
-
 # xingbuild 版本记录
 
 ## v0.23.0 — 统一能力展示控件与可组合表达

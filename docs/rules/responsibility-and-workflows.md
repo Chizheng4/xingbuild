@@ -12,8 +12,9 @@
 | 责任域 | 负责 | 不负责 |
 | --- | --- | --- |
 | 产品与视觉 | 产品总案、IA、页面能力、视觉合同、候选评审、正式方案、`current.md`、产品/视觉验收 | 日常选题、逐条事实审核、产品代码提交、线上 transport |
-| Engineering | 读取 `current.md` 实现产品能力，测试、自 QA、版本记录、commit/tag/clean；产品/视觉验收通过后按 Xing 的持续授权直接执行 transport 和公网验证 | 自行改变产品目标、越过方案、把内容发布当产品版本、擅自创建 task/分支/worktree |
-| 内容与发布 | Brief/Article/Practice、B 端产品页面内容、事实审核、独立内容发布和内容公网验收 | 修改页面能力、IA、schema、组件、视觉 token、产品版本、产品 tag |
+| Engineering | 读取 `current.md` 实现产品能力，测试、自 QA、版本记录、commit/tag/clean；产品/视觉验收通过后按 Xing 的持续授权提交产品 transport 意图并由协调器完成公网验证 | 自行改变产品目标、越过方案、把内容发布当产品版本、擅自创建 task/分支/worktree、直接调用 EdgeOne deploy |
+| 内容与发布 | Brief/Article/Practice、B 端产品页面内容、事实审核、独立 `ContentReleaseIntent` 和内容事实验收；将意图提交给 SitePublication Coordinator | 修改页面能力、IA、schema、组件、视觉 token、产品版本、产品 tag、直接调用 EdgeOne deploy |
+| SitePublication Coordinator | 读取当前 ProductArtifact 与 active ContentReleaseIntent，取得站点 lease，生成整站 snapshot，唯一调用 EdgeOne，保存 deployment、传播验证、recovery 和 finalize | 决定产品业务、编写内容、替代产品/内容 owner、改变产品或内容事实 |
 | Ops | 来源覆盖、可信证据候选、去重和运行记录 | 写公开正文、人工审核、发布、创建或复制 scheduler |
 | Xing | 产品方向、关键未决项、持续发布授权的暂停/撤销和其他不可逆外部决策 | 不替代执行 owner 的实现和验证 |
 
@@ -30,14 +31,14 @@ flowchart LR
     E -->|有产品/视觉问题| F["下一版本方案\n直接写入 current"]
     F --> B
     E -->|通过| G["既有持续发布授权"]
-    G --> H["Engineering：transport + 公网证据"]
+    G --> H["Coordinator：SitePublication transport + 公网证据"]
 ```
 
 - `current.md` 只保存当前可执行产品方案，不保存生命周期状态字段。
 - Engineering 在本地形成 commit/tag/clean 后一次性写入对应 history；已打 tag 的 current/history 不因验收或线上事件回写。
 - 提交前发现普通工程缺陷，Engineering 在当前版本内修复并重新自 QA；发现产品目标、对象边界或验收合同不成立，停止越界并回到产品/视觉确认。
 - 提交后产品/视觉验收发现问题，直接定义下一个 patch/小迭代/大迭代并写入 current，不重新创建普通候选，也不改旧版本。
-- Xing 已授予产品闭环持续发布授权；产品/视觉验收通过后 Engineering 直接执行线上 transport，不再逐次询问。Xing 明确暂停或撤销时，立即停止后续 publish；线上版本必须与同一 local HEAD/tag 对齐。
+- Xing 已授予产品闭环持续发布授权；产品/视觉验收通过后 Engineering 提交产品 transport 意图，由 Coordinator 串行完成站点发布，不再逐次询问。Xing 明确暂停或撤销时，立即停止后续 publish；线上版本必须与同一 ProductRelease 对齐。
 - 默认自动闭环：在方案、验收和既有授权均满足时，各责任 task 继续完成本责任域的 prepare、build、transport、verify、finalize；只有 Xing 明确暂停、停止、撤销或要求人工接管时才停。硬失败、身份不一致和安全边界仍立即停止并上报。
 
 ## 三、候选分流与归档
@@ -71,11 +72,16 @@ stateDiagram-v2
 
 ## 五、内容与 Ops 独立运营
 
-```text
-Ops 采集 → EvidenceCandidate → 内容审核/确认 → 独立 contentReleaseId 发布
+```mermaid
+flowchart LR
+    O[Ops 采集] --> E[EvidenceCandidate]
+    E --> C[内容审核/确认]
+    C --> I[ContentReleaseIntent]
+    I --> S[SitePublication Coordinator]
+    P[ProductRelease] --> S
 ```
 
-内容和 Ops 使用各自合同、被忽略 `.content-workspace/` 与独立发布身份，不进入产品 `v0.x`、`current.md`、产品 history、commit/tag 或产品 publish。只有新增页面、路由、schema、组件、交互或共享视觉能力时，才转为产品候选并进入产品工程闭环。
+内容和 Ops 使用各自合同、被忽略 `.content-workspace/` 与独立发布身份，不进入产品 `v0.x`、`current.md`、产品 history、commit/tag 或 ProductRelease。内容 transport 可以独立准备，但物理站点 transport 必须由 SitePublication Coordinator 串行合并 active 内容；只有新增页面、路由、schema、组件、交互或共享视觉能力时，才转为产品候选并进入产品工程闭环。
 
 ## 六、固定收口报告
 

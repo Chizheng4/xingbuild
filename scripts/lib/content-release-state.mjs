@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const CONTENT_RELEASE_STATES = Object.freeze([
@@ -17,10 +17,10 @@ export const CONTENT_RELEASE_STATES = Object.freeze([
 const ordered = new Map(["prepared", "built", "transported", "verifying", "finalized", "released"].map((state, index) => [state, index]));
 
 export function contentReleaseIdempotencyKey({ contentReleaseId, contentHash, baseSiteArtifactId } = {}) {
-  if (![contentReleaseId, contentHash, baseSiteArtifactId].every((value) => typeof value === "string" && value.length > 0)) {
-    throw new Error("content release idempotency key requires contentReleaseId, contentHash and baseSiteArtifactId");
+  if (![contentReleaseId, contentHash].every((value) => typeof value === "string" && value.length > 0)) {
+    throw new Error("content release idempotency key requires contentReleaseId and contentHash");
   }
-  return createHash("sha256").update(`${contentReleaseId}:${contentHash}:${baseSiteArtifactId}`).digest("hex");
+  return createHash("sha256").update(`${contentReleaseId}:${contentHash}:${baseSiteArtifactId || "independent-content-intent-v1"}`).digest("hex");
 }
 
 export async function readContentReleaseState(packageDirectory) {
@@ -47,8 +47,34 @@ export async function acquireContentReleasePackageLease({ packageDirectory, idem
     if (error.code !== "ENOENT" && !/Unexpected token|JSON/.test(error.message)) throw error;
   }
   const lease = { idempotencyKey, contentReleaseId, pid: process.pid, acquiredAt: new Date(now).toISOString(), expiresAt: now + ttlMs };
-  await writeJsonAtomically(leasePath, lease);
-  return { leasePath, lease };
+  // The lease is the physical-site mutex. Use exclusive creation so two
+  // product/content transports cannot both pass a read-then-write race.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const handle = await open(leasePath, "wx");
+      await handle.writeFile(`${JSON.stringify(lease, null, 2)}\n`);
+      await handle.close();
+      return { leasePath, lease };
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      try {
+        const existing = JSON.parse(await readFile(leasePath, "utf8"));
+        if (existing.idempotencyKey === idempotencyKey && existing.pid === process.pid) {
+          await rm(leasePath, { force: true });
+          continue;
+        }
+        if (Number(existing.expiresAt) <= now) {
+          await rm(leasePath, { force: true });
+          continue;
+        }
+        throw new Error(`content release package lease is held for ${existing.contentReleaseId}`);
+      } catch (readError) {
+        if (readError.code === "ENOENT") continue;
+        throw readError;
+      }
+    }
+  }
+  throw new Error(`unable to acquire lease: ${leasePath}`);
 }
 
 export async function releaseContentReleasePackageLease({ leasePath, idempotencyKey } = {}) {

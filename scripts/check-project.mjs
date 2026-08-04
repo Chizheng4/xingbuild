@@ -59,6 +59,9 @@ const requiredFiles = [
   "scripts/content-supersede.mjs",
   "scripts/content-scope-check.mjs",
   "scripts/content-release.mjs",
+  "scripts/site-publication.mjs",
+  "scripts/lib/site-publication-coordinator.mjs",
+  "scripts/lib/content-compatibility.mjs",
   "scripts/content-target.mjs",
   "scripts/lib/publish-target.mjs",
   "scripts/unified-publish.mjs",
@@ -96,6 +99,7 @@ const packageJson = JSON.parse(
 assert.equal(packageJson.scripts["content:publish"], "node scripts/content-release.mjs", "content publish must use the independent content engine");
 assert.equal(packageJson.scripts["content:prepare"], "node scripts/content-release.mjs --prepare", "content prepare must stay explicit");
 assert.equal(packageJson.scripts["content:build"], "node scripts/content-release.mjs --build", "content build must stay explicit");
+assert.equal(packageJson.scripts["site-publication"], "node scripts/site-publication.mjs", "site publication must have one coordinator entry point");
 const version = await readFile(new URL("../VERSION.md", import.meta.url), "utf8");
 const current = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),
@@ -151,6 +155,12 @@ assert(evergreenRepository.includes("__XINGBUILD_CONTENT_BUILD__"), "framework a
 const siteBuild = await readFile(new URL("../scripts/prepare-sites-build.mjs", import.meta.url), "utf8");
 assert(!siteBuild.includes("contentRootDirectory"), "product Sites preparation must not read the independent content root");
 assert(!siteBuild.includes("independentMediaRoot"), "product Sites preparation must not copy independent media");
+const unifiedPublish = await readFile(new URL("../scripts/unified-publish.mjs", import.meta.url), "utf8");
+const contentRelease = await readFile(new URL("../scripts/content-release.mjs", import.meta.url), "utf8");
+const siteCoordinator = await readFile(new URL("../scripts/lib/site-publication-coordinator.mjs", import.meta.url), "utf8");
+assert(!/makers[\"']?,?\s*[\"']deploy/.test(unifiedPublish), "product wrapper must not call EdgeOne deploy directly");
+assert(!/makers[\"']?,?\s*[\"']deploy/.test(contentRelease), "content wrapper must not call EdgeOne deploy directly");
+assert(siteCoordinator.includes("[\"makers\", \"deploy\""), "site coordinator must own EdgeOne deploy");
 const pageDefinitions = await readFile(new URL("../src/content/pageDefinitions.js", import.meta.url), "utf8");
 const compositionRenderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
 assert(pageDefinitions.includes("pageDefinitionRegistry"), "page definitions must expose a controlled registry");

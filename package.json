@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.24.38",
+  "version": "0.25.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -30,6 +30,7 @@
     "content:prepare": "node scripts/content-release.mjs --prepare",
     "content:build": "node scripts/content-release.mjs --build",
     "content:publish": "node scripts/content-release.mjs",
+    "site-publication": "node scripts/site-publication.mjs",
     "practice:check": "node scripts/practice-content-check.mjs",
     "practice:scope-check": "node scripts/practice-scope-check.mjs",
     "release:closeout-check": "node scripts/release-closeout-check.mjs",

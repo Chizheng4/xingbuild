@@ -13,11 +13,11 @@ import {
   edgeoneProject,
   edgeoneProjectId,
   isPublishAuthorized,
-  publicUrl,
   readDeploymentResult,
   readFixedEdgeoneTarget,
 } from "./lib/publish-target.mjs";
-import { assertSitePublicationEvidence, createSitePublication } from "./lib/site-publication.mjs";
+import { createSitePublication } from "./lib/site-publication.mjs";
+import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
@@ -125,12 +125,6 @@ export async function publish({ kind, target, argv = process.argv.slice(2), env 
     source = await collectPublishContext(root);
     phase = "prepared-dist";
     prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head });
-    const publication = await createSitePublication({
-      productClient: prepared.client,
-      releasesRoot: path.join(root, ".content-workspace", "releases"),
-      outputRoot: path.join(root, ".content-workspace", "site-publications", `${source.version}-${source.head}`),
-    });
-    prepared = { ...prepared, client: publication.client, publication };
     phase = "preflight";
     run("npm", ["run", "release:preflight"], root, { env: { ...env, XINGBUILD_RELEASE_WORKTREE: "1" } });
     phase = "authorization";
@@ -138,20 +132,29 @@ export async function publish({ kind, target, argv = process.argv.slice(2), env 
     if (!(await exists(edgeone))) throw new Error("EdgeOne CLI is not installed in the project");
     edgeoneTarget = await readFixedEdgeoneTarget(root);
     configureNetwork();
-    run(edgeone, ["whoami"], root);
+    const publication = await createSitePublication({
+      productClient: prepared.client,
+      releasesRoot: path.join(root, ".content-workspace", "releases"),
+      outputRoot: path.join(root, ".content-workspace", "site-publications", `${source.version}-${source.head}`),
+      assemble: true,
+      sourceRoot: root,
+    });
+    prepared = { ...prepared, client: publication.client, publication };
     phase = "transport-push";
     run("git", ["push", "origin", "HEAD:main"], root);
     run("git", ["push", "origin", source.tag], root);
     const remote = git(["ls-remote", "origin", "refs/heads/main"], root).split(/\s+/)[0];
     if (remote !== source.head) throw new Error(`remote main is ${remote}; expected ${source.head}`);
     phase = "transport-deploy";
-    const deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", prepared.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root));
+    const completed = await transportSitePublication({
+      publication,
+      sourceRoot: root,
+      argv,
+      env,
+      edgeonePath: edgeone,
+    });
     phase = "public-verify";
-    run("node", ["scripts/verify-public-release.mjs", publicUrl, source.version, source.head], root, { env });
-    const productVerify = { version: source.version, commit: source.head, verifiedAt: new Date().toISOString() };
-    const contentVerify = { contentReleaseIds: prepared.publication.contentReleaseIds, verifiedAt: productVerify.verifiedAt };
-    assertSitePublicationEvidence({ deployment, publicVerify: productVerify, productVerify, contentVerify });
-    return { ...source, kind, target, dist: prepared.client, edgeoneTarget, deployment, publicVerify: productVerify, online: true };
+    return { ...source, kind, target, dist: prepared.client, edgeoneTarget, deployment: completed.deployment, publicVerify: completed.publicVerify, sitePublicationId: completed.sitePublicationId, online: true };
   } catch (error) {
     error.publishContext = { ...(source || {}), dist: prepared?.client, phase, edgeoneTarget };
     throw error;

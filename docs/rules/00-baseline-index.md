@@ -24,7 +24,7 @@ flowchart TD
 | 2.2 | 已存在的 task 如何一次性交接和回传？ | [`collaboration-workflow.md`](collaboration-workflow.md) |
 | 2.3 | 产品版本如何从方案走到线上证据？ | [`iteration-and-release.md`](iteration-and-release.md) |
 | 2.4 | 网站应该是什么，页面和视觉能力边界是什么？ | [`../product/xingbuild 网站产品架构与视觉系统总案.md`](../product/xingbuild%20网站产品架构与视觉系统总案.md) |
-| 2.5 | 当前工程如何组织、构建和发布，不能越过哪些边界？ | [`engineering-architecture-and-principles.md`](engineering-architecture-and-principles.md) |
+| 2.5 | 当前工程如何组织、构建和发布，不能越过哪些边界？ | [`engineering-architecture-and-principles.md`](engineering-architecture-and-principles.md)；站点物理发布由 `scripts/lib/site-publication-coordinator.mjs` 实现 |
 
 运营事实不并入产品工程五层：内容运营以 [`../operations/内容运营与发布规则.md`](../operations/内容运营与发布规则.md) 为准，经营观察采集以 [`../operations/经营观察信息源与覆盖合同.md`](../operations/经营观察信息源与覆盖合同.md) 为准。
 

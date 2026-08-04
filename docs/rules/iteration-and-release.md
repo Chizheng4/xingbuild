@@ -12,8 +12,8 @@ flowchart LR
     D --> E["产品/视觉验收"]
     E -->|有问题| F["下一版本方案\ncurrent.md"]
     F --> B
-    E -->|通过| G["既有发布授权生效"]
-    G --> H["Engineering：push → EdgeOne → 公网验证"]
+    E -->|通过| G["既有持续发布授权生效"]
+    G --> H["SitePublication Coordinator：串行 transport → 公网验证"]
 ```
 
 版本号用于可辨识的产品能力、页面结构、内容模型、视觉系统、作品详情、共享展示能力或发布架构变化；局部快速修订可合并后形成一个稳定版本，不为每次对话或未完成试验增加版本。
@@ -69,7 +69,7 @@ Engineering 同一轮一次性更新 `VERSION.md`、`current.md` 和 `docs/itera
 ./publish-xingbuild.command
 ```
 
-产品 publish 是线上 transport 执行器，不是版本创建器。它只消费已完成产品/视觉验收的现有 clean `main` HEAD、annotated tag 和预生成 `dist/client`，不得自动递增版本、写 package/VERSION/current/history、commit、tag、修复脏改或运行网站业务逻辑。
+产品 publish 是线上 transport 意图入口，不是版本创建器或业务执行器。它只消费已完成产品/视觉验收的现有 clean `main` HEAD、annotated tag 和预生成 `dist/client`，不得自动递增版本、写 package/VERSION/current/history、commit、tag、修复脏改或运行网站业务逻辑；整站物理发布统一由 `SitePublication Coordinator` 负责。
 
 transport 顺序固定：
 
@@ -78,21 +78,23 @@ transport 顺序固定：
 3. 校验 `dist/client/release.json` 与版本/commit 匹配；
 4. 执行 `release:preflight`；
 5. Xing 已授予产品闭环持续发布授权；产品/视觉验收通过后，Engineering 直接使用显式 `--authorize-publish` 执行，不再逐次向 Xing 询问；除非 Xing 明确暂停、停止、撤销或要求人工接管，否则自动完成后续 push、deploy、public verify；硬失败仍立即停止；
-6. 将同一 `dist/client` 部署到固定 EdgeOne 目标：`name=xingbuild-nochina`、`projectId=makers-ze0f6txvlhco`、`domain=xingbuild.top`；
-7. 访问固定公网域名，验证 `release.json` 和核心页面；
-8. 只有公网验证成功才报告线上统一产品版本。
+6. 由协调器将当前 ProductArtifact 与 active ContentReleaseIntent 合并为一个 `SitePublication`，取得站点 lease 后部署到固定 EdgeOne 目标：`name=xingbuild-nochina`、`projectId=makers-ze0f6txvlhco`、`domain=xingbuild.top`；
+7. 持久化 machine-readable deployment JSON，按有界退避等待传播，校验 `release.json`、`content-manifest.json`、目标页面/媒体与 active/candidate 集合；
+8. 只有 `SitePublication` finalized 才报告线上统一产品和内容结果；Deploy Success、push 或单页 HTTP 200 均不等于完成。
 
 失败立即停止并保留未发布/部分完成事实；不得继续后续阶段或写入完成声明。push 成功而 deploy/verify 失败时，只报告“代码已同步、网站未上线”。EdgeOne 目标合同未来若需调整，必须在新治理版本中同时更新本文件、发布脚本、测试和目标验证；旧目标和历史证据不得静默改写。
 
 ## 7. 内容运营边界
 
-内容 Observation、Article、Practice 和不改变页面能力的 B 端产品内容不进入产品版本；它们使用独立 `contentReleaseId`、包含实际 source bundle/sourceDirectory/hash 的 immutable `baseSiteArtifact`、ignored `.content-workspace/` 和独立 transport。内容 task 不读取当前产品 HEAD/tag、`current.md`、closeout/preflight 作为内容门禁，也不从当前 dist 隐式选基座、不创建产品 commit/tag；详细阶段、日志和基座字段以内容运营规则为准。
+内容 Observation、Article、Practice 和不改变页面能力的 B 端产品内容不进入产品版本；它们使用独立 `ContentReleaseIntent`、ignored `.content-workspace/` 和独立生命周期。内容 task 不读取当前产品 HEAD/tag 作为内容身份，不创建产品 commit/tag；它提交意图给唯一 `SitePublication Coordinator`，由协调器选择当前稳定 ProductArtifact 并与 active 内容合并，不使用旧产品 dist 作为内容事实。详细阶段、日志和内容事实以内容运营规则为准。
+
+产品与内容可以独立准备，但不能并行 transport：产品 transport 中内容保持 prepared/queued；内容 transport 中产品保持未部署。产品方案必须声明 `contentImpact`、`affectedTargets`、`affectedRoutes`、`affectedFields` 和 `compatibilityEvidence`，缺失或为 breaking/unknown 时发布前形成 Product Incident 并阻断。
 
 详细内容准备、审核、构建、发布、失败保留 draft/review/recovery 和公网内容验收只以 [`docs/operations/内容运营与发布规则.md`](../operations/内容运营与发布规则.md) 为准。经营观察定时/按需采集只以 [`docs/operations/经营观察信息源与覆盖合同.md`](../operations/经营观察信息源与覆盖合同.md) 为准；内容 task 不得创建、复制或替代 scheduler。
 
 ## 8. Publish Incident 故障决策门
 
-任一 prepare、build、closeout、preflight 或 transport 阶段失败，立即停止。Engineering 只提交一份最小故障检查点（可追加到 `docs/qa/`，不回写已打 tag 的 current/history）：
+任一 prepare、build、closeout、preflight 或 SitePublication transport/verify 阶段失败，立即停止。协调器只提交一份最小故障检查点（可追加到 `docs/qa/`，不回写已打 tag 的 current/history）：
 
 ```text
 Publish Incident

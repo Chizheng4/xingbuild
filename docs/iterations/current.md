@@ -1,48 +1,60 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.24.38`
+## 当前唯一版本：`v0.25.0`
 
 ## 本版本目标
 
-修正内容 deployment 恢复与传播验证：持久化 deploymentId，resume 只做 verify/finalize，不重复部署；公网传播采用有界退避窗口。
+以 `SitePublication` 为唯一站点发布对象，彻底分离产品能力、内容运营和物理站点部署：产品与内容保持独立身份，由本地单一协调器生成整站快照、串行部署、保存 deployment、等待传播、精确公网验证并最终收口。
+
+```mermaid
+flowchart LR
+    P[ProductRelease\n产品版本] --> S[SitePublication\n唯一站点快照]
+    C[ContentReleaseIntent\n独立内容意图] --> S
+    S --> D[唯一 EdgeOne deployment]
+    D --> V[release.json + content-manifest\n页面/媒体公网证据]
+    V --> R[released 或 recoverable\n同 deployment resume]
+```
 
 ## 正式设计与父版本
 
-- 正式设计：`docs/design/v0.24.38 内容 deployment 恢复与传播验证方案.md`。
-- 继承设计：`docs/design/v0.24.37 内容 transport 当前产品基座绑定方案.md`。
-- 继承设计：`docs/design/v0.24.36 首次候选合并快照修正方案.md`。
-- 继承设计：`docs/design/v0.24.35 合并快照公网验证修正方案.md`。
-- 继承设计：`docs/design/v0.24.34 内容恢复 CLI 暴露方案.md`。
-- 继承设计：`docs/design/v0.24.33 内容增量 transport 接口方案.md`。
-- 继承设计：`docs/design/v0.24.31 内容生命周期事实源读取修正方案.md`、`docs/design/v0.24.30 统一站点发布快照与内容保留方案.md`。
-- 继承设计：`docs/design/v0.24.29 产品发布门禁与内容基座解耦方案.md`、`docs/design/v0.24.28 持续自动闭环与协作身份治理方案.md`、`docs/design/v0.24.27 内容发布状态机与幂等恢复方案.md`。
-- 产品候选：`XBUILD-CONTENT-RELEASE-003`（已纳入 v0.24.27，保留历史证据）。
-- 父版本：`v0.24.37` / `bd97ed78b8cb30cb906689a131a8c612890bdc69`；既有 tag/history 不修改。
+- 正式设计：`docs/design/v0.25.0 产品内容站点发布三层架构.md`。
+- 父版本：`v0.24.37` / `bd97ed78b8cb30cb906689a131a8c612890bdc69`；v0.24.38 未形成正式 tag，不单独发布；既有 tag/history 不修改。
+- 保留兼容入口：`publish-xingbuild.command`、`content-release` 与 `publish-content.command`，它们只提交意图给 Site Publication Coordinator。
+
+## 产品—内容兼容声明
+
+```yaml
+contentImpact: compatible
+affectedTargets: []
+affectedRoutes: []
+affectedFields: []
+compatibilityEvidence: v0.25.0-site-publication-coordinator-tests
+```
 
 ## 本版本范围
 
-- 继承 v0.24.28 的 task 身份、Xing 称呼、图形优先输出和持续自动闭环规则。
-- 产品确定性发布门禁与环境型浏览器 QA 分层；不删除 QA，不绕过身份/clean/manifest/公网门禁。
-- 产品与内容继续通过统一 sitePublication 快照合并部署，保留 active content。
-- 内容新增/恢复必须通过标准 `--resume --package` CLI 调用 incremental transport，合并当前 active 集合后生成新 deployment；verifier 按合并 manifest 合同验证 active 集合。
-- EdgeOne deployment 使用持久状态与 resume，不以固定 30 秒执行窗口判定失败；上传前执行文件数、最大单文件和总大小配额预检。
-- active 生命周期只读 content-release.json；dist manifest 只做身份/hash/目标证据。
-- deployment JSON 与公网 product/content verify 均为 released 必需证据。
+- `ProductRelease` 只记录产品 version/commit/annotatedTag/productArtifactId/clean。
+- `ContentReleaseIntent` 只记录目标、正文/媒体 hash、来源、审核、requiredCapabilities 和 ChangeSet；不读取旧产品 dist 作为发布输入。
+- `SitePublication` 合并当前产品 immutable artifact 与所有 active 内容及 candidate，持久化 snapshotHash、deployment JSON、publicVerify、failure/recoveryId。
+- 产品和内容 transport 共用同一物理站点，但严格串行；产品发布中内容只能 prepared/queued，内容发布中产品不部署。
+- Deploy Success 只是中间事件；只有 deployment JSON、产品身份、内容 active/candidate、目标页面/媒体和 SitePublication finalized 全部成立，工具才返回成功。
+- 传播延迟由协调器使用有界退避等待；超时保留 recoverable 和同一 deploymentId，resume 不创建重复部署。
+- 产品变更若 `contentImpact` 为 breaking/migration-required/unknown，发布前硬阻断并形成 Product Incident；内容发现异常只上报产品问题，不由内容 task 修改产品。
 
 ## 明确不做
 
-- 不修改上游事实、已发布 v0.24.34 或内容正文/来源/status/publishedAt。
-- 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag。
-- 不创建并行 task、branch、worktree 或 automation。
+- 不修改上游事实、v0.24.37 tag/history、既有内容正文/来源/status/publishedAt。
+- 不让内容 task 修改 `src/`、产品版本、current/history、commit/tag；不让产品 task 把独立内容变成产品版本。
+- 不允许产品或内容入口直接调用 EdgeOne；只有 Site Publication Coordinator 可以部署。
+- 不创建并行 task、branch、worktree 或 automation；本轮不 push/publish/deploy。
 
 ## 验收合同
 
-- 内容 A 经产品发布 B 后仍可公网访问；产品 B 经内容 C 后仍可公网访问。
-- 缺 deployment JSON 或公网双验证时，发布绝不进入 released。
-- 长部署超出单次执行窗口时，必须保存 deploymentId 并可继续查询同一 deployment；禁止重复创建。
-- 资源超限必须在上传前明确报告配额阻断。
-- 失败可恢复、不重复部署、不污染产品版本或既有内容事实。
-- `npm run check`、内容发布专项、release prepare/closeout/preflight、diff-check 通过。
-- `npm run check`、相关内容/发布专项、`release:prepare`、closeout、preflight、`git diff --check` 通过；既有环境 I/O 单独记录。
+- 产品功能发布不丢失 active 内容；内容发布不改变产品版本。
+- 产品变更影响内容时，兼容性声明缺失或非 compatible 立即阻断。
+- 任一物理站点部署只能对应一个 SitePublication；两个 transport 不并行。
+- 缺 deployment JSON、身份不匹配、页面/媒体未传播或 active 集合不完整时，工具返回失败 + Incident/recoveryId，不报告成功。
+- resume 复用已保存 deploymentId；失败不改变既有 active 内容，finalize 只在完整公网证据之后发生。
+- `npm run check`、`release:prepare`、`release:build`、专项测试、closeout、preflight、`git diff --check` 通过；环境 I/O 单独记录。
 
-责任 task：产品与视觉主线负责方案和验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6e0a85` 负责实现、自 QA、本地版本收口。
+责任 task：产品与视觉主线负责方案和验收；Engineering 主线 `019fc263-abf9-7732-84ef-73914e6a0a85` 负责实现、自 QA、本地版本收口。

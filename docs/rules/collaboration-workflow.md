@@ -51,6 +51,29 @@ sourceThreadId / targetThreadId / returnThreadId
 - 检查点只传决策摘要、文件路径、版本/commit/tag、验证证据、阻断 ID 和下一动作；消息不能替代项目文件、候选或版本 history。
 - 没有新事件时，责任 task 不自行唤起其他 task；用户查询只做一次即时快照，不自动进入监控。
 
+### 站点发布协调顺序
+
+```mermaid
+sequenceDiagram
+    participant P as ProductRelease
+    participant C as ContentReleaseIntent
+    participant S as SitePublication Coordinator
+    participant E as EdgeOne
+    P->>S: 产品 transport 意图
+    C->>S: 内容 transport 意图
+    S->>S: 站点 lease + 合并快照
+    S->>E: 唯一 deployment
+    E-->>S: deployment JSON
+    S->>S: 传播等待 + 公网精确验证
+    S-->>P: finalized / incident
+    S-->>C: 网站已验证 / recoveryId
+```
+
+- 产品和内容可以独立准备，但不能并行调用物理 transport；Coordinator 是唯一 EdgeOne deploy owner。
+- 内容 task 不因产品版本变化自动重写或重建内容事实；它只提交 `ContentReleaseIntent`，由 Coordinator 使用当前稳定 ProductArtifact 组装快照。
+- Coordinator 未返回 `finalized` 前，不得通知下游“已上线并可继续依赖”；失败只回传 Incident/recoveryId，不能让内容和产品进入并行发布。
+- 传播等待是一次有界执行，不以固定 30 秒假定成功或失败；有 deploymentId 时恢复只查询和验证同一 deployment，不创建新 deployment。
+
 ## 四、标准消息模板
 
 ```text

@@ -684,10 +684,12 @@ test("product and content publish scripts use separate release contracts", async
   assert.match(runtime, /contentReleaseId/);
   assert.doesNotMatch(runtime, /unified-publish\.mjs/);
   const unified = await readFile(path.join(root, "scripts", "unified-publish.mjs"), "utf8");
+  const coordinator = await readFile(path.join(root, "scripts", "lib", "site-publication-coordinator.mjs"), "utf8");
   assert.match(unified, /release:preflight/);
   assert.match(unified, /readPreparedDist/);
-  assert.match(unified, /makers.*deploy/);
-  assert.match(unified, /--json/);
+  assert.doesNotMatch(unified, /makers.*deploy/);
+  assert.match(coordinator, /\["makers", "deploy"/);
+  assert.match(coordinator, /--json/);
   assert.match(unified, /transport-push|transport-deploy|public-verify/);
   assert.match(runtime, /publish-target/);
   assert.match(unified, /git.*push/);
