@@ -50,7 +50,7 @@ export function readDeploymentResult(output) {
   const line = output.split(/\r?\n/).map((value) => value.trim()).reverse().find((value) => value.startsWith("{") && value.endsWith("}"));
   if (!line) throw new Error("EdgeOne deployment did not return a machine-readable result");
   const result = JSON.parse(line);
-  if (result.status !== "success" || result.projectId !== edgeoneProjectId) {
+  if (!result.deploymentId || !["success", "pending", "processing", "running"].includes(result.status) || result.projectId !== edgeoneProjectId) {
     throw new Error(`EdgeOne deployment identity mismatch: expected ${edgeoneProjectId}`);
   }
   return result;

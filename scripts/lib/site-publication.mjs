@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
@@ -17,6 +17,26 @@ export async function acquireSitePublicationLease({ publicationDirectory, sitePu
 }
 
 export const releaseSitePublicationLease = releaseContentReleasePackageLease;
+
+export async function validateUploadQuota(directory, { maxFiles = 10000, maxFileBytes = 50 * 1024 * 1024, maxTotalBytes = 500 * 1024 * 1024 } = {}) {
+  let files = 0;
+  let totalBytes = 0;
+  async function walk(current) {
+    for (const entry of await readdir(current, { withFileTypes: true })) {
+      const file = path.join(current, entry.name);
+      if (entry.isDirectory()) await walk(file);
+      else if (entry.isFile()) {
+        files += 1;
+        const bytes = (await stat(file)).size;
+        if (bytes > maxFileBytes) throw new Error(`upload quota exceeded: file ${entry.name} exceeds max single file size`);
+        totalBytes += bytes;
+        if (files > maxFiles || totalBytes > maxTotalBytes) throw new Error("upload quota exceeded");
+      }
+    }
+  }
+  await walk(directory);
+  return { files, totalBytes };
+}
 
 export async function readActiveContentReleases(releasesRoot) {
   const active = [];

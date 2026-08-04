@@ -21,7 +21,7 @@ import {
 import { assertPracticeContent, validatePublishablePracticeBundle } from "./lib/practice-content.mjs";
 import { assertBaseSiteArtifactCompatible, readBaseSiteArtifact, validateBaseSiteArtifact } from "./lib/base-site-artifact.mjs";
 import { contentRootDirectory } from "./lib/content-root.mjs";
-import { acquireSitePublicationLease, createSitePublication, releaseSitePublicationLease } from "./lib/site-publication.mjs";
+import { acquireSitePublicationLease, createSitePublication, releaseSitePublicationLease, validateUploadQuota } from "./lib/site-publication.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -435,12 +435,13 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
       additionalContentManifest: manifest,
     });
     publicationLease = await acquireSitePublicationLease({ publicationDirectory: publication.client, sitePublicationId: publication.sitePublicationId });
+    await validateUploadQuota(publication.client);
     let deployed = manifest;
     let deployment = null;
     if (!publication.deploymentId) {
       run(edgeone, ["whoami"], root, env);
       deployment = readDeploymentResult(runCapture(edgeone, ["makers", "deploy", publication.client, "--name", edgeoneTarget.name, "--env", "production", "--json"], root, env));
-      deployed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", { deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString(), attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
+      deployed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", { sitePublicationId: publication.sitePublicationId, deploymentId: deployment.deploymentId || deployment.id || null, publishedAt: new Date().toISOString(), attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
     }
     const verifying = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { deploymentId: deployed.deploymentId, recoverable: false });
     const publicVerify = await verifyContentPackage({ manifest: verifying });
@@ -482,6 +483,13 @@ async function main(argv = process.argv.slice(2)) {
   const target = valueFor("--slug") || valueFor("--id");
   const changeSetPath = valueFor("--change-set");
   const artifactPath = valueFor("--base-site-artifact");
+  const packageDirectory = valueFor("--package");
+  if (argv.includes("--resume")) {
+    if (!packageDirectory) throw new Error("Usage: node scripts/content-release.mjs --resume --package <dir> [--authorize-publish]");
+    const result = await resumeContentRelease({ packageDirectory, argv });
+    console.log(JSON.stringify({ contentReleaseId: result.contentReleaseId, sitePublicationId: result.sitePublicationId || null, deploymentId: result.deploymentId || null, publicVerify: result.publicVerify || null }));
+    return;
+  }
   if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice|profile|businessObservation> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
     const result = await prepareContentRelease({ kind, target, changeSetPath, artifactPath });

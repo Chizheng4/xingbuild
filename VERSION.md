@@ -1,4 +1,10 @@
 
+## v0.24.34 — 内容恢复 CLI 与异步 transport 配额门禁
+
+- 暴露 `--resume --package` CLI，保存 deploymentId 并支持同一 package resume。
+- 上传前执行文件数、单文件和总大小配额预检。
+- 本地版本，未 push/publish/deploy。
+
 ## v0.24.33 — 内容增量 transport 接口
 
 - 内容 transport 生成新的 active+candidate sitePublication identity 与独立 deployment，不复用旧 candidate deployment。

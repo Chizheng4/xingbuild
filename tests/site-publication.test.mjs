@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases, sitePublicationId, sitePublicationIdempotencyKey } from "../scripts/lib/site-publication.mjs";
+import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases, sitePublicationId, sitePublicationIdempotencyKey, validateUploadQuota } from "../scripts/lib/site-publication.mjs";
 import { fileURLToPath } from "node:url";
 
 async function fixture() {
@@ -57,4 +57,9 @@ test("incremental publication identity is stable and distinct from candidate dep
   const id = sitePublicationId({ productVersion: "v0.24.32", productCommit: "a".repeat(40), contentReleaseIds: ["a", "b"] });
   assert.equal(id, sitePublicationId({ productVersion: "v0.24.32", productCommit: "a".repeat(40), contentReleaseIds: ["a", "b"] }));
   assert.equal(sitePublicationIdempotencyKey({ sitePublicationId: id }).length, 64);
+});
+
+test("upload quota rejects oversized files before transport", async () => {
+  const f = await fixture();
+  await assert.rejects(() => validateUploadQuota(f.product, { maxFileBytes: 1 }), /max single file size/);
 });
