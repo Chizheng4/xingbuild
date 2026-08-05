@@ -22,6 +22,25 @@ export function hashValue(value) {
   return createHash("sha256").update(canonical(value)).digest("hex");
 }
 
+/**
+ * Stable identity for a logical content object.  The content snapshot hash is
+ * intentionally not part of this value: a later approved ChangeSet is a new
+ * physical revision of the same object, not a new logical object.
+ */
+export function logicalContentId({ kind, target } = {}) {
+  if (!hasText(kind) || !hasText(target)) throw new Error("logicalContentId requires kind and target");
+  return `${kind}:${target}`;
+}
+
+function inferLogicalContentId(targets = [], explicit = null) {
+  if (explicit) return explicit;
+  const sourcePaths = new Set(targets.map((target) => target?.sourcePath));
+  if (["content/products/robotaxi.json", "content/media/robotaxi/manifest.json"].some((sourcePath) => sourcePaths.has(sourcePath))) {
+    return logicalContentId({ kind: "practice", target: "robotaxi" });
+  }
+  return null;
+}
+
 function safeRelativePath(value, { allowSrc = true } = {}) {
   if (!hasText(value) || path.isAbsolute(value) || value.includes("\\")) return false;
   const normalized = path.posix.normalize(value);
@@ -122,7 +141,7 @@ export async function createContentTargetCard(targetId, { rootDirectory = projec
   const document = JSON.parse(await readFile(resolveContentSourceFile(target.sourcePath, { rootDirectory }), "utf8"));
   let current;
   try { current = readFieldValue(document, target.fieldPath); } catch (error) {
-    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) current = null;
+    if (target.kind === "media-content" && (target.fieldPath.startsWith("assets[id=") || target.fieldPath.includes("].mediaId"))) current = null;
     else throw error;
   }
   if (current !== null && typeof current !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
@@ -211,6 +230,138 @@ function validateAfter(target, after) {
   if (Array.isArray(constraints.enum) && !constraints.enum.includes(after)) throw new Error(`${target.targetId} after is outside the registered enum`);
 }
 
+function operationAfter(operation) {
+  return Object.prototype.hasOwnProperty.call(operation || {}, "afterValue") ? operation.afterValue : operation?.after;
+}
+
+function operationBefore(operation) {
+  return Object.prototype.hasOwnProperty.call(operation || {}, "beforeValue") ? operation.beforeValue : operation?.before;
+}
+
+function operationSourceRefs(operation, fallback = []) {
+  return Array.isArray(operation?.sourceRefs) ? operation.sourceRefs : fallback;
+}
+
+function operationDescriptor(operation, target, { before, after } = {}) {
+  const resolvedBefore = before === undefined ? operationBefore(operation) : before;
+  const resolvedAfter = after === undefined ? operationAfter(operation) : after;
+  return {
+    targetId: target.targetId,
+    sourcePath: target.sourcePath,
+    fieldPath: target.fieldPath,
+    valueType: target.valueType || "string",
+    beforeHash: operation.beforeHash || hashValue(resolvedBefore),
+    before: resolvedBefore,
+    beforeValue: resolvedBefore,
+    after: resolvedAfter,
+    afterValue: resolvedAfter,
+    afterHash: operation.afterHash || hashValue(resolvedAfter),
+    affectedRoutes: [...(operation.affectedRoutes || target.projectionRoutes || [])],
+    sourceRefs: [...operationSourceRefs(operation)],
+    provenance: operation.provenance || null,
+    requires: [...(operation.requires || target.requires || [])],
+    logicalContentId: operation.logicalContentId || inferLogicalContentId([target]),
+    boundary: operation.boundary || null,
+    authority: operation.authority || null,
+  };
+}
+
+/** Return the canonical operations array while retaining legacy single-field input. */
+export function contentChangeSetOperations(changeSet) {
+  if (Array.isArray(changeSet?.operations)) return changeSet.operations;
+  if (changeSet?.targetId) {
+    return [{
+      targetId: changeSet.targetId,
+      sourcePath: changeSet.sourcePath,
+      fieldPath: changeSet.fieldPath,
+      valueType: changeSet.valueType || "string",
+      beforeHash: changeSet.beforeHash,
+      before: changeSet.before,
+      beforeValue: changeSet.before,
+      after: changeSet.after,
+      afterValue: changeSet.after,
+      afterHash: changeSet.afterHash || hashValue(changeSet.after),
+      affectedRoutes: changeSet.affectedRoutes,
+      sourceRefs: changeSet.sourceRefs,
+      provenance: changeSet.provenance || null,
+      requires: changeSet.requires,
+      boundary: changeSet.boundary,
+      authority: changeSet.authority,
+    }];
+  }
+  return [];
+}
+
+function validateLogicalContentId(value) {
+  if (value !== undefined && (!hasText(value) || !/^[a-zA-Z][a-zA-Z0-9_-]*:[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(value))) {
+    throw new Error("ChangeSet logicalContentId is invalid");
+  }
+}
+
+function validateOperation(operation, target, { index = 0, fallbackSourceRefs = [], fallbackBoundary = null, fallbackAuthority = null } = {}) {
+  if (!operation || !hasText(operation.targetId)) throw new Error(`ChangeSet operation ${index + 1} targetId is required`);
+  if (!target) throw new Error(`ChangeSet operation ${index + 1} target registry entry is required`);
+  if (operation.targetId !== target.targetId || (operation.sourcePath && operation.sourcePath !== target.sourcePath) || (operation.fieldPath && operation.fieldPath !== target.fieldPath)) {
+    throw new Error(`ChangeSet operation ${index + 1} target or field path does not match the registry`);
+  }
+  const after = operationAfter(operation);
+  const before = operationBefore(operation);
+  if (!/^[a-f0-9]{64}$/.test(operation.beforeHash || "")) throw new Error(`ChangeSet operation ${index + 1} beforeHash must be sha256`);
+  if (!/^[a-f0-9]{64}$/.test(operation.afterHash || hashValue(after))) throw new Error(`ChangeSet operation ${index + 1} afterHash must be sha256`);
+  if (operation.afterHash && operation.afterHash !== hashValue(after)) throw new Error(`ChangeSet operation ${index + 1} afterHash does not match afterValue`);
+  const sourceRefs = operationSourceRefs(operation, fallbackSourceRefs);
+  if (!Array.isArray(sourceRefs) || sourceRefs.length === 0 || sourceRefs.some((source) => !hasText(source))) throw new Error(`ChangeSet operation ${index + 1} sourceRefs are required`);
+  const boundary = operation.boundary || fallbackBoundary;
+  const authority = operation.authority || fallbackAuthority;
+  if (!hasText(boundary) || !hasText(authority)) throw new Error(`ChangeSet operation ${index + 1} boundary and authority are required`);
+  if (operation.valueType && operation.valueType !== target.valueType) throw new Error(`ChangeSet operation ${index + 1} valueType does not match the registry`);
+  if (target.kind === "media-content" && (target.requires || []).some((requirement) => ["media-approval", "media-provenance"].includes(requirement))) {
+    if (!operation.provenance || operation.provenance.approvalStatus !== "approved" || !hasText(operation.provenance.source)) {
+      throw new Error(`ChangeSet operation ${index + 1} media approval/provenance is required`);
+    }
+  }
+  if (Array.isArray(after) || (after && typeof after === "object")) throw new Error("ChangeSet cannot replace an array or object");
+  validateAfter(target, after);
+  if (before !== undefined && before !== null && typeof before !== "string") throw new Error(`ChangeSet operation ${index + 1} before must match the registered value type`);
+  return { ...operation, ...operationDescriptor(operation, target, { before, after }), sourceRefs, boundary, authority };
+}
+
+/** Validate and normalize a multi-operation ChangeSet using registry targets. */
+export async function validateContentChangeSetOperations(changeSet, { rootDirectory = projectRoot } = {}) {
+  if (!changeSet || changeSet.scope !== "field-set") throw new Error("ChangeSet scope must be field-set");
+  if (!hasText(changeSet.changeSetId || changeSet.changeId)) throw new Error("ChangeSet identity is required");
+  validateLogicalContentId(changeSet.logicalContentId);
+  const rawOperations = contentChangeSetOperations(changeSet);
+  if (!Array.isArray(rawOperations) || rawOperations.length === 0) throw new Error("ChangeSet operations are required");
+  const seen = new Set();
+  const operations = [];
+  for (let index = 0; index < rawOperations.length; index += 1) {
+    const raw = rawOperations[index];
+    if (seen.has(raw?.targetId)) throw new Error(`ChangeSet duplicate target: ${raw?.targetId || "missing"}`);
+    seen.add(raw?.targetId);
+    const target = await resolveContentTarget(raw?.targetId, { rootDirectory });
+    operations.push(validateOperation(raw, target, {
+      index,
+      fallbackSourceRefs: changeSet.sourceRefs,
+      fallbackBoundary: changeSet.boundary,
+      fallbackAuthority: changeSet.authority,
+    }));
+  }
+  const inferred = inferLogicalContentId(operations, changeSet.logicalContentId);
+  if (!inferred) throw new Error("ChangeSet logicalContentId is required");
+  const operationLogicalIds = operations.map((operation) => operation.logicalContentId).filter(Boolean);
+  if (operationLogicalIds.some((value) => value !== inferred)) throw new Error("ChangeSet operations cross logical content identities");
+  return {
+    ...changeSet,
+    scope: "field-set",
+    changeSetId: changeSet.changeSetId || changeSet.changeId,
+    changeId: changeSet.changeId || changeSet.changeSetId,
+    logicalContentId: inferred,
+    operations,
+    changedTargets: operations.map((operation) => operation.targetId),
+  };
+}
+
 export async function createContentChangeSet({
   targetId,
   after,
@@ -220,7 +371,87 @@ export async function createContentChangeSet({
   authority,
   rootDirectory = projectRoot,
   changeId,
+  changeSetId,
+  logicalContentId: requestedLogicalContentId,
+  operations,
 } = {}) {
+  if (Array.isArray(operations)) {
+    if (operations.length === 0) throw new Error("ChangeSet operations are required");
+    const resolved = [];
+    const seen = new Set();
+    for (let index = 0; index < operations.length; index += 1) {
+      const operation = operations[index] || {};
+      if (seen.has(operation.targetId)) throw new Error(`ChangeSet duplicate target: ${operation.targetId || "missing"}`);
+      seen.add(operation.targetId);
+      const target = await resolveContentTarget(operation.targetId, { rootDirectory });
+      const sourceFile = resolveContentSourceFile(target.sourcePath, { rootDirectory });
+      const document = JSON.parse(await readFile(sourceFile, "utf8"));
+      let before;
+      try { before = readFieldValue(document, target.fieldPath); } catch (error) {
+        if (target.kind === "media-content" && (target.fieldPath.startsWith("assets[id=") || target.fieldPath.includes("].mediaId"))) before = null;
+        else throw error;
+      }
+      if (before !== null && typeof before !== "string") throw new Error(`registered target is not a string field: ${operation.targetId}`);
+      const nextAfter = operationAfter(operation);
+      validateAfter(target, nextAfter);
+      const actualBeforeHash = hashValue(before);
+      if (operation.beforeHash && operation.beforeHash !== actualBeforeHash) throw new Error(`ChangeSet beforeHash conflict for ${operation.targetId}`);
+      const operationSourceRefs = operation.sourceRefs || sourceRefs;
+      const operationBoundary = operation.boundary || boundary;
+      const operationAuthority = operation.authority || authority;
+      if (!Array.isArray(operationSourceRefs) || operationSourceRefs.length === 0 || operationSourceRefs.some((source) => !hasText(source))) throw new Error(`ChangeSet operation ${index + 1} sourceRefs are required`);
+      if (!hasText(operationBoundary) || !hasText(operationAuthority)) throw new Error(`ChangeSet operation ${index + 1} boundary and authority are required`);
+      if (target.kind === "media-content" && (target.requires || []).some((requirement) => ["media-approval", "media-provenance"].includes(requirement))
+        && (!operation.provenance || operation.provenance.approvalStatus !== "approved" || !hasText(operation.provenance.source))) {
+        throw new Error(`ChangeSet operation ${index + 1} media approval/provenance is required`);
+      }
+      resolved.push({
+        ...operationDescriptor({ ...operation, sourceRefs: operationSourceRefs, boundary: operationBoundary, authority: operationAuthority }, target, { before, after: nextAfter }),
+        logicalContentId: operation.logicalContentId || inferLogicalContentId([target], requestedLogicalContentId),
+        target,
+      });
+    }
+    const inferred = inferLogicalContentId(resolved, requestedLogicalContentId);
+    if (!inferred) throw new Error("ChangeSet logicalContentId is required");
+    if (resolved.some((operation) => operation.logicalContentId && operation.logicalContentId !== inferred)) throw new Error("ChangeSet operations cross logical content identities");
+    const canonicalOperations = resolved.map(({ target: _target, ...operation }) => operation);
+    const deterministicInput = { logicalContentId: inferred, operations: canonicalOperations.map((operation) => ({
+      targetId: operation.targetId,
+      beforeHash: operation.beforeHash,
+      afterHash: operation.afterHash,
+      afterValue: operation.afterValue,
+      sourcePath: operation.sourcePath,
+      fieldPath: operation.fieldPath,
+    })) };
+    const nextChangeSetId = changeSetId || changeId || `changeset-${hashValue(deterministicInput).slice(0, 24)}`;
+    const changeSet = {
+      changeSetId: nextChangeSetId,
+      changeId: nextChangeSetId,
+      scope: "field-set",
+      logicalContentId: inferred,
+      operations: canonicalOperations,
+      changedTargets: canonicalOperations.map((operation) => operation.targetId),
+      affectedRoutes: [...new Set(canonicalOperations.flatMap((operation) => operation.affectedRoutes || []))].sort(),
+      sourceRefs: [...new Set(canonicalOperations.flatMap((operation) => operation.sourceRefs || []))],
+      boundary: boundary || "仅允许登记目标字段的原子多字段内容变更。",
+      authority: authority || "registered-approved-content",
+      baseProductVersion: null,
+      recovery: {
+        type: "operations-reverse",
+        rollbackChangeId: `${nextChangeSetId}-rollback`,
+        operations: [...canonicalOperations].reverse().map((operation) => ({
+          ...operation,
+          beforeHash: operation.afterHash,
+          before: operation.afterValue,
+          beforeValue: operation.afterValue,
+          after: operation.beforeValue,
+          afterValue: operation.beforeValue,
+          afterHash: hashValue(operation.beforeValue),
+        })),
+      },
+    };
+    return { ...changeSet, operations: canonicalOperations.map((operation) => ({ ...operation, target: resolved.find((value) => value.targetId === operation.targetId)?.target })) };
+  }
   const target = await resolveContentTarget(targetId, { rootDirectory });
   if (!Array.isArray(sourceRefs) || sourceRefs.length === 0 || sourceRefs.some((source) => !hasText(source))) {
     throw new Error("ChangeSet sourceRefs must contain at least one non-empty source");
@@ -232,7 +463,7 @@ export async function createContentChangeSet({
   const document = JSON.parse(await readFile(sourceFile, "utf8"));
   let before;
   try { before = readFieldValue(document, target.fieldPath); } catch (error) {
-    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) before = null;
+    if (target.kind === "media-content" && (target.fieldPath.startsWith("assets[id=") || target.fieldPath.includes("].mediaId"))) before = null;
     else throw error;
   }
   if (before !== null && typeof before !== "string") throw new Error(`registered target is not a string field: ${targetId}`);
@@ -240,14 +471,17 @@ export async function createContentChangeSet({
   if (beforeHash && beforeHash !== actualBeforeHash) throw new Error(`ChangeSet beforeHash conflict for ${targetId}`);
   const nextChangeId = changeId || `change-${targetId.replace(/[^a-zA-Z0-9-]/g, "-")}-${hashValue(after).slice(0, 16)}`;
   const changeSet = {
+    changeSetId: nextChangeId,
     changeId: nextChangeId,
     targetId: target.targetId,
     scope: "field",
+    logicalContentId: inferLogicalContentId([target], requestedLogicalContentId),
     sourcePath: target.sourcePath,
     fieldPath: target.fieldPath,
     beforeHash: actualBeforeHash,
     before,
     after,
+    afterHash: hashValue(after),
     affectedRoutes: [...target.projectionRoutes],
     sourceRefs: [...sourceRefs],
     boundary,
@@ -260,10 +494,32 @@ export async function createContentChangeSet({
       originalAfter: after,
     },
   };
+  changeSet.operations = [operationDescriptor(changeSet, target, { before, after })];
+  changeSet.changedTargets = [target.targetId];
   return { ...changeSet, target };
 }
 
 export function validateContentChangeSet(changeSet, { target } = {}) {
+  if (changeSet?.scope === "field-set") {
+    if (!hasText(changeSet.changeSetId || changeSet.changeId)) throw new Error("ChangeSet identity is required");
+    validateLogicalContentId(changeSet.logicalContentId);
+    const operations = contentChangeSetOperations(changeSet);
+    if (!Array.isArray(operations) || operations.length === 0) throw new Error("ChangeSet operations are required");
+    const seen = new Set();
+    for (const [index, operation] of operations.entries()) {
+      if (!hasText(operation?.targetId)) throw new Error(`ChangeSet operation ${index + 1} targetId is required`);
+      if (seen.has(operation.targetId)) throw new Error(`ChangeSet duplicate target: ${operation.targetId}`);
+      seen.add(operation.targetId);
+      if (!/^[a-f0-9]{64}$/.test(operation.beforeHash || "")) throw new Error(`ChangeSet operation ${index + 1} beforeHash must be sha256`);
+      const after = operationAfter(operation);
+      if (!/^[a-f0-9]{64}$/.test(operation.afterHash || hashValue(after))) throw new Error(`ChangeSet operation ${index + 1} afterHash must be sha256`);
+      if (operation.afterHash && operation.afterHash !== hashValue(after)) throw new Error(`ChangeSet operation ${index + 1} afterHash does not match afterValue`);
+      if (!Array.isArray(operation.sourceRefs) || operation.sourceRefs.length === 0 || operation.sourceRefs.some((source) => !hasText(source))) throw new Error(`ChangeSet operation ${index + 1} sourceRefs are required`);
+      if (!hasText(operation.boundary || changeSet.boundary) || !hasText(operation.authority || changeSet.authority)) throw new Error(`ChangeSet operation ${index + 1} boundary and authority are required`);
+    }
+    if (changeSet.changedTargets && JSON.stringify(changeSet.changedTargets) !== JSON.stringify(operations.map((operation) => operation.targetId))) throw new Error("ChangeSet changedTargets are incomplete");
+    return changeSet;
+  }
   if (!changeSet || changeSet.scope !== "field") throw new Error("ChangeSet scope must be field");
   if (!hasText(changeSet.changeId) || !hasText(changeSet.targetId)) throw new Error("ChangeSet identity is required");
   if (!target) throw new Error("ChangeSet target registry entry is required");
@@ -294,19 +550,24 @@ export function validateContentChangeSet(changeSet, { target } = {}) {
 }
 
 export async function writeContentChangeSet(changeSet, { rootDirectory = projectRoot } = {}) {
-  const target = await resolveContentTarget(changeSet?.targetId, { rootDirectory });
-  validateContentChangeSet(changeSet, { target });
-  const { target: _target, file: _file, ...persisted } = changeSet;
+  let normalized = changeSet;
+  if (changeSet?.scope === "field-set") normalized = await validateContentChangeSetOperations(changeSet, { rootDirectory });
+  else {
+    const target = await resolveContentTarget(changeSet?.targetId, { rootDirectory });
+    validateContentChangeSet(changeSet, { target });
+  }
+  const { target: _target, file: _file, ...persisted } = normalized;
+  if (Array.isArray(persisted.operations)) persisted.operations = persisted.operations.map(({ target: _operationTarget, ...operation }) => operation);
   const directory = path.join(rootDirectory, changesDirectory);
   await mkdir(directory, { recursive: true });
-  const file = path.join(directory, changeFileName(changeSet.changeId));
+  const file = path.join(directory, changeFileName(normalized.changeSetId || normalized.changeId));
   if (await exists(file)) {
     const existing = JSON.parse(await readFile(file, "utf8"));
-    if (JSON.stringify(existing) !== JSON.stringify(persisted)) throw new Error(`ChangeSet identity conflict: ${changeSet.changeId}`);
+    if (JSON.stringify(existing) !== JSON.stringify(persisted)) throw new Error(`ChangeSet identity conflict: ${normalized.changeSetId || normalized.changeId}`);
   } else {
     await writeFile(file, `${JSON.stringify(persisted, null, 2)}\n`);
   }
-  return { ...changeSet, file };
+  return { ...normalized, file };
 }
 
 export async function linkContentChangeSetRelease(changeSetPath, { contentReleaseId, releasePackage, rootDirectory = projectRoot } = {}) {
@@ -335,6 +596,43 @@ export async function createRollbackChangeSet(changeSetPath, { rootDirectory = p
   const original = await readContentChangeSet(changeSetPath, { rootDirectory });
   if (!hasText(original.contentReleaseId) || !hasText(original.releasePackage)) {
     throw new Error("rollback requires a prepared contentReleaseId and releasePackage association");
+  }
+  if (original.scope === "field-set") {
+    const rollbackId = changeId || original.recovery?.rollbackChangeId || `${original.changeSetId || original.changeId}-rollback`;
+    const operations = [...original.operations].reverse().map((operation) => ({
+      ...operation,
+      beforeHash: operation.afterHash,
+      before: operation.afterValue,
+      beforeValue: operation.afterValue,
+      after: operation.beforeValue,
+      afterValue: operation.beforeValue,
+      afterHash: hashValue(operation.beforeValue),
+      sourceRefs: [...(operation.sourceRefs || []), `rollback:${original.changeSetId || original.changeId}`],
+    }));
+    const rollback = {
+      changeSetId: rollbackId,
+      changeId: rollbackId,
+      scope: "field-set",
+      logicalContentId: original.logicalContentId,
+      operations,
+      changedTargets: operations.map((operation) => operation.targetId),
+      affectedRoutes: [...new Set(operations.flatMap((operation) => operation.affectedRoutes || []))].sort(),
+      sourceRefs: [...new Set(operations.flatMap((operation) => operation.sourceRefs || []))],
+      boundary: original.boundary,
+      authority: original.authority,
+      contentReleaseId: original.contentReleaseId,
+      releasePackage: original.releasePackage,
+      rollbackOf: {
+        changeSetId: original.changeSetId || original.changeId,
+        changeId: original.changeId,
+        contentReleaseId: original.contentReleaseId,
+        releasePackage: original.releasePackage,
+        logicalContentId: original.logicalContentId,
+        operations: original.operations,
+      },
+      recovery: { type: "operations-reverse", rollbackChangeId: `${rollbackId}-rollback`, operations: original.operations },
+    };
+    return writeContentChangeSet(rollback, { rootDirectory });
   }
   const rollback = {
     changeId: changeId || original.recovery?.rollbackChangeId || `${original.changeId}-rollback`,
@@ -372,21 +670,55 @@ export async function readContentChangeSet(changeSetPath, { rootDirectory = proj
   const allowedRoot = path.resolve(rootDirectory, changesDirectory);
   if (resolved !== allowedRoot && !resolved.startsWith(`${allowedRoot}${path.sep}`)) throw new Error("ChangeSet must be inside .content-workspace/changes");
   const changeSet = JSON.parse(await readFile(resolved, "utf8"));
+  if (changeSet.scope === "field-set") {
+    const normalized = await validateContentChangeSetOperations(changeSet, { rootDirectory });
+    return { ...normalized, file: resolved };
+  }
   const target = await resolveContentTarget(changeSet.targetId, { rootDirectory });
   validateContentChangeSet(changeSet, { target });
   return { ...changeSet, target, file: resolved };
 }
 
 export function applyContentChangeSet(document, changeSet) {
+  if (Array.isArray(changeSet?.operations)) {
+    const operations = changeSet.operations;
+    const sourcePaths = new Set(operations.map((operation) => operation.sourcePath).filter(Boolean));
+    if (sourcePaths.size > 1) throw new Error("ChangeSet operations span multiple source documents; use applyContentChangeSetDocuments");
+    let result = structuredClone(document);
+    for (const operation of operations) result = applyContentChangeSet(result, { ...operation, target: operation.target || { kind: "media-content", fieldPath: operation.fieldPath, targetId: operation.targetId } });
+    return result;
+  }
   const target = changeSet.target || changeSet;
   let before;
   try { before = readFieldValue(document, target.fieldPath); } catch (error) {
-    if (target.kind === "media-content" && target.fieldPath.startsWith("assets[id=")) before = null;
+    if (target.kind === "media-content" && (target.fieldPath.startsWith("assets[id=") || target.fieldPath.includes("].mediaId"))) before = null;
     else throw error;
   }
   if (hashValue(before) !== changeSet.beforeHash) throw new Error(`ChangeSet beforeHash conflict for ${changeSet.targetId}`);
   if (changeSet.after === null && target.fieldPath.startsWith("assets[id=")) return removeFieldValue(document, target.fieldPath);
   return writeFieldValue(document, target.fieldPath, changeSet.after);
+}
+
+/**
+ * Apply every operation to a cloned document set.  No caller-visible document
+ * is changed when any precondition fails; this is the staging/rollback atomic
+ * boundary used by content-release prepare.
+ */
+export function applyContentChangeSetDocuments(documents, changeSet) {
+  const operations = contentChangeSetOperations(changeSet);
+  if (!operations.length) throw new Error("ChangeSet operations are required");
+  const result = documents instanceof Map ? new Map([...documents].map(([key, value]) => [key, structuredClone(value)])) : Object.fromEntries(Object.entries(documents || {}).map(([key, value]) => [key, structuredClone(value)]));
+  const get = (sourcePath) => result instanceof Map ? result.get(sourcePath) : result[sourcePath];
+  const set = (sourcePath, value) => { if (result instanceof Map) result.set(sourcePath, value); else result[sourcePath] = value; };
+  for (const operation of operations) {
+    const sourcePath = operation.sourcePath;
+    if (!sourcePath) throw new Error(`ChangeSet operation sourcePath is missing: ${operation.targetId}`);
+    const document = get(sourcePath);
+    if (document === undefined) throw new Error(`ChangeSet source document is missing: ${sourcePath}`);
+    const target = operation.target || { kind: "media-content", fieldPath: operation.fieldPath, targetId: operation.targetId };
+    set(sourcePath, applyContentChangeSet(document, { ...operation, after: operationAfter(operation), beforeHash: operation.beforeHash, target }));
+  }
+  return result;
 }
 
 export function removeFieldValue(document, fieldPath) {

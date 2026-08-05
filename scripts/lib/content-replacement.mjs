@@ -24,8 +24,9 @@ function targetDirectory(kind) {
           : "products";
 }
 
-export function contentPackageRevisionIdentity({ contentReleaseId, contentHash, sourceHash, baseSiteArtifactId } = {}) {
+export function contentPackageRevisionIdentity({ contentReleaseId, logicalContentId, contentHash, sourceHash, baseSiteArtifactId } = {}) {
   const tuple = { contentReleaseId, contentHash, sourceHash, baseSiteArtifactId, contractVersion: CONTENT_PACKAGE_CONTRACT_VERSION };
+  if (logicalContentId) tuple.logicalContentId = logicalContentId;
   const revisionHash = createHash("sha256").update(stableJson(tuple)).digest("hex");
   return { tuple, revisionHash, packageRevisionId: `revision-${revisionHash.slice(0, 16)}` };
 }
@@ -34,9 +35,20 @@ export function contentPackageSlotId(value) {
   return value?.packageRevisionId || value?.contentReleaseId || null;
 }
 
+export function contentLogicalSlotId(value) {
+  return value?.logicalContentId || (value?.kind && value?.target ? `${value.kind}:${value.target}` : value?.contentReleaseId || null);
+}
+
 export function assertSameLogicalContent(actual, expected, location = "content replacement") {
-  for (const field of ["contentReleaseId", "contentHash", "kind", "target"]) {
-    if ((actual?.[field] ?? null) !== (expected?.[field] ?? null)) {
+  const logicalIdentity = actual?.logicalContentId || expected?.logicalContentId;
+  if (logicalIdentity && contentLogicalSlotId(actual) !== contentLogicalSlotId(expected)) {
+    throw new Error(`content replacement logical logicalContentId drift: ${location}`);
+  }
+  const fields = logicalIdentity ? ["kind", "target"] : ["contentReleaseId", "contentHash", "kind", "target"];
+  for (const field of fields) {
+    const actualValue = field === "logicalContentId" ? contentLogicalSlotId(actual) : actual?.[field];
+    const expectedValue = field === "logicalContentId" ? contentLogicalSlotId(expected) : expected?.[field];
+    if ((actualValue ?? null) !== (expectedValue ?? null)) {
       throw new Error(`content replacement logical ${field} drift: ${location}`);
     }
   }
@@ -80,6 +92,7 @@ export async function assertContentPackageRevisionRecord(manifest, packageDirect
   }
   if (lineage.type !== "ContentPackageLineage"
     || lineage.contentReleaseId !== manifest.contentReleaseId
+    || (manifest.logicalContentId != null && lineage.logicalContentId !== manifest.logicalContentId)
     || lineage.packageRevisionId !== manifest.packageRevisionId
     || lineage.supersedesPackageId !== manifest.supersedesPackageId
     || stableJson(lineage.revisionTuple) !== stableJson(identity.tuple)) {
@@ -119,6 +132,12 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
     throw new Error(`content replacement state is not eligible: ${candidate?.state || "missing"}`);
   }
   assertSameLogicalContent(candidate, activeReceipt, location);
+  const logicalHashUpdate = Boolean((candidate?.logicalContentId || activeReceipt?.logicalContentId)
+    && contentLogicalSlotId(candidate) === contentLogicalSlotId(activeReceipt)
+    && candidate.contentHash !== activeReceipt.contentHash);
+  if (logicalHashUpdate && (!candidate.changeSetId || !Array.isArray(candidate.changedTargets) || candidate.changedTargets.length === 0 || !Array.isArray(candidate.operations) || candidate.operations.length !== candidate.changedTargets.length)) {
+    throw new Error(`content replacement hash update requires approved ChangeSet lineage: ${location}`);
+  }
   assertReplacementFacts(candidate, activeReceipt, location);
   await assertContentPackageRevisionRecord(candidate, candidatePackageDirectory);
   const activeSlotId = contentPackageSlotId(activeReceipt);
@@ -142,7 +161,10 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   } catch (error) {
     throw new Error(`content replacement approved review is missing or unreadable: ${location}: ${error.message}`);
   }
-  if (review.status !== "approved" || review.contentHash !== candidate.sourceHash || (candidate.reviewedAt && review.reviewedAt !== candidate.reviewedAt)) {
+  if (review.status !== "approved"
+    || (!logicalHashUpdate && review.contentHash !== candidate.sourceHash)
+    || (logicalHashUpdate && ![candidate.sourceHash, candidate.contentHash].includes(review.contentHash))
+    || (candidate.reviewedAt && review.reviewedAt !== candidate.reviewedAt)) {
     throw new Error(`content replacement approved review drift: ${location}`);
   }
   let hashes;
@@ -151,7 +173,10 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   } catch (error) {
     throw new Error(`content replacement source lifecycle is missing or unreadable: ${location}: ${error.message}`);
   }
-  if (hashes.some((value) => value !== candidate.sourceHash) || candidate.contentHash !== candidate.sourceHash) {
+  const lifecycleDrift = logicalHashUpdate
+    ? hashes[3] !== candidate.sourceHash || new Set(hashes.slice(0, 3)).size !== 1
+    : hashes.some((value) => value !== candidate.sourceHash) || candidate.contentHash !== candidate.sourceHash;
+  if (lifecycleDrift) {
     throw new Error(`content replacement source lifecycle hash drift: ${location}`);
   }
   const canonical = JSON.parse(await readFile(canonicalPath, "utf8"));

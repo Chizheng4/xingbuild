@@ -48,7 +48,8 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   const baseSiteArtifact = await readBaseSiteArtifact({ sourceRoot, artifactPath });
   if (baseSiteArtifact.baseSiteArtifactId !== baseSiteArtifactId) throw new Error("content reconcile baseSiteArtifact identity drift");
 
-  const identity = contentPackageRevisionIdentity({ contentReleaseId, contentHash: original.contentHash, sourceHash: canonicalHash, baseSiteArtifactId });
+  const logicalId = original.logicalContentId || `${original.kind}:${original.target}`;
+  const identity = contentPackageRevisionIdentity({ contentReleaseId, logicalContentId: logicalId, contentHash: original.contentHash, sourceHash: canonicalHash, baseSiteArtifactId });
   const revisionDirectory = path.join(releaseRoot, "revisions", identity.packageRevisionId);
   const manifestPath = path.join(revisionDirectory, "content-release.json");
   if (await exists(manifestPath)) {
@@ -79,6 +80,7 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   const manifest = {
     ...activePackage.release,
     contentReleaseId,
+    logicalContentId: logicalId,
     contentHash: original.contentHash,
     sourceHash: canonicalHash,
     baseSiteArtifactId,
@@ -107,6 +109,7 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   await writeJsonAtomically(lineagePath, {
     type: "ContentPackageLineage",
     contentReleaseId,
+    logicalContentId: logicalId,
     packageRevisionId: identity.packageRevisionId,
     supersedesPackageId: manifest.supersedesPackageId,
     recoverySource: manifest.recoverySource,

@@ -1,4 +1,11 @@
 
+## v0.25.13 — 多字段内容变更与稳定逻辑身份
+
+- 将稳定 `logicalContentId` 与变化中的 `contentHash`、物理 `packageRevisionId` 分层；同一内容对象的后继 revision 不再因 hash 更新被误判为新逻辑对象。
+- ChangeSet 支持确定性 `operations[]`：四个 Robotaxi `mediaId` 槽位可一次原子 staging，逐项校验 before/after hash、注册目标、媒体 approval/provenance；旧单字段输入归一为一项。
+- receipt、completion、package lineage 与整站 projection 保存 logical identity、changeSetId、完整 changedTargets；replacement 按 logical slot 选择，失败不污染旧 active。
+- 保留 v0.25.12 的页面、视觉、34 个 active 内容与发布边界；本版本仅完成 Engineering 能力与本地验证，不执行内容或产品 transport。
+
 ## v0.25.12 — 产品内容兼容合同单一枚举与前置门禁
 
 - 将 `contentImpact` 收敛为 `none`、`compatible`、`migration-required`、`breaking`、`unknown` 封闭枚举，并以独立 `contentImpactReason` 保存说明。

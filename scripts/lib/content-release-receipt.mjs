@@ -68,6 +68,12 @@ async function readProjection(packageDirectory, release, collections) {
   if (projection.packageRevisionId != null || release.packageRevisionId != null) {
     assertEqual(projection.packageRevisionId || null, release.packageRevisionId || null, "projection packageRevisionId", packageDirectory);
   }
+  for (const field of ["logicalContentId", "changeSetId"]) {
+    if (projection[field] != null || release[field] != null) assertEqual(projection[field] || null, release[field] || null, `projection ${field}`, packageDirectory);
+  }
+  if (projection.changedTargets != null || release.changedTargets != null) {
+    assertEqual(JSON.stringify(projection.changedTargets || []), JSON.stringify(release.changedTargets || []), "projection changedTargets", packageDirectory);
+  }
   // Legacy intent projections were built before transport bound the current
   // ProductArtifact. A missing/null base id is tolerated; a declared id may
   // never drift from the lifecycle receipt.
@@ -115,6 +121,12 @@ export async function readContentReleaseReceipt(packageDirectory) {
     assertEqual(completion[field], release[field], `completion ${field}`, packageDirectory);
   }
   receiptTargetCollections(completion, { packageDirectory });
+  for (const field of ["logicalContentId", "changeSetId"]) {
+    if (completion[field] != null) assertEqual(completion[field], release[field] || null, `completion ${field}`, packageDirectory);
+  }
+  if (completion.changedTargets != null || release.changedTargets != null) {
+    if (completion.changedTargets != null) assertEqual(JSON.stringify(completion.changedTargets), JSON.stringify(release.changedTargets || []), "completion changedTargets", packageDirectory);
+  }
   if (completion.packageRevisionId != null || release.packageRevisionId != null) {
     assertEqual(completion.packageRevisionId || null, release.packageRevisionId || null, "completion packageRevisionId", packageDirectory);
   }
@@ -125,11 +137,14 @@ export async function readContentReleaseReceipt(packageDirectory) {
   const receiptIdentity = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: release.contentReleaseId,
+    logicalContentId: release.logicalContentId || null,
     packageRevisionId: release.packageRevisionId || null,
     contentHash: release.contentHash,
     kind: release.kind,
     target: release.target,
     targetPath: release.targetPath || null,
+    changeSetId: release.changeSetId || null,
+    changedTargets: release.changedTargets || [],
     baseSiteArtifactId: release.baseSiteArtifactId,
     ...collections,
   };
@@ -152,11 +167,14 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
   const identity = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: receipt.contentReleaseId,
+    logicalContentId: receipt.logicalContentId || null,
     packageRevisionId: receipt.packageRevisionId || null,
     contentHash: receipt.contentHash,
     kind: receipt.kind,
     target: receipt.target,
     targetPath: receipt.targetPath || null,
+    changeSetId: receipt.changeSetId || null,
+    changedTargets: receipt.changedTargets || [],
     baseSiteArtifactId,
     ...collections,
   };

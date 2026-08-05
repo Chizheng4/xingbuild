@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { contentReceiptProjection, contentTargetCollectionNames, readContentReleaseReceipt, receiptTargetCollections } from "./content-release-receipt.mjs";
-import { selectReleasedContentPackage, validateContentReplacement } from "./content-replacement.mjs";
+import { contentLogicalSlotId, selectReleasedContentPackage, validateContentReplacement } from "./content-replacement.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
@@ -56,9 +56,10 @@ export async function readActiveContentReleases(releasesRoot) {
     }
     if (release.state !== "released") return;
     if (!release.contentReleaseId) throw new Error(`released content lifecycle fact has no contentReleaseId: ${releasePath}`);
-    const values = releasedById.get(release.contentReleaseId) || [];
+    const slotId = contentLogicalSlotId(release);
+    const values = releasedById.get(slotId) || [];
     values.push({ packageDirectory, release });
-    releasedById.set(release.contentReleaseId, values);
+    releasedById.set(slotId, values);
   }
   for (const entry of await readdir(releasesRoot, { withFileTypes: true }).catch(() => [])) {
     if (!entry.isDirectory()) continue;
@@ -70,8 +71,8 @@ export async function readActiveContentReleases(releasesRoot) {
     }
   }
   const active = [];
-  for (const [contentReleaseId, candidates] of releasedById) {
-    const selected = await selectReleasedContentPackage(candidates, contentReleaseId);
+  for (const [contentSlotId, candidates] of releasedById) {
+    const selected = await selectReleasedContentPackage(candidates, contentSlotId);
     const receipt = await readContentReleaseReceipt(selected.packageDirectory);
     const sourceDirectory = path.join(selected.packageDirectory, "source");
     active.push({ ...receipt, sourceDirectory, mediaPaths: await collectMediaPaths(sourceDirectory) });
@@ -195,7 +196,7 @@ export function assertContentManifestComplete(manifest, receipts) {
   if (projected.length !== receipts.length) throw new Error("content manifest receipt projection is incomplete");
   for (const receipt of receipts) {
     const item = projected.find((value) => value.contentReleaseId === receipt.contentReleaseId);
-    if (!item || item.receiptHash !== receipt.receiptHash || item.contentHash !== receipt.contentHash || item.kind !== receipt.kind || item.target !== receipt.target) {
+    if (!item || item.receiptHash !== receipt.receiptHash || item.contentHash !== receipt.contentHash || item.kind !== receipt.kind || item.target !== receipt.target || (item.logicalContentId || null) !== (receipt.logicalContentId || null) || JSON.stringify(item.changedTargets || []) !== JSON.stringify(receipt.changedTargets || [])) {
       throw new Error(`content manifest receipt identity mismatch: ${receipt.contentReleaseId}`);
     }
   }
@@ -225,7 +226,8 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
   let replacement = null;
   if (additionalContentManifest?.contentReleaseId && additionalContentManifest.contentHash && additionalContentManifest.target) {
     const sourceDirectory = candidatePackageDirectory ? path.join(candidatePackageDirectory, "source") : null;
-    const activeIndex = activeContentReleases.findIndex((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId);
+    const candidateLogicalSlot = contentLogicalSlotId(additionalContentManifest);
+    const activeIndex = activeContentReleases.findIndex((item) => contentLogicalSlotId(item) === candidateLogicalSlot);
     const candidateReceipt = contentReceiptProjection(
       { ...additionalContentManifest, packageDirectory: candidatePackageDirectory },
       { baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest.baseSiteArtifactId || null },

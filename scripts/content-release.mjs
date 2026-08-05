@@ -33,9 +33,11 @@ import {
   writeJsonAtomically,
 } from "./lib/content-release-state.mjs";
 import {
-  applyContentChangeSet,
+  applyContentChangeSetDocuments,
+  contentChangeSetOperations,
   hashValue,
   linkContentChangeSetRelease,
+  logicalContentId,
   readContentChangeSet,
   readFieldValue,
   writeFieldValue,
@@ -153,9 +155,14 @@ export async function finalizeContentRelease(packageInfo) {
   const completion = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: packageInfo.contentReleaseId,
+    logicalContentId: packageInfo.logicalContentId || logicalContentId({ kind: packageInfo.kind, target: packageInfo.target }),
     contentHash: packageInfo.contentHash,
     baseSiteArtifactId: packageInfo.baseSiteArtifactId,
     packageRevisionId: packageInfo.packageRevisionId || null,
+    changeSetId: packageInfo.changeSetId || null,
+    changedTargets: packageInfo.changedTargets || [],
+    operations: packageInfo.operations || [],
+    revisionLineage: packageInfo.revisionLineage || null,
     kind: packageInfo.kind,
     target: packageInfo.target,
     targetPath: packageInfo.targetPath,
@@ -179,34 +186,57 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const changeSet = changeSetPath
     ? await readContentChangeSet(changeSetPath, { rootDirectory: sourceRoot })
     : null;
-  if (changeSet && ![content.relative, "content/media/robotaxi/manifest.json", "content/products/robotaxi.json"].includes(changeSet.sourcePath)) {
-    throw new Error("content ChangeSet source must be the explicit independent target document");
-  }
   if (changeSet) {
-    const targetDocument = changeSet.sourcePath === "content/media/robotaxi/manifest.json"
-      ? content.practiceBundle?.manifest
-      : content.value;
-    if (!targetDocument) throw new Error("Robotaxi media ChangeSet requires the approved media manifest");
-    if (changeSet.rollbackOf) {
+    const expectedLogicalContentId = logicalContentId({ kind, target });
+    if (changeSet.logicalContentId && changeSet.logicalContentId !== expectedLogicalContentId) {
+      throw new Error(`content ChangeSet logicalContentId drift: expected ${expectedLogicalContentId}`);
+    }
+    const operations = contentChangeSetOperations(changeSet);
+    const allowedSources = new Set([content.relative, "content/media/robotaxi/manifest.json", "content/products/robotaxi.json"]);
+    if (operations.some((operation) => !allowedSources.has(operation.sourcePath))) {
+      throw new Error("content ChangeSet source must be the explicit independent target document");
+    }
+    if (operations.some((operation) => operation.sourcePath === "content/media/robotaxi/manifest.json") && !content.practiceBundle?.manifest) {
+      throw new Error("Robotaxi media ChangeSet requires the approved media manifest");
+    }
+    const documents = {
+      [content.relative]: content.value,
+      "content/media/robotaxi/manifest.json": content.practiceBundle?.manifest,
+      "content/products/robotaxi.json": content.value,
+    };
+    const rollbackOperations = changeSet.rollbackOf?.operations || null;
+    if (rollbackOperations) {
+      for (const operation of rollbackOperations) {
+        const document = documents[operation.sourcePath];
+        if (!document) throw new Error(`rollback source document is missing for ${operation.targetId}`);
+        let canonicalValue;
+        try { canonicalValue = readFieldValue(document, operation.fieldPath); } catch (error) {
+          if (operation.beforeValue === null && operation.fieldPath.startsWith("assets[id=")) canonicalValue = null;
+          else throw error;
+        }
+        if (hashValue(canonicalValue) !== hashValue(operation.beforeValue)) {
+          throw new Error(`rollback canonical baseline drift for ${operation.targetId}`);
+        }
+      }
+    } else if (changeSet.rollbackOf?.originalBefore !== undefined) {
       let canonicalValue;
-      try { canonicalValue = readFieldValue(targetDocument, changeSet.fieldPath); } catch (error) {
-        if (changeSet.rollbackOf.originalBefore === null && changeSet.fieldPath.startsWith("assets[id=")) canonicalValue = null;
+      const operation = operations[0];
+      const document = documents[operation.sourcePath];
+      try { canonicalValue = readFieldValue(document, operation.fieldPath); } catch (error) {
+        if (changeSet.rollbackOf.originalBefore === null && operation.fieldPath.startsWith("assets[id=")) canonicalValue = null;
         else throw error;
       }
       if (canonicalValue !== changeSet.rollbackOf.originalBefore || hashValue(canonicalValue) !== hashValue(changeSet.rollbackOf.originalBefore)) {
-        throw new Error(`rollback canonical baseline drift for ${changeSet.targetId}`);
+        throw new Error(`rollback canonical baseline drift for ${operation.targetId}`);
       }
-      if (changeSet.sourcePath === "content/media/robotaxi/manifest.json") {
-        content.practiceBundle.manifest = writeFieldValue(content.practiceBundle.manifest, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
-      } else {
-        content.value = writeFieldValue(content.value, changeSet.fieldPath, changeSet.rollbackOf.originalAfter);
-      }
+      // Legacy single-field rollback records the original preimage separately;
+      // stage that forward value first, then apply the inverse operation with
+      // its own beforeHash so the same atomic path handles old and new files.
+      documents[operation.sourcePath] = writeFieldValue(documents[operation.sourcePath], operation.fieldPath, changeSet.rollbackOf.originalAfter);
     }
-    if (changeSet.sourcePath === "content/media/robotaxi/manifest.json") {
-      content.practiceBundle.manifest = applyContentChangeSet(content.practiceBundle.manifest, changeSet);
-    } else {
-      content.value = applyContentChangeSet(content.value, changeSet);
-    }
+    const stagedDocuments = applyContentChangeSetDocuments(documents, changeSet);
+    content.value = stagedDocuments[content.relative] || stagedDocuments["content/products/robotaxi.json"];
+    if (content.practiceBundle?.manifest) content.practiceBundle.manifest = stagedDocuments["content/media/robotaxi/manifest.json"] || content.practiceBundle.manifest;
     if (content.practiceBundle) {
       const errors = validatePublishablePracticeBundle(content.value, content.practiceBundle.manifest, { expectedId: target });
       if (errors.length) throw new Error(`Practice ChangeSet validation failed: ${errors.join("; ")}`);
@@ -228,6 +258,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const idempotencyKey = contentReleaseIdempotencyKey({ contentReleaseId, contentHash, baseSiteArtifactId: immutableArtifact?.baseSiteArtifactId });
   const manifest = {
     contentReleaseId,
+    logicalContentId: changeSet?.logicalContentId || logicalContentId({ kind, target }),
     kind,
     target,
     contentHash,
@@ -242,8 +273,10 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     baseProductVersion,
     baseProductCommit,
     targetPath: publicPath(kind, target),
-    changeSetId: changeSet?.changeId || null,
-    changedTargets: changeSet ? [changeSet.targetId] : [],
+    changeSetId: changeSet?.changeSetId || changeSet?.changeId || null,
+    changedTargets: changeSet?.changedTargets || (changeSet ? [changeSet.targetId] : []),
+    operations: changeSet ? contentChangeSetOperations(changeSet).map(({ target: _target, ...operation }) => operation) : [],
+    revisionLineage: changeSet ? { logicalContentId: changeSet.logicalContentId || logicalContentId({ kind, target }), supersedesPackageId: null, changeSetId: changeSet.changeSetId || changeSet.changeId || null } : null,
     releasePackage: path.posix.join(".content-workspace/releases", contentReleaseId),
     rollbackOf: changeSet?.rollbackOf || null,
     state: "prepared",
@@ -256,7 +289,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const manifestPath = path.join(packageDirectory, "content-release.json");
   if (await exists(manifestPath)) {
     const existing = JSON.parse(await readFile(manifestPath, "utf8"));
-    if (existing.contentHash !== contentHash || existing.target !== target || existing.kind !== kind) {
+    if (existing.contentHash !== contentHash || existing.target !== target || existing.kind !== kind || (existing.logicalContentId && existing.logicalContentId !== manifest.logicalContentId)) {
       throw new Error(`content release package identity conflict: ${contentReleaseId}`);
     }
     if (existing.baseSiteArtifactId && immutableArtifact && existing.baseSiteArtifactId !== immutableArtifact.baseSiteArtifactId || (existing.idempotencyKey && existing.idempotencyKey !== idempotencyKey && existing.baseSiteArtifactId === immutableArtifact?.baseSiteArtifactId)) {
@@ -287,11 +320,11 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
   const sourceOverlayRelative = path.join(".content-workspace", "content", content.relative.slice("content/".length));
   const sourceFile = path.join(sourceDirectory, sourceOverlayRelative);
   await mkdir(path.dirname(sourceFile), { recursive: true });
-  if (changeSet && changeSet.sourcePath === content.relative) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
+  if (changeSet && contentChangeSetOperations(changeSet).some((operation) => operation.sourcePath === content.relative)) await writeFile(sourceFile, `${JSON.stringify(content.value, null, 2)}\n`);
   else await cp(content.file, sourceFile);
   if (kind === "practice") {
     const mediaManifest = path.join(sourceDirectory, ".content-workspace", "content", "media", target, "manifest.json");
-    if (content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
+    if (content.practiceBundle?.manifest && changeSet && contentChangeSetOperations(changeSet).some((operation) => operation.sourcePath === "content/media/robotaxi/manifest.json")) {
       await mkdir(path.dirname(mediaManifest), { recursive: true });
       await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
     } else if (await exists(path.join(contentRootDirectory({ sourceRoot }), "media", target, "manifest.json"))) {
@@ -305,7 +338,7 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     if (await exists(mediaRoot)) await cp(mediaRoot, path.join(sourceDirectory, ".content-workspace", "content", "media", target), { recursive: true });
     if (await exists(publicMediaRoot)) await cp(publicMediaRoot, path.join(sourceDirectory, "public", "media", target), { recursive: true });
   }
-  if (kind === "practice" && content.practiceBundle?.manifest && changeSet?.sourcePath === "content/media/robotaxi/manifest.json") {
+  if (kind === "practice" && content.practiceBundle?.manifest && changeSet && contentChangeSetOperations(changeSet).some((operation) => operation.sourcePath === "content/media/robotaxi/manifest.json")) {
     const mediaManifest = path.join(sourceDirectory, ".content-workspace", "content", "media", target, "manifest.json");
     await mkdir(path.dirname(mediaManifest), { recursive: true });
     await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
@@ -459,6 +492,8 @@ export async function verifyContentPackage({ manifest, baseUrl = publicUrl, fetc
 
 export function assertContentPackageIdentity(packageInfo, manifest) {
   if (manifest.contentReleaseId !== packageInfo.contentReleaseId || manifest.contentHash !== packageInfo.contentHash) throw new Error("content release package identity mismatch");
+  if (packageInfo.logicalContentId && manifest.logicalContentId !== packageInfo.logicalContentId) throw new Error("content logical identity mismatch");
+  if (manifest.changeSetId && (!Array.isArray(manifest.changedTargets) || !Array.isArray(manifest.operations) || manifest.changedTargets.length !== manifest.operations.length)) throw new Error("content ChangeSet lineage is incomplete");
   if (manifest.baseSiteArtifact && manifest.baseSiteArtifact.baseSiteArtifactId !== manifest.baseSiteArtifactId) throw new Error("content release embedded baseSiteArtifact identity mismatch; reconcile is required");
   if (manifest.packageRevisionId && manifest.packageRevisionId !== packageInfo.packageRevisionId) throw new Error("content package revision identity mismatch");
   return true;
