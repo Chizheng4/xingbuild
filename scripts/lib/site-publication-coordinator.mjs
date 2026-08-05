@@ -33,6 +33,31 @@ export async function readSitePublicationRecord(publicationDirectory) {
   return readJson(path.join(publicationDirectory, "site-publication.json"));
 }
 
+export function sitePublicationIdentity(publication = {}) {
+  return {
+    sitePublicationId: publication.sitePublicationId || null,
+    snapshotHash: publication.snapshotHash || null,
+    version: publication.productVersion || null,
+    commit: publication.productCommit || null,
+    baseSiteArtifactId: publication.productArtifactId || null,
+  };
+}
+
+function propagationError(message, observedIdentity = {}) {
+  const error = new Error(message);
+  error.recoverable = true;
+  error.propagation = true;
+  error.observedIdentity = observedIdentity;
+  return error;
+}
+
+function identityDriftError(message, observedIdentity = {}) {
+  const error = new Error(message);
+  error.code = "SITE_PUBLICATION_IDENTITY_DRIFT";
+  error.observedIdentity = observedIdentity;
+  return error;
+}
+
 export async function finalizeSitePublication({ publicationDirectory, publicVerify } = {}) {
   const current = await readSitePublicationRecord(publicationDirectory);
   if (!current.deploymentId || !publicVerify) throw new Error("SitePublication finalize requires deploymentId and publicVerify");
@@ -60,6 +85,8 @@ async function fetchJson(url, fetchImpl) {
   if (!response.ok) {
     const error = new Error(`public verify ${url} returned HTTP ${response.status}`);
     error.recoverable = response.status >= 500 || response.status === 404;
+    error.propagation = error.recoverable;
+    error.observedIdentity = { url: String(url), status: response.status };
     throw error;
   }
   try {
@@ -87,16 +114,32 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
     fetchJson(new URL("/release.json", base), fetchImpl),
     fetchJson(new URL("/content-manifest.json", base), fetchImpl),
   ]);
+  const expectedIdentity = sitePublicationIdentity(publication);
+  const observedIdentity = {
+    version: release.version || null,
+    commit: release.commit || null,
+    contentVersion: contentManifest.version || null,
+    contentCommit: contentManifest.commit || null,
+    sitePublicationId: contentManifest.sitePublicationId || null,
+    snapshotHash: contentManifest.snapshotHash || null,
+    baseSiteArtifactId: contentManifest.baseSiteArtifactId || null,
+  };
+  if (!release.version || !release.commit || !contentManifest.version || !contentManifest.commit
+    || !contentManifest.sitePublicationId || !contentManifest.snapshotHash || !contentManifest.baseSiteArtifactId) {
+    throw new Error("public release/content manifest identity fields are incomplete");
+  }
   if (release.version !== publication.productVersion || release.commit !== publication.productCommit) {
-    throw new Error("public release identity does not match SitePublication");
+    throw propagationError("public release identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
   }
   if (contentManifest.version !== publication.productVersion || contentManifest.commit !== publication.productCommit) {
-    throw new Error("public content manifest identity does not match SitePublication");
+    throw propagationError("public content manifest identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
   }
   if (contentManifest.sitePublicationId !== publication.sitePublicationId || contentManifest.snapshotHash !== publication.snapshotHash) {
-    throw new Error("public content manifest snapshot identity does not match SitePublication");
+    throw propagationError("public content manifest snapshot identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
   }
-  if (contentManifest.baseSiteArtifactId !== publication.productArtifactId) throw new Error("public content manifest ProductArtifact identity does not match SitePublication");
+  if (contentManifest.baseSiteArtifactId !== publication.productArtifactId) {
+    throw identityDriftError("public content manifest ProductArtifact identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
+  }
   const actualIds = assertExactArray(contentManifest.activeContentReleaseIds, publication.contentReleaseIds, "activeContentReleaseIds");
   for (const field of ["publishedSlugs", "publishedArticleSlugs", "practiceIds", "profileIds", "businessObservationIds", "mediaPaths"]) {
     assertExactArray(contentManifest[field], publication.contentManifest?.[field], field);
@@ -167,13 +210,25 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
   };
 }
 
-export async function waitForPublicSitePublication({ publication, baseUrl = publicUrl, fetchImpl = fetch, maxAttempts = 30, initialDelayMs = 1000, maxDelayMs = 10000, sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
+export async function waitForPublicSitePublication({ publication, baseUrl = publicUrl, fetchImpl = fetch, maxAttempts = 30, initialDelayMs = 1000, maxDelayMs = 10000, sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), onObservation = async () => {} } = {}) {
   let lastError;
+  const observations = [];
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      return { ...(await verifyPublicSitePublication({ publication, baseUrl, fetchImpl })), attempts: attempt };
+      return { ...(await verifyPublicSitePublication({ publication, baseUrl, fetchImpl })), attempts: attempt, propagationObservations: observations };
     } catch (error) {
       lastError = error;
+      if (error.propagation) {
+        const observation = {
+          expectedIdentity: sitePublicationIdentity(publication),
+          observedIdentity: error.observedIdentity || null,
+          attempt,
+          observedAt: new Date().toISOString(),
+          message: error.message,
+        };
+        observations.push(observation);
+        await onObservation(observation);
+      }
       if (!error.recoverable) throw error;
       if (attempt === maxAttempts) break;
       await sleepImpl(Math.min(maxDelayMs, initialDelayMs * 2 ** (attempt - 1)));
@@ -183,6 +238,10 @@ export async function waitForPublicSitePublication({ publication, baseUrl = publ
   error.code = "SITE_PUBLICATION_VERIFY_TIMEOUT";
   error.recoveryId = publicationRecoveryId(publication.sitePublicationId, "public-verify");
   error.recoverable = true;
+  error.propagation = true;
+  error.expectedIdentity = sitePublicationIdentity(publication);
+  error.observedIdentity = observations.at(-1)?.observedIdentity || lastError?.observedIdentity || null;
+  error.propagationObservations = observations;
   throw error;
 }
 
@@ -193,9 +252,23 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
   const currentText = await readFile(path.join(sourceRoot, "docs/iterations/current.md"), "utf8");
   assertProductContentCompatibility({ currentText, activeContentReleaseIds: publication.contentReleaseIds || [] });
   const target = await readFixedEdgeoneTarget(sourceRoot);
+  let persisted = null;
+  try {
+    persisted = await readSitePublicationRecord(publication.client);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (persisted && (persisted.sitePublicationId !== publication.sitePublicationId
+    || persisted.snapshotHash !== publication.snapshotHash
+    || persisted.productVersion !== publication.productVersion
+    || persisted.productCommit !== publication.productCommit
+    || (persisted.productArtifactId || null) !== (publication.productArtifactId || null))) {
+    throw new Error("persisted SitePublication identity does not match resume request");
+  }
   const leaseDirectory = path.join(sourceRoot, ".content-workspace", "site-publications", ".site-lease");
   const lease = await acquireSitePublicationLease({ publicationDirectory: publication.client, leaseDirectory, sitePublicationId: publication.sitePublicationId, snapshotHash: publication.snapshotHash, ttlMs: 900000 });
   let current = { ...publication };
+  let propagationObservations = current.propagation?.observations || [];
   try {
     if (!current.deploymentId) {
       if (!edgeonePath) throw new Error("EdgeOne CLI path is required for SitePublication transport");
@@ -219,14 +292,57 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
       await writeJsonAtomically(path.join(publication.client, "deployment.json"), deployment);
     }
     current = await writePublicationRecord(publication.client, { ...current, state: "propagating" });
-    const publicVerify = await waitForPublicSitePublication({ publication: current, baseUrl, fetchImpl, maxAttempts, initialDelayMs, maxDelayMs, sleepImpl });
+    const publicVerify = await waitForPublicSitePublication({
+      publication: current,
+      baseUrl,
+      fetchImpl,
+      maxAttempts,
+      initialDelayMs,
+      maxDelayMs,
+      sleepImpl,
+      onObservation: async (observation) => {
+        propagationObservations = [...propagationObservations, observation];
+        current = await writePublicationRecord(publication.client, {
+          ...current,
+          state: "propagating",
+          propagation: {
+            expectedIdentity: sitePublicationIdentity(current),
+            observedIdentity: observation.observedIdentity,
+            deploymentId: current.deploymentId || null,
+            attempts: observation.attempt,
+            observations: propagationObservations,
+            lastObservedAt: observation.observedAt,
+          },
+        });
+      },
+    });
     const productVerify = { version: current.productVersion, commit: current.productCommit, verifiedAt: publicVerify.verifiedAt };
     const contentVerify = { activeContentReleaseIds: publicVerify.activeContentReleaseIds, snapshotHash: publicVerify.snapshotHash, contentManifest: publicVerify.contentManifest, verifiedAt: publicVerify.verifiedAt };
     assertSitePublicationEvidence({ deployment: current.deployment || { deploymentId: current.deploymentId }, publicVerify, productVerify, contentVerify });
     return await finalizeSitePublication({ publicationDirectory: publication.client, publicVerify }).then((finalized) => writePublicationRecord(publication.client, { ...finalized, productVerify, contentVerify }));
   } catch (error) {
     const state = error.recoverable === true ? "recoverable" : "failed";
-    const failed = { ...current, state, recoveryId: current.recoveryId || publicationRecoveryId(publication.sitePublicationId, error.code || "transport"), failure: { message: error.message, code: error.code || null, at: new Date().toISOString() } };
+    const propagation = error.propagationObservations?.length
+      ? {
+        expectedIdentity: error.expectedIdentity || sitePublicationIdentity(current),
+        observedIdentity: error.observedIdentity || error.propagationObservations.at(-1)?.observedIdentity || null,
+        deploymentId: current.deploymentId || null,
+        attempts: error.propagationObservations.at(-1)?.attempt || null,
+        observations: [...propagationObservations, ...error.propagationObservations.filter((item) => !propagationObservations.includes(item))],
+        lastObservedAt: error.propagationObservations.at(-1)?.observedAt || null,
+      }
+      : current.propagation;
+    const failed = {
+      ...current,
+      state,
+      recoveryId: current.recoveryId || publicationRecoveryId(publication.sitePublicationId, error.code || "transport"),
+      ...(propagation
+        ? { propagation, incident: { type: error.code || "SITE_PUBLICATION_TRANSPORT", expectedIdentity: propagation.expectedIdentity, observedIdentity: propagation.observedIdentity, deploymentId: propagation.deploymentId, attempts: propagation.attempts } }
+        : error.observedIdentity
+          ? { incident: { type: error.code || "SITE_PUBLICATION_TRANSPORT", expectedIdentity: sitePublicationIdentity(current), observedIdentity: error.observedIdentity, deploymentId: current.deploymentId || null } }
+          : {}),
+      failure: { message: error.message, code: error.code || null, at: new Date().toISOString() },
+    };
     await writePublicationRecord(publication.client, failed).catch(() => {});
     error.sitePublication = failed;
     throw error;

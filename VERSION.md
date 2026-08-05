@@ -1,4 +1,10 @@
 
+## v0.25.7 — SitePublication 传播恢复与内容决策边界
+
+- bounded propagation 将完整但暂不一致的公网身份视为 recoverable，逐次保存 expected/observed identity、attempt、时间与 deploymentId；部分 manifest、hash、target、source、review 或 base 漂移仍硬失败。
+- 同一 SitePublication 通过同一 lease 和 deploymentId resume，传播收敛后执行精确整站 publicVerify 与原子 finalize；超出有界窗口才保留 recovery 并形成 Incident，不污染既有 active 内容。
+- 覆盖传播延迟、永久漂移、重复 resume 和 active 保留回归；不修改内容正文、审核、媒体事实、既有 contentReleaseId、产品 UI/IA/schema/视觉或 v0.25.6 tag/history。
+
 ## v0.25.6 — 内容发布替换 revision 与 active 生命周期
 
 - logical identity 与 immutable `ContentPackageRevision` 分离；Coordinator 依据 `supersedesPackageId`、revision tuple 和 lineage 将合法 replacement 放入唯一 active slot。
