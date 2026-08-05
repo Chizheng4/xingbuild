@@ -74,13 +74,11 @@ async function readProjection(packageDirectory, release, collections) {
   if (projection.baseSiteArtifactId != null) {
     assertEqual(projection.baseSiteArtifactId, release.baseSiteArtifactId, "projection baseSiteArtifactId", packageDirectory);
   }
-  for (const field of contentTargetCollectionNames) {
-    if (projection[field] == null) throw new Error(`content release projection is partial; missing ${field}: ${projectionPath}`);
-    const actual = exactStringArray(projection[field], field, packageDirectory);
-    if (JSON.stringify(actual) !== JSON.stringify(collections[field])) {
-      throw new Error(`content release projection ${field} mismatch: ${projectionPath}`);
-    }
-  }
+  // A package projection is a derived, single-release view. Global active
+  // collections belong to the Coordinator's ActiveContentSet and may be
+  // absent or stale in legacy/finalized package output. The receipt and
+  // completion facts above remain the only source for this release's target
+  // collections.
   return {
     projection,
     projectionPath,

@@ -1,4 +1,10 @@
 
+## v0.25.8 — ContentReleaseReceipt 投影一致性与 active 快照
+
+- 单条 `ContentReleaseReceipt`（`content-release.json` + `completion.json`）成为 logical release 唯一事实源；finalized package 的派生 projection 只校验自身 identity，不再承担全局 active 集合。
+- 新增规范化 `ActiveContentSet`，由全部 finalized receipts 与 candidate 生成唯一 `activeContentReleaseIds`、slug、practice、media 和 receipt projection，再物化整站 SitePublicationSnapshot。
+- Didi finalized 的缺失/旧 package 全局字段不会丢失 active；保留唯一 lease、同 publication/deployment resume、整站 publicVerify 与 atomic finalize 边界，不修改正文、审核、hash、IDs 或历史版本。
+
 ## v0.25.7 — SitePublication 传播恢复与内容决策边界
 
 - bounded propagation 将完整但暂不一致的公网身份视为 recoverable，逐次保存 expected/observed identity、attempt、时间与 deploymentId；部分 manifest、hash、target、source、review 或 base 漂移仍硬失败。

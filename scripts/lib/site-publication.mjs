@@ -202,6 +202,22 @@ export function assertContentManifestComplete(manifest, receipts) {
   return true;
 }
 
+export function createActiveContentSet(receipts = []) {
+  const activeContentReleases = [...receipts].sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
+  const collections = Object.fromEntries(contentTargetCollectionNames.map((field) => [
+    field,
+    [...new Set(activeContentReleases.flatMap((item) => item[field] || []))].sort(),
+  ]));
+  const activeContentSet = {
+    ...collections,
+    activeContentReleaseIds: activeContentReleases.map((item) => item.contentReleaseId),
+    mediaPaths: [...new Set(activeContentReleases.flatMap((item) => item.mediaPaths || []))].sort(),
+    contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, { baseSiteArtifactId: item.baseSiteArtifactId })),
+  };
+  assertContentManifestComplete(activeContentSet, activeContentReleases);
+  return { activeContentReleases, ...activeContentSet };
+}
+
 export async function createSitePublication({ productClient, releasesRoot, outputRoot, publicationRoot = null, additionalContentManifest = null, candidatePackageDirectory = null, assemble = false, sourceRoot = process.cwd() } = {}) {
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
   const activeContentReleases = await readActiveContentReleases(releasesRoot);
@@ -237,14 +253,15 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
   }
   activeContentReleases.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
   const candidate = additionalContentManifest?.contentReleaseId ? activeContentReleases.find((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId) : null;
+  const activeContentSet = createActiveContentSet(activeContentReleases);
   const contentManifest = {
     version: productRelease.version,
     commit: productRelease.commit,
-    ...Object.fromEntries(contentTargetCollectionNames.map((field) => [field, [...new Set(activeContentReleases.flatMap((item) => item[field] || []))].sort()])),
-    activeContentReleaseIds: activeContentReleases.map((item) => item.contentReleaseId),
-    mediaPaths: [...new Set(activeContentReleases.flatMap((item) => item.mediaPaths || []))].sort(),
+    ...Object.fromEntries(contentTargetCollectionNames.map((field) => [field, activeContentSet[field]])),
+    activeContentReleaseIds: activeContentSet.activeContentReleaseIds,
+    mediaPaths: activeContentSet.mediaPaths,
     baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest?.baseSiteArtifactId || null,
-    contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, { baseSiteArtifactId: item.baseSiteArtifactId })),
+    contentReleaseReceipts: activeContentSet.contentReleaseReceipts,
     candidateContentReleaseId: candidate?.contentReleaseId || null,
     candidatePackageRevisionId: candidate?.packageRevisionId || null,
     candidateTarget: candidate?.target || null,
