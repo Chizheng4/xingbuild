@@ -1,4 +1,10 @@
 
+## v0.25.14 — 内容首次发布与修订发布时间分层
+
+- 将 logical content 的 `firstPublishedAt` 与 package revision 的 `revisionReleasedAt` 分离；`publishedAt` 继续只投影首次公开时间。
+- 旧 receipt 的 `publishedAt` 只读兼容为 `firstPublishedAt`；replacement candidate 的空 revision 时间合法，显式首次发布时间漂移硬失败。
+- receipt、completion、package/public projection、reconcile 与 Coordinator finalize 复用统一生命周期时间解析；保留 v0.25.13 的视觉、34 active 内容、四槽和五路由边界，不执行内容 transport。
+
 ## v0.25.13 — 多字段内容变更与稳定逻辑身份
 
 - 将稳定 `logicalContentId` 与变化中的 `contentHash`、物理 `packageRevisionId` 分层；同一内容对象的后继 revision 不再因 hash 更新被误判为新逻辑对象。

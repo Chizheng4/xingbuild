@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { contentRootDirectory } from "./content-root.mjs";
 import { hashFile } from "./observation-content.mjs";
+import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 
 export const CONTENT_PACKAGE_CONTRACT_VERSION = "content-package-revision-v1";
 export const CONTENT_REPLACEMENT_STATES = Object.freeze(new Set(["prepared", "built", "recoverable", "transported", "verifying"]));
@@ -56,7 +57,7 @@ export function assertSameLogicalContent(actual, expected, location = "content r
 }
 
 function assertReplacementFacts(candidate, activeReceipt, location) {
-  for (const field of ["targetPath", "reviewedAt", "publishedAt"]) {
+  for (const field of ["targetPath", "reviewedAt"]) {
     if (activeReceipt?.[field] != null && candidate?.[field] !== activeReceipt[field]) {
       throw new Error(`content replacement ${field} drift: ${location}`);
     }
@@ -67,6 +68,7 @@ function assertReplacementFacts(candidate, activeReceipt, location) {
       throw new Error(`content replacement ${field} drift: ${location}`);
     }
   }
+  return resolveContentLifecycleTimes(candidate, { activeRecord: activeReceipt, now: () => "1970-01-01T00:00:00.000Z" });
 }
 
 export async function assertContentPackageRevisionRecord(manifest, packageDirectory) {
@@ -131,6 +133,9 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   if (!CONTENT_REPLACEMENT_STATES.has(candidate?.state)) {
     throw new Error(`content replacement state is not eligible: ${candidate?.state || "missing"}`);
   }
+  if (candidate?.revisionReleasedAt != null) {
+    throw new Error(`content replacement revisionReleasedAt must be null before finalize: ${location}`);
+  }
   assertSameLogicalContent(candidate, activeReceipt, location);
   const logicalHashUpdate = Boolean((candidate?.logicalContentId || activeReceipt?.logicalContentId)
     && contentLogicalSlotId(candidate) === contentLogicalSlotId(activeReceipt)
@@ -138,7 +143,7 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   if (logicalHashUpdate && (!candidate.changeSetId || !Array.isArray(candidate.changedTargets) || candidate.changedTargets.length === 0 || !Array.isArray(candidate.operations) || candidate.operations.length !== candidate.changedTargets.length)) {
     throw new Error(`content replacement hash update requires approved ChangeSet lineage: ${location}`);
   }
-  assertReplacementFacts(candidate, activeReceipt, location);
+  const lifecycleTimes = assertReplacementFacts(candidate, activeReceipt, location);
   await assertContentPackageRevisionRecord(candidate, candidatePackageDirectory);
   const activeSlotId = contentPackageSlotId(activeReceipt);
   if (candidate.supersedesPackageId !== activeSlotId) {
@@ -188,5 +193,6 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
     supersedesPackageId: candidate.supersedesPackageId,
     previousPackageRevisionId: activeReceipt.packageRevisionId || null,
     previousReceiptHash: activeReceipt.receiptHash,
+    lifecycleTimes,
   };
 }

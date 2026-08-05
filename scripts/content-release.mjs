@@ -24,6 +24,7 @@ import { planContentBatch } from "./lib/content-batch.mjs";
 import { reconcileContentPackage } from "./lib/content-package-reconcile.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
 import { CONTENT_RELEASE_RECEIPT_VERSION, readContentReleaseReceipt, receiptTargetCollections } from "./lib/content-release-receipt.mjs";
+import { resolveContentLifecycleTimes } from "./lib/content-lifecycle-time.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -152,6 +153,11 @@ export async function finalizeContentRelease(packageInfo) {
   const sourceFile = path.join(contentRoot, packageInfo.kind === "content" ? "observations" : packageInfo.kind === "article" ? "articles" : packageInfo.kind === "profile" ? "profile" : packageInfo.kind === "businessObservation" ? "business-observations" : "products", `${packageInfo.target}.json`);
   if (!(await isFile(sourceFile))) throw new Error(`independent content target is missing during finalize: ${packageInfo.target}`);
   const targetCollections = receiptTargetCollections(packageInfo, { packageDirectory: packageInfo.packageDirectory });
+  const lifecycleTimes = resolveContentLifecycleTimes(packageInfo, {
+    activeRecord: packageInfo.activeReceipt || null,
+    finalize: true,
+    now: packageInfo.now || (() => new Date().toISOString()),
+  });
   const completion = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: packageInfo.contentReleaseId,
@@ -170,15 +176,16 @@ export async function finalizeContentRelease(packageInfo) {
     deploymentId: packageInfo.deploymentId,
     productVersion: packageInfo.baseProductVersion,
     productCommit: packageInfo.baseProductCommit,
+    ...lifecycleTimes,
     ...targetCollections,
     sourcePath: path.relative(packageInfo.sourceRoot || root, sourceFile),
-    finalizedAt: new Date().toISOString(),
+    finalizedAt: lifecycleTimes.revisionReleasedAt,
   };
   const completionPath = path.join(packageInfo.packageDirectory, "completion.json");
   await writeJsonAtomically(completionPath, completion);
   const factPath = path.join(contentRoot, "finalized", packageInfo.kind, `${packageInfo.target}.json`);
   await writeJsonAtomically(factPath, completion);
-  return { completionPath, factPath };
+  return { completionPath, factPath, lifecycleTimes };
 }
 
 export async function prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, sourceRoot = root } = {}) {
@@ -265,7 +272,9 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     sources: sourceIds(content.value),
     sourceRefs: changeSet?.sourceRefs || sourceIds(content.value),
     reviewedAt: review.reviewedAt,
-    publishedAt: content.value.publishedAt || content.value.updatedAt || null,
+    firstPublishedAt: null,
+    revisionReleasedAt: null,
+    publishedAt: null,
     deploymentId: null,
     publicVerify: null,
     baseSiteArtifactId: immutableArtifact?.baseSiteArtifactId || null,
@@ -535,12 +544,15 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
       env,
       edgeonePath: edgeone,
     });
+    const projectedReceipt = completedPublication.publicVerify?.contentManifest?.contentReleaseReceipts?.find((item) => item.contentReleaseId === manifest.contentReleaseId) || null;
+    const projectedLifecycleTimes = resolveContentLifecycleTimes(projectedReceipt || manifest, { now: () => "1970-01-01T00:00:00.000Z" });
     const transported = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", {
       sitePublicationId: completedPublication.sitePublicationId,
       deploymentId: completedPublication.deploymentId,
       baseSiteArtifactId: completedPublication.contentManifest?.baseSiteArtifactId || manifest.baseSiteArtifactId || null,
       baseProductVersion: currentRelease.version,
       baseProductCommit: currentRelease.commit,
+      ...projectedLifecycleTimes,
       transportedAt: new Date().toISOString(),
       attempts: (manifest.attempts || 0) + 1,
       recoverable: false,
@@ -548,8 +560,8 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     });
     const verifying = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { deploymentId: transported.deploymentId, sitePublicationId: transported.sitePublicationId, publicVerify: completedPublication.publicVerify, recoverable: false });
     const verified = verifying;
-    const finalized = await finalizeContentRelease({ ...packageInfo, ...verified });
-    const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { completionPath: finalized.completionPath, recoverable: false });
+    const finalized = await finalizeContentRelease({ ...packageInfo, ...verified, ...projectedLifecycleTimes });
+    const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { ...finalized.lifecycleTimes, completionPath: finalized.completionPath, recoverable: false });
     await writeJsonAtomically(path.join(packageInfo.packageDirectory, "dist", "client", "content-manifest.json"), finalizedManifest);
     const completed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "released", { publicVerify: finalizedManifest.publicVerify, recoverable: false, failure: null });
     await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "released", data: { deploymentId: completed.deploymentId } });

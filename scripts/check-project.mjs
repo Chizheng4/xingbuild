@@ -77,6 +77,7 @@ const requiredFiles = [
   "scripts/lib/content-release-readiness.mjs",
   "scripts/lib/content-package-reconcile.mjs",
   "scripts/lib/content-replacement.mjs",
+  "scripts/lib/content-lifecycle-time.mjs",
   "tests/product-content-isolation.test.mjs",
   "scripts/verify-public-release.mjs",
   "edgeone.json",

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 
 export const CONTENT_RELEASE_RECEIPT_VERSION = "content-release-receipt-v1";
 
@@ -80,6 +81,20 @@ async function readProjection(packageDirectory, release, collections) {
   if (projection.baseSiteArtifactId != null) {
     assertEqual(projection.baseSiteArtifactId, release.baseSiteArtifactId, "projection baseSiteArtifactId", packageDirectory);
   }
+  const lifecycleTimes = resolveContentLifecycleTimes(release, { now: () => "1970-01-01T00:00:00.000Z" });
+  const declaresLifecycleFields = Object.hasOwn(projection, "firstPublishedAt") || Object.hasOwn(projection, "revisionReleasedAt");
+  if (declaresLifecycleFields) {
+    for (const field of ["firstPublishedAt", "revisionReleasedAt", "publishedAt"]) {
+      assertEqual(projection[field] ?? null, lifecycleTimes[field] ?? null, `projection ${field}`, packageDirectory);
+    }
+  }
+  // Old package projections sometimes copied the content body's date rather
+  // than the lifecycle receipt. Their missing new fields are legacy evidence,
+  // so keep them readable; once either new field is declared, publishedAt must
+  // be the first-publication compatibility projection.
+  if (projection.publishedAt != null && (projection.firstPublishedAt != null || projection.revisionReleasedAt != null)) {
+    assertEqual(projection.publishedAt, lifecycleTimes.publishedAt, "projection publishedAt", packageDirectory);
+  }
   // A package projection is a derived, single-release view. Global active
   // collections belong to the Coordinator's ActiveContentSet and may be
   // absent or stale in legacy/finalized package output. The receipt and
@@ -133,6 +148,13 @@ export async function readContentReleaseReceipt(packageDirectory) {
   for (const field of ["sitePublicationId", "deploymentId", "productVersion", "productCommit"]) {
     if (completion[field] != null) assertEqual(completion[field], release[field] ?? release[`base${field[0].toUpperCase()}${field.slice(1)}`], `completion ${field}`, packageDirectory);
   }
+  const lifecycleTimes = resolveContentLifecycleTimes(release, { now: () => "1970-01-01T00:00:00.000Z" });
+  const declaresLifecycleFields = Object.hasOwn(completion, "firstPublishedAt") || Object.hasOwn(completion, "revisionReleasedAt");
+  if (declaresLifecycleFields) {
+    for (const field of ["firstPublishedAt", "revisionReleasedAt", "publishedAt"]) {
+      assertEqual(completion[field] ?? null, lifecycleTimes[field] ?? null, `completion ${field}`, packageDirectory);
+    }
+  }
   const projectionEvidence = await readProjection(packageDirectory, release, collections);
   const receiptIdentity = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
@@ -146,6 +168,9 @@ export async function readContentReleaseReceipt(packageDirectory) {
     changeSetId: release.changeSetId || null,
     changedTargets: release.changedTargets || [],
     baseSiteArtifactId: release.baseSiteArtifactId,
+    firstPublishedAt: lifecycleTimes.firstPublishedAt,
+    revisionReleasedAt: lifecycleTimes.revisionReleasedAt,
+    publishedAt: lifecycleTimes.publishedAt,
     ...collections,
   };
   return {
@@ -164,6 +189,7 @@ export async function readContentReleaseReceipt(packageDirectory) {
 
 export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt.baseSiteArtifactId } = {}) {
   const collections = receiptTargetCollections(receipt, { packageDirectory: receipt.packageDirectory || receipt.contentReleaseId });
+  const lifecycleTimes = resolveContentLifecycleTimes(receipt, { now: () => "1970-01-01T00:00:00.000Z" });
   const identity = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: receipt.contentReleaseId,
@@ -176,6 +202,9 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     changeSetId: receipt.changeSetId || null,
     changedTargets: receipt.changedTargets || [],
     baseSiteArtifactId,
+    firstPublishedAt: lifecycleTimes.firstPublishedAt,
+    revisionReleasedAt: lifecycleTimes.revisionReleasedAt,
+    publishedAt: lifecycleTimes.publishedAt,
     ...collections,
   };
   return { ...identity, receiptHash: stableHash(identity) };

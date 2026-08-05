@@ -228,8 +228,19 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     const sourceDirectory = candidatePackageDirectory ? path.join(candidatePackageDirectory, "source") : null;
     const candidateLogicalSlot = contentLogicalSlotId(additionalContentManifest);
     const activeIndex = activeContentReleases.findIndex((item) => contentLogicalSlotId(item) === candidateLogicalSlot);
+    let lifecycleTimes = null;
+    if (activeIndex !== -1) {
+      replacement = await validateContentReplacement({
+        candidate: additionalContentManifest,
+        candidatePackageDirectory,
+        activeReceipt: activeContentReleases[activeIndex],
+        productArtifactId: productArtifact?.baseSiteArtifactId || null,
+        sourceRoot,
+      });
+      lifecycleTimes = replacement.lifecycleTimes;
+    }
     const candidateReceipt = contentReceiptProjection(
-      { ...additionalContentManifest, packageDirectory: candidatePackageDirectory },
+      { ...additionalContentManifest, ...lifecycleTimes, packageDirectory: candidatePackageDirectory },
       { baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest.baseSiteArtifactId || null },
     );
     const candidateEntry = {
@@ -243,13 +254,6 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     if (activeIndex === -1) {
       activeContentReleases.push(candidateEntry);
     } else {
-      replacement = await validateContentReplacement({
-        candidate: additionalContentManifest,
-        candidatePackageDirectory,
-        activeReceipt: activeContentReleases[activeIndex],
-        productArtifactId: productArtifact?.baseSiteArtifactId || null,
-        sourceRoot,
-      });
       activeContentReleases.splice(activeIndex, 1, { ...candidateEntry, receiptStatus: "replacement-candidate", replacement });
     }
   }

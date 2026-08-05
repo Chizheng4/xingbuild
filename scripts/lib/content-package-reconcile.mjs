@@ -5,6 +5,7 @@ import { hashFile } from "./observation-content.mjs";
 import { readBaseSiteArtifact } from "./base-site-artifact.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { CONTENT_PACKAGE_CONTRACT_VERSION, contentPackageRevisionIdentity, contentPackageSlotId, selectReleasedContentPackage } from "./content-replacement.mjs";
+import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 
 export { CONTENT_PACKAGE_CONTRACT_VERSION } from "./content-replacement.mjs";
 
@@ -69,6 +70,10 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   }
   const activePackage = await selectReleasedContentPackage(releasedPackages, contentReleaseId);
   if (!activePackage) throw new Error(`content reconcile requires one released active package: ${contentReleaseId}`);
+  const lifecycleTimes = resolveContentLifecycleTimes(original, {
+    activeRecord: activePackage.release,
+    now: () => "1970-01-01T00:00:00.000Z",
+  });
 
   const sourceDirectory = path.join(revisionDirectory, "source");
   await mkdir(sourceDirectory, { recursive: true });
@@ -87,6 +92,9 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     baseSiteArtifact,
     baseProductVersion: baseSiteArtifact.productVersion,
     baseProductCommit: baseSiteArtifact.productCommit,
+    firstPublishedAt: lifecycleTimes.firstPublishedAt,
+    revisionReleasedAt: null,
+    publishedAt: lifecycleTimes.firstPublishedAt,
     packageRevisionId: identity.packageRevisionId,
     revisionHash: identity.revisionHash,
     revisionTuple: identity.tuple,

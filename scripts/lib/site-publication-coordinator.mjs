@@ -4,6 +4,7 @@ import path from "node:path";
 import { assertProductContentCompatibility } from "./content-compatibility.mjs";
 import { acquireSitePublicationLease, releaseSitePublicationLease, assertSitePublicationEvidence } from "./site-publication.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
+import { assertContentLifecycleProjection } from "./content-lifecycle-time.mjs";
 import {
   assertFixedPublishTarget,
   assertPublishAuthorization,
@@ -63,6 +64,12 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
   if (!current.deploymentId || !publicVerify) throw new Error("SitePublication finalize requires deploymentId and publicVerify");
   if (publicVerify.sitePublicationId !== current.sitePublicationId || publicVerify.snapshotHash !== current.snapshotHash) {
     throw new Error("SitePublication finalize evidence identity mismatch");
+  }
+  const expectedReceipts = current.contentManifest?.contentReleaseReceipts || [];
+  const actualReceipts = publicVerify.contentManifest?.contentReleaseReceipts || [];
+  for (const expected of expectedReceipts) {
+    const actual = actualReceipts.find((item) => item.contentReleaseId === expected.contentReleaseId);
+    if (actual) assertContentLifecycleProjection(actual, expected, expected.contentReleaseId);
   }
   const expected = [...(current.contentReleaseIds || [])].sort();
   const actual = [...(publicVerify.activeContentReleaseIds || [])].sort();
@@ -153,6 +160,7 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       || actual.contentHash !== expected.contentHash || actual.kind !== expected.kind || actual.target !== expected.target) {
       throw new Error(`public content manifest receipt identity mismatch: ${expected.contentReleaseId}`);
     }
+    assertContentLifecycleProjection(actual, expected, expected.contentReleaseId);
   }
   if ((contentManifest.candidatePackageRevisionId || null) !== (publication.candidatePackageRevisionId || null)) {
     throw new Error("public content manifest candidate package revision identity mismatch");

@@ -79,11 +79,13 @@ test("approved logical replacement permits a content hash update while retaining
       sources: [],
       sourceRefs: [],
       reviewedAt: null,
-      publishedAt: null,
+      publishedAt: "2026-08-04T13:46:03.884Z",
       receiptHash: "receipt-old",
     };
     const result = await validateContentReplacement({ candidate, candidatePackageDirectory: candidateDirectory, activeReceipt, productArtifactId: "v0.25.13-test", sourceRoot: root });
     assert.equal(result.previousPackageRevisionId, "old-revision");
+    assert.equal(result.lifecycleTimes.firstPublishedAt, activeReceipt.publishedAt);
+    assert.equal(result.lifecycleTimes.revisionReleasedAt, null);
     await assert.rejects(
       validateContentReplacement({ candidate: { ...candidate, changeSetId: null, operations: [] }, candidatePackageDirectory: candidateDirectory, activeReceipt, productArtifactId: "v0.25.13-test", sourceRoot: root }),
       /approved ChangeSet lineage/,
