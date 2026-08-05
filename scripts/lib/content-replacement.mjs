@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 import { getContentLifecycleAdapter } from "./content-lifecycle-adapter.mjs";
+import { contentReceiptId, resolveContentSlotCandidate } from "./content-slot-registry.mjs";
 
 export const CONTENT_PACKAGE_CONTRACT_VERSION = "content-package-revision-v1";
 export const CONTENT_REPLACEMENT_STATES = Object.freeze(new Set(["prepared", "built", "recoverable", "transported", "verifying"]));
@@ -119,7 +120,7 @@ export async function selectReleasedContentPackage(candidates, contentReleaseId)
   return leaves[0];
 }
 
-export async function validateContentReplacement({ candidate, candidatePackageDirectory, activeReceipt, productArtifactId, sourceRoot } = {}) {
+export async function validateContentReplacement({ candidate, candidatePackageDirectory, activeReceipt, activeSlot = null, registry = null, productArtifactId, sourceRoot } = {}) {
   const location = candidatePackageDirectory || candidate?.packageRevisionId || "content replacement";
   if (!CONTENT_REPLACEMENT_STATES.has(candidate?.state)) {
     throw new Error(`content replacement state is not eligible: ${candidate?.state || "missing"}`);
@@ -136,9 +137,20 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   }
   const lifecycleTimes = assertReplacementFacts(candidate, activeReceipt, location);
   await assertContentPackageRevisionRecord(candidate, candidatePackageDirectory);
-  const activeSlotId = contentPackageSlotId(activeReceipt);
-  if (candidate.supersedesPackageId !== activeSlotId) {
-    throw new Error(`content replacement does not supersede the active package slot: ${location}`);
+  let resolvedLineage = null;
+  if (registry) {
+    resolvedLineage = resolveContentSlotCandidate({ registry, candidate });
+    if (activeSlot && activeSlot.activeReceiptId !== resolvedLineage.predecessorReceiptId) {
+      throw new Error(`content replacement registry predecessor drift: ${location}`);
+    }
+    if (activeReceipt && contentReceiptId(activeReceipt) !== resolvedLineage.predecessorReceiptId) {
+      throw new Error(`content replacement active receipt is not the registry predecessor: ${location}`);
+    }
+  } else {
+    const activeSlotId = contentPackageSlotId(activeReceipt);
+    if (candidate.supersedesPackageId !== activeSlotId) {
+      throw new Error(`content replacement does not supersede the active package slot: ${location}`);
+    }
   }
   if (!productArtifactId || candidate.baseSiteArtifactId !== productArtifactId) {
     throw new Error(`content replacement baseSiteArtifactId drift: ${location}`);
@@ -164,7 +176,9 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   return {
     contentReleaseId: candidate.contentReleaseId,
     packageRevisionId: candidate.packageRevisionId,
-    supersedesPackageId: candidate.supersedesPackageId,
+    supersedesPackageId: resolvedLineage?.predecessorPackageSlotId || candidate.supersedesPackageId,
+    predecessorReceiptId: resolvedLineage?.predecessorReceiptId || contentReceiptId(activeReceipt),
+    predecessorPackageSlotId: resolvedLineage?.predecessorPackageSlotId || contentPackageSlotId(activeReceipt),
     previousPackageRevisionId: activeReceipt.packageRevisionId || null,
     previousReceiptHash: activeReceipt.receiptHash,
     lifecycleTimes,

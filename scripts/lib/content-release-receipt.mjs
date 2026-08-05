@@ -151,6 +151,15 @@ export async function readContentReleaseReceipt(packageDirectory) {
   if (completion.packageRevisionId != null || release.packageRevisionId != null) {
     assertEqual(completion.packageRevisionId || null, release.packageRevisionId || null, "completion packageRevisionId", packageDirectory);
   }
+  for (const field of ["predecessorReceiptId", "supersedesPackageId"]) {
+    // These lineage fields were added after the original receipt corpus. An
+    // absent value in a legacy completion fact is compatible; once the
+    // completion explicitly carries a field it must match the immutable
+    // receipt exactly.
+    if (Object.hasOwn(completion, field)) {
+      assertEqual(completion[field] || null, release[field] || null, `completion ${field}`, packageDirectory);
+    }
+  }
   for (const field of ["sitePublicationId", "deploymentId", "productVersion", "productCommit"]) {
     if (completion[field] != null) assertEqual(completion[field], release[field] ?? release[`base${field[0].toUpperCase()}${field.slice(1)}`], `completion ${field}`, packageDirectory);
   }
@@ -167,6 +176,8 @@ export async function readContentReleaseReceipt(packageDirectory) {
     contentReleaseId: release.contentReleaseId,
     logicalContentId: release.logicalContentId || null,
     packageRevisionId: release.packageRevisionId || null,
+    predecessorReceiptId: release.predecessorReceiptId || null,
+    supersedesPackageId: release.supersedesPackageId || null,
     contentHash: release.contentHash,
     kind: release.kind,
     target: release.target,
@@ -203,6 +214,8 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     contentReleaseId: receipt.contentReleaseId,
     logicalContentId: receipt.logicalContentId || null,
     packageRevisionId: receipt.packageRevisionId || null,
+    predecessorReceiptId: receipt.predecessorReceiptId || null,
+    supersedesPackageId: receipt.supersedesPackageId || null,
     contentHash: receipt.contentHash,
     kind: receipt.kind,
     target: receipt.target,
@@ -217,5 +230,6 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     publishedAt: lifecycleTimes.publishedAt,
     ...collections,
   };
+  if (receipt.predecessorReceiptId) identity.predecessorReceiptId = receipt.predecessorReceiptId;
   return { ...identity, receiptHash: stableHash(identity) };
 }

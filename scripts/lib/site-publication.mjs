@@ -6,7 +6,9 @@ import { createHash } from "node:crypto";
 import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { contentReceiptProjection, contentTargetCollectionNames, readContentReleaseReceipt, receiptTargetCollections } from "./content-release-receipt.mjs";
-import { contentLogicalSlotId, selectReleasedContentPackage, validateContentReplacement } from "./content-replacement.mjs";
+import { contentLogicalSlotId, validateContentReplacement } from "./content-replacement.mjs";
+import { compareAndSwapContentSlot, contentReceiptId, contentLogicalContentId, ensureContentSlotRegistry, resolveContentSlotCandidate } from "./content-slot-registry.mjs";
+import { assertContentSlotArtifactCompatible } from "./base-site-artifact.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
@@ -22,6 +24,19 @@ export async function acquireSitePublicationLease({ publicationDirectory, leaseD
 }
 
 export const releaseSitePublicationLease = releaseContentReleasePackageLease;
+
+function inferredSourceRoot(releasesRoot) {
+  const resolved = path.resolve(releasesRoot);
+  return path.basename(path.dirname(resolved)) === ".content-workspace"
+    ? path.resolve(resolved, "..", "..")
+    : path.resolve(resolved, "..");
+}
+
+function resolveSourceRootForReleases(releasesRoot, sourceRoot) {
+  const candidate = path.resolve(sourceRoot || inferredSourceRoot(releasesRoot));
+  const releases = path.resolve(releasesRoot);
+  return releases === candidate || releases.startsWith(`${candidate}${path.sep}`) ? candidate : inferredSourceRoot(releasesRoot);
+}
 
 export async function validateUploadQuota(directory, { maxFiles = 10000, maxFileBytes = 50 * 1024 * 1024, maxTotalBytes = 500 * 1024 * 1024 } = {}) {
   let files = 0;
@@ -43,41 +58,41 @@ export async function validateUploadQuota(directory, { maxFiles = 10000, maxFile
   return { files, totalBytes };
 }
 
-export async function readActiveContentReleases(releasesRoot) {
-  const releasedById = new Map();
-  async function collectCandidate(packageDirectory) {
-    const releasePath = path.join(packageDirectory, "content-release.json");
-    let release;
-    try {
-      release = JSON.parse(await readFile(releasePath, "utf8"));
-    } catch (error) {
-      if (error.code === "ENOENT") return;
-      throw new Error(`content release lifecycle fact is unreadable: ${releasePath}: ${error.message}`);
-    }
-    if (release.state !== "released") return;
-    if (!release.contentReleaseId) throw new Error(`released content lifecycle fact has no contentReleaseId: ${releasePath}`);
-    const slotId = contentLogicalSlotId(release);
-    const values = releasedById.get(slotId) || [];
-    values.push({ packageDirectory, release });
-    releasedById.set(slotId, values);
-  }
-  for (const entry of await readdir(releasesRoot, { withFileTypes: true }).catch(() => [])) {
-    if (!entry.isDirectory()) continue;
-    const packageDirectory = path.join(releasesRoot, entry.name);
-    await collectCandidate(packageDirectory);
-    const revisionsRoot = path.join(packageDirectory, "revisions");
-    for (const revision of await readdir(revisionsRoot, { withFileTypes: true }).catch(() => [])) {
-      if (revision.isDirectory()) await collectCandidate(path.join(revisionsRoot, revision.name));
-    }
-  }
+export async function readActiveContentReleases(releasesRoot, { sourceRoot } = {}) {
+  const resolvedSourceRoot = resolveSourceRootForReleases(releasesRoot, sourceRoot);
+  const registry = await ensureContentSlotRegistry({ sourceRoot: resolvedSourceRoot, releasesRoot });
   const active = [];
-  for (const [contentSlotId, candidates] of releasedById) {
-    const selected = await selectReleasedContentPackage(candidates, contentSlotId);
-    const receipt = await readContentReleaseReceipt(selected.packageDirectory);
-    const sourceDirectory = path.join(selected.packageDirectory, "source");
-    active.push({ ...receipt, sourceDirectory, mediaPaths: await collectMediaPaths(sourceDirectory) });
+  for (const slot of registry.slots) {
+    let packageDirectory = path.resolve(resolvedSourceRoot, slot.activePackageDirectory);
+    if (!(await stat(path.join(packageDirectory, "content-release.json")).catch(() => null))) {
+      // Registries created by the first v0.25.16 migration stored paths
+      // relative to `.content-workspace`; accept that representation while
+      // the new source-root-relative format is rolled forward.
+      packageDirectory = path.resolve(resolvedSourceRoot, ".content-workspace", slot.activePackageDirectory);
+    }
+    const receipt = await readContentReleaseReceipt(packageDirectory);
+    if (!receipt) throw new Error(`content slot registry active receipt is missing or not released: ${slot.logicalContentId}`);
+    if (contentReceiptId(receipt) !== slot.activeReceiptId) {
+      throw new Error(`content slot registry active receipt identity drift: ${slot.logicalContentId}`);
+    }
+    if (contentLogicalContentId(receipt) !== slot.logicalContentId) {
+      throw new Error(`content slot registry logical identity drift: ${slot.logicalContentId}`);
+    }
+    const sourceDirectory = path.join(packageDirectory, "source");
+    const projectedReceipt = contentReceiptProjection({ ...receipt, logicalContentId: slot.logicalContentId, predecessorReceiptId: slot.predecessorReceiptId || null }, { baseSiteArtifactId: receipt.baseSiteArtifactId });
+    active.push({
+      ...receipt,
+      logicalContentId: slot.logicalContentId,
+      predecessorReceiptId: slot.predecessorReceiptId || null,
+      receiptId: slot.activeReceiptId,
+      registrySlot: slot,
+      receiptHash: projectedReceipt.receiptHash,
+      packageDirectory,
+      sourceDirectory,
+      mediaPaths: await collectMediaPaths(sourceDirectory),
+    });
   }
-  return active.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
+  return active.sort((a, b) => a.logicalContentId.localeCompare(b.logicalContentId));
 }
 
 async function collectMediaPaths(sourceDirectory) {
@@ -187,6 +202,11 @@ export function assertContentManifestComplete(manifest, receipts) {
   const ids = receipts.map((item) => item.contentReleaseId).sort();
   const actualIds = [...new Set(manifest.activeContentReleaseIds || [])].sort();
   if (JSON.stringify(actualIds) !== JSON.stringify(ids)) throw new Error("content manifest activeContentReleaseIds are incomplete");
+  if (manifest.activeReceiptIds != null) {
+    const expectedReceiptIds = receipts.map((item) => item.receiptId || contentReceiptId(item)).sort();
+    const actualReceiptIds = [...new Set(manifest.activeReceiptIds || [])].sort();
+    if (JSON.stringify(actualReceiptIds) !== JSON.stringify(expectedReceiptIds)) throw new Error("content manifest activeReceiptIds are incomplete");
+  }
   for (const field of contentTargetCollectionNames) {
     const expected = [...new Set(receipts.flatMap((item) => item[field] || []))].sort();
     const actual = [...new Set(manifest[field] || [])].sort();
@@ -212,6 +232,7 @@ export function createActiveContentSet(receipts = []) {
   const activeContentSet = {
     ...collections,
     activeContentReleaseIds: activeContentReleases.map((item) => item.contentReleaseId),
+    activeReceiptIds: activeContentReleases.map((item) => item.receiptId || contentReceiptId(item)).sort(),
     mediaPaths: [...new Set(activeContentReleases.flatMap((item) => item.mediaPaths || []))].sort(),
     contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, { baseSiteArtifactId: item.baseSiteArtifactId })),
   };
@@ -220,9 +241,21 @@ export function createActiveContentSet(receipts = []) {
 }
 
 export async function createSitePublication({ productClient, releasesRoot, outputRoot, publicationRoot = null, additionalContentManifest = null, candidatePackageDirectory = null, assemble = false, sourceRoot = process.cwd() } = {}) {
+  sourceRoot = resolveSourceRootForReleases(releasesRoot, sourceRoot);
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
-  const activeContentReleases = await readActiveContentReleases(releasesRoot);
+  const slotRegistry = await ensureContentSlotRegistry({ sourceRoot, releasesRoot });
+  const activeContentReleases = await readActiveContentReleases(releasesRoot, { sourceRoot });
   const productArtifact = await readFile(path.join(productClient, "base-site-artifact.json"), "utf8").then(JSON.parse).catch(() => null);
+  const requiredKinds = [...new Set([
+    ...activeContentReleases.map((item) => item.kind),
+    ...(additionalContentManifest?.kind ? [additionalContentManifest.kind] : []),
+  ])];
+  if (productArtifact) {
+    assertContentSlotArtifactCompatible(productArtifact, {
+      registryMode: slotRegistry.mode || "legacy",
+      requiredKinds,
+    });
+  }
   let replacement = null;
   if (additionalContentManifest?.contentReleaseId && additionalContentManifest.contentHash && additionalContentManifest.target) {
     const sourceDirectory = candidatePackageDirectory ? path.join(candidatePackageDirectory, "source") : null;
@@ -230,22 +263,32 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     const activeIndex = activeContentReleases.findIndex((item) => contentLogicalSlotId(item) === candidateLogicalSlot);
     let lifecycleTimes = null;
     if (activeIndex !== -1) {
+      const resolvedCandidate = resolveContentSlotCandidate({ registry: slotRegistry, candidate: additionalContentManifest });
       replacement = await validateContentReplacement({
         candidate: additionalContentManifest,
         candidatePackageDirectory,
         activeReceipt: activeContentReleases[activeIndex],
+        activeSlot: resolvedCandidate.slot,
+        registry: slotRegistry,
         productArtifactId: productArtifact?.baseSiteArtifactId || null,
         sourceRoot,
       });
       lifecycleTimes = replacement.lifecycleTimes;
     }
     const candidateReceipt = contentReceiptProjection(
-      { ...additionalContentManifest, ...lifecycleTimes, packageDirectory: candidatePackageDirectory },
+      {
+        ...additionalContentManifest,
+        ...lifecycleTimes,
+        packageDirectory: candidatePackageDirectory,
+        predecessorReceiptId: replacement?.predecessorReceiptId || null,
+        supersedesPackageId: replacement?.supersedesPackageId || additionalContentManifest.supersedesPackageId || null,
+      },
       { baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest.baseSiteArtifactId || null },
     );
     const candidateEntry = {
       ...additionalContentManifest,
       ...candidateReceipt,
+      predecessorReceiptId: replacement?.predecessorReceiptId || null,
       packageDirectory: candidatePackageDirectory,
       sourceDirectory,
       mediaPaths: await collectMediaPaths(sourceDirectory),
@@ -265,6 +308,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     commit: productRelease.commit,
     ...Object.fromEntries(contentTargetCollectionNames.map((field) => [field, activeContentSet[field]])),
     activeContentReleaseIds: activeContentSet.activeContentReleaseIds,
+    activeReceiptIds: activeContentSet.activeReceiptIds,
     mediaPaths: activeContentSet.mediaPaths,
     baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest?.baseSiteArtifactId || null,
     contentReleaseReceipts: activeContentSet.contentReleaseReceipts,
@@ -287,11 +331,13 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     contentReleaseIds: contentManifest.activeContentReleaseIds,
     candidateContentReleaseId: candidate?.contentReleaseId || null,
     candidatePackageRevisionId: candidate?.packageRevisionId || null,
+    candidatePackageDirectory: candidatePackageDirectory ? path.relative(sourceRoot, candidatePackageDirectory) : null,
     contentReplacement: replacement,
     targetPath: candidate?.targetPath || null,
     contentManifest,
     snapshotHash,
     contentPackageRevisionIds: activeContentReleases.map((item) => item.packageRevisionId).filter(Boolean),
+    contentSlotRegistryRevision: slotRegistry.registryRevision,
     publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: id, snapshotHash }),
     deploymentId: null,
     publicVerify: null,

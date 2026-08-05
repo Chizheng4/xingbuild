@@ -5,6 +5,7 @@ import { assertProductContentCompatibility } from "./content-compatibility.mjs";
 import { acquireSitePublicationLease, releaseSitePublicationLease, assertSitePublicationEvidence } from "./site-publication.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { assertContentLifecycleProjection } from "./content-lifecycle-time.mjs";
+import { compareAndSwapContentSlot, contentLogicalContentId, contentReceiptId, ensureContentSlotRegistry, restoreContentSlot } from "./content-slot-registry.mjs";
 import {
   assertFixedPublishTarget,
   assertPublishAuthorization,
@@ -59,7 +60,7 @@ function identityDriftError(message, observedIdentity = {}) {
   return error;
 }
 
-export async function finalizeSitePublication({ publicationDirectory, publicVerify } = {}) {
+export async function finalizeSitePublication({ publicationDirectory, publicVerify, sourceRoot = null } = {}) {
   const current = await readSitePublicationRecord(publicationDirectory);
   if (!current.deploymentId || !publicVerify) throw new Error("SitePublication finalize requires deploymentId and publicVerify");
   if (publicVerify.sitePublicationId !== current.sitePublicationId || publicVerify.snapshotHash !== current.snapshotHash) {
@@ -74,7 +75,71 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
   const expected = [...(current.contentReleaseIds || [])].sort();
   const actual = [...(publicVerify.activeContentReleaseIds || [])].sort();
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("SitePublication finalize evidence is incomplete");
-  return writePublicationRecord(publicationDirectory, { ...current, state: "released", publicVerify, releasedAt: current.releasedAt || new Date().toISOString(), failure: null });
+  let contentSlotTransition = current.contentSlotTransition || null;
+  if (current.candidateContentReleaseId && !contentSlotTransition) {
+    const candidate = actualReceipts.find((item) => item.contentReleaseId === current.candidateContentReleaseId
+      && (current.candidatePackageRevisionId == null || item.packageRevisionId === current.candidatePackageRevisionId));
+    if (!candidate) throw new Error("SitePublication finalize candidate receipt projection is missing");
+    const resolvedSourceRoot = sourceRoot || path.resolve(publicationDirectory, "..", "..", "..");
+    const logicalContentId = contentLogicalContentId(candidate);
+    if (!logicalContentId) throw new Error("SitePublication finalize candidate logicalContentId is missing");
+    const registry = await ensureContentSlotRegistry({ sourceRoot: resolvedSourceRoot });
+    const candidateReceiptId = contentReceiptId(candidate);
+    const existingSlot = registry.slots.find((slot) => slot.logicalContentId === logicalContentId);
+    if (existingSlot?.activeReceiptId === candidateReceiptId) {
+      contentSlotTransition = { type: "idempotent", logicalContentId, predecessorReceiptId: existingSlot.predecessorReceiptId || null, activeReceiptId: existingSlot.activeReceiptId, registryRevision: registry.registryRevision };
+    } else {
+      const candidatePackageDirectory = current.candidatePackageDirectory
+        ? path.resolve(resolvedSourceRoot, current.candidatePackageDirectory)
+        : null;
+      const transition = await compareAndSwapContentSlot({
+        sourceRoot: resolvedSourceRoot,
+        logicalContentId,
+        expectedReceiptId: current.contentReplacement?.predecessorReceiptId || null,
+        expectedRegistryRevision: current.contentSlotRegistryRevision,
+        candidate: {
+          ...candidate,
+          logicalContentId,
+          predecessorReceiptId: current.contentReplacement?.predecessorReceiptId || candidate.predecessorReceiptId || null,
+        },
+        transition: { activePackageDirectory: candidatePackageDirectory ? path.relative(resolvedSourceRoot, candidatePackageDirectory) : null },
+      });
+      contentSlotTransition = {
+        type: "compare-and-swap",
+        logicalContentId,
+        predecessorReceiptId: transition.previousSlot?.activeReceiptId || null,
+        activeReceiptId: transition.nextSlot.activeReceiptId,
+        registryRevision: transition.registry.registryRevision,
+        previousSlot: transition.previousSlot,
+        nextSlot: transition.nextSlot,
+      };
+    }
+  }
+  try {
+    return await writePublicationRecord(publicationDirectory, {
+      ...current,
+      contentSlotTransition,
+      contentSlotRegistryRevision: contentSlotTransition?.registryRevision || current.contentSlotRegistryRevision || null,
+      state: "released",
+      publicVerify,
+      releasedAt: current.releasedAt || new Date().toISOString(),
+      failure: null,
+    });
+  } catch (error) {
+    // Registry CAS and publication state are separate durable files. If the
+    // publication record cannot be committed after a fresh CAS, compensate
+    // only that exact transition; never leave an active slot ahead of its
+    // finalized SitePublication.
+    if (contentSlotTransition?.type === "compare-and-swap" && contentSlotTransition.previousSlot) {
+      await restoreContentSlot({
+        sourceRoot: sourceRoot || path.resolve(publicationDirectory, "..", "..", ".."),
+        logicalContentId: contentSlotTransition.logicalContentId,
+        expectedReceiptId: contentSlotTransition.activeReceiptId,
+        previousSlot: contentSlotTransition.previousSlot,
+      }).catch(() => {});
+    }
+    throw error;
+  }
 }
 
 export async function rollbackSitePublication({ publicationDirectory, reason = "explicit rollback" } = {}) {
@@ -148,6 +213,9 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
     throw identityDriftError("public content manifest ProductArtifact identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
   }
   const actualIds = assertExactArray(contentManifest.activeContentReleaseIds, publication.contentReleaseIds, "activeContentReleaseIds");
+  if (publication.contentManifest?.activeReceiptIds) {
+    assertExactArray(contentManifest.activeReceiptIds, publication.contentManifest.activeReceiptIds, "activeReceiptIds");
+  }
   for (const field of ["publishedSlugs", "publishedArticleSlugs", "practiceIds", "profileIds", "businessObservationIds", "mediaPaths"]) {
     assertExactArray(contentManifest[field], publication.contentManifest?.[field], field);
   }
@@ -202,6 +270,7 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       sitePublicationId: contentManifest.sitePublicationId,
       snapshotHash: contentManifest.snapshotHash,
       baseSiteArtifactId: contentManifest.baseSiteArtifactId,
+      activeReceiptIds: contentManifest.activeReceiptIds || [],
       publishedSlugs: contentManifest.publishedSlugs,
       publishedArticleSlugs: contentManifest.publishedArticleSlugs,
       practiceIds: contentManifest.practiceIds,
@@ -327,7 +396,7 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
     const productVerify = { version: current.productVersion, commit: current.productCommit, verifiedAt: publicVerify.verifiedAt };
     const contentVerify = { activeContentReleaseIds: publicVerify.activeContentReleaseIds, snapshotHash: publicVerify.snapshotHash, contentManifest: publicVerify.contentManifest, verifiedAt: publicVerify.verifiedAt };
     assertSitePublicationEvidence({ deployment: current.deployment || { deploymentId: current.deploymentId }, publicVerify, productVerify, contentVerify });
-    return await finalizeSitePublication({ publicationDirectory: publication.client, publicVerify }).then((finalized) => writePublicationRecord(publication.client, { ...finalized, productVerify, contentVerify }));
+    return await finalizeSitePublication({ publicationDirectory: publication.client, publicVerify, sourceRoot }).then((finalized) => writePublicationRecord(publication.client, { ...finalized, productVerify, contentVerify }));
   } catch (error) {
     const state = error.recoverable === true ? "recoverable" : "failed";
     const propagation = error.propagationObservations?.length

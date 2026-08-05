@@ -3,9 +3,10 @@ import path from "node:path";
 import { contentRootDirectory } from "./content-root.mjs";
 import { readBaseSiteArtifact } from "./base-site-artifact.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
-import { CONTENT_PACKAGE_CONTRACT_VERSION, contentPackageRevisionIdentity, contentPackageSlotId, selectReleasedContentPackage } from "./content-replacement.mjs";
+import { CONTENT_PACKAGE_CONTRACT_VERSION, contentPackageRevisionIdentity, selectReleasedContentPackage } from "./content-replacement.mjs";
 import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 import { getContentLifecycleAdapter } from "./content-lifecycle-adapter.mjs";
+import { contentPackageSlotId as registryPackageSlotId, contentReceiptId, ensureContentSlotRegistry, resolveContentSlot } from "./content-slot-registry.mjs";
 
 export { CONTENT_PACKAGE_CONTRACT_VERSION } from "./content-replacement.mjs";
 
@@ -48,6 +49,9 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   if (baseSiteArtifact.baseSiteArtifactId !== baseSiteArtifactId) throw new Error("content reconcile baseSiteArtifact identity drift");
 
   const logicalId = original.logicalContentId || `${original.kind}:${original.target}`;
+  const slotRegistry = await ensureContentSlotRegistry({ sourceRoot });
+  let registrySlot = null;
+  try { registrySlot = resolveContentSlot(slotRegistry, logicalId); } catch { /* first publication has no active slot */ }
   const identity = contentPackageRevisionIdentity({
     contentReleaseId,
     logicalContentId: logicalId,
@@ -62,7 +66,17 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     if (existing.revisionHash !== identity.revisionHash || JSON.stringify(existing.revisionTuple) !== JSON.stringify(identity.tuple)) {
       throw new Error(`content reconcile revision identity conflict: ${identity.packageRevisionId}`);
     }
-    return { ...existing, packageDirectory: revisionDirectory, manifestPath, sourceDirectory: path.join(revisionDirectory, "source"), sourceRoot, reused: true };
+    return {
+      ...existing,
+      predecessorReceiptId: registrySlot?.activeReceiptId || existing.predecessorReceiptId || null,
+      supersedesPackageId: registrySlot?.activePackageSlotId || existing.supersedesPackageId || null,
+      registryRevision: slotRegistry.registryRevision,
+      packageDirectory: revisionDirectory,
+      manifestPath,
+      sourceDirectory: path.join(revisionDirectory, "source"),
+      sourceRoot,
+      reused: true,
+    };
   }
 
   const releasedPackages = original.state === "released" ? [{ packageDirectory: releaseRoot, release: original }] : [];
@@ -72,7 +86,13 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     const release = await readFile(path.join(packageDirectory, "content-release.json"), "utf8").then(JSON.parse).catch(() => null);
     if (release?.state === "released") releasedPackages.push({ packageDirectory, release });
   }
-  let activePackage = await selectReleasedContentPackage(releasedPackages, contentReleaseId);
+  let activePackage = registrySlot
+    ? {
+      packageDirectory: path.resolve(sourceRoot, registrySlot.activePackageDirectory),
+      release: await readFile(path.resolve(sourceRoot, registrySlot.activePackageDirectory, "content-release.json"), "utf8").then(JSON.parse),
+      registrySlot,
+    }
+    : await selectReleasedContentPackage(releasedPackages, contentReleaseId);
   // A recoverable immutable Practice candidate may have no released predecessor
   // in this logical slot. Its own package is still the predecessor/recovery
   // source; it is never treated as active until finalize succeeds.
@@ -82,6 +102,8 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     activeRecord: activePackage.release,
     now: () => "1970-01-01T00:00:00.000Z",
   });
+  const predecessorReceiptId = registrySlot?.activeReceiptId || contentReceiptId(activePackage.release);
+  const predecessorPackageSlotId = registrySlot?.activePackageSlotId || registryPackageSlotId(activePackage.release);
 
   const sourceDirectory = path.join(revisionDirectory, "source");
   await mkdir(sourceDirectory, { recursive: true });
@@ -119,7 +141,9 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     revisionHash: identity.revisionHash,
     revisionTuple: identity.tuple,
     contractVersion: CONTENT_PACKAGE_CONTRACT_VERSION,
-    supersedesPackageId: contentPackageSlotId(activePackage.release),
+    supersedesPackageId: predecessorPackageSlotId,
+    predecessorReceiptId,
+    registryRevision: slotRegistry.registryRevision,
     recoverySource: path.relative(sourceRoot, activePackage.packageDirectory),
     releasePackage: path.relative(sourceRoot, revisionDirectory),
     state: "prepared",
@@ -140,6 +164,7 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     logicalContentId: logicalId,
     packageRevisionId: identity.packageRevisionId,
     supersedesPackageId: manifest.supersedesPackageId,
+    predecessorReceiptId: manifest.predecessorReceiptId,
     recoverySource: manifest.recoverySource,
     revisionTuple: identity.tuple,
     beforeHash: proof.beforeHash,

@@ -78,6 +78,7 @@ const requiredFiles = [
   "scripts/lib/content-package-reconcile.mjs",
   "scripts/lib/content-lifecycle-adapter.mjs",
   "scripts/lib/content-replacement.mjs",
+  "scripts/lib/content-slot-registry.mjs",
   "scripts/lib/content-lifecycle-time.mjs",
   "tests/product-content-isolation.test.mjs",
   "scripts/verify-public-release.mjs",
@@ -93,6 +94,7 @@ const requiredFiles = [
   "tests/baseline-governance.test.mjs",
   "tests/content-targets.test.mjs",
   "tests/content-package-reconcile.test.mjs",
+  "tests/content-slot-registry.test.mjs",
   "tests/content-lifecycle-adapter.test.mjs",
 ];
 

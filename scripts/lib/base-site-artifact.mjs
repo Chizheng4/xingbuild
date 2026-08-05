@@ -7,6 +7,15 @@ const commitPattern = /^[a-f0-9]{7,64}$/;
 const versionPattern = /^v\d+\.\d+\.\d+$/;
 const artifactIdPattern = /^[a-z0-9][a-z0-9._-]+$/;
 
+export const CONTENT_SLOT_CAPABILITY_CONTRACT_VERSION = "content-slot-registry-v1";
+export const CONTENT_SLOT_CAPABILITY_CONTRACT = Object.freeze({
+  contentKinds: ["content", "article", "practice", "profile", "businessObservation"],
+  registeredTargets: "ContentSlotRegistry",
+  mediaContract: "approved-media-manifest-v1",
+  routeContract: "content-target-path-v1",
+  fieldContract: ["logicalContentId", "activeReceiptId", "predecessorReceiptId", "packageRevisionId", "snapshotHash"],
+});
+
 function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
 }
@@ -119,6 +128,28 @@ export function assertBaseSiteArtifactCompatible(artifact, { requiredCapabilitie
   return artifact;
 }
 
+export function assertContentSlotArtifactCompatible(artifact, { registryMode = "legacy", requiredKinds = [] } = {}) {
+  validateBaseSiteArtifact(artifact);
+  if (!artifact.capabilityContractVersion && !artifact.capabilityContract) {
+    if (registryMode === "legacy") return { artifact, legacy: true };
+    throw new Error("baseSiteArtifact content slot capability contract is unknown");
+  }
+  if (artifact.capabilityContractVersion !== CONTENT_SLOT_CAPABILITY_CONTRACT_VERSION) {
+    throw new Error(`baseSiteArtifact content slot capability contract is incompatible: ${artifact.capabilityContractVersion || "missing"}`);
+  }
+  const contract = artifact.capabilityContract;
+  if (!contract || contract.registeredTargets !== "ContentSlotRegistry" || contract.mediaContract !== CONTENT_SLOT_CAPABILITY_CONTRACT.mediaContract || contract.routeContract !== CONTENT_SLOT_CAPABILITY_CONTRACT.routeContract) {
+    throw new Error("baseSiteArtifact content slot capability contract is incompatible");
+  }
+  const kinds = new Set(contract.contentKinds || []);
+  if (JSON.stringify([...kinds].sort()) !== JSON.stringify([...CONTENT_SLOT_CAPABILITY_CONTRACT.contentKinds].sort())
+    || JSON.stringify(contract.fieldContract || []) !== JSON.stringify(CONTENT_SLOT_CAPABILITY_CONTRACT.fieldContract)) {
+    throw new Error("baseSiteArtifact content slot field contract is incompatible");
+  }
+  if (requiredKinds.some((kind) => !kinds.has(kind))) throw new Error("baseSiteArtifact content slot kind contract is incompatible");
+  return { artifact, legacy: false };
+}
+
 export async function createBaseSiteArtifact({ sourceRoot, productVersion, productCommit, release, contentManifest, sourceDeploymentId = "prepared-dist" } = {}) {
   if (!hasText(sourceRoot) || !path.isAbsolute(sourceRoot)) throw new Error("baseSiteArtifact sourceRoot must be absolute");
   if (!versionPattern.test(productVersion || "") || !commitPattern.test(productCommit || "")) throw new Error("baseSiteArtifact product identity is invalid");
@@ -136,6 +167,8 @@ export async function createBaseSiteArtifact({ sourceRoot, productVersion, produ
     releaseManifestHash: hashArtifactValue(release),
     artifactContentHash: hashArtifactValue({ release, contentManifest }),
     sourceDeploymentId,
+    capabilityContractVersion: CONTENT_SLOT_CAPABILITY_CONTRACT_VERSION,
+    capabilityContract: CONTENT_SLOT_CAPABILITY_CONTRACT,
     sourceDirectory,
     sourceBundle: entries,
     sourceBundleHash: bundleHash,

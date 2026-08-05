@@ -26,6 +26,7 @@ import { transportSitePublication } from "./lib/site-publication-coordinator.mjs
 import { CONTENT_RELEASE_RECEIPT_VERSION, readContentReleaseReceipt, receiptTargetCollections } from "./lib/content-release-receipt.mjs";
 import { resolveContentLifecycleTimes } from "./lib/content-lifecycle-time.mjs";
 import { getContentLifecycleAdapter, finalizeContentLifecycle, restoreContentLifecycle } from "./lib/content-lifecycle-adapter.mjs";
+import { restoreContentSlot } from "./lib/content-slot-registry.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -171,6 +172,8 @@ export async function finalizeContentRelease(packageInfo) {
     contentHash: packageInfo.contentHash,
     baseSiteArtifactId: packageInfo.baseSiteArtifactId,
     packageRevisionId: packageInfo.packageRevisionId || null,
+    predecessorReceiptId: packageInfo.predecessorReceiptId || packageInfo.contentReplacement?.predecessorReceiptId || null,
+    supersedesPackageId: packageInfo.supersedesPackageId || packageInfo.contentReplacement?.supersedesPackageId || null,
     changeSetId: packageInfo.changeSetId || null,
     changedTargets: packageInfo.changedTargets || [],
     operations: packageInfo.operations || [],
@@ -610,6 +613,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   assertPublishAuthorization({ argv, env });
   const idempotencyKey = manifest.idempotencyKey || contentReleaseIdempotencyKey({ contentReleaseId: manifest.contentReleaseId, contentHash: manifest.contentHash, baseSiteArtifactId: manifest.baseSiteArtifactId });
   const lease = await acquireContentReleasePackageLease({ packageDirectory: packageInfo.packageDirectory, idempotencyKey, contentReleaseId: manifest.contentReleaseId });
+  let completedPublication = null;
   try {
     if (manifest.state === "released" && manifest.publicVerify) {
       const receipt = await readContentReleaseReceipt(packageInfo.packageDirectory);
@@ -632,7 +636,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
       sourceRoot: root,
     });
     await validateUploadQuota(publication.client);
-    const completedPublication = await transportSitePublication({
+    completedPublication = await transportSitePublication({
       publication,
       sourceRoot: root,
       argv,
@@ -662,6 +666,15 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "released", data: { deploymentId: completed.deploymentId } });
     return { ...completed, deployment: completedPublication.deployment, publicVerify: completed.publicVerify, sitePublicationId: completed.sitePublicationId };
   } catch (error) {
+    const transition = completedPublication?.contentSlotTransition;
+    if (transition?.type === "compare-and-swap" && transition.previousSlot) {
+      await restoreContentSlot({
+        sourceRoot: root,
+        logicalContentId: transition.logicalContentId,
+        expectedReceiptId: transition.activeReceiptId,
+        previousSlot: transition.previousSlot,
+      }).catch(() => {});
+    }
     await markReleaseFailure(packageInfo, error);
     throw error;
   } finally {

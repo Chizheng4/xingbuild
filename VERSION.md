@@ -1,4 +1,11 @@
 
+## v0.25.16 — 内容活动槽位注册表与原子替换发布
+
+- 建立版本化 `ContentSlotRegistry`，从真实 finalized receipt/released package corpus 迁移唯一 active slot；冲突、漂移和无法解析的 lineage 硬失败，不猜测覆盖。
+- 跨 kind 由 registry 解析 `predecessorReceiptId`；immutable ContentRevision 保留 before/after、ChangeSet、review/provenance 与 recovery，candidate 不得自填或自指 predecessor。
+- SitePublication 从 ProductArtifact、registry active set 与 candidate 生成唯一 snapshot；精确公网验证后用 predecessor compare-and-swap 原子推进 active，同 publication resume 幂等且不重复 deployment。
+- 兼容现有 Practice 四槽 package/revision 与 34 条 active 内容；不修改正文、审核、媒体、UI/IA/schema 或既有内容身份，本版本不执行内容或产品 transport。
+
 ## v0.25.15 — 内容类型生命周期适配与 Package 证明式 Reconcile
 
 - 按内容 kind 建立唯一 `ContentLifecycleAdapter` registry；Practice 使用 products canonical、Practice review、media approval/provenance 与 package recovery，不再要求通用 `drafts/robotaxi.json` 或 `recoveries/robotaxi.json`。
