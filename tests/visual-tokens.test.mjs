@@ -9,12 +9,13 @@ const header = await readFile(new URL("../src/components/site/SiteHeader.jsx", i
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
 const practice = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+const showcaseModule = await readFile(new URL("../src/components/showcase/ShowcaseModule.jsx", import.meta.url), "utf8");
 const framework = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
 const brief = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
-test("v0.14 uses one shell, showcase geometry, reading width and two-state compact header", () => {
-  for (const token of ["--site-max: 80rem", "--rail-width: 19rem", "--two-column-gap: 1.5rem", "--two-column-main: 59.5rem", "--showcase-description-width: 13rem", "--showcase-gap: 1.25rem", "--measure-reading: 46rem", "--header-height: 3.5rem", "--header-height-mobile: 3.25rem"]) assert.match(tokens, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+test("v0.25.9 uses one cold-white shell, shared showcase geometry and responsive header", () => {
+  for (const token of ["--site-max: 80rem", "--rail-width: 19rem", "--two-column-gap: 1.5rem", "--two-column-main: 59.5rem", "--showcase-description-width: 17.5rem", "--showcase-gap: 3rem", "--measure-reading: 46rem", "--header-height: 4.25rem", "--header-height-mobile: 3.75rem"]) assert.match(tokens, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(layout, /position: sticky/);
   assert.match(layout, /site-header\.is-scrolled::before/);
   assert.match(layout, /site-header::before \{[\s\S]*position: fixed;[\s\S]*inset: 0 0 auto;[\s\S]*height: var\(--header-background-height\)/);
@@ -23,7 +24,7 @@ test("v0.14 uses one shell, showcase geometry, reading width and two-state compa
   assert.doesNotMatch(layout, /\.site-header::before[\s\S]*translateX\(-50%\)/);
   assert.match(header, /window\.scrollY > 8/);
   assert.match(layout, /grid-template-columns: var\(--showcase-description-width\)/);
-  assert.match(layout, /showcase-layout__stage \{ order: -1/);
+  assert.match(layout, /showcase-layout__stage \{ order: 0/);
   assert.doesNotMatch(layout, /prefers-color-scheme/);
 });
 
@@ -48,8 +49,8 @@ test("products is the only Robotaxi reader route and legacy paths replace to it"
 });
 
 test("showcase and observation components preserve data-driven reader anatomy", () => {
-  assert.match(practice, /ShowcaseLayout/);
-  assert.match(practice, /SystemStage/);
+  assert.match(practice, /ShowcaseModule/);
+  assert.match(showcaseModule, /SystemStage/);
   assert.doesNotMatch(practice, /loopRelation \?/);
   assert.match(framework, /FrameworkDescription/);
   assert.doesNotMatch(framework, /ExplanationPanel/);

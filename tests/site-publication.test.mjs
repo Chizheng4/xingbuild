@@ -129,13 +129,18 @@ test("workspace receipt facts retain every released target including legacy proj
   }
 });
 
-test("Didi finalized plus Ojai candidate keeps the active inventory complete", async () => {
+test("Didi finalized plus Ojai candidate keeps the active inventory complete", async (t) => {
   const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
-  const temp = await mkdtemp(path.join(os.tmpdir(), "xingbuild-replacement-publication-"));
   const contentReleaseId = "content-waymo-ojai-first-public-rider-plan-bc67e9bf935bbff0";
   const packageRevisionId = "revision-7e65a94afb3333fa";
   const candidatePackageDirectory = path.join(root, ".content-workspace", "releases", contentReleaseId, "revisions", packageRevisionId);
   const candidate = JSON.parse(await readFile(path.join(candidatePackageDirectory, "content-release.json"), "utf8"));
+  const activeReceipt = (await readActiveContentReleases(path.join(root, ".content-workspace", "releases"))).find((item) => item.contentReleaseId === contentReleaseId);
+  if (candidate.supersedesPackageId !== (activeReceipt?.packageRevisionId || activeReceipt?.contentReleaseId)) {
+    t.skip("retained content workspace has a newer active replacement; product tests must not mutate or rewind it");
+    return;
+  }
+  const temp = await mkdtemp(path.join(os.tmpdir(), "xingbuild-replacement-publication-"));
   const product = path.join(temp, "product");
   await mkdir(product, { recursive: true });
   await writeFile(path.join(product, "release.json"), JSON.stringify({ version: "v0.25.7", commit: "5a983e3aca7ce7cb1cab153b50ee0789d698ea76" }));
@@ -162,12 +167,16 @@ test("Didi finalized plus Ojai candidate keeps the active inventory complete", a
   assert.equal(waymo.state, "prepared");
 });
 
-test("replacement identity, review, source, and base drift hard fail", async () => {
+test("replacement identity, review, source, and base drift hard fail", async (t) => {
   const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
   const contentReleaseId = "content-waymo-ojai-first-public-rider-plan-bc67e9bf935bbff0";
   const candidatePackageDirectory = path.join(root, ".content-workspace", "releases", contentReleaseId, "revisions", "revision-7e65a94afb3333fa");
   const candidate = JSON.parse(await readFile(path.join(candidatePackageDirectory, "content-release.json"), "utf8"));
   const activeReceipt = (await readActiveContentReleases(path.join(root, ".content-workspace", "releases"))).find((item) => item.contentReleaseId === contentReleaseId);
+  if (candidate.supersedesPackageId !== (activeReceipt?.packageRevisionId || activeReceipt?.contentReleaseId)) {
+    t.skip("retained content workspace has a newer active replacement; product tests must not mutate or rewind it");
+    return;
+  }
   const options = { candidatePackageDirectory, activeReceipt, productArtifactId: "v0.25.7-5a983e3aca7c", sourceRoot: root };
   await validateContentReplacement({ ...options, candidate });
   await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, contentHash: "0".repeat(64) } }), /logical contentHash drift/);
@@ -181,7 +190,7 @@ test("replacement identity, review, source, and base drift hard fail", async () 
 test("incremental content publication merges eight active releases with one candidate", async () => {
   const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
   const product = path.join(root, "dist", "client");
-  const output = path.join(root, ".content-workspace", "site-publications", "test-8-plus-1");
+  const output = await mkdtemp(path.join(os.tmpdir(), "xingbuild-incremental-publication-"));
   const publication = await createSitePublication({
     productClient: product,
     releasesRoot: path.join(root, ".content-workspace", "releases"),

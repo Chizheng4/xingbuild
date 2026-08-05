@@ -54,7 +54,7 @@ export const pageDefinitions = Object.freeze([
     route: "/",
     intent: "定位语与最新作品、经营观察的统一投影",
     composition: "HomeComposition",
-    regions: ["TopBand", "body", "rail"],
+    regions: ["TopBand", "body", "ClosingSection"],
     contentRefs: {
       site: { type: "site", id: "site" },
       practice: { type: "practice", id: "robotaxi" },
@@ -70,10 +70,9 @@ export const pageDefinitions = Object.freeze([
     route: "/products",
     intent: "展示 Robotaxi 作品及其状态边界",
     composition: "ShowcaseComposition",
-    regions: ["left", "right", "rail"],
+    regions: ["TopBand", "body", "ClosingSection"],
     contentRefs: {
       practice: { type: "practice", id: "robotaxi" },
-      briefs: { type: "observationBriefs", scope: "robotaxi" },
     },
     navigationContext: { origin: "/products", returnTo: "/products" },
     responsivePolicy: "shared",
@@ -110,7 +109,7 @@ export const pageDefinitions = Object.freeze([
   pageDefinition({
     id: "about",
     route: "/about",
-    intent: "阅读作者定位、能力、经历和联系",
+    intent: "阅读作者定位、能力、经历和简历制品",
     composition: "ReadingComposition",
     regions: ["TopBand", "RichDocument"],
     contentRefs: { profile: { type: "profile", id: "about" } },

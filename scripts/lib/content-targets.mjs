@@ -6,8 +6,9 @@ import { contentRootDirectory } from "./content-root.mjs";
 
 export const contentTargetsPath = "content/registry/content-targets.json";
 export const changesDirectory = ".content-workspace/changes";
-const targetIdPattern = /^products\.robotaxi\.(title|intro|boundary|module\.[a-z0-9-]+\.(label|shortDescription|loopRelation|action\.href))$/;
-const mediaTargetIdPattern = /^media\.robotaxi\.(asset\.[a-z0-9-]+\.(type|src|ratio)|module\.[a-z0-9-]+\.mediaId)$/;
+const targetIdPattern = /^products\.robotaxi\.(title|intro|boundary|heroActions\.[a-z0-9-]+\.(label|href)|closing\.(title|summary|action\.(label|href))|module\.[a-z0-9-]+\.(label|shortDescription|loopRelation|action\.href|order))$/;
+const mediaTargetIdPattern = /^(?:media\.robotaxi\.(asset\.[a-z0-9-]+\.(type|src|ratio|alt|caption)|module\.[a-z0-9-]+\.mediaId)|products\.robotaxi\.module\.[a-z0-9-]+\.mediaId)$/;
+const siteTargetIdPattern = /^site\.(home|sharedCopy)\.[a-z0-9-]+$/;
 
 function hasText(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -53,9 +54,10 @@ export function validateContentTargetRegistry(registry) {
   for (const template of registry.templates) {
     if (!safeRelativePath(template?.sourcePathTemplate, { allowSrc: false })) throw new Error("content target registry has unsafe template source");
     if (!hasText(template.targetIdPattern) || !hasText(template.fieldPathTemplate || template.fieldPath) || template.scope !== "field" || template.editable !== true || template.valueType !== "string") throw new Error("content target registry template contract is invalid");
-    if (template.kind === "product-content" && !template.targetIdPattern.startsWith("products.robotaxi.module.")) throw new Error("Robotaxi product template contract is invalid");
-    if (template.kind === "media-content" && (!template.targetIdPattern.startsWith("media.robotaxi.") || !["content/media/robotaxi/manifest.json", "content/products/robotaxi.json"].includes(template.sourcePathTemplate))) throw new Error("Robotaxi media template contract is invalid");
-    parseFieldPath(String(template.fieldPathTemplate || template.fieldPath).replace(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g, "sample-id"));
+    if (template.kind === "product-content" && !template.targetIdPattern.startsWith("products.robotaxi.")) throw new Error("Robotaxi product template contract is invalid");
+    if (template.kind === "site-content" && !siteTargetIdPattern.test(template.targetIdPattern.replace(/\{[^}]+\}/g, "sample-field"))) throw new Error("Site content template contract is invalid");
+    if (template.kind === "media-content" && (!/^(?:media\.robotaxi\.|products\.robotaxi\.module\.)/.test(template.targetIdPattern) || !["content/media/robotaxi/manifest.json", "content/products/robotaxi.json"].includes(template.sourcePathTemplate))) throw new Error("Robotaxi media template contract is invalid");
+    parseFieldPath(String(template.fieldPathTemplate || template.fieldPath).replace(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g, "samplefield"));
   }
   for (const excluded of registry.excluded) {
     if (excluded.sourcePath && !safeRelativePath(excluded.sourcePath)) throw new Error("content target registry has unsafe excluded source");
@@ -88,6 +90,7 @@ export async function readContentTargetRegistry({ rootDirectory = projectRoot } 
 function targetAllowed(target) {
   return target?.editable === true
     && ((target?.kind === "product-content" && targetIdPattern.test(target.targetId || ""))
+      || (target?.kind === "site-content" && siteTargetIdPattern.test(target.targetId || ""))
       || (target?.kind === "media-content" && mediaTargetIdPattern.test(target.targetId || "")));
 }
 
@@ -107,7 +110,7 @@ export async function resolveContentTarget(targetId, { rootDirectory = projectRo
   const target = (registry.targets || []).find((entry) => entry.targetId === targetId)
     || (registry.templates || []).map((entry) => instantiateTemplate(entry, targetId)).find(Boolean);
   if (!target) throw new Error(`content target is not registered: ${targetId}`);
-  if (!target.editable || target.scope !== "field" || !["product-content", "media-content", "observation", "article", "profile", "businessObservation"].includes(target.kind)) throw new Error(`content target is outside the approved field scope: ${targetId}`);
+  if (!target.editable || target.scope !== "field" || !["site-content", "product-content", "media-content", "observation", "article", "profile", "businessObservation"].includes(target.kind)) throw new Error(`content target is outside the approved field scope: ${targetId}`);
   if (target.sourcePath.startsWith("src/") || target.fieldPath.includes("[") && !target.fieldPath.includes("[id=")) {
     throw new Error(`content target has an unsafe source or field path: ${targetId}`);
   }

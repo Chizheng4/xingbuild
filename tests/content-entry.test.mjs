@@ -141,20 +141,24 @@ test("Practice CTA accepts only the registered safe external product host", () =
   assert.equal(safePracticeAction({ href: "https://example.com/" }), null);
 });
 
-test("MediaAction keeps navigation separate from video playback and exposes fallbacks", async () => {
-  const systemStage = await readFile(new URL("../src/components/showcase/SystemStage.jsx", import.meta.url), "utf8");
-  const practicePage = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
-  assert.match(practicePage, /<SystemStage media=\{module\.media\} action=\{module\.action\}/);
-  assert.doesNotMatch(practicePage, /practice-module__action/);
-  assert.match(systemStage, /safePracticeAction\(action\)/);
-  assert.match(systemStage, /controls=\{!safeAction\}/);
-  assert.match(systemStage, /preload="metadata"/);
-  assert.doesNotMatch(systemStage, /autoPlay|autoplay/);
-  assert.match(systemStage, /target="_blank" rel="noreferrer"/);
-  assert.match(systemStage, /aria-label=\{`查看产品演示：\$\{label\}`\}/);
-  assert.match(systemStage, /onError=\{\(\) => setStatus\("failed"\)\}/);
-  assert.match(systemStage, /MediaFallback/);
-  assert.match(systemStage, /媒体加载中/);
+test("MediaStage keeps navigation separate from video playback and exposes fallbacks", async () => {
+  const mediaStage = await readFile(new URL("../src/components/showcase/MediaStage.jsx", import.meta.url), "utf8");
+  const showcaseModule = await readFile(new URL("../src/components/showcase/ShowcaseModule.jsx", import.meta.url), "utf8");
+  assert.match(showcaseModule, /<SystemStage media=\{module\.media\} action=\{module\.action\}/);
+  assert.doesNotMatch(showcaseModule, /practice-module__action/);
+  assert.match(mediaStage, /safePracticeAction\(action\)/);
+  assert.match(mediaStage, /autoPlay=\{!isReducedMotion\}/);
+  assert.match(mediaStage, /muted[\s\n]/);
+  assert.match(mediaStage, /loop[\s\n]/);
+  assert.match(mediaStage, /playsInline/);
+  assert.match(mediaStage, /preload="metadata"/);
+  assert.doesNotMatch(mediaStage, /controls=/);
+  assert.match(mediaStage, /target="_blank" rel="noreferrer"/);
+  assert.match(mediaStage, /aria-label="进入 Robotaxi 运营平台"/);
+  assert.match(mediaStage, /IntersectionObserver/);
+  assert.match(mediaStage, /onError=\{\(\) => setStatus\("failed"\)\}/);
+  assert.match(mediaStage, /MediaFallback/);
+  assert.match(mediaStage, /媒体加载中/);
 });
 
 test("brief reading source belongs to published observations, not an independent JS list", async () => {
@@ -194,7 +198,7 @@ test("rail contracts keep main height independent, reserve more and allow zero v
   assert.doesNotMatch(rail, /Math\.max\(1/);
   assert.match(rail, /aria-hidden="true" inert>/);
   assert.doesNotMatch(rail, /inert=""/);
-  assert.match(robotaxiPage, /practice\?\.modules\?\.length && briefs\.length/);
+  assert.doesNotMatch(robotaxiPage, /ObservationRail|renderRail/);
   assert.match(components, /\.observation-rail \.brief-item__statement/);
   assert.match(pages, /\.observation-rail__measure[^}]*height: 0;[^}]*overflow: hidden;/);
 });

@@ -1,6 +1,6 @@
 {
   "name": "xingbuild",
-  "version": "0.25.8",
+  "version": "0.25.9",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "framework:data": "node scripts/generate-digital-architecture.mjs",
     "architecture:views": "node scripts/generate-enterprise-architecture-views.mjs",
     "article:figures": "node scripts/generate-evergreen-figures.mjs",
+    "robotaxi:sync-release": "node scripts/sync-robotaxi-release.mjs",
     "article:check": "node scripts/article-content-check.mjs",
     "article:scope-check": "node scripts/article-scope-check.mjs",
     "framework:layout": "node scripts/generate-framework-layout.mjs",

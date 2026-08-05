@@ -1,4 +1,11 @@
 
+## v0.25.9 — 全站统一视觉系统与结构化页面组合
+
+- 全站页面组合改用共享冷白、sans-led VisualSystem，统一 shell、版心、间距、按钮、焦点、媒体比例与空/错误状态。
+- `/products` 使用共享 `ShowcaseFlow`、`ProductHero`、`ShowcaseModule`、`MediaStage`、`ClosingAction`；Robotaxi release 版本通过同源白名单 adapter 投影，媒体入口保持安全跳转。
+- 首页、经营观察、观察集合、About 使用统一页面组合；About 提供经 career 核验的 HTML/PDF `ResumeArtifact`，不新增联系方式或继续阅读。
+- 本地产品能力版本；保留独立内容正文、审核、媒体 provenance、hash 与 contentReleaseId，产品/视觉验收前不执行内容 transport。
+
 ## v0.25.8 — ContentReleaseReceipt 投影一致性与 active 快照
 
 - 单条 `ContentReleaseReceipt`（`content-release.json` + `completion.json`）成为 logical release 唯一事实源；finalized package 的派生 projection 只校验自身 identity，不再承担全局 active 集合。

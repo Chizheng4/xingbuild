@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">xingbuild</title>
+  <rect width="64" height="64" rx="16" fill="#2563eb"/>
+  <path d="M18 18h10l9 12 9-12h10L42 36l14 18H46l-9-12-9 12H18l14-18z" fill="#fff"/>
+</svg>

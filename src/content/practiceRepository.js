@@ -20,13 +20,17 @@ const mediaManifestByPracticeId = new Map(
 );
 
 export function projectPractice(practice, manifest) {
-  const mediaById = new Map(manifest.assets
+  const mediaById = new Map((manifest?.assets || [])
     .filter((asset) => isPublicPracticeMedia(manifest, asset))
     .map((asset) => [asset.id, asset]));
   return {
     ...practice,
     modules: practice.modules
-      .map(({ mediaId, ...module }) => ({ ...module, media: mediaId ? mediaById.get(mediaId) : undefined })),
+      .map((module) => ({
+        ...module,
+        mediaId: module.mediaId || null,
+        media: module.mediaId ? mediaById.get(module.mediaId) : undefined,
+      })),
   };
 }
 

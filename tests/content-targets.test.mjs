@@ -29,13 +29,15 @@ test("registry integrity fixes Robotaxi targets to safe product fields and route
     assert.equal(target.scope, "field");
     assert.deepEqual(target.projectionRoutes, ["/products"]);
   }
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, registry.targets[0]] }), /duplicate targetId/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], sourcePath: "../outside.json" }] }), /unsafe target source/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], sourcePath: "content/articles/enterprise-operating-system.json" }] }), /Robotaxi product target contract/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], valueType: "object" }] }), /Robotaxi product target contract/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], editable: false }] }), /Robotaxi product target contract/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], projectionRoutes: ["/wrong"] }] }), /Robotaxi product target contract/);
-  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...registry.targets[0], fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
+  const productTarget = registry.targets.find((entry) => entry.kind === "product-content");
+  assert.ok(productTarget);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [...registry.targets, productTarget] }), /duplicate targetId/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, sourcePath: "../outside.json" }] }), /unsafe target source/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, sourcePath: "content/articles/enterprise-operating-system.json" }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, valueType: "object" }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, editable: false }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, projectionRoutes: ["/wrong"] }] }), /Robotaxi product target contract/);
+  assert.throws(() => validateContentTargetRegistry({ ...registry, targets: [{ ...productTarget, fieldPath: "modules[0].label" }] }), /unsupported fieldPath|explicit fields/);
   const mediaTemplates = registry.templates.filter((entry) => entry.kind === "media-content");
   assert.ok(mediaTemplates.length > 0);
   for (const target of mediaTemplates) {

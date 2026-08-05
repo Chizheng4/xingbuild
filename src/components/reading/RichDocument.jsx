@@ -20,7 +20,7 @@ export function RichDocument({ blocks = [], sources }) {
         if (block.type === "paragraph") return <p key={index}>{block.text}</p>;
         if (block.type === "list") return <ul key={index}>{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;
         if (block.type === "definitionList") return <dl key={index}>{block.items.map((item) => <div key={item.term}><dt>{item.term}</dt><dd>{item.description}</dd></div>)}</dl>;
-        if (block.type === "callout") return <aside className="rich-document__callout" key={index}>{block.text}</aside>;
+        if (block.type === "callout") return <div className="rich-document__callout" role="note" key={index}>{block.text}</div>;
         if (block.type === "figure") { const assets = diagramFigureAssets(block.sourcePath); return <figure className="rich-document__figure" key={index}>
           <picture>{assets ? <source media="(max-width: 32.4375rem)" srcSet={assets.mobile} /> : null}<img src={assets?.desktop} alt={block.alt} /></picture>
           <figcaption>{block.caption}</figcaption>

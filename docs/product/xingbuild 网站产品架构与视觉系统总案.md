@@ -1,9 +1,9 @@
 # xingbuild 网站产品架构与视觉系统总案
 
-> 状态：正式产品与视觉基线（唯一现行主文档）  
-> 责任：xingbuild 产品与视觉 task 维护；Engineering 只实现已经确认并进入当前迭代的能力  
-> 更新时间：2026-08-01  
-> 适用版本：从当前公开 `v0.23.0` 起，持续适用于后续网站版本
+> 状态：正式产品与视觉基线（唯一现行主文档）
+> 责任：xingbuild 产品与视觉 task 维护；Engineering 只实现已经确认并进入当前迭代的能力
+> 更新时间：2026-08-05
+> 适用版本：现有结构持续有效；统一冷白视觉与页面组合增量从 `v0.25.9` 实施
 > 说明：本文档不是产品版本号，也不是内容发布版本号。它是网站产品结构、视觉系统、内容对象与能力边界的统一依据。
 
 ## 0. 唯一事实源与阅读方式
@@ -59,7 +59,7 @@
 2. 作者能够解决哪些企业经营与数字化问题；
 3. 这些判断由哪些经历、作品和事实支持；
 4. Robotaxi 等作品的真实边界是什么；
-5. 读者应该继续阅读、进入作品，还是联系作者。
+5. 读者应该继续阅读、进入作品，还是查看/下载作者简历。
 
 网站不直接宣称成长、社会价值或长期自我记录等内部解释，而通过持续内容、作品质量和证据让读者自行形成判断。
 
@@ -67,13 +67,13 @@
 
 ### 2.1 已经工程化并公开使用
 
-当前公开 `v0.23.0` 已经形成以下稳定能力：
+当前公开基线已形成以下稳定能力：
 
 | 能力 | 当前实现 | 内容更新是否需要产品迭代 |
 | --- | --- | --- |
 | 全站 SiteShell、Header、Footer、sticky 状态 | `LayoutShell`、`SiteHeader`、`SiteFooter`、共享 token | 否 |
 | 一级导航与页面路由 | B端产品、经营观察、关于我；集中观察页为上下文入口 | 否 |
-| B端产品展示母版 | `ShowcaseLayout`、`PracticePage`、`SystemStage`、Observation rail | 增加已批准内容时否 |
+| B端产品展示母版 | `ShowcaseLayout`、`PracticePage`、`SystemStage`；v0.25.9 升级为共享 ShowcaseFlow | 增加已批准内容时否 |
 | Brief 观察内容 | `ObservationPublication`、schema、rail、集合页、单条文章 | 采集/审核/内容 publish 不进入产品版本；改变内容能力才进入产品版本 |
 | 常青长文 | `EvergreenArticlePublication`、`EvergreenArticle`、`RichDocument`、`ReadingTOC` | 内容对象独立发布；新增 block 类型、阅读结构或图形能力才进入产品版本 |
 | 富文本受控 block | lead、heading、paragraph、list、definitionList、figure、callout、sources、link | 新增 block 类型需要产品版本 |
@@ -155,7 +155,7 @@ B端产品 / 经营观察 / 关于我
 | --- | --- | --- | --- |
 | `/products` | 展示可运行或受控的产品作品及其状态边界 | Robotaxi运营平台 | `ShowcaseComposition` |
 | `/business-observations` | 展示企业经营框架、经营观察和常青长文 | 企业经营体系、Brief rail、Article | `ReadingComposition` / `HybridComposition` |
-| `/about` | 展示作者定位、能力、经历和联系 | About RichDocument | `ReadingComposition` |
+| `/about` | 展示作者定位、能力、经历和简历制品 | About RichDocument、ResumeArtifactRef | `ReadingComposition` |
 | `/observations` | 集中观察集合，不是一级导航 | Brief 与有详情的长文入口 | `CollectionComposition` |
 | `/observations/:slug` | 单条观察或文章详情 | `ObservationPublication` | `ReadingComposition` |
 | `/` | 只使用一次定位语，并投影真实最新对象 | Robotaxi、企业经营体系和最新观察 | `HomeComposition` |
@@ -169,21 +169,29 @@ B端产品 / 经营观察 / 关于我
 首页不是第二套内容系统：
 
 1. 只使用一次定位语作为唯一可见 H1；
-2. 复用来源页中的最新 B端产品和最新经营观察对象；
-3. Observation rail 只出现一次；
-4. 不显示“首页”“核心实践”、复制摘要或空视觉舞台；
-5. 首页投影只改变语义 heading level，不复制内容、字段顺序或事实。
+2. 定位之后固定提供“进入B端产品”和“浏览经营观察”两个动作；
+3. 完整投影最新 B端产品对象，当前为 Robotaxi 运营平台，不只显示摘要卡；
+4. 最新产品之后投影少量最新短文；
+5. 最后直接进入单行 Footer，不增加 About、联系或重复导航收束；
+6. 首页投影只改变组合与语义 heading level，不复制内容、字段顺序或事实。
 
 ### 4.3 B端产品责任
 
-B端产品页使用 `ShowcaseLayout`：
+B端产品页使用可复用 `ShowcaseComposition`，Robotaxi 是当前第一个完整内容实例：
 
 ```text
-左侧：对象标题 + 极短说明 + 必要事实边界
-右侧：SystemStage（媒体、视频或受控产品空间）
-下方：可选的产品长文和经营闭环解释
-右侧 rail：最新经营观察（有有效 Brief 时才出现）
+LatestUpdateCard（Robotaxi 真实 release 事实）
+→ ProductHero + actions
+→ ShowcaseModule[]（左说明 + 右独立 MediaStage）
+→ ClosingAction
+→ SiteFooter
 ```
+
+- 当前 Robotaxi 有 4 个稳定 module；每个模块独立拥有可选 `mediaId`，未来分别绑定不同媒体；
+- 初始可让四个独立模块分别引用同一个批准视频，用于完整页面和视觉验收，但不能建立“继承第一个媒体”的隐式代码逻辑；
+- 没有媒体是合法状态，仍保留正常 `empty` fallback 舞台；
+- 当前 `/products` 不显示 Brief rail；共享 rail 能力保留给其他组合；
+- 页面能力属于共享组件，未来其他作品通过对象和 `modules[]` 配置复用，不新建页面私有 JSX/CSS。
 
 Robotaxi 的互动空间与企业经营架构图是两种不同表达，不共享业务模型。若未来嵌入 Robotaxi 独立系统，必须使用受控、无伪登录、无越权访问记录的公开演示边界；当前批准 action 仍以独立 Robotaxi 网站为准。
 
@@ -198,9 +206,20 @@ Robotaxi 的互动空间与企业经营架构图是两种不同表达，不共�
 
 它不是通用新闻流，也不是工程活动日志。
 
+页面结构保持：`/business-observations` 使用紧凑标题、左侧常青长文和右侧短文；`/observations` 使用短文集合；`/observations/:slug` 使用居中阅读。三者共享全站统一视觉，但不套用 B端产品的大 Hero 或媒体双栏。
+
 ### 4.5 About 责任
 
-About 使用与文章相同的 `RichDocument` 受控 block，表达当前定位、问题、能力、经历、证据边界、方向和联系方式。职业事实不足时如实显示整理中，不补造结果。
+About 使用与文章相同的 `RichDocument` 受控 block，单列居中表达当前定位、能力、经历和证据边界。初始内容来自 career 已确认简历事实；不增加联系方式、继续阅读或营销收束。
+
+About 提供两个受控动作：
+
+- “查看简历”：打开 xingbuild 托管的已核验 career HTML 简历快照；
+- “下载简历”：下载与同一上游身份、hash 和公开状态绑定的 PDF 简历。
+
+简历展示入口不进入一级导航；career 始终是上游事实 owner，xingbuild 只保存公开快照与制品引用。
+
+v0.25.9 初始制品由 Xing 指定为 `金星-Kami简历候选-20260805.html/.pdf`；HTML/PDF 必须分别校验 SHA-256 `453258563a8d51fc150c1ce436549ac8fd94649765cf9e98230f096216734507` 与 `71cf0ece679a415222de8e359f2e11699c832ed2bd3783a803fd3f979868c386`。
 
 ### 4.6 页面产品架构与组合合同
 
@@ -240,10 +259,10 @@ acceptance
 
 | 组合 | 责任 | 可选区域 |
 | --- | --- | --- |
-| `HomeComposition` | 定位语、最新作品和最新观察的统一投影 | `TopBand`、观察 rail、`ClosingSection` |
-| `ShowcaseComposition` | B端产品或作品的说明与能力展示 | `left` 说明、`right` CapabilityHost、长文、rail |
+| `HomeComposition` | 定位语、双动作、最新作品完整投影和最新短文 | `TopBand`、`ActionGroup`、`ShowcaseFlow`、`BriefCollection` |
+| `ShowcaseComposition` | B端产品或作品的更新、Hero、模块流与底部行动 | `LatestUpdateCard`、`ProductHero`、`ShowcaseFlow`、`ClosingAction`；rail 仅在页面配置明确启用时出现 |
 | `CollectionComposition` | Observation 等内容集合 | 标题、导读、集合、筛选/分页能力、rail |
-| `ReadingComposition` | Article、About 和长文阅读 | 标题、摘要、TOC、RichDocument、来源 |
+| `ReadingComposition` | Article、About 和长文阅读 | 紧凑标题、摘要、TOC、RichDocument、来源、可选 ResumeActions |
 | `HybridComposition` | 能力展示与长文在同一页面的组合 | `left`、`right`、RichDocument、rail |
 | `CapabilityComposition` | 独立的架构、流程、状态或互动能力入口 | CapabilityHost、说明、结果、返回 |
 
@@ -318,10 +337,15 @@ Robotaxi 内容对象由上游批准的 `media`、可选 `action` 和内部 `pro
 - `action` 是可选的独立系统入口；
 - `provenance` 保存审批、状态、版本、commit 和哈希，不投影到读者界面；
 - 未达到 approved/public 或哈希校验失败的素材不得进入读者页面。
+- 每个 module 独立拥有可选 `mediaId`；多个 module 可以显式引用同一批准 asset，但页面不得自动继承其他 module 的媒体；
+- `MediaStage` 正常支持 image、video、empty、loading、failed/revoked；没有媒体时不删除槽位；
+- 视频默认只在可见区域 `autoplay muted loop playsinline`，无 controls；点击只触发已登记产品入口，不触发播放/暂停；Reduced Motion 下使用静态状态。
 
 ### 5.4 Profile / About
 
 About 的公开内容使用受控 `RichDocument`，不在页面 JSX 中写业务正文、私有字号或任意 margin。
+
+简历使用 `ResumeArtifactRef` 关联 career 已确认的 HTML/PDF 制品、hash、来源版本和公开状态；查看与下载必须属于同一上游简历身份。候选或未确认制品不得公开。
 
 ### 5.5 VisualExpression（未来统一视觉表达对象）
 
@@ -348,21 +372,20 @@ provenance
 
 - 桌面唯一 shell 最大 `1280px`，外边距至少 `32px`；
 - 手机 gutter `20px`，窄屏 `16px`；
-- 主背景暖白，内容自然流动，不为每个页面创建独立版心；
+- 主背景冷白，内容自然流动，不为每个页面创建独立版心；
 - Footer 始终位于页面内容自然流的末端；短内容页面也不能让 Footer 悬在内容中部。
 
 ### 6.2 ShowcaseLayout
 
-桌面完整双栏：
+桌面媒体展示模块使用共享双栏：
 
 ```text
-主展示区 952px = 说明列 208px + 20px + SystemStage
-主展示区 952px + 24px + Observation rail 304px
+说明列 240–280px + 48px + MediaStage
 ```
 
-仅当 SystemStage 仍可保持至少 `640px` 有效宽时使用完整双栏；否则转为单栏，不压缩主视觉到不可读。
+仅当 MediaStage 仍可保持至少 `640px` 有效宽时使用完整双栏；否则转为单栏，不压缩主视觉到不可读。当前 `/products` 不显示 Observation rail。
 
-手机使用单列，并保持对象归属：`SystemStage → explanation` 的间距 `12–16px`；不同对象之间 `40–48px`。同一内容对象不得在手机被拆成无法判断归属的两块。
+手机使用单列并保持对象归属：`explanation → MediaStage` 的间距 `20–24px`；不同对象之间 `56–72px`。同一内容对象不得在手机被拆成无法判断归属的两块。
 
 ### 6.3 ReadingShell 与 ReadingTOC
 
@@ -377,6 +400,7 @@ provenance
 ### 6.4 Observation rail
 
 - 只有存在有效 Brief 时才渲染 rail；
+- `/products` 当前配置明确关闭 rail；`/business-observations` 保持左长文、右 Brief rail；
 - 页面与首页使用相同观察对象和 `ObservationBlock` 投影；
 - rail 不展示治理信息；
 - 无有效 Brief 时不保留空 rail 或占位空间。
@@ -397,10 +421,10 @@ PageFrame
 └─ ClosingSection?
 ```
 
-- `TopBand`：页面标题、可选说明和最多一个有真实目标的上下文 action；标题可左对齐或居中。
+- `TopBand`：页面标题、可选说明和有真实目标的受控 action；首页和 B端产品可使用 ActionGroup，经营观察使用紧凑标题。
 - `ContentComposition`：单栏、左右双栏或内容区关闭任一侧；关闭后不留下空 rail，不创建页面私有版心。
 - `RichDocument`：使用受控 block 和目录，可以独占页面、进入一个区域或位于展示能力下方。
-- `ClosingSection`：居中标题、标题+说明或省略；默认是内容收束，不自动成为营销 CTA。
+- `ClosingSection`：居中标题、标题+说明或省略；B端产品中作为全部模块后的产品再次入口，其他页面不自动增加营销 CTA。
 - 同一页面在桌面、紧凑宽度和手机只改变顺序、密度和区域折叠，不改变对象语义、导航目标和内容事实。
 - 页面内的图片、视频、图形和互动状态由统一能力层负责内容级响应式；不能只缩放外层容器。
 
@@ -414,32 +438,34 @@ TopBand → title/summary → action or TOC → capability/content → result �
 
 ### 7.1 品牌与颜色
 
-温暖、编辑式、精确，不以装饰建立高级感。
+冷白、克制、专业、极简。高级感由统一网格、文字层级、留白、媒体质量和轻微空间深度形成，不靠装饰线、纯黑按钮或页面私有特效。
 
 | 角色 | 当前 token | 责任 |
 | --- | --- | --- |
-| 主背景 | `--color-canvas: #F5F1E8` | 全站画布 |
-| 轻表面 | `--color-surface-subtle: #ECE5D8` | 目录、导读、轻区分区域 |
-| 主文字 | `--color-text: #20211F` | 标题和正文 |
-| 辅助文字 | `--color-text-muted: #625F58` | 元数据、来源、边界 |
-| 边界 | `--color-border: #C9C3B7` | 必要控件、焦点辅助、真实边界 |
-| 强调 | `--color-accent: #A34322` | 当前项、链接、标签和克制反馈 |
-| 强强调/焦点 | `--color-accent-strong: #7D2F19` | hover、active、focus |
+| 主背景 | `--color-canvas: #F8FAFC` | 全站冷白画布 |
+| 主表面 | `--color-surface: #FFFFFF` | 媒体、更新卡和必要行动区 |
+| 轻表面 | `--color-surface-subtle: #F1F5F9` | 空状态、导读和轻分组 |
+| 主文字 | `--color-text: #111827` | 标题和正文；不是纯黑 |
+| 辅助文字 | `--color-text-muted: #64748B` | 元数据、来源、边界 |
+| 边界 | `--color-border: #E2E8F0` | 必要控件与可见焦点辅助，不作装饰分割线 |
+| 强调 | `--color-accent: #1769E0` | 主要按钮、active 和主链接 |
+| 强强调/焦点 | `--color-accent-strong: #0F56C7` | hover、pressed、focus 辅助 |
+| 媒体阴影 | `--shadow-media: 0 18px 48px rgba(15,23,42,.10)` | 只用于媒体窗口和必要行动区 |
 
 规则：
 
 - 当前只有浅色主题，不自动跟随系统深色模式；
 - 正文不使用强调色；
-- 不用边框、阴影、浮起效果制造通用卡片；
-- 线条只表达真实边界或业务关系；
+- 不使用纯黑大按钮、暖红/棕色强调、玻璃拟态或发光渐变；
+- 媒体窗口允许柔和环境阴影形成高级画布上的轻浮起感；正文和普通卡片不批量加阴影；
+- 不用装饰线或分割线建立页面层级；真实控件边界与 focus ring 除外；
 - 不采用手绘、水彩、草图、植物、风景和装饰隐喻。
 
 ### 7.2 字体角色
 
 ```text
-Editorial：Noto Serif SC → Songti SC → STSong → serif
-Interface：Noto Sans SC → PingFang SC → Microsoft YaHei → sans-serif
-Wordmark：Georgia → Noto Serif SC → serif
+Display / Heading / Body / Meta：Noto Sans SC → PingFang SC → Microsoft YaHei → sans-serif
+Wordmark：Inter → -apple-system → BlinkMacSystemFont → sans-serif
 ```
 
 角色顺序固定：
@@ -475,8 +501,8 @@ section：96–128px  栏目之间
 
 ### 7.4 Header、导航、Footer
 
-- Header 是一个紧凑横向身份组：较大的 `xingbuild` 后接较小的 `金星 Xingjin`，间距约 `8px`，基线对齐；
-- Header 全站 sticky，顶部与画布融合，滚动后只增加暖色半透明层、克制 blur 和轻 shadow，不改变高度；
+- Header 是一个紧凑横向身份组，网站名和一级导航对齐到同一 shell 网格；
+- Header 全站 sticky，顶部与冷白画布融合，滚动后只增加中性半透明层、克制 blur 和轻 shadow，不改变高度；
 - 一级导航保持 `B端产品 / 经营观察 / 关于我`；
 - 手机低于约 `520px` 使用全视口菜单 overlay，锁定背景滚动并恢复焦点；约 `557px` 保留紧凑行内 Header；
 - Footer 只显示 `© 年份 xingbuild · 当前产品版本`；作者、地点、更新时间和治理状态不进入全局 chrome；
@@ -485,7 +511,7 @@ section：96–128px  栏目之间
 ### 7.5 卡片、链接与返回
 
 - 重复可点击集合使用共享卡片系统；整张卡片是主链接；
-- hover 只改变克制表面/边界对比，不改变尺寸、不重排、不上浮；
+- hover 只改变克制表面、蓝色动作或既定阴影，不改变尺寸、不重排；媒体的浮起深度属于静态层级，不依赖 hover 才成立；
 - focus-visible 必须清楚且不只依赖颜色；
 - `ReturnNavigation` 是全站统一辅助文字链接，主文案为 `← 返回{真实目的地名称}`；
 - 它不是描边按钮、浮动工具条或页面私有变体；
@@ -497,7 +523,8 @@ section：96–128px  栏目之间
 - 展示空间是页面内容对象的视觉主角，但不改变页面的语义层级；说明、操作、状态、结果和来源保持可辨识顺序。
 - 图片、视频、架构图和互动系统都必须有真实的边界、可读尺寸、`alt/caption` 或文本结果；不能用巨大空白、不可读缩放或孤立标签填充空间。
 - 桌面支持 hover、focus-visible 和 click；手机支持 tap；键盘 Enter/Space 与触控共享同一状态语义。hover 不能是唯一信息来源。
-- 选中、加载、错误和 fallback 只改变必要的颜色、说明、结果或状态，不改变页面列数、标题位置、图形坐标或滚动上下文。
+- image、video、empty、loading、failed/revoked 共享稳定媒体槽位；状态变化只改变必要说明，不改变页面列数、标题位置、比例或滚动上下文。
+- 带安全 action 的视频在可见区域自动静音循环播放，无 controls；点击或 Enter 只打开目标产品，不触发播放/暂停；离屏暂停，Reduced Motion 使用静态状态。
 - 交互反馈使用克制的边界、颜色和轻量过渡，尊重 `prefers-reduced-motion`；不把复杂滚动动画作为理解内容的前提。
 - 统一能力层负责“容器响应式 + 内容投影响应式”：固定桌面图不能仅通过 `width: 100%` 压缩到手机；renderer 必须提供合适投影或可靠降级。
 
@@ -664,12 +691,18 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 ### 视觉与响应式
 
-- Header、Footer、品牌色、字体角色和返回导航保持共享合同；
+- 视觉验收是产品发布硬门禁，不以构建成功、DOM 存在或自动化测试通过替代真实页面判断；
+- 先验收 Web 1600×1067 的全站构图和视觉质量，通过后再验收 Mobile 390×844；320/375/768/1280 只做稳健性补充；
+- Header、Footer、冷白画布、sans-led 字体、蓝色动作、共享网格和返回导航保持统一合同；任何页面残留暖白/棕红、黑色大按钮、装饰线或页面私有版心都视为未通过；
+- 对齐、文字层级、阅读宽度、段落节奏、section 间距、媒体比例、轻浮起阴影、空状态和按钮密度必须与已确认视觉稿保持同一视觉语言；
+- 使用真实当前内容和长文本增长检查；不得只用短占位文本掩盖布局问题；
 - 桌面、紧凑宽度、手机均无横向溢出和无意义内部滚动；
 - hover、focus、click、tap 不改变布局几何或造成页面晃动；
 - 文字、关系线、图形和说明在真实尺寸下可读；
 - 目录、锚点、焦点和直接访问成立；
 - 图形不是截图式占位，不把线条与无关组件边缘重合。
+- `/products` 四个模块的说明/媒体归属清楚；video/empty/loading/failed 状态不改变构图，视频自动播放和点击跳转合同成立；
+- 首页、经营观察、集合/详情与 About 的页面职责不同，但视觉底层、网格、字体、按钮、媒体和状态必须一致。
 
 ### 内容与事实
 
@@ -688,7 +721,7 @@ sourcePath / renderer / layoutPreset / alt / caption
 
 ## 14. 当前待确认事项
 
-当前产品总案没有脱离活动候选入口的已确认事项。新的产品、视觉、页面或公开发布能力优化，必须先登记到活动 `docs/iterations/candidates/`；产品 task 评估后要么转为正式设计方案并归档候选，要么保留 pending 并向用户报告。内容 task、Ops 和 Engineering 不得自行把问题升级为产品版本。
+当前已确认事项是 `v0.25.9` 全站统一视觉系统与结构化页面组合方案，并已进入 `current.md`。其他新的产品、视觉、页面或公开发布能力优化，仍必须先登记活动候选；内容 task、Ops 和 Engineering 不得自行扩大 v0.25.9 范围。
 
 ## 15. 变更记录
 
@@ -697,3 +730,4 @@ sourcePath / renderer / layoutPreset / alt / caption
 | 2026-08-01 | 首次建立统一产品架构、内容对象、视觉系统、展示能力和文档治理主文档 | 产品与视觉 task |
 | 2026-08-01 | 补充 `PageDefinition → PageComposition` 页面产品架构、共享区域和能力展示互动合同；候选 DRAFT 改为只保留未确认能力细节 | 产品与视觉 task |
 | 2026-08-02 | 统一候选入口、current/history 和规则索引；roadmap 不再作为活动事实源 | 产品与视觉 task |
+| 2026-08-05 | 将全站视觉底层升级为冷白、sans-led、轻浮起和蓝色动作系统；定稿首页、B端产品、经营观察、About 页面组合、独立媒体槽位、正常 fallback、Robotaxi release reference 与 career 简历制品能力 | 产品与视觉 task |

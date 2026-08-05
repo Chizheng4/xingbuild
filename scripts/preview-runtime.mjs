@@ -17,7 +17,7 @@ function currentIdentity(root = projectRoot()) {
   return {
     cwd: root,
     commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
-    version: `v${packageJson}`,
+    version: `v${packageJson.version}`,
   };
 }
 

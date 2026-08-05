@@ -211,3 +211,37 @@
     .practice-module.showcase-layout { grid-template-columns: minmax(0, 1fr); gap: var(--showcase-mobile-gap); }
   }
 }
+
+@layer pages {
+  .page-composition { display: grid; gap: var(--rhythm-section); padding-block: var(--space-content-entry) 0; }
+  .page-composition--home { gap: var(--rhythm-section-flow); }
+  .home-page__positioning-shell { margin: 0; }
+  .home-page__positioning { max-width: var(--measure-positioning); margin: 0; font: 650 var(--type-positioning)/var(--leading-positioning) var(--font-ui); letter-spacing: -0.035em; }
+  .home-page__actions { margin-top: calc(var(--rhythm-section-flow) * -0.45); }
+  .home-page__projection, .home-page__latest-briefs { min-width: 0; }
+  .home-page__projection .practice-presentation { gap: var(--space-8); }
+  .home-page__latest-briefs { display: grid; gap: var(--space-6); }
+
+  .practice-page { gap: var(--space-8); }
+  .practice-page > .practice-presentation { width: 100%; }
+  .practice-presentation { display: grid; gap: var(--space-8); min-width: 0; }
+  .practice-presentation > .practice-module-list { margin-top: var(--space-6); }
+  .practice-page .closing-action { margin-top: clamp(5rem, 8vw, 8rem); }
+
+  .about-page .reading-shell { width: min(100%, 52rem); }
+  .about-page .reading-shell__header { max-width: 44rem; margin-inline: auto; text-align: center; }
+  .about-page .rich-document { max-width: 46rem; margin-inline: auto; }
+  .about-page .rich-document > :is(h2, h3) { font-weight: 650; }
+
+  .page-composition--collection .collection-layout { width: min(100%, var(--measure-reading)); margin-inline: auto; }
+  .page-composition--reading .two-column-layout { width: 100%; }
+  .page-composition--reading .reading-shell { width: min(100%, var(--measure-reading)); margin-inline: auto; }
+
+  @media (max-width: 58.25rem) {
+    .home-page__actions { margin-top: 0; }
+  }
+  @media (max-width: 32.4375rem) {
+    .page-composition { padding-block-start: var(--space-6); }
+    .home-page__positioning { font-size: clamp(1.75rem, 8vw, 2.25rem); }
+  }
+}

@@ -11,7 +11,7 @@ export function TwoColumnLayout({ children, renderRail }) {
   return (
     <div className={rail ? "two-column-layout has-rail" : "two-column-layout"}>
       <div className="two-column-layout__main" ref={mainRef}>{children}</div>
-      {rail ? <aside className="two-column-layout__rail" aria-label="最新观察">{rail}</aside> : null}
+      {rail ? <section className="two-column-layout__rail" aria-label="最新观察">{rail}</section> : null}
     </div>
   );
 }

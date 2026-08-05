@@ -15,7 +15,6 @@
   img, svg { display: block; max-width: 100%; }
   h1, h2, h3, p, ol { margin-block-start: 0; }
   :where(
-    .home-hero h1,
     .home-page__positioning,
     .page-intro h1,
     .article-header h1
@@ -27,6 +26,8 @@
     .section-intro h2,
     .business-observation-presentation :is(h1, h2),
     .practice-header :is(h1, h2),
+    .product-hero :is(h1, h2),
+    .showcase-module :is(h2, h3),
     .content-card__title,
     .prose h2,
     .work-detail-grid h2,

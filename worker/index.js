@@ -9,6 +9,7 @@ const VISITOR_SEED_PATTERN = /^[A-Za-z0-9-]{16,100}$/;
 const VERSION_PATTERN = /^v\d+\.\d+\.\d+$/;
 const VISIT_KEY_PATTERN = /^visit_(?:XINGBUILD|ROBOTAXI)_(\d{8})_[a-f0-9]{24}$/;
 const MAX_CLEANUP_DELETES = 32;
+const ROBOTAXI_RELEASE_ENDPOINT = "https://robotaxi.xingbuild.top/deployment-manifest.json";
 
 function jsonResponse(body, status) {
   return Response.json(body, {
@@ -17,6 +18,35 @@ function jsonResponse(body, status) {
       "cache-control": "no-store",
     },
   });
+}
+
+function robotaxiReleaseResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": status === 200 ? "public, max-age=300, stale-while-revalidate=86400" : "no-store",
+    },
+  });
+}
+
+function projectRobotaxiRelease(payload) {
+  if (!payload || typeof payload !== "object" || !/^v\d+\.\d+\.\d+$/.test(payload.version || "") || !/^[a-f0-9]{40}$/.test(payload.commit || "")) return null;
+  if (payload.production_url !== ROBOTAXI_RELEASE_ENDPOINT.replace("/deployment-manifest.json", "/")) return null;
+  return {
+    version: payload.version,
+    commit: payload.commit,
+    production_url: payload.production_url,
+    verifiedAt: new Date().toISOString(),
+  };
+}
+
+async function readRobotaxiRelease() {
+  const response = await fetch(ROBOTAXI_RELEASE_ENDPOINT, { cf: { cacheTtl: 300, cacheEverything: true } });
+  if (!response.ok) throw new Error(`upstream returned ${response.status}`);
+  const release = projectRobotaxiRelease(await response.json());
+  if (!release) throw new Error("upstream identity failed validation");
+  return release;
 }
 
 function hasExcludedCookie(request) {
@@ -161,6 +191,15 @@ export async function handleVisitQualification(request, env, {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/__xingbuild/robotaxi-release" || url.pathname === "/api/robotaxi-release") {
+      if (request.method !== "GET" && request.method !== "HEAD") return robotaxiReleaseResponse({ error: "method-not-allowed" }, 405);
+      try {
+        const release = await readRobotaxiRelease();
+        return robotaxiReleaseResponse(release);
+      } catch (error) {
+        return robotaxiReleaseResponse({ error: "robotaxi-release-unavailable", detail: error.message }, 502);
+      }
+    }
     if (url.pathname === "/api/visits/qualify") {
       return handleVisitQualification(request, env);
     }

@@ -27,8 +27,8 @@
   .architecture-explorer__layer { position: absolute; border: 1px dashed color-mix(in srgb, var(--color-architecture-line) 35%, transparent); pointer-events: none; }
   .architecture-explorer__layer span { position: absolute; top: 12px; left: 16px; color: var(--color-accent-strong); font: 600 var(--type-caption)/1 var(--font-ui); }
   .architecture-explorer__lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
-  .architecture-explorer__lines polyline { fill:none; stroke:#4f4941; stroke-width:1.7; vector-effect:non-scaling-stroke; }
-.architecture-explorer__lines marker path { fill:#4f4941; }
+  .architecture-explorer__lines polyline { fill:none; stroke:#475569; stroke-width:1.7; vector-effect:non-scaling-stroke; }
+.architecture-explorer__lines marker path { fill:#475569; }
 .architecture-explorer__lines marker#architecture-arrow-active path { fill:var(--color-accent-strong); }
 .architecture-explorer__lines g.is-active polyline { stroke:var(--color-accent-strong); stroke-width:2.15; }
   .architecture-explorer__lines text { fill:var(--color-text-muted); font:500 11px/1 var(--font-ui); text-anchor:middle; paint-order:stroke; stroke:var(--color-canvas); stroke-width:5px; }

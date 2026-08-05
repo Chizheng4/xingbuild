@@ -1,0 +1,22 @@
+import { Link } from "../../lib/navigation";
+import { safePracticeAction } from "../../content/practiceAction";
+
+function Action({ action, className = "" }) {
+  if (!action?.href || !action?.label) return null;
+  const safeExternal = safePracticeAction(action);
+  if (safeExternal) {
+    return <a className={`action-group__action ${className}`.trim()} href={safeExternal.href} target="_blank" rel="noreferrer">{action.label}</a>;
+  }
+  if (typeof action.href === "string" && action.href.startsWith("/") && !action.href.startsWith("//")) {
+    return <Link className={`action-group__action ${className}`.trim()} href={action.href}>{action.label}</Link>;
+  }
+  return null;
+}
+
+export function ActionGroup({ actions = [], className = "" }) {
+  const visibleActions = actions.filter((action) => action?.href && action?.label);
+  if (!visibleActions.length) return null;
+  return <div className={`action-group ${className}`.trim()}>{visibleActions.map((action) => <Action action={action} key={action.id || `${action.href}:${action.label}`} />)}</div>;
+}
+
+export { Action };
