@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
+import { assertProductContentCompatibility } from "./lib/content-compatibility.mjs";
 
 const requiredFiles = [
   "AGENTS.md",
@@ -109,6 +110,7 @@ const current = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),
   "utf8",
 );
+assertProductContentCompatibility({ currentText: current });
 const siteContent = await readFile(
   new URL("../src/content/siteContent.js", import.meta.url),
   "utf8",

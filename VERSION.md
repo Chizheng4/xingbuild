@@ -1,4 +1,10 @@
 
+## v0.25.12 — 产品内容兼容合同单一枚举与前置门禁
+
+- 将 `contentImpact` 收敛为 `none`、`compatible`、`migration-required`、`breaking`、`unknown` 封闭枚举，并以独立 `contentImpactReason` 保存说明。
+- `npm run check`、`release:closeout-check`、`release:preflight` 与 SitePublication Coordinator 复用唯一兼容性 validator；非法枚举、缺字段和缺证据在 transport 前硬失败。
+- 保留 v0.25.11 已验收的视觉、响应式、视频、五路由与 34 个 active 内容事实；不执行内容 transport。
+
 ## v0.25.11 — Showcase 间距单一责任与视觉验收收口
 
 - 保留 v0.25.10 已通过的页面、媒体与内容边界，只移除 Showcase 新旧样式的责任冲突。

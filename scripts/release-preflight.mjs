@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import process from "node:process";
+import { assertProductContentCompatibility } from "./lib/content-compatibility.mjs";
 import { assertNoVersionStateFields, evaluateProductReleaseReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
 
 function git(...args) {
@@ -19,6 +20,7 @@ const currentIteration = await readFile(
   new URL("../docs/iterations/current.md", import.meta.url),
   "utf8",
 );
+assertProductContentCompatibility({ currentText: currentIteration });
 assertNoVersionStateFields(currentIteration);
 const result = evaluateProductReleaseReadiness({
   branch: git("branch", "--show-current"),

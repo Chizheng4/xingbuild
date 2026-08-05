@@ -10,6 +10,7 @@ import { acquireSitePublicationLease, releaseSitePublicationLease } from "../scr
 const compatibleCurrent = [
   "# current",
   "contentImpact: compatible",
+  "contentImpactReason: coordinator-contract",
   "affectedTargets: []",
   "affectedRoutes: []",
   "compatibilityEvidence: coordinator-contract",
