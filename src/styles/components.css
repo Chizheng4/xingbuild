@@ -522,13 +522,12 @@
   .product-hero__boundary { max-width: 47.5rem; margin: 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .product-hero .action-group { justify-content: center; margin-top: var(--space-2); }
 
+  /* ShowcaseModule owns its internal copy/media geometry; the list owns module rhythm. */
   .showcase-module { display: grid; grid-template-columns: var(--showcase-description-width) minmax(0, 1fr); gap: var(--showcase-gap); align-items: start; }
-  .showcase-module + .showcase-module { margin-top: clamp(5rem, 7vw, 7rem); }
   .showcase-module__copy { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-2); }
   .showcase-module__label { margin: 0; color: var(--color-accent-strong); font: 600 var(--type-meta)/var(--leading-meta) var(--font-ui); }
   .showcase-module__copy h2, .showcase-module__copy h3 { margin: 0; font: 650 var(--type-section-title)/var(--leading-title) var(--font-ui); letter-spacing: -0.02em; }
   .showcase-module__copy > p:not(.showcase-module__label) { margin: 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
-  .practice-module-list { display: grid; min-width: 0; }
 
   .closing-action, .resume-actions {
     display: flex;
@@ -550,7 +549,6 @@
 
   @media (max-width: 58.25rem) {
     .showcase-module { grid-template-columns: minmax(0, 1fr); gap: var(--showcase-mobile-gap); }
-    .showcase-module + .showcase-module { margin-top: 4rem; }
     .showcase-module__copy { padding-top: 0; }
   }
   @media (max-width: 32.4375rem) {

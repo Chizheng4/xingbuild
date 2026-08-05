@@ -1,4 +1,11 @@
 
+## v0.25.11 — Showcase 间距单一责任与视觉验收收口
+
+- 保留 v0.25.10 已通过的页面、媒体与内容边界，只移除 Showcase 新旧样式的责任冲突。
+- `.showcase-module` 唯一负责说明列、媒体列及 copy→media 间距；`.practice-module-list` 唯一负责 module→module 间距。
+- 新增 Web 1600/1280 与 Mobile 390 的 computed geometry 回归，禁止旧 `.practice-module` 覆盖或 sibling margin 重复计距。
+- 产品/视觉独立验收通过前不执行产品或内容 transport。
+
 ## v0.25.10 — Web 视觉定稿几何与完整展示验收修正
 
 - 保留 v0.25.9 VisualSystem、PageComposition 与 MediaAction，只把 Header、更新卡、ProductHero、首页中心轴和媒体浮起收口到已确认 Web 几何。
