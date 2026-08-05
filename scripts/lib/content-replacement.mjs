@@ -120,7 +120,7 @@ export async function selectReleasedContentPackage(candidates, contentReleaseId)
   return leaves[0];
 }
 
-export async function validateContentReplacement({ candidate, candidatePackageDirectory, activeReceipt, activeSlot = null, registry = null, productArtifactId, sourceRoot } = {}) {
+export async function validateContentReplacement({ candidate, candidatePackageDirectory, activeReceipt, activeSlot = null, registry = null, productArtifactId, sourceRoot, allowBaseArtifactRebind = false } = {}) {
   const location = candidatePackageDirectory || candidate?.packageRevisionId || "content replacement";
   if (!CONTENT_REPLACEMENT_STATES.has(candidate?.state)) {
     throw new Error(`content replacement state is not eligible: ${candidate?.state || "missing"}`);
@@ -139,7 +139,7 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
   await assertContentPackageRevisionRecord(candidate, candidatePackageDirectory);
   let resolvedLineage = null;
   if (registry) {
-    resolvedLineage = resolveContentSlotCandidate({ registry, candidate });
+    resolvedLineage = resolveContentSlotCandidate({ registry, candidate, allowLegacySelfReference: true });
     if (activeSlot && activeSlot.activeReceiptId !== resolvedLineage.predecessorReceiptId) {
       throw new Error(`content replacement registry predecessor drift: ${location}`);
     }
@@ -152,7 +152,10 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
       throw new Error(`content replacement does not supersede the active package slot: ${location}`);
     }
   }
-  if (!productArtifactId || candidate.baseSiteArtifactId !== productArtifactId) {
+  const legacyBaseArtifactIsBound = allowBaseArtifactRebind
+    && candidate.packageRevisionId
+    && candidate.baseSiteArtifact?.baseSiteArtifactId === candidate.baseSiteArtifactId;
+  if (!productArtifactId || (candidate.baseSiteArtifactId !== productArtifactId && !legacyBaseArtifactIsBound)) {
     throw new Error(`content replacement baseSiteArtifactId drift: ${location}`);
   }
 

@@ -155,9 +155,16 @@ export async function readContentReleaseReceipt(packageDirectory) {
     // These lineage fields were added after the original receipt corpus. An
     // absent value in a legacy completion fact is compatible; once the
     // completion explicitly carries a field it must match the immutable
-    // receipt exactly.
+    // receipt exactly, unless the completion carries the immutable
+    // PublicationLineageBinding projection.  A binding is the only allowed
+    // runtime correction for a legacy self-reference; the package receipt is
+    // intentionally left untouched.
     if (Object.hasOwn(completion, field)) {
-      assertEqual(completion[field] || null, release[field] || null, `completion ${field}`, packageDirectory);
+      const bindingValue = field === "predecessorReceiptId"
+        ? completion.lineageBinding?.predecessorReceiptId
+        : completion.lineageBinding?.predecessorPackageId;
+      const expectedValue = completion.lineageBinding ? bindingValue : release[field] || null;
+      assertEqual(completion[field] || null, expectedValue || null, `completion ${field}`, packageDirectory);
     }
   }
   for (const field of ["sitePublicationId", "deploymentId", "productVersion", "productCommit"]) {
@@ -206,16 +213,23 @@ export async function readContentReleaseReceipt(packageDirectory) {
   };
 }
 
-export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt.baseSiteArtifactId } = {}) {
+export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt.baseSiteArtifactId, lineageBinding = null } = {}) {
   const collections = receiptTargetCollections(receipt, { packageDirectory: receipt.packageDirectory || receipt.contentReleaseId });
   const lifecycleTimes = resolveContentLifecycleTimes(receipt, { now: () => "1970-01-01T00:00:00.000Z" });
+  const projectedLineageBinding = lineageBinding || null;
+  const predecessorReceiptId = projectedLineageBinding?.predecessorReceiptId
+    || receipt.predecessorReceiptId
+    || null;
+  const supersedesPackageId = projectedLineageBinding?.predecessorPackageId
+    || receipt.supersedesPackageId
+    || null;
   const identity = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: receipt.contentReleaseId,
     logicalContentId: receipt.logicalContentId || null,
     packageRevisionId: receipt.packageRevisionId || null,
-    predecessorReceiptId: receipt.predecessorReceiptId || null,
-    supersedesPackageId: receipt.supersedesPackageId || null,
+    predecessorReceiptId,
+    supersedesPackageId,
     contentHash: receipt.contentHash,
     kind: receipt.kind,
     target: receipt.target,
@@ -230,6 +244,6 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     publishedAt: lifecycleTimes.publishedAt,
     ...collections,
   };
-  if (receipt.predecessorReceiptId) identity.predecessorReceiptId = receipt.predecessorReceiptId;
+  if (projectedLineageBinding?.lineageBindingId) identity.lineageBindingId = projectedLineageBinding.lineageBindingId;
   return { ...identity, receiptHash: stableHash(identity) };
 }

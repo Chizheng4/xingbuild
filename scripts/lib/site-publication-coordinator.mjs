@@ -7,6 +7,14 @@ import { writeJsonAtomically } from "./content-release-state.mjs";
 import { assertContentLifecycleProjection } from "./content-lifecycle-time.mjs";
 import { compareAndSwapContentSlot, contentLogicalContentId, contentReceiptId, ensureContentSlotRegistry, restoreContentSlot } from "./content-slot-registry.mjs";
 import {
+  assertBindingCandidate,
+  assertPublicationLineageBindingAgainstRegistry,
+  createOrReusePublicationLineageBinding,
+  publicationLineageBindingProjection,
+  readPublicationLineageBinding,
+  validatePublicationLineageBinding,
+} from "./publication-lineage-binding.mjs";
+import {
   assertFixedPublishTarget,
   assertPublishAuthorization,
   edgeoneProjectId,
@@ -61,7 +69,7 @@ function identityDriftError(message, observedIdentity = {}) {
 }
 
 export async function finalizeSitePublication({ publicationDirectory, publicVerify, sourceRoot = null } = {}) {
-  const current = await readSitePublicationRecord(publicationDirectory);
+  let current = await readSitePublicationRecord(publicationDirectory);
   if (!current.deploymentId || !publicVerify) throw new Error("SitePublication finalize requires deploymentId and publicVerify");
   if (publicVerify.sitePublicationId !== current.sitePublicationId || publicVerify.snapshotHash !== current.snapshotHash) {
     throw new Error("SitePublication finalize evidence identity mismatch");
@@ -75,19 +83,70 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
   const expected = [...(current.contentReleaseIds || [])].sort();
   const actual = [...(publicVerify.activeContentReleaseIds || [])].sort();
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("SitePublication finalize evidence is incomplete");
+  const resolvedSourceRoot = sourceRoot || path.resolve(publicationDirectory, "..", "..", "..");
+  let lineageBinding = current.lineageBinding ? validatePublicationLineageBinding(current.lineageBinding, {
+    sitePublicationId: current.sitePublicationId,
+  }) : null;
+  if (current.lineageBindingId) {
+    const persistedBinding = await readPublicationLineageBinding({
+      sourceRoot: resolvedSourceRoot,
+      lineageBindingId: current.lineageBindingId,
+      expected: { sitePublicationId: current.sitePublicationId },
+    });
+    if (lineageBinding && persistedBinding.bindingHash !== lineageBinding.bindingHash) {
+      throw new Error("SitePublication lineage binding sidecar drift");
+    }
+    lineageBinding = persistedBinding;
+  }
   let contentSlotTransition = current.contentSlotTransition || null;
   if (current.candidateContentReleaseId && !contentSlotTransition) {
     const candidate = actualReceipts.find((item) => item.contentReleaseId === current.candidateContentReleaseId
       && (current.candidatePackageRevisionId == null || item.packageRevisionId === current.candidatePackageRevisionId));
     if (!candidate) throw new Error("SitePublication finalize candidate receipt projection is missing");
-    const resolvedSourceRoot = sourceRoot || path.resolve(publicationDirectory, "..", "..", "..");
     const logicalContentId = contentLogicalContentId(candidate);
     if (!logicalContentId) throw new Error("SitePublication finalize candidate logicalContentId is missing");
     const registry = await ensureContentSlotRegistry({ sourceRoot: resolvedSourceRoot });
+    if (!lineageBinding && current.lineageBindingId) {
+      lineageBinding = await readPublicationLineageBinding({
+        sourceRoot: resolvedSourceRoot,
+        lineageBindingId: current.lineageBindingId,
+        expected: { sitePublicationId: current.sitePublicationId },
+      });
+    }
+    if (!lineageBinding) {
+      if (!candidate.packageRevisionId) throw new Error("SitePublication finalize candidate packageRevisionId is missing for lineage binding");
+      const created = await createOrReusePublicationLineageBinding({
+        sourceRoot: resolvedSourceRoot,
+        sitePublicationId: current.sitePublicationId,
+        candidate,
+        registry,
+        expectedRegistryRevision: current.contentSlotRegistryRevision ?? registry.registryRevision,
+      });
+      lineageBinding = publicationLineageBindingProjection(created);
+      current = await writePublicationRecord(publicationDirectory, {
+        ...current,
+        lineageBindingId: lineageBinding.lineageBindingId,
+        lineageBinding,
+        contentReplacement: {
+          ...(current.contentReplacement || {}),
+          lineageBindingId: lineageBinding.lineageBindingId,
+          bindingHash: lineageBinding.bindingHash,
+          predecessorReceiptId: lineageBinding.predecessorReceiptId,
+          predecessorPackageSlotId: lineageBinding.predecessorPackageId,
+          supersedesPackageId: lineageBinding.predecessorPackageId,
+        },
+      });
+    } else {
+      assertBindingCandidate(lineageBinding, candidate);
+    }
+    await assertPublicationLineageBindingAgainstRegistry({ sourceRoot: resolvedSourceRoot, binding: lineageBinding, candidate });
     const candidateReceiptId = contentReceiptId(candidate);
     const existingSlot = registry.slots.find((slot) => slot.logicalContentId === logicalContentId);
     if (existingSlot?.activeReceiptId === candidateReceiptId) {
-      contentSlotTransition = { type: "idempotent", logicalContentId, predecessorReceiptId: existingSlot.predecessorReceiptId || null, activeReceiptId: existingSlot.activeReceiptId, registryRevision: registry.registryRevision };
+      if (existingSlot.predecessorReceiptId !== lineageBinding.predecessorReceiptId) {
+        throw new Error("SitePublication finalize active candidate lineage binding drift");
+      }
+      contentSlotTransition = { type: "idempotent", logicalContentId, predecessorReceiptId: lineageBinding.predecessorReceiptId, activeReceiptId: existingSlot.activeReceiptId, registryRevision: registry.registryRevision, lineageBindingId: lineageBinding.lineageBindingId, bindingHash: lineageBinding.bindingHash };
     } else {
       const candidatePackageDirectory = current.candidatePackageDirectory
         ? path.resolve(resolvedSourceRoot, current.candidatePackageDirectory)
@@ -95,12 +154,12 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
       const transition = await compareAndSwapContentSlot({
         sourceRoot: resolvedSourceRoot,
         logicalContentId,
-        expectedReceiptId: current.contentReplacement?.predecessorReceiptId || null,
-        expectedRegistryRevision: current.contentSlotRegistryRevision,
+        expectedReceiptId: lineageBinding.predecessorReceiptId,
+        expectedRegistryRevision: lineageBinding.registryRevision,
         candidate: {
           ...candidate,
           logicalContentId,
-          predecessorReceiptId: current.contentReplacement?.predecessorReceiptId || candidate.predecessorReceiptId || null,
+          predecessorReceiptId: lineageBinding.predecessorReceiptId,
         },
         transition: { activePackageDirectory: candidatePackageDirectory ? path.relative(resolvedSourceRoot, candidatePackageDirectory) : null },
       });
@@ -110,6 +169,8 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
         predecessorReceiptId: transition.previousSlot?.activeReceiptId || null,
         activeReceiptId: transition.nextSlot.activeReceiptId,
         registryRevision: transition.registry.registryRevision,
+        lineageBindingId: lineageBinding.lineageBindingId,
+        bindingHash: lineageBinding.bindingHash,
         previousSlot: transition.previousSlot,
         nextSlot: transition.nextSlot,
       };
@@ -119,6 +180,8 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
     return await writePublicationRecord(publicationDirectory, {
       ...current,
       contentSlotTransition,
+      lineageBindingId: lineageBinding?.lineageBindingId || current.lineageBindingId || null,
+      lineageBinding: lineageBinding || current.lineageBinding || null,
       contentSlotRegistryRevision: contentSlotTransition?.registryRevision || current.contentSlotRegistryRevision || null,
       state: "released",
       publicVerify,
@@ -230,6 +293,21 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
     }
     assertContentLifecycleProjection(actual, expected, expected.contentReleaseId);
   }
+  if (publication.lineageBinding) {
+    const expectedBinding = validatePublicationLineageBinding(publication.lineageBinding, { sitePublicationId: publication.sitePublicationId });
+    const actualCandidate = actualReceipts.find((item) => item.contentReleaseId === expectedBinding.candidateContentReleaseId
+      && item.packageRevisionId === expectedBinding.packageRevisionId);
+    if (!actualCandidate
+      || actualCandidate.lineageBindingId !== expectedBinding.lineageBindingId
+      || actualCandidate.predecessorReceiptId !== expectedBinding.predecessorReceiptId
+      || actualCandidate.supersedesPackageId !== expectedBinding.predecessorPackageId) {
+      throw new Error("public content manifest lineage binding projection mismatch");
+    }
+    if (contentManifest.lineageBindingId !== expectedBinding.lineageBindingId
+      || JSON.stringify(contentManifest.lineageBinding || null) !== JSON.stringify(expectedBinding)) {
+      throw new Error("public content manifest lineage binding identity mismatch");
+    }
+  }
   if ((contentManifest.candidatePackageRevisionId || null) !== (publication.candidatePackageRevisionId || null)) {
     throw new Error("public content manifest candidate package revision identity mismatch");
   }
@@ -280,6 +358,8 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       contentReleaseReceipts: actualReceipts,
       candidatePackageRevisionId: contentManifest.candidatePackageRevisionId || null,
       contentReplacement: contentManifest.contentReplacement || null,
+      lineageBindingId: contentManifest.lineageBindingId || null,
+      lineageBinding: contentManifest.lineageBinding || null,
     },
     pages,
     media,

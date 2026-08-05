@@ -293,7 +293,7 @@ export function resolveContentSlot(registry, logicalContentId) {
   return slot;
 }
 
-export function resolveContentSlotCandidate({ registry, candidate } = {}) {
+export function resolveContentSlotCandidate({ registry, candidate, allowLegacySelfReference = true } = {}) {
   const logicalContentId = contentLogicalContentId(candidate);
   if (!logicalContentId) throw new Error("content slot candidate logicalContentId is required");
   const slot = resolveContentSlot(registry, logicalContentId);
@@ -303,7 +303,16 @@ export function resolveContentSlotCandidate({ registry, candidate } = {}) {
   if (candidatePackageSlotId === slot.activePackageSlotId || candidateReceiptId === slot.activeReceiptId) {
     throw new Error(`content slot candidate is already active: ${logicalContentId}`);
   }
-  if (candidate.supersedesPackageId === candidatePackageSlotId || candidate.supersedesPackageId === candidateReceiptId || candidate.predecessorReceiptId === candidateReceiptId) {
+  // A legacy revision may carry the logical release id as its historical
+  // supersedes projection. It is accepted only as input compatibility; the
+  // resolver still returns the Registry predecessor and all exact physical
+  // self references remain hard failures.
+  if (candidate.supersedesPackageId === candidatePackageSlotId
+    || candidate.supersedesPackageId === candidateReceiptId
+    || (!allowLegacySelfReference && candidate.supersedesPackageId === candidate.contentReleaseId)
+    || candidate.predecessorReceiptId === candidateReceiptId
+    || candidate.predecessorReceiptId === candidatePackageSlotId
+    || candidate.predecessorReceiptId === candidate.contentReleaseId) {
     throw new Error(`content slot candidate predecessor cannot reference itself: ${logicalContentId}`);
   }
   if (candidate.kind !== slot.kind || candidate.target !== slot.target) {

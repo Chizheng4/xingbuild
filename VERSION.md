@@ -1,4 +1,11 @@
 
+## v0.25.17 — 不可变 Revision 与 Registry Lineage Binding
+
+- 新增不可变 `PublicationLineageBinding` sidecar，以 `ContentSlotRegistry` 的真实 active receipt、registry revision 和 binding hash 固化 replacement predecessor。
+- 既有 `revision-9bb22df0f30845e8` resume 只读 Registry，自动绑定 `practice-robotaxi-d67fcedd760acc5a`；不回写旧 package/revision、正文、媒体、ChangeSet 或 hash。
+- SitePublication、Coordinator finalize、receipt/completion projection 统一消费 binding；binding drift、Registry CAS 竞争、传播失败保留旧 active，同一 publication resume 不重复 deployment。
+- 保留 v0.25.16 的 UI/IA/schema/视觉、34 active 内容和独立内容身份；本版本仅完成 Engineering 能力，不执行内容或产品 transport。
+
 ## v0.25.16 — 内容活动槽位注册表与原子替换发布
 
 - 建立版本化 `ContentSlotRegistry`，从真实 finalized receipt/released package corpus 迁移唯一 active slot；冲突、漂移和无法解析的 lineage 硬失败，不猜测覆盖。

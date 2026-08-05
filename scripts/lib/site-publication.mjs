@@ -9,6 +9,7 @@ import { contentReceiptProjection, contentTargetCollectionNames, readContentRele
 import { contentLogicalSlotId, validateContentReplacement } from "./content-replacement.mjs";
 import { compareAndSwapContentSlot, contentReceiptId, contentLogicalContentId, ensureContentSlotRegistry, resolveContentSlotCandidate } from "./content-slot-registry.mjs";
 import { assertContentSlotArtifactCompatible } from "./base-site-artifact.mjs";
+import { assertBindingCandidate, createOrReusePublicationLineageBinding } from "./publication-lineage-binding.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
@@ -79,11 +80,21 @@ export async function readActiveContentReleases(releasesRoot, { sourceRoot } = {
       throw new Error(`content slot registry logical identity drift: ${slot.logicalContentId}`);
     }
     const sourceDirectory = path.join(packageDirectory, "source");
-    const projectedReceipt = contentReceiptProjection({ ...receipt, logicalContentId: slot.logicalContentId, predecessorReceiptId: slot.predecessorReceiptId || null }, { baseSiteArtifactId: receipt.baseSiteArtifactId });
+    const completionBinding = receipt.completion?.lineageBinding || null;
+    if (completionBinding) assertBindingCandidate(completionBinding, receipt);
+    const projectedReceipt = contentReceiptProjection({
+      ...receipt,
+      logicalContentId: slot.logicalContentId,
+      predecessorReceiptId: slot.predecessorReceiptId || completionBinding?.predecessorReceiptId || null,
+      supersedesPackageId: completionBinding?.predecessorPackageId || receipt.supersedesPackageId || null,
+    }, { baseSiteArtifactId: receipt.baseSiteArtifactId });
     active.push({
       ...receipt,
       logicalContentId: slot.logicalContentId,
       predecessorReceiptId: slot.predecessorReceiptId || null,
+      supersedesPackageId: projectedReceipt.supersedesPackageId || null,
+      lineageBindingId: completionBinding?.lineageBindingId || receipt.completion?.lineageBindingId || null,
+      lineageBinding: completionBinding,
       receiptId: slot.activeReceiptId,
       registrySlot: slot,
       receiptHash: projectedReceipt.receiptHash,
@@ -234,7 +245,10 @@ export function createActiveContentSet(receipts = []) {
     activeContentReleaseIds: activeContentReleases.map((item) => item.contentReleaseId),
     activeReceiptIds: activeContentReleases.map((item) => item.receiptId || contentReceiptId(item)).sort(),
     mediaPaths: [...new Set(activeContentReleases.flatMap((item) => item.mediaPaths || []))].sort(),
-    contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, { baseSiteArtifactId: item.baseSiteArtifactId })),
+    contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, {
+      baseSiteArtifactId: item.baseSiteArtifactId,
+      lineageBinding: item.lineageBinding || null,
+    })),
   };
   assertContentManifestComplete(activeContentSet, activeContentReleases);
   return { activeContentReleases, ...activeContentSet };
@@ -257,13 +271,14 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     });
   }
   let replacement = null;
+  let candidateLineageBinding = null;
   if (additionalContentManifest?.contentReleaseId && additionalContentManifest.contentHash && additionalContentManifest.target) {
     const sourceDirectory = candidatePackageDirectory ? path.join(candidatePackageDirectory, "source") : null;
     const candidateLogicalSlot = contentLogicalSlotId(additionalContentManifest);
     const activeIndex = activeContentReleases.findIndex((item) => contentLogicalSlotId(item) === candidateLogicalSlot);
     let lifecycleTimes = null;
     if (activeIndex !== -1) {
-      const resolvedCandidate = resolveContentSlotCandidate({ registry: slotRegistry, candidate: additionalContentManifest });
+      const resolvedCandidate = resolveContentSlotCandidate({ registry: slotRegistry, candidate: additionalContentManifest, allowLegacySelfReference: true });
       replacement = await validateContentReplacement({
         candidate: additionalContentManifest,
         candidatePackageDirectory,
@@ -272,6 +287,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
         registry: slotRegistry,
         productArtifactId: productArtifact?.baseSiteArtifactId || null,
         sourceRoot,
+        allowBaseArtifactRebind: Boolean(additionalContentManifest.packageRevisionId && additionalContentManifest.baseSiteArtifactId !== (productArtifact?.baseSiteArtifactId || null)),
       });
       lifecycleTimes = replacement.lifecycleTimes;
     }
@@ -302,6 +318,48 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
   }
   activeContentReleases.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
   const candidate = additionalContentManifest?.contentReleaseId ? activeContentReleases.find((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId) : null;
+  const publicationContentIdentities = activeContentReleases.map((item) => item.packageRevisionId ? `${item.contentReleaseId}@${item.packageRevisionId}` : item.contentReleaseId);
+  const id = sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: publicationContentIdentities });
+  const candidateBeforeBinding = additionalContentManifest?.contentReleaseId
+    ? activeContentReleases.find((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId) || null
+    : null;
+  if (candidateBeforeBinding?.packageRevisionId && replacement) {
+    const resolvedBinding = await createOrReusePublicationLineageBinding({
+      sourceRoot,
+      sitePublicationId: id,
+      candidate: candidateBeforeBinding,
+      registry: slotRegistry,
+      expectedRegistryRevision: slotRegistry.registryRevision,
+    });
+    candidateLineageBinding = Object.fromEntries([
+      "bindingVersion",
+      "sitePublicationId",
+      "logicalContentId",
+      "packageRevisionId",
+      "candidateContentReleaseId",
+      "predecessorReceiptId",
+      "predecessorPackageId",
+      "registryRevision",
+      "lineageBindingId",
+      "bindingHash",
+      "createdAt",
+    ].map((field) => [field, resolvedBinding[field]]));
+    const candidateProjection = contentReceiptProjection(candidateBeforeBinding, {
+      baseSiteArtifactId: productArtifact?.baseSiteArtifactId || candidateBeforeBinding.baseSiteArtifactId || null,
+      lineageBinding: candidateLineageBinding,
+    });
+    const boundCandidate = {
+      ...candidateBeforeBinding,
+      ...candidateProjection,
+      lineageBinding: candidateLineageBinding,
+      lineageBindingId: candidateLineageBinding.lineageBindingId,
+      predecessorReceiptId: candidateLineageBinding.predecessorReceiptId,
+      supersedesPackageId: candidateLineageBinding.predecessorPackageId,
+    };
+    const candidateIndex = activeContentReleases.findIndex((item) => item.contentReleaseId === candidateBeforeBinding.contentReleaseId);
+    activeContentReleases.splice(candidateIndex, 1, { ...boundCandidate, receiptStatus: "replacement-candidate", replacement: { ...replacement, lineageBindingId: candidateLineageBinding.lineageBindingId, bindingHash: candidateLineageBinding.bindingHash, predecessorReceiptId: candidateLineageBinding.predecessorReceiptId, predecessorPackageSlotId: candidateLineageBinding.predecessorPackageId } });
+    replacement = { ...replacement, lineageBindingId: candidateLineageBinding.lineageBindingId, bindingHash: candidateLineageBinding.bindingHash, predecessorReceiptId: candidateLineageBinding.predecessorReceiptId, predecessorPackageSlotId: candidateLineageBinding.predecessorPackageId, supersedesPackageId: candidateLineageBinding.predecessorPackageId };
+  }
   const activeContentSet = createActiveContentSet(activeContentReleases);
   const contentManifest = {
     version: productRelease.version,
@@ -317,11 +375,11 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     candidateTarget: candidate?.target || null,
     candidateTargetPath: candidate?.targetPath || null,
     contentReplacement: replacement,
+    lineageBindingId: candidateLineageBinding?.lineageBindingId || null,
+    lineageBinding: candidateLineageBinding,
   };
   assertContentManifestComplete(contentManifest, activeContentReleases);
   const snapshotHash = createHash("sha256").update(JSON.stringify({ productRelease, productArtifactId: productArtifact?.baseSiteArtifactId || null, contentManifest })).digest("hex");
-  const publicationContentIdentities = activeContentReleases.map((item) => item.packageRevisionId ? `${item.contentReleaseId}@${item.packageRevisionId}` : item.contentReleaseId);
-  const id = sitePublicationId({ productVersion: productRelease.version, productCommit: productRelease.commit, contentReleaseIds: publicationContentIdentities });
   Object.assign(contentManifest, { sitePublicationId: id, snapshotHash });
   const publication = {
     sitePublicationId: id,
@@ -338,6 +396,8 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     snapshotHash,
     contentPackageRevisionIds: activeContentReleases.map((item) => item.packageRevisionId).filter(Boolean),
     contentSlotRegistryRevision: slotRegistry.registryRevision,
+    lineageBindingId: candidateLineageBinding?.lineageBindingId || null,
+    lineageBinding: candidateLineageBinding,
     publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: id, snapshotHash }),
     deploymentId: null,
     publicVerify: null,

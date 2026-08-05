@@ -165,6 +165,7 @@ export async function finalizeContentRelease(packageInfo) {
     packageInfo: { ...packageInfo, proofEnvelope: packageInfo.proofEnvelope || packageInfo.packageProof },
     publicEvidence: packageInfo.publicVerify || packageInfo.publicEvidence,
   });
+  const lineageBinding = packageInfo.lineageBinding || null;
   const completion = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: packageInfo.contentReleaseId,
@@ -172,8 +173,10 @@ export async function finalizeContentRelease(packageInfo) {
     contentHash: packageInfo.contentHash,
     baseSiteArtifactId: packageInfo.baseSiteArtifactId,
     packageRevisionId: packageInfo.packageRevisionId || null,
-    predecessorReceiptId: packageInfo.predecessorReceiptId || packageInfo.contentReplacement?.predecessorReceiptId || null,
-    supersedesPackageId: packageInfo.supersedesPackageId || packageInfo.contentReplacement?.supersedesPackageId || null,
+    predecessorReceiptId: lineageBinding?.predecessorReceiptId || packageInfo.predecessorReceiptId || packageInfo.contentReplacement?.predecessorReceiptId || null,
+    supersedesPackageId: lineageBinding?.predecessorPackageId || packageInfo.supersedesPackageId || packageInfo.contentReplacement?.supersedesPackageId || null,
+    lineageBindingId: lineageBinding?.lineageBindingId || null,
+    lineageBinding,
     changeSetId: packageInfo.changeSetId || null,
     changedTargets: packageInfo.changedTargets || [],
     operations: packageInfo.operations || [],
@@ -623,7 +626,13 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     const currentProductClient = path.join(root, "dist", "client");
     const currentRelease = JSON.parse(await readFile(path.join(currentProductClient, "release.json"), "utf8"));
     const currentArtifact = JSON.parse(await readFile(path.join(currentProductClient, "base-site-artifact.json"), "utf8"));
-    if (manifest.baseSiteArtifactId && manifest.baseSiteArtifactId !== currentArtifact.baseSiteArtifactId) {
+    const immutableRevisionBaseProvenance = Boolean(
+      manifest.packageRevisionId
+      && manifest.baseSiteArtifact?.baseSiteArtifactId === manifest.baseSiteArtifactId,
+    );
+    if (manifest.baseSiteArtifactId
+      && manifest.baseSiteArtifactId !== currentArtifact.baseSiteArtifactId
+      && !immutableRevisionBaseProvenance) {
       throw new Error("content package baseSiteArtifact is not the current immutable product artifact; reconcile is required");
     }
     const publication = await createSitePublication({
@@ -648,9 +657,14 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     const transported = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "transported", {
       sitePublicationId: completedPublication.sitePublicationId,
       deploymentId: completedPublication.deploymentId,
-      baseSiteArtifactId: completedPublication.contentManifest?.baseSiteArtifactId || manifest.baseSiteArtifactId || null,
-      baseProductVersion: currentRelease.version,
-      baseProductCommit: currentRelease.commit,
+      // A prepared immutable revision keeps its original package/base
+      // provenance. The new ProductArtifact is recorded by SitePublication;
+      // resume must not rewrite the revision manifest's identity fields.
+      ...(immutableRevisionBaseProvenance ? {} : {
+        baseSiteArtifactId: completedPublication.contentManifest?.baseSiteArtifactId || manifest.baseSiteArtifactId || null,
+        baseProductVersion: currentRelease.version,
+        baseProductCommit: currentRelease.commit,
+      }),
       ...projectedLifecycleTimes,
       transportedAt: new Date().toISOString(),
       attempts: (manifest.attempts || 0) + 1,
@@ -659,7 +673,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     });
     const verifying = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "verifying", { deploymentId: transported.deploymentId, sitePublicationId: transported.sitePublicationId, publicVerify: completedPublication.publicVerify, recoverable: false });
     const verified = verifying;
-    const finalized = await finalizeContentRelease({ ...packageInfo, ...verified, ...projectedLifecycleTimes });
+    const finalized = await finalizeContentRelease({ ...packageInfo, ...verified, ...projectedLifecycleTimes, lineageBinding: completedPublication.lineageBinding || null });
     const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { ...finalized.lifecycleTimes, completionPath: finalized.completionPath, recoverable: false });
     await writeJsonAtomically(path.join(packageInfo.packageDirectory, "dist", "client", "content-manifest.json"), finalizedManifest);
     const completed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "released", { publicVerify: finalizedManifest.publicVerify, recoverable: false, failure: null });
