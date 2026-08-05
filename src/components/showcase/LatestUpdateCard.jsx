@@ -10,17 +10,17 @@ export function LatestUpdateCard() {
     return <section className="latest-update-card latest-update-card--empty" aria-label="最新更新"><p>最新更新暂时无法核验</p></section>;
   }
   return (
-    <section className="latest-update-card" aria-labelledby="latest-update-title">
-      <div className="latest-update-card__copy">
-        <p className="eyebrow">最新更新</p>
-        <p id="latest-update-title" className="latest-update-card__title">Robotaxi 运营平台</p>
-        <p>真实产品版本：{release.version}</p>
-      </div>
-      <div className="latest-update-card__meta" aria-live="polite">
-        <span>{status === "live" ? "已从 Robotaxi 核验" : "使用最近一次已核验快照"}</span>
-        <code>{release.commit.slice(0, 12)}</code>
-        <a href={action.href} target="_blank" rel="noreferrer">进入 Robotaxi 运营平台</a>
-      </div>
+    <section
+      className="latest-update-card"
+      aria-labelledby="latest-update-title"
+      data-release-status={status}
+      data-release-commit={release.commit}
+    >
+      <a className="latest-update-card__link" href={action.href} target="_blank" rel="noreferrer" aria-label={`查看 Robotaxi 最新版本 ${release.version}`}>
+        <span className="eyebrow">最新更新</span>
+        <span id="latest-update-title" className="latest-update-card__title">Robotaxi 真实版本：{release.version}</span>
+        <span className="latest-update-card__action">查看最新版</span>
+      </a>
     </section>
   );
 }

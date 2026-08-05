@@ -1,4 +1,11 @@
 
+## v0.25.10 — Web 视觉定稿几何与完整展示验收修正
+
+- 保留 v0.25.9 VisualSystem、PageComposition 与 MediaAction，只把 Header、更新卡、ProductHero、首页中心轴和媒体浮起收口到已确认 Web 几何。
+- 更新卡公开内容收敛为最新更新、Robotaxi 真实版本和查看最新版；commit 与核验状态只保留内部证据。
+- 增加显式 QA fixture 证明四个独立 mediaId 槽可引用同一批准媒体，并独立保留 empty fallback；不改变正式内容事实。
+- 产品/视觉验收通过前不执行产品或内容 transport。
+
 ## v0.25.9 — 全站统一视觉系统与结构化页面组合
 
 - 全站页面组合改用共享冷白、sans-led VisualSystem，统一 shell、版心、间距、按钮、焦点、媒体比例与空/错误状态。

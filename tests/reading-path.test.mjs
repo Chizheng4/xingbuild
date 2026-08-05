@@ -29,7 +29,7 @@ test("global chrome stays minimal and mobile navigation is a full viewport layer
   assert.match(header, /<X aria-hidden="true"/);
   assert.match(header, /aria-label=\{menuOpen \? "关闭菜单" : "打开菜单"\}/);
   assert.match(header, /identity-lockup/);
-  assert.match(header, /author-lockup/);
+  assert.doesNotMatch(header, /author-lockup/);
   assert.doesNotMatch(footer, /updatedAt|location|author/);
   assert.match(components, /position: fixed;\s+inset: 0;/);
 });

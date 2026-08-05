@@ -53,7 +53,6 @@ export function SiteHeader({ pathname }) {
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`}>
       <Link className="identity-lockup" href="/" aria-label="xingbuild 首页">
         <span className="wordmark">{site.name}</span>
-        <span className="author-lockup">{site.author}</span>
       </Link>
 
       <nav

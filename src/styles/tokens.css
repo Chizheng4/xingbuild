@@ -22,7 +22,7 @@
     --color-card-surface-hover: #f8fafc;
     --color-card-border: #e2e8f0;
     --color-card-border-hover: #bfdbfe;
-    --shadow-media: 0 18px 48px rgba(15, 23, 42, 0.10);
+    --shadow-media: 0 2px 8px rgba(15, 23, 42, 0.08), 0 20px 56px rgba(15, 23, 42, 0.10);
     --shadow-control: 0 4px 16px rgba(15, 23, 42, 0.08);
     --shadow-card-hover: var(--shadow-control);
 
@@ -35,6 +35,7 @@
     --type-positioning: clamp(1.75rem, 1.3rem + 1.4vw, 3.25rem);
     --type-wordmark: clamp(1.25rem, 1.14rem + 0.35vw, 1.5rem);
     --type-page-title: clamp(1.75rem, 1.5rem + 0.8vw, 2.25rem);
+    --type-product-title: clamp(2.75rem, 3.4vw, 3.5rem);
     --type-article-title: clamp(1.875rem, 1.55rem + 1vw, 2.75rem);
     --type-section-title: clamp(1.125rem, 1.03rem + 0.3vw, 1.375rem);
     --type-reading: clamp(1rem, 0.98rem + 0.08vw, 1.0625rem);
@@ -73,6 +74,8 @@
     --measure-practice: 59.5rem;
     --measure-observation: 46rem;
     --measure-display: 45.25rem;
+    --measure-product-hero: 57.5rem;
+    --measure-update-card: 27.5rem;
     --measure-positioning: 64rem;
     --measure-reading: 46rem;
     --measure-summary: 41rem;
@@ -88,7 +91,7 @@
     --graph-min-height-narrow: 18.75rem;
     --rail-toc: 10rem;
     --touch-target: 2.75rem;
-    --header-height: 4.25rem;
+    --header-height: 4.5rem;
     --header-height-mobile: 3.75rem;
     --footer-height: 3.5rem;
     --footer-height-mobile: 3.25rem;

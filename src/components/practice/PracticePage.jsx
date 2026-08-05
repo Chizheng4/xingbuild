@@ -8,7 +8,7 @@ import { ShowcaseModule } from "../showcase/ShowcaseModule.jsx";
 export function ProductHero({ practice, headingLevel = 1, headingId, actions = [] }) {
   const Heading = `h${headingLevel}`;
   return (
-    <header className="product-hero">
+    <header className={`product-hero${headingLevel > 1 ? " product-hero--compact" : ""}`}>
       <p className="eyebrow">B端产品</p>
       <Heading id={headingId}>{practice.title}</Heading>
       <p className="product-hero__intro">{practice.intro}</p>

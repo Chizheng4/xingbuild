@@ -215,17 +215,18 @@
 @layer pages {
   .page-composition { display: grid; gap: var(--rhythm-section); padding-block: var(--space-content-entry) 0; }
   .page-composition--home { gap: var(--rhythm-section-flow); }
-  .home-page__positioning-shell { margin: 0; }
-  .home-page__positioning { max-width: var(--measure-positioning); margin: 0; font: 650 var(--type-positioning)/var(--leading-positioning) var(--font-ui); letter-spacing: -0.035em; }
-  .home-page__actions { margin-top: calc(var(--rhythm-section-flow) * -0.45); }
+  .home-page__positioning-shell { width: min(100%, var(--measure-product-hero)); margin-inline: auto; text-align: center; }
+  .home-page__positioning { max-width: 100%; margin-inline: auto; font: 650 var(--type-positioning)/var(--leading-positioning) var(--font-ui); letter-spacing: -0.035em; }
+  .home-page__actions { justify-content: center; margin-top: calc(var(--rhythm-section-flow) * -0.45); }
   .home-page__projection, .home-page__latest-briefs { min-width: 0; }
-  .home-page__projection .practice-presentation { gap: var(--space-8); }
+  .home-page__projection .practice-presentation { gap: 0; }
   .home-page__latest-briefs { display: grid; gap: var(--space-6); }
 
   .practice-page { gap: var(--space-8); }
   .practice-page > .practice-presentation { width: 100%; }
-  .practice-presentation { display: grid; gap: var(--space-8); min-width: 0; }
-  .practice-presentation > .practice-module-list { margin-top: var(--space-6); }
+  .practice-presentation { display: grid; gap: 0; min-width: 0; }
+  .practice-presentation > .latest-update-card { margin-bottom: clamp(2.25rem, 2.5vw, 2.5rem); }
+  .practice-presentation > .practice-module-list { margin-top: clamp(4.5rem, 5.5vw, 5.5rem); }
   .practice-page .closing-action { margin-top: clamp(5rem, 8vw, 8rem); }
 
   .about-page .reading-shell { width: min(100%, 52rem); }
