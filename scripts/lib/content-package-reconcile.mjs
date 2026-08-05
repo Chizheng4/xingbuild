@@ -1,11 +1,11 @@
 import { access, cp, mkdir, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { contentRootDirectory } from "./content-root.mjs";
-import { hashFile } from "./observation-content.mjs";
 import { readBaseSiteArtifact } from "./base-site-artifact.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { CONTENT_PACKAGE_CONTRACT_VERSION, contentPackageRevisionIdentity, contentPackageSlotId, selectReleasedContentPackage } from "./content-replacement.mjs";
 import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
+import { getContentLifecycleAdapter } from "./content-lifecycle-adapter.mjs";
 
 export { CONTENT_PACKAGE_CONTRACT_VERSION } from "./content-replacement.mjs";
 
@@ -13,6 +13,12 @@ async function exists(file) {
   try { await access(file); return true; } catch { return false; }
 }
 
+/**
+ * Rebind an immutable content intent to a new ProductArtifact.  Lifecycle
+ * evidence is resolved by kind; this function never infers Practice evidence
+ * from Observation draft/recovery filenames and never mutates the canonical
+ * content before public finalize.
+ */
 export async function reconcileContentPackage({ sourceRoot, contentReleaseId, baseSiteArtifactId, now = () => new Date().toISOString() } = {}) {
   if (!sourceRoot || !path.isAbsolute(sourceRoot)) throw new Error("content reconcile requires an absolute sourceRoot");
   if (!contentReleaseId) throw new Error("content reconcile requires contentReleaseId");
@@ -25,32 +31,30 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   if (original.contentReleaseId !== contentReleaseId || !original.kind || !original.target || !original.contentHash) {
     throw new Error("content reconcile source package identity is invalid");
   }
+  const expectedLogicalContentId = `${original.kind}:${original.target}`;
+  if (original.logicalContentId && original.logicalContentId !== expectedLogicalContentId) {
+    throw new Error("content reconcile logicalContentId kind/target drift");
+  }
 
-  const contentDirectory = contentRootDirectory({ sourceRoot });
-  const canonicalPath = path.join(contentDirectory, original.kind === "content" ? "observations" : original.kind === "article" ? "articles" : original.kind === "profile" ? "profile" : original.kind === "businessObservation" ? "business-observations" : "products", `${original.target}.json`);
-  const draftPath = path.join(sourceRoot, ".content-workspace", "drafts", `${original.target}.json`);
-  const recoveryPath = path.join(sourceRoot, ".content-workspace", "recoveries", `${original.target}.json`);
-  const reviewPath = path.join(sourceRoot, ".content-workspace", "reviews", `${original.target}.json`);
-  for (const file of [canonicalPath, draftPath, recoveryPath, reviewPath]) {
-    if (!(await exists(file))) throw new Error(`content reconcile lifecycle file is missing: ${path.relative(sourceRoot, file)}`);
-  }
-  const [canonicalHash, draftHash, recoveryHash, review] = await Promise.all([
-    hashFile(canonicalPath), hashFile(draftPath), hashFile(recoveryPath), readFile(reviewPath, "utf8").then(JSON.parse),
-  ]);
-  if (review.status !== "approved") throw new Error(`content reconcile review is not approved: ${original.target}`);
-  if (canonicalHash !== original.contentHash || draftHash !== canonicalHash || recoveryHash !== canonicalHash || review.contentHash !== canonicalHash) {
-    throw new Error(`content reconcile source/content/review hash drift: ${original.target}`);
-  }
-  const canonical = JSON.parse(await readFile(canonicalPath, "utf8"));
-  const canonicalTarget = original.kind === "content" || original.kind === "article" ? canonical.slug : canonical.id;
-  if (canonicalTarget !== original.target) throw new Error(`content reconcile target drift: ${original.target}`);
+  const adapter = getContentLifecycleAdapter(original.kind);
+  const canonical = await adapter.resolveCanonical({ sourceRoot, kind: original.kind, target: original.target, logicalContentId: original.logicalContentId });
+  const originalPackageInfo = { ...original, packageDirectory: releaseRoot, sourceRoot };
+  const reviewEvidence = await adapter.resolveReviewEvidence({ sourceRoot, kind: original.kind, target: original.target, canonical, packageInfo: originalPackageInfo });
+  const proof = await adapter.validateBefore({ packageInfo: originalPackageInfo, canonical, reviewEvidence, changeSet: original });
+  const proofEnvelope = original.proofEnvelope || await adapter.createProof({ packageInfo: originalPackageInfo, canonical, reviewEvidence, changeSet: original });
 
   const artifactPath = path.join(sourceRoot, ".content-workspace", "base-site-artifacts", baseSiteArtifactId, "base-site-artifact.json");
   const baseSiteArtifact = await readBaseSiteArtifact({ sourceRoot, artifactPath });
   if (baseSiteArtifact.baseSiteArtifactId !== baseSiteArtifactId) throw new Error("content reconcile baseSiteArtifact identity drift");
 
   const logicalId = original.logicalContentId || `${original.kind}:${original.target}`;
-  const identity = contentPackageRevisionIdentity({ contentReleaseId, logicalContentId: logicalId, contentHash: original.contentHash, sourceHash: canonicalHash, baseSiteArtifactId });
+  const identity = contentPackageRevisionIdentity({
+    contentReleaseId,
+    logicalContentId: logicalId,
+    contentHash: original.contentHash,
+    sourceHash: proof.beforeHash,
+    baseSiteArtifactId,
+  });
   const revisionDirectory = path.join(releaseRoot, "revisions", identity.packageRevisionId);
   const manifestPath = path.join(revisionDirectory, "content-release.json");
   if (await exists(manifestPath)) {
@@ -68,7 +72,11 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     const release = await readFile(path.join(packageDirectory, "content-release.json"), "utf8").then(JSON.parse).catch(() => null);
     if (release?.state === "released") releasedPackages.push({ packageDirectory, release });
   }
-  const activePackage = await selectReleasedContentPackage(releasedPackages, contentReleaseId);
+  let activePackage = await selectReleasedContentPackage(releasedPackages, contentReleaseId);
+  // A recoverable immutable Practice candidate may have no released predecessor
+  // in this logical slot. Its own package is still the predecessor/recovery
+  // source; it is never treated as active until finalize succeeds.
+  if (!activePackage && original.kind === "practice") activePackage = { packageDirectory: releaseRoot, release: original };
   if (!activePackage) throw new Error(`content reconcile requires one released active package: ${contentReleaseId}`);
   const lifecycleTimes = resolveContentLifecycleTimes(original, {
     activeRecord: activePackage.release,
@@ -79,15 +87,27 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   await mkdir(sourceDirectory, { recursive: true });
   const predecessorSource = path.join(activePackage.packageDirectory, "source");
   if (await exists(predecessorSource)) await cp(predecessorSource, sourceDirectory, { recursive: true, force: true });
-  await cp(contentDirectory, path.join(sourceDirectory, ".content-workspace", "content"), { recursive: true, force: true });
+  if (original.kind !== "practice") {
+    const contentDirectory = contentRootDirectory({ sourceRoot });
+    await cp(contentDirectory, path.join(sourceDirectory, ".content-workspace", "content"), { recursive: true, force: true });
+  }
 
   const reconciledAt = now();
   const manifest = {
     ...activePackage.release,
     contentReleaseId,
     logicalContentId: logicalId,
+    kind: original.kind,
+    target: original.target,
     contentHash: original.contentHash,
-    sourceHash: canonicalHash,
+    sourceHash: proof.beforeHash,
+    beforeHash: proof.beforeHash,
+    afterHash: proof.afterHash || original.contentHash,
+    beforeSnapshot: proof.beforeSnapshot || proofEnvelope.beforeSnapshot || null,
+    afterSnapshot: proof.afterSnapshot || proofEnvelope.afterSnapshot || null,
+    proofEnvelope,
+    reviewEnvelope: proofEnvelope.reviewEnvelope || null,
+    recoveryEnvelope: proofEnvelope.recoveryEnvelope || null,
     baseSiteArtifactId,
     baseSiteArtifact,
     baseProductVersion: baseSiteArtifact.productVersion,
@@ -122,6 +142,9 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     supersedesPackageId: manifest.supersedesPackageId,
     recoverySource: manifest.recoverySource,
     revisionTuple: identity.tuple,
+    beforeHash: proof.beforeHash,
+    afterHash: proof.afterHash || original.contentHash,
+    changeSetId: manifest.changeSetId || null,
     reconciledAt,
   });
   return { ...manifest, packageDirectory: revisionDirectory, manifestPath, sourceDirectory, sourceRoot, lineagePath, reused: false };

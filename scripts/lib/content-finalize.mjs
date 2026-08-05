@@ -7,8 +7,19 @@ import {
   isFile,
   projectRoot,
 } from "./observation-content.mjs";
+import { getContentLifecycleAdapter } from "./content-lifecycle-adapter.mjs";
 
-export async function finalizeReleasedContent(slug, { rootDirectory = projectRoot } = {}) {
+export async function finalizeReleasedContent(slug, { rootDirectory = projectRoot, kind = "content", packageInfo = null, publicEvidence = { ok: true } } = {}) {
+  if (kind !== "content") {
+    const adapter = getContentLifecycleAdapter(kind);
+    return adapter.finalizeCanonical({
+      sourceRoot: rootDirectory,
+      target: slug,
+      kind,
+      packageInfo: packageInfo || { kind, target: slug, sourceRoot: rootDirectory },
+      publicEvidence,
+    });
+  }
   assertValidSlug(slug);
   const workspace = path.join(rootDirectory, ".content-workspace");
   const files = {

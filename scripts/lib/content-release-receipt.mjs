@@ -75,6 +75,9 @@ async function readProjection(packageDirectory, release, collections) {
   if (projection.changedTargets != null || release.changedTargets != null) {
     assertEqual(JSON.stringify(projection.changedTargets || []), JSON.stringify(release.changedTargets || []), "projection changedTargets", packageDirectory);
   }
+  for (const field of ["beforeHash", "afterHash"]) {
+    if (projection[field] != null || release[field] != null) assertEqual(projection[field] || null, release[field] || null, `projection ${field}`, packageDirectory);
+  }
   // Legacy intent projections were built before transport bound the current
   // ProductArtifact. A missing/null base id is tolerated; a declared id may
   // never drift from the lifecycle receipt.
@@ -142,6 +145,9 @@ export async function readContentReleaseReceipt(packageDirectory) {
   if (completion.changedTargets != null || release.changedTargets != null) {
     if (completion.changedTargets != null) assertEqual(JSON.stringify(completion.changedTargets), JSON.stringify(release.changedTargets || []), "completion changedTargets", packageDirectory);
   }
+  for (const field of ["beforeHash", "afterHash"]) {
+    if (completion[field] != null) assertEqual(completion[field] || null, release[field] || null, `completion ${field}`, packageDirectory);
+  }
   if (completion.packageRevisionId != null || release.packageRevisionId != null) {
     assertEqual(completion.packageRevisionId || null, release.packageRevisionId || null, "completion packageRevisionId", packageDirectory);
   }
@@ -167,6 +173,8 @@ export async function readContentReleaseReceipt(packageDirectory) {
     targetPath: release.targetPath || null,
     changeSetId: release.changeSetId || null,
     changedTargets: release.changedTargets || [],
+    beforeHash: release.beforeHash || null,
+    afterHash: release.afterHash || null,
     baseSiteArtifactId: release.baseSiteArtifactId,
     firstPublishedAt: lifecycleTimes.firstPublishedAt,
     revisionReleasedAt: lifecycleTimes.revisionReleasedAt,
@@ -201,6 +209,8 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     targetPath: receipt.targetPath || null,
     changeSetId: receipt.changeSetId || null,
     changedTargets: receipt.changedTargets || [],
+    beforeHash: receipt.beforeHash || null,
+    afterHash: receipt.afterHash || null,
     baseSiteArtifactId,
     firstPublishedAt: lifecycleTimes.firstPublishedAt,
     revisionReleasedAt: lifecycleTimes.revisionReleasedAt,

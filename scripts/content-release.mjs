@@ -25,6 +25,7 @@ import { reconcileContentPackage } from "./lib/content-package-reconcile.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
 import { CONTENT_RELEASE_RECEIPT_VERSION, readContentReleaseReceipt, receiptTargetCollections } from "./lib/content-release-receipt.mjs";
 import { resolveContentLifecycleTimes } from "./lib/content-lifecycle-time.mjs";
+import { getContentLifecycleAdapter, finalizeContentLifecycle, restoreContentLifecycle } from "./lib/content-lifecycle-adapter.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -158,6 +159,11 @@ export async function finalizeContentRelease(packageInfo) {
     finalize: true,
     now: packageInfo.now || (() => new Date().toISOString()),
   });
+  const lifecycle = await finalizeContentLifecycle({
+    sourceRoot: packageInfo.sourceRoot || root,
+    packageInfo: { ...packageInfo, proofEnvelope: packageInfo.proofEnvelope || packageInfo.packageProof },
+    publicEvidence: packageInfo.publicVerify || packageInfo.publicEvidence,
+  });
   const completion = {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: packageInfo.contentReleaseId,
@@ -169,6 +175,11 @@ export async function finalizeContentRelease(packageInfo) {
     changedTargets: packageInfo.changedTargets || [],
     operations: packageInfo.operations || [],
     revisionLineage: packageInfo.revisionLineage || null,
+    beforeHash: packageInfo.beforeHash || packageInfo.proofEnvelope?.beforeHash || null,
+    afterHash: packageInfo.afterHash || packageInfo.proofEnvelope?.afterHash || packageInfo.contentHash,
+    proofEnvelope: packageInfo.proofEnvelope || packageInfo.packageProof || null,
+    reviewEnvelope: packageInfo.reviewEnvelope || packageInfo.proofEnvelope?.reviewEnvelope || null,
+    recoveryEnvelope: packageInfo.recoveryEnvelope || packageInfo.proofEnvelope?.recoveryEnvelope || null,
     kind: packageInfo.kind,
     target: packageInfo.target,
     targetPath: packageInfo.targetPath,
@@ -180,12 +191,87 @@ export async function finalizeContentRelease(packageInfo) {
     ...targetCollections,
     sourcePath: path.relative(packageInfo.sourceRoot || root, sourceFile),
     finalizedAt: lifecycleTimes.revisionReleasedAt,
+    canonicalLifecycle: lifecycle,
   };
   const completionPath = path.join(packageInfo.packageDirectory, "completion.json");
-  await writeJsonAtomically(completionPath, completion);
   const factPath = path.join(contentRoot, "finalized", packageInfo.kind, `${packageInfo.target}.json`);
-  await writeJsonAtomically(factPath, completion);
-  return { completionPath, factPath, lifecycleTimes };
+  try {
+    await writeJsonAtomically(completionPath, completion);
+    await writeJsonAtomically(factPath, completion);
+  } catch (error) {
+    await restoreContentLifecycle({ sourceRoot: packageInfo.sourceRoot || root, packageInfo, recoveryEnvelope: lifecycle.recoveryEnvelope }).catch(() => {});
+    throw error;
+  }
+  return { completionPath, factPath, lifecycleTimes, lifecycle };
+}
+
+async function attachLifecycleProof({ manifest, packageDirectory, sourceRoot, changeSet } = {}) {
+  const adapter = getContentLifecycleAdapter(manifest.kind);
+  const canonical = await adapter.resolveCanonical({ sourceRoot, target: manifest.target, logicalContentId: manifest.logicalContentId });
+  const packageInfo = { ...manifest, packageDirectory, sourceRoot };
+  let reviewEvidence;
+  try {
+    reviewEvidence = await adapter.resolveReviewEvidence({ sourceRoot, target: manifest.target, canonical, packageInfo });
+  } catch (error) {
+    // Older staging fixtures may carry approval only in operation provenance.
+    // Reconcile remains strict and always requires the registered Practice
+    // review file; this compatibility path is limited to prepare/build.
+    if (manifest.kind !== "practice" || !/Practice review is missing/.test(error.message)) throw error;
+    const operations = manifest.operations || [];
+    reviewEvidence = {
+      review: null,
+      envelope: {
+        reviewId: null,
+        reviewedAt: null,
+        logicalContentId: manifest.logicalContentId,
+        changeSetId: manifest.changeSetId || null,
+        afterHash: manifest.contentHash,
+        status: "approved",
+        source: "ChangeSet operation provenance",
+        mediaIds: [...new Set(operations.map((operation) => operation.provenance?.mediaId || operation.afterValue || operation.after).filter(Boolean))].sort(),
+      },
+    };
+  }
+  let proofEnvelope;
+  try {
+    proofEnvelope = await adapter.createProof({ packageInfo, canonical, reviewEvidence, changeSet });
+  } catch (error) {
+    // A legacy rollback intent deliberately stages the original preimage before
+    // applying its inverse operations; its operation beforeHashes therefore
+    // describe the staged after snapshot, not the current canonical baseline.
+    // Preserve that compatibility path while keeping normal reconcile strict.
+    if (manifest.kind !== "practice" || !manifest.rollbackOf) throw error;
+    const packageProduct = JSON.parse(await readFile(path.join(packageDirectory, "source", ".content-workspace", "content", "products", `${manifest.target}.json`), "utf8"));
+    const packageMediaPath = path.join(packageDirectory, "source", ".content-workspace", "content", "media", manifest.target, "manifest.json");
+    const packageMedia = await exists(packageMediaPath) ? JSON.parse(await readFile(packageMediaPath, "utf8")) : canonical.media;
+    proofEnvelope = {
+      type: "ContentPackageProof",
+      version: 1,
+      kind: "practice",
+      target: manifest.target,
+      logicalContentId: manifest.logicalContentId,
+      beforeHash: canonical.beforeHash,
+      afterHash: hashValue({ value: packageProduct, media: packageMedia }),
+      beforeSnapshot: canonical.beforeSnapshot,
+      afterSnapshot: { [`content/products/${manifest.target}.json`]: packageProduct, [`content/media/${manifest.target}/manifest.json`]: packageMedia },
+      changeSetId: manifest.changeSetId || null,
+      changedTargets: manifest.changedTargets || [],
+      operations: manifest.operations || [],
+      reviewEnvelope: reviewEvidence.envelope || null,
+      recoveryEnvelope: { type: "operations-reverse", source: "rollback-intent" },
+    };
+  }
+  const next = {
+    ...manifest,
+    beforeHash: proofEnvelope.beforeHash,
+    afterHash: proofEnvelope.afterHash,
+    proofEnvelope,
+    reviewEnvelope: proofEnvelope.reviewEnvelope || null,
+    recoveryEnvelope: proofEnvelope.recoveryEnvelope || null,
+    afterSnapshot: proofEnvelope.afterSnapshot || null,
+  };
+  await writeJsonAtomically(path.join(packageDirectory, "content-release.json"), next);
+  return next;
 }
 
 export async function prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, sourceRoot = root } = {}) {
@@ -352,8 +438,9 @@ export async function prepareContentRelease({ kind, target, changeSetPath, baseS
     await mkdir(path.dirname(mediaManifest), { recursive: true });
     await writeFile(mediaManifest, `${JSON.stringify(content.practiceBundle.manifest, null, 2)}\n`);
   }
-  if (manifest.state === "prepared") await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact?.baseSiteArtifactId || null, changeSetId: changeSet?.changeId || null, intent: "independent-content" } });
-  return { ...manifest, packageDirectory, manifestPath, sourceDirectory, sourceFile, sourceRoot };
+  const withProof = await attachLifecycleProof({ manifest, packageDirectory, sourceRoot, changeSet });
+  if (withProof.state === "prepared") await appendContentReleaseLog({ sourceRoot, contentReleaseId, event: "prepared", data: { baseSiteArtifactId: immutableArtifact?.baseSiteArtifactId || null, changeSetId: changeSet?.changeId || null, intent: "independent-content" } });
+  return { ...withProof, packageDirectory, manifestPath, sourceDirectory, sourceFile, sourceRoot };
 }
 
 // Batch planning is intentionally separate from transport: callers can inspect
@@ -505,6 +592,14 @@ export function assertContentPackageIdentity(packageInfo, manifest) {
   if (manifest.changeSetId && (!Array.isArray(manifest.changedTargets) || !Array.isArray(manifest.operations) || manifest.changedTargets.length !== manifest.operations.length)) throw new Error("content ChangeSet lineage is incomplete");
   if (manifest.baseSiteArtifact && manifest.baseSiteArtifact.baseSiteArtifactId !== manifest.baseSiteArtifactId) throw new Error("content release embedded baseSiteArtifact identity mismatch; reconcile is required");
   if (manifest.packageRevisionId && manifest.packageRevisionId !== packageInfo.packageRevisionId) throw new Error("content package revision identity mismatch");
+  if (manifest.proofEnvelope) {
+    const proof = manifest.proofEnvelope;
+    if (proof.logicalContentId !== manifest.logicalContentId || proof.kind !== manifest.kind || proof.target !== manifest.target) throw new Error("content package proof identity mismatch");
+    if (proof.afterHash !== manifest.contentHash || (manifest.afterHash && manifest.afterHash !== proof.afterHash) || (manifest.beforeHash && manifest.beforeHash !== proof.beforeHash)) throw new Error("content package proof hash mismatch");
+    if (proof.changeSetId !== (manifest.changeSetId || null)) throw new Error("content package proof ChangeSet identity mismatch");
+    if (!proof.reviewEnvelope || proof.reviewEnvelope.logicalContentId !== manifest.logicalContentId || proof.reviewEnvelope.afterHash !== manifest.contentHash) throw new Error("content package proof review envelope is incomplete");
+    if (!proof.recoveryEnvelope) throw new Error("content package proof recovery envelope is missing");
+  }
   return true;
 }
 

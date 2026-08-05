@@ -1,4 +1,11 @@
 
+## v0.25.15 — 内容类型生命周期适配与 Package 证明式 Reconcile
+
+- 按内容 kind 建立唯一 `ContentLifecycleAdapter` registry；Practice 使用 products canonical、Practice review、media approval/provenance 与 package recovery，不再要求通用 `drafts/robotaxi.json` 或 `recoveries/robotaxi.json`。
+- immutable package 保存/兼容读取 before/after snapshot、ChangeSet、review envelope 与 recovery envelope；reconcile 校验 canonical before + 确定性 operations 得到 package after/contentHash，只重新绑定 ProductArtifact。
+- public verify 后由同一 adapter 原子推进 Practice canonical after，保留 before recovery，失败不污染旧 active；Observation、Article、Profile、BusinessObservation 保持各自生命周期合同。
+- 保留 v0.25.14 的视觉、五路由、34 active 内容、四槽媒体与独立内容身份；本版本仅完成 Engineering 能力，不执行内容或产品 transport。
+
 ## v0.25.14 — 内容首次发布与修订发布时间分层
 
 - 将 logical content 的 `firstPublishedAt` 与 package revision 的 `revisionReleasedAt` 分离；`publishedAt` 继续只投影首次公开时间。

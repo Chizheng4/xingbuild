@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { contentRootDirectory } from "./content-root.mjs";
-import { hashFile } from "./observation-content.mjs";
 import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
+import { getContentLifecycleAdapter } from "./content-lifecycle-adapter.mjs";
 
 export const CONTENT_PACKAGE_CONTRACT_VERSION = "content-package-revision-v1";
 export const CONTENT_REPLACEMENT_STATES = Object.freeze(new Set(["prepared", "built", "recoverable", "transported", "verifying"]));
@@ -15,14 +14,6 @@ function stableJson(value) {
 function requireString(value, field, location) {
   if (typeof value !== "string" || !value) throw new Error(`content replacement ${field} is missing: ${location}`);
   return value;
-}
-
-function targetDirectory(kind) {
-  return kind === "content" ? "observations"
-    : kind === "article" ? "articles"
-      : kind === "profile" ? "profile"
-        : kind === "businessObservation" ? "business-observations"
-          : "products";
 }
 
 export function contentPackageRevisionIdentity({ contentReleaseId, logicalContentId, contentHash, sourceHash, baseSiteArtifactId } = {}) {
@@ -153,40 +144,23 @@ export async function validateContentReplacement({ candidate, candidatePackageDi
     throw new Error(`content replacement baseSiteArtifactId drift: ${location}`);
   }
 
-  const directory = targetDirectory(candidate.kind);
-  const relative = path.join(directory, `${candidate.target}.json`);
-  const canonicalPath = path.join(contentRootDirectory({ sourceRoot }), relative);
-  const draftPath = path.join(sourceRoot, ".content-workspace", "drafts", `${candidate.target}.json`);
-  const recoveryPath = path.join(sourceRoot, ".content-workspace", "recoveries", `${candidate.target}.json`);
-  const reviewPath = path.join(sourceRoot, ".content-workspace", "reviews", `${candidate.target}.json`);
-  const packageSourcePath = path.join(candidatePackageDirectory, "source", ".content-workspace", "content", relative);
-  let review;
+  const adapter = getContentLifecycleAdapter(candidate.kind);
+  const canonical = await adapter.resolveCanonical({ sourceRoot, kind: candidate.kind, target: candidate.target, logicalContentId: candidate.logicalContentId });
+  const packageInfo = { ...candidate, packageDirectory: candidatePackageDirectory, sourceRoot, logicalHashUpdate };
+  let reviewEvidence;
   try {
-    review = JSON.parse(await readFile(reviewPath, "utf8"));
+    reviewEvidence = await adapter.resolveReviewEvidence({ sourceRoot, kind: candidate.kind, target: candidate.target, canonical, packageInfo });
   } catch (error) {
-    throw new Error(`content replacement approved review is missing or unreadable: ${location}: ${error.message}`);
+    throw new Error(`content replacement approved review/source lifecycle drift: ${location}: ${error.message}`);
   }
-  if (review.status !== "approved"
-    || (!logicalHashUpdate && review.contentHash !== candidate.sourceHash)
-    || (logicalHashUpdate && ![candidate.sourceHash, candidate.contentHash].includes(review.contentHash))
-    || (candidate.reviewedAt && review.reviewedAt !== candidate.reviewedAt)) {
-    throw new Error(`content replacement approved review drift: ${location}`);
+  if (candidate.reviewedAt && reviewEvidence.reviewedAt !== candidate.reviewedAt) {
+    throw new Error(`content replacement reviewedAt drift: ${location}`);
   }
-  let hashes;
   try {
-    hashes = await Promise.all([canonicalPath, draftPath, recoveryPath, packageSourcePath].map(hashFile));
+    await adapter.validateBefore({ packageInfo, canonical, reviewEvidence, changeSet: candidate });
   } catch (error) {
-    throw new Error(`content replacement source lifecycle is missing or unreadable: ${location}: ${error.message}`);
+    throw new Error(`content replacement source lifecycle hash drift: ${location}: ${error.message}`);
   }
-  const lifecycleDrift = logicalHashUpdate
-    ? hashes[3] !== candidate.sourceHash || new Set(hashes.slice(0, 3)).size !== 1
-    : hashes.some((value) => value !== candidate.sourceHash) || candidate.contentHash !== candidate.sourceHash;
-  if (lifecycleDrift) {
-    throw new Error(`content replacement source lifecycle hash drift: ${location}`);
-  }
-  const canonical = JSON.parse(await readFile(canonicalPath, "utf8"));
-  const canonicalTarget = candidate.kind === "content" || candidate.kind === "article" ? canonical.slug : canonical.id;
-  if (canonicalTarget !== candidate.target) throw new Error(`content replacement canonical target drift: ${location}`);
   return {
     contentReleaseId: candidate.contentReleaseId,
     packageRevisionId: candidate.packageRevisionId,
