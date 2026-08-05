@@ -1,4 +1,11 @@
 
+## v0.25.6 — 内容发布替换 revision 与 active 生命周期
+
+- logical identity 与 immutable `ContentPackageRevision` 分离；Coordinator 依据 `supersedesPackageId`、revision tuple 和 lineage 将合法 replacement 放入唯一 active slot。
+- replacement 在组装前校验正文 hash、kind、target、source lifecycle、approved review 与当前 ProductArtifact；任何漂移硬失败且不污染旧 active。
+- SitePublication identity 显式包含 replacement revision，重复 resume 复用同一 snapshot/deployment；公网 manifest 精确校验 revision receipt 与 lineage。
+- 三个既有 Brief revision 已在 v0.25.5 ProductArtifact 上完成本地 replacement 快照验证；不修改正文、审核、媒体、发布时间或既有 `contentReleaseId`，不执行内容 transport。
+
 ## v0.25.5 — 内容发布站点快照身份与可恢复发布
 
 - `content-release.json` 与 `completion.json` 组成 `ContentReleaseReceipt`，成为 active 生命周期唯一事实；旧 dist 投影缺失基座字段不再导致内容静默丢失。

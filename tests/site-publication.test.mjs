@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { assertSitePublicationEvidence, createSitePublication, readActiveContentReleases, sitePublicationId, sitePublicationIdempotencyKey, validateUploadQuota } from "../scripts/lib/site-publication.mjs";
+import { validateContentReplacement } from "../scripts/lib/content-replacement.mjs";
 import { fileURLToPath } from "node:url";
 
 async function fixture() {
@@ -56,6 +57,17 @@ test("site publication preserves active content when product snapshot is rebuilt
   assert.deepEqual(JSON.parse(await readFile(path.join(f.output, "content-manifest.json"))).publishedSlugs, ["a"]);
 });
 
+test("same SitePublication identity preserves persisted deployment evidence on reassembly", async () => {
+  const f = await fixture();
+  const first = await createSitePublication({ productClient: f.product, releasesRoot: f.releases, outputRoot: f.output });
+  const deployment = { deploymentId: "deployment-stable", url: "https://example.invalid" };
+  await writeFile(path.join(f.output, "site-publication.json"), `${JSON.stringify({ ...first, client: undefined, state: "recoverable", deployment }, null, 2)}\n`);
+  const resumed = await createSitePublication({ productClient: f.product, releasesRoot: f.releases, outputRoot: f.output });
+  assert.equal(resumed.sitePublicationId, first.sitePublicationId);
+  assert.equal(resumed.snapshotHash, first.snapshotHash);
+  assert.deepEqual(JSON.parse(await readFile(path.join(f.output, "deployment.json"), "utf8")), deployment);
+});
+
 test("released receipt remains active when a legacy projection omits baseSiteArtifactId", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "xingbuild-receipt-legacy-"));
   const releases = path.join(root, "releases");
@@ -90,6 +102,68 @@ test("workspace receipt facts retain every released target including legacy proj
   for (const target of ["nhtsa-first-responder-requirement", "didi-20f-autonomous-driving-disclosure", "waymo-ojai-first-public-rider-plan", "waymo-us-service-area-expansion"]) {
     assert.ok(active.some((item) => item.target === target));
   }
+});
+
+test("three existing Brief revisions replace one logical slot without changing the active inventory", async () => {
+  const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const temp = await mkdtemp(path.join(os.tmpdir(), "xingbuild-replacement-publication-"));
+  const product = path.join(temp, "product");
+  await mkdir(product, { recursive: true });
+  await writeFile(path.join(product, "release.json"), JSON.stringify({ version: "v0.25.5", commit: "554526b93e62d589b132308b185d8e40b90e89a0" }));
+  await cp(
+    path.join(root, ".content-workspace", "base-site-artifacts", "v0.25.5-554526b93e62", "base-site-artifact.json"),
+    path.join(product, "base-site-artifact.json"),
+  );
+  const revisions = [
+    ["content-didi-20f-autonomous-driving-disclosure-8a47aeb08c8371ad", "revision-ace50f5aea5235ee"],
+    ["content-waymo-ojai-first-public-rider-plan-bc67e9bf935bbff0", "revision-2bb55e82e07fe0a4"],
+    ["content-waymo-us-service-area-expansion-0207712472144f3d", "revision-d7506767085cfd37"],
+  ];
+  for (const [contentReleaseId, packageRevisionId] of revisions) {
+    const candidatePackageDirectory = path.join(root, ".content-workspace", "releases", contentReleaseId, "revisions", packageRevisionId);
+    const candidate = JSON.parse(await readFile(path.join(candidatePackageDirectory, "content-release.json"), "utf8"));
+    const outputRoot = path.join(temp, packageRevisionId);
+    const first = await createSitePublication({
+      productClient: product,
+      releasesRoot: path.join(root, ".content-workspace", "releases"),
+      outputRoot,
+      additionalContentManifest: candidate,
+      candidatePackageDirectory,
+      sourceRoot: root,
+    });
+    const resumed = await createSitePublication({
+      productClient: product,
+      releasesRoot: path.join(root, ".content-workspace", "releases"),
+      outputRoot,
+      additionalContentManifest: candidate,
+      candidatePackageDirectory,
+      sourceRoot: root,
+    });
+    assert.equal(first.contentReleaseIds.length, 34);
+    assert.equal(first.contentManifest.publishedSlugs.length, 33);
+    assert.equal(first.contentManifest.practiceIds.length, 1);
+    assert.equal(first.contentManifest.contentReleaseReceipts.filter((item) => item.contentReleaseId === contentReleaseId).length, 1);
+    assert.equal(first.contentManifest.contentReleaseReceipts.find((item) => item.contentReleaseId === contentReleaseId).packageRevisionId, packageRevisionId);
+    assert.equal(first.contentReplacement.supersedesPackageId, contentReleaseId);
+    assert.equal(first.sitePublicationId, resumed.sitePublicationId);
+    assert.equal(first.snapshotHash, resumed.snapshotHash);
+  }
+});
+
+test("replacement identity, review, source, and base drift hard fail", async () => {
+  const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const contentReleaseId = "content-didi-20f-autonomous-driving-disclosure-8a47aeb08c8371ad";
+  const candidatePackageDirectory = path.join(root, ".content-workspace", "releases", contentReleaseId, "revisions", "revision-ace50f5aea5235ee");
+  const candidate = JSON.parse(await readFile(path.join(candidatePackageDirectory, "content-release.json"), "utf8"));
+  const activeReceipt = (await readActiveContentReleases(path.join(root, ".content-workspace", "releases"))).find((item) => item.contentReleaseId === contentReleaseId);
+  const options = { candidatePackageDirectory, activeReceipt, productArtifactId: "v0.25.5-554526b93e62", sourceRoot: root };
+  await validateContentReplacement({ ...options, candidate });
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, contentHash: "0".repeat(64) } }), /logical contentHash drift/);
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, target: "wrong-target" } }), /logical target drift/);
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, kind: "article" } }), /logical kind drift/);
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, reviewedAt: "wrong-review" } }), /reviewedAt drift/);
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, sourceHash: "0".repeat(64) } }), /revision tuple drift/);
+  await assert.rejects(validateContentReplacement({ ...options, candidate: { ...candidate, baseSiteArtifactId: "wrong-base" } }), /revision tuple drift/);
 });
 
 test("incremental content publication merges eight active releases with one candidate", async () => {

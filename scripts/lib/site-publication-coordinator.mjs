@@ -106,9 +106,16 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
   if (!Array.isArray(actualReceipts) || actualReceipts.length !== expectedReceipts.length) throw new Error("public content manifest receipt projection is incomplete");
   for (const expected of expectedReceipts) {
     const actual = actualReceipts.find((item) => item.contentReleaseId === expected.contentReleaseId);
-    if (!actual || actual.receiptHash !== expected.receiptHash || actual.contentHash !== expected.contentHash || actual.kind !== expected.kind || actual.target !== expected.target) {
+    if (!actual || actual.receiptHash !== expected.receiptHash || (actual.packageRevisionId || null) !== (expected.packageRevisionId || null)
+      || actual.contentHash !== expected.contentHash || actual.kind !== expected.kind || actual.target !== expected.target) {
       throw new Error(`public content manifest receipt identity mismatch: ${expected.contentReleaseId}`);
     }
+  }
+  if ((contentManifest.candidatePackageRevisionId || null) !== (publication.candidatePackageRevisionId || null)) {
+    throw new Error("public content manifest candidate package revision identity mismatch");
+  }
+  if (JSON.stringify(contentManifest.contentReplacement || null) !== JSON.stringify(publication.contentReplacement || null)) {
+    throw new Error("public content manifest replacement lineage mismatch");
   }
   const routes = new Set(["/", "/products", "/business-observations", "/observations", "/about"]);
   if (publication.targetPath) routes.add(publication.targetPath);
@@ -151,6 +158,8 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       businessObservationIds: contentManifest.businessObservationIds,
       mediaPaths: contentManifest.mediaPaths,
       contentReleaseReceipts: actualReceipts,
+      candidatePackageRevisionId: contentManifest.candidatePackageRevisionId || null,
+      contentReplacement: contentManifest.contentReplacement || null,
     },
     pages,
     media,

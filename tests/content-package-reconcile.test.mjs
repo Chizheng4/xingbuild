@@ -34,6 +34,16 @@ async function fixture() {
   return { root, contentHash };
 }
 
+async function markRevisionReleased(reconciled, baseSiteArtifactId) {
+  const manifest = { ...reconciled, state: "released", deploymentId: "new-deployment", publicVerify: { ok: true }, targetPath: `/observations/${target}`, publishedSlugs: [target], publishedArticleSlugs: [], practiceIds: [], profileIds: [], businessObservationIds: [] };
+  delete manifest.packageDirectory; delete manifest.manifestPath; delete manifest.sourceDirectory; delete manifest.sourceRoot; delete manifest.lineagePath; delete manifest.reused;
+  await writeFile(reconciled.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await mkdir(path.join(reconciled.packageDirectory, "dist", "client"), { recursive: true });
+  await writeFile(path.join(reconciled.packageDirectory, "dist", "client", "content-manifest.json"), `${JSON.stringify(manifest)}\n`);
+  await writeFile(path.join(reconciled.packageDirectory, "completion.json"), `${JSON.stringify({ contentReleaseId: releaseId, contentHash: reconciled.contentHash, baseSiteArtifactId, packageRevisionId: reconciled.packageRevisionId, kind: "content", target })}\n`);
+  return manifest;
+}
+
 test("reconcile creates one immutable package revision and reuses the same tuple", async () => {
   const { root, contentHash } = await fixture();
   const first = await reconcileContentPackage({ sourceRoot: root, contentReleaseId: releaseId, baseSiteArtifactId: artifactId, now: () => "2026-08-04T00:00:00.000Z" });
@@ -58,13 +68,22 @@ test("failed revision does not replace active content and released revision is d
   const { root } = await fixture();
   const reconciled = await reconcileContentPackage({ sourceRoot: root, contentReleaseId: releaseId, baseSiteArtifactId: artifactId });
   await assert.rejects(readActiveContentReleases(path.join(root, ".content-workspace", "releases")), /completion fact is missing/);
-  const manifest = { ...reconciled, state: "released", deploymentId: "new-deployment", publicVerify: { ok: true }, targetPath: `/observations/${target}`, publishedSlugs: [target], publishedArticleSlugs: [], practiceIds: [], profileIds: [], businessObservationIds: [] };
-  delete manifest.packageDirectory; delete manifest.manifestPath; delete manifest.sourceDirectory; delete manifest.sourceRoot; delete manifest.lineagePath; delete manifest.reused;
-  await writeFile(reconciled.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  await mkdir(path.join(reconciled.packageDirectory, "dist", "client"), { recursive: true });
-  await writeFile(path.join(reconciled.packageDirectory, "dist", "client", "content-manifest.json"), `${JSON.stringify(manifest)}\n`);
-  await writeFile(path.join(reconciled.packageDirectory, "completion.json"), `${JSON.stringify({ contentReleaseId: releaseId, contentHash: reconciled.contentHash, baseSiteArtifactId: artifactId, packageRevisionId: reconciled.packageRevisionId, kind: "content", target })}\n`);
+  await markRevisionReleased(reconciled, artifactId);
   const active = await readActiveContentReleases(path.join(root, ".content-workspace", "releases"));
   assert.equal(active.length, 1);
   assert.equal(active[0].packageRevisionId, reconciled.packageRevisionId);
+});
+
+test("a later revision supersedes the currently released physical slot", async () => {
+  const { root } = await fixture();
+  const first = await reconcileContentPackage({ sourceRoot: root, contentReleaseId: releaseId, baseSiteArtifactId: artifactId });
+  await markRevisionReleased(first, artifactId);
+  const nextArtifactId = "v0.25.2-77b50f1a0aa9";
+  const nextArtifactDirectory = path.join(root, ".content-workspace", "base-site-artifacts", nextArtifactId);
+  await mkdir(nextArtifactDirectory, { recursive: true });
+  await cp(path.join(projectRoot, ".content-workspace", "base-site-artifacts", nextArtifactId, "base-site-artifact.json"), path.join(nextArtifactDirectory, "base-site-artifact.json"));
+  const second = await reconcileContentPackage({ sourceRoot: root, contentReleaseId: releaseId, baseSiteArtifactId: nextArtifactId });
+  assert.equal(second.supersedesPackageId, first.packageRevisionId);
+  assert.equal(second.recoverySource, path.relative(root, first.packageDirectory));
+  assert.notEqual(second.packageRevisionId, first.packageRevisionId);
 });

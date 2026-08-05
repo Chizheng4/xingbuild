@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { acquireContentReleasePackageLease, releaseContentReleasePackageLease } from "./content-release-state.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { contentReceiptProjection, contentTargetCollectionNames, readContentReleaseReceipt, receiptTargetCollections } from "./content-release-receipt.mjs";
+import { selectReleasedContentPackage, validateContentReplacement } from "./content-replacement.mjs";
 
 export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
   return [productVersion, productCommit, ...contentReleaseIds].join("+");
@@ -70,19 +71,7 @@ export async function readActiveContentReleases(releasesRoot) {
   }
   const active = [];
   for (const [contentReleaseId, candidates] of releasedById) {
-    candidates.sort((a, b) => {
-      const revisionOrder = Number(Boolean(b.release.packageRevisionId)) - Number(Boolean(a.release.packageRevisionId));
-      if (revisionOrder) return revisionOrder;
-      const aTime = a.release.stateUpdatedAt || a.release.reconciledAt || "";
-      const bTime = b.release.stateUpdatedAt || b.release.reconciledAt || "";
-      return bTime.localeCompare(aTime);
-    });
-    const selected = candidates[0];
-    for (const other of candidates.slice(1)) {
-      if (other.release.contentHash !== selected.release.contentHash || other.release.kind !== selected.release.kind || other.release.target !== selected.release.target) {
-        throw new Error(`released ContentReleaseReceipt logical identity conflict: ${contentReleaseId}`);
-      }
-    }
+    const selected = await selectReleasedContentPackage(candidates, contentReleaseId);
     const receipt = await readContentReleaseReceipt(selected.packageDirectory);
     const sourceDirectory = path.join(selected.packageDirectory, "source");
     active.push({ ...receipt, sourceDirectory, mediaPaths: await collectMediaPaths(sourceDirectory) });
@@ -217,23 +206,34 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
   const activeContentReleases = await readActiveContentReleases(releasesRoot);
   const productArtifact = await readFile(path.join(productClient, "base-site-artifact.json"), "utf8").then(JSON.parse).catch(() => null);
+  let replacement = null;
   if (additionalContentManifest?.contentReleaseId && additionalContentManifest.contentHash && additionalContentManifest.target) {
     const sourceDirectory = candidatePackageDirectory ? path.join(candidatePackageDirectory, "source") : null;
-    if (activeContentReleases.some((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId)) {
-      throw new Error(`candidate ContentReleaseIntent is already active: ${additionalContentManifest.contentReleaseId}`);
-    }
+    const activeIndex = activeContentReleases.findIndex((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId);
     const candidateReceipt = contentReceiptProjection(
       { ...additionalContentManifest, packageDirectory: candidatePackageDirectory },
       { baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest.baseSiteArtifactId || null },
     );
-    activeContentReleases.push({
+    const candidateEntry = {
       ...additionalContentManifest,
       ...candidateReceipt,
       packageDirectory: candidatePackageDirectory,
       sourceDirectory,
       mediaPaths: await collectMediaPaths(sourceDirectory),
       receiptStatus: "candidate",
-    });
+    };
+    if (activeIndex === -1) {
+      activeContentReleases.push(candidateEntry);
+    } else {
+      replacement = await validateContentReplacement({
+        candidate: additionalContentManifest,
+        candidatePackageDirectory,
+        activeReceipt: activeContentReleases[activeIndex],
+        productArtifactId: productArtifact?.baseSiteArtifactId || null,
+        sourceRoot,
+      });
+      activeContentReleases.splice(activeIndex, 1, { ...candidateEntry, receiptStatus: "replacement-candidate", replacement });
+    }
   }
   activeContentReleases.sort((a, b) => a.contentReleaseId.localeCompare(b.contentReleaseId));
   const candidate = additionalContentManifest?.contentReleaseId ? activeContentReleases.find((item) => item.contentReleaseId === additionalContentManifest.contentReleaseId) : null;
@@ -246,8 +246,10 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest?.baseSiteArtifactId || null,
     contentReleaseReceipts: activeContentReleases.map((item) => contentReceiptProjection(item, { baseSiteArtifactId: item.baseSiteArtifactId })),
     candidateContentReleaseId: candidate?.contentReleaseId || null,
+    candidatePackageRevisionId: candidate?.packageRevisionId || null,
     candidateTarget: candidate?.target || null,
     candidateTargetPath: candidate?.targetPath || null,
+    contentReplacement: replacement,
   };
   assertContentManifestComplete(contentManifest, activeContentReleases);
   const snapshotHash = createHash("sha256").update(JSON.stringify({ productRelease, productArtifactId: productArtifact?.baseSiteArtifactId || null, contentManifest })).digest("hex");
@@ -261,6 +263,8 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     productArtifactId: productArtifact?.baseSiteArtifactId || null,
     contentReleaseIds: contentManifest.activeContentReleaseIds,
     candidateContentReleaseId: candidate?.contentReleaseId || null,
+    candidatePackageRevisionId: candidate?.packageRevisionId || null,
+    contentReplacement: replacement,
     targetPath: candidate?.targetPath || null,
     contentManifest,
     snapshotHash,
@@ -299,6 +303,9 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
   };
   delete persisted.client;
   await writeJsonAtomically(path.join(resolvedOutputRoot, "site-publication.json"), persisted);
+  if (persisted.deployment?.deploymentId) {
+    await writeJsonAtomically(path.join(resolvedOutputRoot, "deployment.json"), persisted.deployment);
+  }
   return { ...persisted, client: resolvedOutputRoot, activeContentReleases };
 }
 

@@ -1,21 +1,15 @@
-import { createHash } from "node:crypto";
-import { access, cp, mkdir, readFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { contentRootDirectory } from "./content-root.mjs";
 import { hashFile } from "./observation-content.mjs";
 import { readBaseSiteArtifact } from "./base-site-artifact.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
+import { CONTENT_PACKAGE_CONTRACT_VERSION, contentPackageRevisionIdentity, contentPackageSlotId, selectReleasedContentPackage } from "./content-replacement.mjs";
 
-export const CONTENT_PACKAGE_CONTRACT_VERSION = "content-package-revision-v1";
+export { CONTENT_PACKAGE_CONTRACT_VERSION } from "./content-replacement.mjs";
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
-}
-
-function revisionIdentity({ contentReleaseId, contentHash, sourceHash, baseSiteArtifactId }) {
-  const tuple = { contentReleaseId, contentHash, sourceHash, baseSiteArtifactId, contractVersion: CONTENT_PACKAGE_CONTRACT_VERSION };
-  const revisionHash = createHash("sha256").update(JSON.stringify(tuple)).digest("hex");
-  return { tuple, revisionHash, packageRevisionId: `revision-${revisionHash.slice(0, 16)}` };
 }
 
 export async function reconcileContentPackage({ sourceRoot, contentReleaseId, baseSiteArtifactId, now = () => new Date().toISOString() } = {}) {
@@ -54,7 +48,7 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
   const baseSiteArtifact = await readBaseSiteArtifact({ sourceRoot, artifactPath });
   if (baseSiteArtifact.baseSiteArtifactId !== baseSiteArtifactId) throw new Error("content reconcile baseSiteArtifact identity drift");
 
-  const identity = revisionIdentity({ contentReleaseId, contentHash: original.contentHash, sourceHash: canonicalHash, baseSiteArtifactId });
+  const identity = contentPackageRevisionIdentity({ contentReleaseId, contentHash: original.contentHash, sourceHash: canonicalHash, baseSiteArtifactId });
   const revisionDirectory = path.join(releaseRoot, "revisions", identity.packageRevisionId);
   const manifestPath = path.join(revisionDirectory, "content-release.json");
   if (await exists(manifestPath)) {
@@ -65,15 +59,25 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     return { ...existing, packageDirectory: revisionDirectory, manifestPath, sourceDirectory: path.join(revisionDirectory, "source"), sourceRoot, reused: true };
   }
 
+  const releasedPackages = original.state === "released" ? [{ packageDirectory: releaseRoot, release: original }] : [];
+  for (const entry of await readdir(path.join(releaseRoot, "revisions"), { withFileTypes: true }).catch(() => [])) {
+    if (!entry.isDirectory()) continue;
+    const packageDirectory = path.join(releaseRoot, "revisions", entry.name);
+    const release = await readFile(path.join(packageDirectory, "content-release.json"), "utf8").then(JSON.parse).catch(() => null);
+    if (release?.state === "released") releasedPackages.push({ packageDirectory, release });
+  }
+  const activePackage = await selectReleasedContentPackage(releasedPackages, contentReleaseId);
+  if (!activePackage) throw new Error(`content reconcile requires one released active package: ${contentReleaseId}`);
+
   const sourceDirectory = path.join(revisionDirectory, "source");
   await mkdir(sourceDirectory, { recursive: true });
-  const originalSource = path.join(releaseRoot, "source");
-  if (await exists(originalSource)) await cp(originalSource, sourceDirectory, { recursive: true, force: true });
+  const predecessorSource = path.join(activePackage.packageDirectory, "source");
+  if (await exists(predecessorSource)) await cp(predecessorSource, sourceDirectory, { recursive: true, force: true });
   await cp(contentDirectory, path.join(sourceDirectory, ".content-workspace", "content"), { recursive: true, force: true });
 
   const reconciledAt = now();
   const manifest = {
-    ...original,
+    ...activePackage.release,
     contentReleaseId,
     contentHash: original.contentHash,
     sourceHash: canonicalHash,
@@ -85,8 +89,8 @@ export async function reconcileContentPackage({ sourceRoot, contentReleaseId, ba
     revisionHash: identity.revisionHash,
     revisionTuple: identity.tuple,
     contractVersion: CONTENT_PACKAGE_CONTRACT_VERSION,
-    supersedesPackageId: original.packageRevisionId || contentReleaseId,
-    recoverySource: path.relative(sourceRoot, releaseRoot),
+    supersedesPackageId: contentPackageSlotId(activePackage.release),
+    recoverySource: path.relative(sourceRoot, activePackage.packageDirectory),
     releasePackage: path.relative(sourceRoot, revisionDirectory),
     state: "prepared",
     deploymentId: null,
