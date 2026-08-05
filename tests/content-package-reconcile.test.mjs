@@ -57,13 +57,13 @@ test("reconcile hard fails lifecycle drift before preparing a revision", async (
 test("failed revision does not replace active content and released revision is deduplicated", async () => {
   const { root } = await fixture();
   const reconciled = await reconcileContentPackage({ sourceRoot: root, contentReleaseId: releaseId, baseSiteArtifactId: artifactId });
-  assert.deepEqual(await readActiveContentReleases(path.join(root, ".content-workspace", "releases")), []);
-  const manifest = { ...reconciled, state: "released", deploymentId: "new-deployment", publicVerify: { ok: true } };
+  await assert.rejects(readActiveContentReleases(path.join(root, ".content-workspace", "releases")), /completion fact is missing/);
+  const manifest = { ...reconciled, state: "released", deploymentId: "new-deployment", publicVerify: { ok: true }, targetPath: `/observations/${target}`, publishedSlugs: [target], publishedArticleSlugs: [], practiceIds: [], profileIds: [], businessObservationIds: [] };
   delete manifest.packageDirectory; delete manifest.manifestPath; delete manifest.sourceDirectory; delete manifest.sourceRoot; delete manifest.lineagePath; delete manifest.reused;
   await writeFile(reconciled.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   await mkdir(path.join(reconciled.packageDirectory, "dist", "client"), { recursive: true });
   await writeFile(path.join(reconciled.packageDirectory, "dist", "client", "content-manifest.json"), `${JSON.stringify(manifest)}\n`);
-  await writeFile(path.join(reconciled.packageDirectory, "completion.json"), `${JSON.stringify({ contentReleaseId: releaseId, contentHash: reconciled.contentHash, baseSiteArtifactId: artifactId, packageRevisionId: reconciled.packageRevisionId })}\n`);
+  await writeFile(path.join(reconciled.packageDirectory, "completion.json"), `${JSON.stringify({ contentReleaseId: releaseId, contentHash: reconciled.contentHash, baseSiteArtifactId: artifactId, packageRevisionId: reconciled.packageRevisionId, kind: "content", target })}\n`);
   const active = await readActiveContentReleases(path.join(root, ".content-workspace", "releases"));
   assert.equal(active.length, 1);
   assert.equal(active[0].packageRevisionId, reconciled.packageRevisionId);

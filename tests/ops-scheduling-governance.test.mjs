@@ -9,7 +9,7 @@ test("经营观察只有登记的 xingbuild scheduler 与固定 task 身份", as
   const contract = await read("docs/operations/经营观察信息源与覆盖合同.md");
   assert.match(contract, /`collectionKey`\s*\|\s*`xingbuild-经营观察`/);
   assert.match(contract, /`automationId`\s*\|\s*`xingbuild`/);
-  assert.match(contract, /019fb57b-e90e-75a3-8898-ce3803d6c1fa/);
+  assert.match(contract, /019fd012-6699-7b90-aadf-c2da6b097644/);
   assert.match(contract, /019fa166-9645-7532-87f6-99ae4cf9508a/);
   assert.match(contract, /运行 task.*不是新的调度器/);
   assert.match(contract, /不能创建新的自动化、cron 或 scheduled task/);

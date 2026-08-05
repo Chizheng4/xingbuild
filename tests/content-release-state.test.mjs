@@ -74,7 +74,10 @@ test("finalize writes an independent atomic completion fact and preserves lifecy
   const packageDirectory = path.join(root, ".content-workspace", "releases", "profile-about-hash");
   await mkdir(packageDirectory, { recursive: true });
   const result = await finalizeContentRelease({ packageDirectory, sourceRoot: root, contentReleaseId: "profile-about-hash", contentHash: "a".repeat(64), baseSiteArtifactId: "v0.24.26-base", kind: "profile", target: "about" });
-  assert.equal(JSON.parse(await readFile(result.completionPath, "utf8")).target, "about");
+  const completion = JSON.parse(await readFile(result.completionPath, "utf8"));
+  assert.equal(completion.target, "about");
+  assert.deepEqual(completion.profileIds, ["about"]);
+  assert.deepEqual(completion.publishedSlugs, []);
   assert.equal(JSON.parse(await readFile(result.factPath, "utf8")).contentReleaseId, "profile-about-hash");
   assert.equal(await readFile(contentFile, "utf8"), JSON.stringify({ id: "about" }));
 });

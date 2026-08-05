@@ -23,6 +23,7 @@ import { createSitePublication, validateUploadQuota } from "./lib/site-publicati
 import { planContentBatch } from "./lib/content-batch.mjs";
 import { reconcileContentPackage } from "./lib/content-package-reconcile.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
+import { CONTENT_RELEASE_RECEIPT_VERSION, readContentReleaseReceipt, receiptTargetCollections } from "./lib/content-release-receipt.mjs";
 import {
   acquireContentReleasePackageLease,
   assertContentReleaseTransition,
@@ -148,13 +149,21 @@ export async function finalizeContentRelease(packageInfo) {
   const contentRoot = contentRootDirectory({ sourceRoot: packageInfo.sourceRoot || root });
   const sourceFile = path.join(contentRoot, packageInfo.kind === "content" ? "observations" : packageInfo.kind === "article" ? "articles" : packageInfo.kind === "profile" ? "profile" : packageInfo.kind === "businessObservation" ? "business-observations" : "products", `${packageInfo.target}.json`);
   if (!(await isFile(sourceFile))) throw new Error(`independent content target is missing during finalize: ${packageInfo.target}`);
+  const targetCollections = receiptTargetCollections(packageInfo, { packageDirectory: packageInfo.packageDirectory });
   const completion = {
+    receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: packageInfo.contentReleaseId,
     contentHash: packageInfo.contentHash,
     baseSiteArtifactId: packageInfo.baseSiteArtifactId,
     packageRevisionId: packageInfo.packageRevisionId || null,
     kind: packageInfo.kind,
     target: packageInfo.target,
+    targetPath: packageInfo.targetPath,
+    sitePublicationId: packageInfo.sitePublicationId,
+    deploymentId: packageInfo.deploymentId,
+    productVersion: packageInfo.baseProductVersion,
+    productCommit: packageInfo.baseProductCommit,
+    ...targetCollections,
     sourcePath: path.relative(packageInfo.sourceRoot || root, sourceFile),
     finalizedAt: new Date().toISOString(),
   };
@@ -349,22 +358,26 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
     return { ...packageInfo, ...existingManifest, client: existingClient, manifest: existingManifest };
   }
   if (!packageInfo.baseSiteArtifact) {
+    const targetCollections = receiptTargetCollections(packageInfo, { packageDirectory: packageInfo.packageDirectory });
     const manifest = {
       ...existingManifest,
-      publishedSlugs: packageInfo.kind === "content" ? [packageInfo.target] : [],
-      publishedArticleSlugs: packageInfo.kind === "article" ? [packageInfo.target] : [],
-      practiceIds: packageInfo.kind === "practice" ? [packageInfo.target] : [],
-      profileIds: packageInfo.kind === "profile" ? [packageInfo.target] : [],
-      businessObservationIds: packageInfo.kind === "businessObservation" ? [packageInfo.target] : [],
+      ...targetCollections,
       intentType: "ContentReleaseIntent",
       buildType: "content-intent",
     };
+    const builtReceipt = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "built", {
+      ...targetCollections,
+      intentType: "ContentReleaseIntent",
+      buildType: "content-intent",
+      attempts: (manifest.attempts || 0) + 1,
+      recoverable: false,
+      failure: null,
+    });
     const packageClient = path.join(packageInfo.packageDirectory, "dist", "client");
     await mkdir(packageClient, { recursive: true });
-    await writeFile(path.join(packageClient, "content-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-    await writeJsonAtomically(path.join(packageInfo.packageDirectory, "content-intent.json"), { ...manifest, sourceDirectory: packageInfo.sourceDirectory, preparedAt: new Date().toISOString() });
-    await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "built", { attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null, buildType: "content-intent" });
-    return { ...packageInfo, ...manifest, client: packageClient, manifest };
+    await writeFile(path.join(packageClient, "content-manifest.json"), `${JSON.stringify(builtReceipt, null, 2)}\n`);
+    await writeJsonAtomically(path.join(packageInfo.packageDirectory, "content-intent.json"), { ...builtReceipt, sourceDirectory: packageInfo.sourceDirectory, preparedAt: new Date().toISOString() });
+    return { ...packageInfo, ...builtReceipt, client: packageClient, manifest: builtReceipt };
   }
   const staging = await stageRepository({ packageInfo, sourceRoot });
   try {
@@ -375,22 +388,18 @@ export async function buildContentRelease({ packageInfo, sourceRoot = root } = {
       XINGBUILD_CONTENT_BUILD: "1",
     });
     const client = path.join(staging, "dist", "client");
+    const targetCollections = receiptTargetCollections(packageInfo, { packageDirectory: packageInfo.packageDirectory });
     const manifest = {
       ...existingManifest,
-      publishedSlugs: packageInfo.kind === "content" ? [packageInfo.target] : [],
-      publishedArticleSlugs: packageInfo.kind === "article" ? [packageInfo.target] : [],
-      practiceIds: packageInfo.kind === "practice" ? [packageInfo.target] : [],
-      profileIds: packageInfo.kind === "profile" ? [packageInfo.target] : [],
-      businessObservationIds: packageInfo.kind === "businessObservation" ? [packageInfo.target] : [],
+      ...targetCollections,
     };
-    await writeFile(path.join(client, "content-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    const builtReceipt = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "built", { ...targetCollections, attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
+    await writeFile(path.join(client, "content-manifest.json"), `${JSON.stringify(builtReceipt, null, 2)}\n`);
     const packageClient = path.join(packageInfo.packageDirectory, "dist", "client");
     await mkdir(path.dirname(packageClient), { recursive: true });
     await cp(client, packageClient, { recursive: true });
-    await writeFile(packageInfo.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-    await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "built", { attempts: (manifest.attempts || 0) + 1, recoverable: false, failure: null });
     await appendContentReleaseLog({ sourceRoot, contentReleaseId: packageInfo.contentReleaseId, event: "built", data: { baseSiteArtifactId: packageInfo.baseSiteArtifactId } });
-    return { ...packageInfo, ...manifest, client: packageClient, manifest: { ...manifest, state: "built" } };
+    return { ...packageInfo, ...builtReceipt, client: packageClient, manifest: builtReceipt };
   } finally {
     await rm(staging, { recursive: true, force: true });
   }
@@ -463,7 +472,11 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
   const idempotencyKey = manifest.idempotencyKey || contentReleaseIdempotencyKey({ contentReleaseId: manifest.contentReleaseId, contentHash: manifest.contentHash, baseSiteArtifactId: manifest.baseSiteArtifactId });
   const lease = await acquireContentReleasePackageLease({ packageDirectory: packageInfo.packageDirectory, idempotencyKey, contentReleaseId: manifest.contentReleaseId });
   try {
-    if (manifest.state === "released" && manifest.publicVerify) return { ...manifest, publicVerify: manifest.publicVerify };
+    if (manifest.state === "released" && manifest.publicVerify) {
+      const receipt = await readContentReleaseReceipt(packageInfo.packageDirectory);
+      if (!receipt) throw new Error("released content package is missing its ContentReleaseReceipt");
+      return { ...manifest, receipt, publicVerify: manifest.publicVerify };
+    }
     const currentProductClient = path.join(root, "dist", "client");
     const currentRelease = JSON.parse(await readFile(path.join(currentProductClient, "release.json"), "utf8"));
     const currentArtifact = JSON.parse(await readFile(path.join(currentProductClient, "base-site-artifact.json"), "utf8"));
@@ -473,7 +486,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     const publication = await createSitePublication({
       productClient: currentProductClient,
       releasesRoot: path.join(root, ".content-workspace", "releases"),
-      outputRoot: path.join(packageInfo.packageDirectory, "site-publication"),
+      publicationRoot: path.join(root, ".content-workspace", "site-publications"),
       additionalContentManifest: manifest,
       candidatePackageDirectory: packageInfo.packageDirectory,
       assemble: true,
@@ -493,7 +506,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
       baseSiteArtifactId: completedPublication.contentManifest?.baseSiteArtifactId || manifest.baseSiteArtifactId || null,
       baseProductVersion: currentRelease.version,
       baseProductCommit: currentRelease.commit,
-      publishedAt: new Date().toISOString(),
+      transportedAt: new Date().toISOString(),
       attempts: (manifest.attempts || 0) + 1,
       recoverable: false,
       failure: null,
@@ -502,6 +515,7 @@ export async function transportContentRelease({ packageInfo, argv = process.argv
     const verified = verifying;
     const finalized = await finalizeContentRelease({ ...packageInfo, ...verified });
     const finalizedManifest = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "finalized", { completionPath: finalized.completionPath, recoverable: false });
+    await writeJsonAtomically(path.join(packageInfo.packageDirectory, "dist", "client", "content-manifest.json"), finalizedManifest);
     const completed = await updateReleaseState({ ...packageInfo, manifestPath: packageInfo.manifestPath }, "released", { publicVerify: finalizedManifest.publicVerify, recoverable: false, failure: null });
     await appendContentReleaseLog({ sourceRoot: packageInfo.sourceRoot || root, contentReleaseId: packageInfo.contentReleaseId, event: "released", data: { deploymentId: completed.deploymentId } });
     return { ...completed, deployment: completedPublication.deployment, publicVerify: completed.publicVerify, sitePublicationId: completed.sitePublicationId };

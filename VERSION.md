@@ -1,4 +1,11 @@
 
+## v0.25.5 — 内容发布站点快照身份与可恢复发布
+
+- `content-release.json` 与 `completion.json` 组成 `ContentReleaseReceipt`，成为 active 生命周期唯一事实；旧 dist 投影缺失基座字段不再导致内容静默丢失。
+- Coordinator 从当前 ProductArtifact、全部 active receipt 与 candidate 原子生成完整 manifest，绑定 sitePublicationId、snapshotHash、target 集合、媒体与 receipt hash。
+- 全站单一 lease、同快照 deployment resume、全量页面/媒体/manifest 公网验证和恢复状态阻止重复部署与失败污染 active。
+- 产品构建继续隔离独立内容；本版本不修改正文、审核、媒体事实或既有内容身份，不执行内容发布。
+
 ## v0.25.4 — 全站视觉结构与媒体交互
 
 - Home、Showcase、Reading、Collection 页面组合统一使用共享视觉结构、文本增长、焦点、空状态和媒体降级合同。

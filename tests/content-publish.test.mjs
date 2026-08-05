@@ -93,6 +93,10 @@ test("content build uses a staging copy and emits an independent content manifes
     assert.equal(manifest.contentReleaseId, prepared.contentReleaseId);
     assert.equal(manifest.target, target);
     assert.equal(manifest.publishedArticleSlugs[0], target);
+    const receipt = JSON.parse(await readFile(prepared.manifestPath, "utf8"));
+    assert.deepEqual(receipt.publishedArticleSlugs, [target]);
+    assert.deepEqual(receipt.publishedSlugs, []);
+    assert.equal(receipt.state, "built");
     assert.equal(release.version, prepared.baseProductVersion);
     assert.equal(release.commit, prepared.baseProductCommit);
   } finally {

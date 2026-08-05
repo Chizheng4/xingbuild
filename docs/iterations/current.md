@@ -1,48 +1,76 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.25.4`
+## 当前唯一版本：`v0.25.5`
+
+父版本：`v0.25.4` / `99dcd94b08f8b2353632ce8a33c6dd12928dfddf`
 
 ## 正式方案
 
-`docs/design/v0.25.4 全站视觉结构与媒体交互方案.md`
+`docs/design/v0.25.5 内容发布站点快照身份与可恢复发布方案.md`
+
+来源候选：`XBUILD-CONTENT-RELEASE-003`（已转化并归档）。
 
 ## 目标
 
-统一 Home、Products、Business Observations、About、Observations 五类页面组合的视觉结构，并建设 MediaAction：内容只更新字段；产品能力统一负责字体、段落、留白、媒体和响应式。图片/视频有登记 action 时，点击只跳转 Robotaxi 运营平台入口；视频不自动播放，不显示播放器控制，不执行播放/暂停。
+修复独立内容发布的站点快照身份与生命周期事实脱节问题，使内容运营能够在不修改产品版本和内容事实的前提下，可靠地发布、验证、恢复和保留全部 active 内容。
+
+```mermaid
+flowchart LR
+    A["ProductArtifact\n当前产品基座"] --> C["Coordinator\n完整 SitePublication"]
+    B["ContentReleaseReceipt\n全部 active + candidate"] --> C
+    C --> D["唯一 deployment"]
+    D --> E["整站公网验证"]
+    E --> F["原子 finalize"]
+```
 
 ## 产品—内容兼容声明
 
 ```yaml
 contentImpact: compatible
-affectedTargets: [practice-robotaxi]
-affectedRoutes: [/, /products, /business-observations, /about, /observations]
-affectedFields: [page compositions, visual primitives, media action]
-compatibilityEvidence: v0.25.4-visual-structure-media-action-contract
+affectedTargets: [all-active-content-receipts, content-release-candidate]
+affectedRoutes: [/, /products, /business-observations, /observations, /about, /observations/:slug]
+affectedFields: [ContentReleaseReceipt, SitePublication identity, content manifest projection, deployment recovery]
+compatibilityEvidence: v0.25.5-receipt-snapshot-recovery-contract
 ```
 
 ## 范围
 
-- 统一 `SiteShell → PageComposition → Visual primitives` 的排版、留白、层级、媒体比例、焦点、错误和空状态。
-- 实现 MediaAction，复用现有 `media` 与已登记 `action.href`。
-- 视频无 `autoplay`、无原生 `controls`（有 action 时）、点击不播放/暂停，只跳转。
-- 覆盖桌面、窄屏、390px 移动、200% 缩放、键盘和 Reduced Motion。
-- 使用 Playwright 截图/DOM 回归与 axe-core 辅助检查；不新增第二套样式系统。
+- 以 `content-release.json` 与 `completion.json` 形成的 `ContentReleaseReceipt` 作为 active 生命周期唯一事实源；
+- `dist/client/content-manifest.json` 只做构建投影与身份一致性校验，不因旧投影缺字段静默丢失 active；
+- 每次发布从当前 ProductArtifact、全部 released receipt 和 candidate 组装完整站点快照；
+- 快照统一保存 `sitePublicationId`、`snapshotHash`、active IDs、slug 列表、媒体路径、deployment JSON 和公网验证；
+- SitePublication Coordinator 负责站点 lease、唯一 deployment、传播验证、resume 和原子 finalize；
+- 保留现有三个 Brief 的 `contentReleaseId`、hash、审核、deployment、recovery 证据，能力验收后通过 reconcile 一次恢复，不改正文、不创建新内容身份。
 
 ## 明确不做
 
-- 不修改内容正文、审核、媒体事实、content release、上游事实或产品/内容身份边界。
-- 不新增页面、路由、业务 schema、Storybook、BackstopJS 或并行视觉系统。
-- 不让内容 task 修改 `src/`、CSS、产品版本、current/history、commit/tag；不重发既有内容。
-- 不创建 branch、worktree、替代 task 或并行发布。
+- 不修改 v0.25.4 tag/history、产品 UI、IA、schema、视觉或内容正文；
+- 不让产品 build 读取独立内容根；
+- 不让内容 task 直接调用 EdgeOne；
+- 不以单次 Deploy Success、HTTP 200 或单页可见替代整站快照证据；
+- 不创建第二套发布 CLI、后台 CMS、候选、branch、worktree 或 task。
+
+## Engineering 实现合同
+
+1. active 读取以 receipt 为准；身份不一致、旧投影、部分 manifest 必须显式硬失败或进入可恢复状态，不能静默排除；
+2. snapshot manifest 原子生成，`activeContentReleaseIds`、`publishedSlugs`、`publishedArticleSlugs`、media、hash 与 receipt 完整一致；
+3. 同一 SitePublication 使用唯一 lease、幂等键和原 deployment resume，不重复部署；
+4. transport、传播、verify、finalize 任一阶段失败保留 package、publication、日志和 recovery，不污染既有 active；
+5. 产品发布只消费 ProductArtifact，内容发布不产生产品版本。
 
 ## 验收合同
 
-1. 五类页面组合视觉层级一致，主角、Proof 和 Action 清晰。
-2. 内容字段增长不会破坏字体、段落、留白、阅读宽度和响应式结构。
-3. `/products` 带 action 媒体点击只跳转 Robotaxi，不播放、不暂停、无原生 controls。
-4. 视频 `autoplay=false`；链接、键盘、焦点、accessible name 和安全属性正确。
-5. 五条核心路由在桌面、窄屏、390px、200% 缩放无横向溢出。
-6. 空内容、媒体缺失、失败和 Reduced Motion 均有合法降级。
-7. Playwright 截图/DOM、键盘、控制台、axe-core 辅助检查以及项目 release checks 全部通过。
+- 三个待恢复 Brief 与既有 active 内容可由同一完整快照同时保留；
+- 公网 active IDs 与 slug 列表完全对应，三个新 slug 的页面、内容身份、媒体和 hash 均可验证；
+- 旧 dist manifest 缺少 `baseSiteArtifactId` 时不会丢失已完成 receipt；
+- 重复 resume 不产生第二个内容身份或 deployment；
+- 部署成功但公网未传播、身份漂移、内容清单不完整均不得返回成功；
+- 产品版本、内容事实和既有 active 发布证据不被破坏；
+- `npm run check`、release/内容专项、closeout、preflight 和真实公网整站验证通过。
 
-责任 task：产品/视觉主线维护方案并验收；Engineering 主线 `019fcbf2-20e3-7d51-a4de-87ad7c94b190` 负责实现、自 QA、本地 commit/tag/clean 和发布；内容及发布主线只在产品上线后核验既有内容，不重发、不改产品文件。
+## 当前责任
+
+- 产品/视觉：维护本方案并执行提交后验收；
+- Engineering 主线：`019fcbf2-20e3-7d51-a4de-87ad7c94b190`，负责实现、自 QA、本地 commit/tag/clean 和持续授权发布；
+- 内容及发布主线：`019fa166-9645-7532-87f6-99ae4cf9508a`，保留三个 package/recovery/log，能力验收前不重发，验收后按 reconcile 合同恢复；
+- Ops：不参与发布恢复。
