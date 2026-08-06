@@ -42,9 +42,9 @@
 - `current.md` 只保存当前可执行产品方案；Engineering 形成 local commit/tag/clean 后一次性写 history。产品/视觉验收、publish 授权和线上状态是外部事件，不回写已打 tag 的 current/history。
 - 提交前的普通工程缺陷由 Engineering 在当前版本内修复；提交后的产品/视觉验收问题直接定义下一版本并写入 `current.md`，不修改旧版本、不重新创建普通候选。
 - 活动 candidates 只保存未确认 `pending`/`DRAFT`；候选纳入正式设计方案或关闭时，必须移入 `docs/iterations/history/candidates/`，不能长期保留 `confirmed`。
-- 内容正文/媒体默认位于被忽略 `.content-workspace/content`；draft/review/recovery、Ops 运行记录和内容发布包只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。内容构建形成独立 `ContentReleaseIntent`；物理站点快照由 Coordinator 读取当前 ProductArtifact 与 active 内容组装，旧 `baseSiteArtifact` 仅保留 provenance。
+- 内容正文/媒体默认位于被忽略 `.content-workspace/content`；draft/review/recovery、Ops 运行记录和内容运行事实只写被忽略 `.content-workspace/`，不进入产品版本或产品 bundle。内容构建形成独立 `ContentSet Candidate`；物理站点快照由 Coordinator 读取当前 ProductArtifact 与 active ContentSet 组装，旧 receipts、Registry、lineage、projection 和 `baseSiteArtifact` 仅保留迁移/审计 provenance。
 - 产品 publish 只消费已完成产品/视觉验收的现有 clean HEAD/tag 和预生成 `dist/client`；Xing 已授予持续发布授权，验收通过后 Engineering 直接执行；Xing 明确暂停/撤销时立即停止。不得自动递增版本、回写版本文件、commit、tag、修复脏改或运行网站业务逻辑。
-- 产品与内容的物理站点发布统一由 `scripts/lib/site-publication-coordinator.mjs` 的 SitePublication Coordinator 负责；`publish-xingbuild.command` 与 `content-release` 只能提交意图，禁止各自直接调用 EdgeOne。Coordinator 以站点 lease 串行部署当前 ProductArtifact + active ContentReleaseIntent，保存 deployment JSON，等待传播并完成精确公网验证后才返回成功。
+- 产品与内容的物理站点发布统一由 `scripts/lib/site-publication-coordinator.mjs` 的 Site Publication Coordinator 负责；`publish-xingbuild.command` 与 `content-release` 只能提交意图，禁止各自直接调用 EdgeOne。Coordinator 以站点 lease 串行部署当前 ProductArtifact + active ContentSet 组成的 SiteSnapshot，保存 deployment JSON，等待传播并完成精确公网验证后才返回成功。
 - 生成器只在源/方案变化后显式运行并把生成物纳入同一 local commit；构建后的 tracked dirty、身份不一致或产物缺失必须停止。
 - EdgeOne 生产目标固定为 `xingbuild-nochina` / `makers-ze0f6txvlhco` / `xingbuild.top`；目标合同变化必须形成明确治理版本并同步验证，禁止环境变量静默覆盖。
 - 任何 branch/worktree、并行 task、automation/cron/scheduled task 都是受控资源；未经用户明确授权不得创建、复制、更新、暂停、删除或替代。经营观察只能复用运营合同登记的唯一 scheduler。

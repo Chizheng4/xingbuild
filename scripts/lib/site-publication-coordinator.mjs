@@ -7,6 +7,8 @@ import { writeJsonAtomically } from "./content-release-state.mjs";
 import { assertContentLifecycleProjection } from "./content-lifecycle-time.mjs";
 import { assertActiveContentProjection } from "./content-release-receipt.mjs";
 import { compareAndSwapContentSlot, contentLogicalContentId, contentReceiptId, ensureContentSlotRegistry, restoreContentSlot } from "./content-slot-registry.mjs";
+import { activateContentSet, readActiveContentSet, restoreActiveContentSet } from "./content-set.mjs";
+import { markPublicationRecoverable, markPublicationReleased, markPublicationRolledBack, readPublicationRun, writePublicationRun } from "./publication-run.mjs";
 import {
   assertBindingCandidate,
   assertPublicationLineageBindingAgainstRegistry,
@@ -25,9 +27,15 @@ import {
 } from "./publish-target.mjs";
 
 function runCapture(command, args, cwd, env = process.env) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", env });
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", env, timeout: 120000, killSignal: "SIGTERM" });
   const output = `${result.stdout || ""}${result.stderr || ""}`;
   process.stdout.write(output);
+  if (result.error?.code === "ETIMEDOUT") {
+    const error = new Error(`${command} ${args.join(" ")} timed out after 120000ms`);
+    error.code = "SITE_PUBLICATION_CLI_TIMEOUT";
+    error.recoverable = true;
+    throw error;
+  }
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed with status ${result.status ?? "unknown"}`);
   return output;
 }
@@ -69,11 +77,72 @@ function identityDriftError(message, observedIdentity = {}) {
   return error;
 }
 
+function isContentSetPublication(publication = {}) {
+  return Boolean(publication.contentSetId && publication.contentSetHash && publication.siteSnapshotId && publication.snapshotHash && publication.publicationRunId);
+}
+
+async function finalizeContentSetPublication({ current, publicationDirectory, publicVerify, sourceRoot }) {
+  if (publicVerify.contentSetId !== current.contentSetId
+    || publicVerify.contentSetHash !== current.contentSetHash
+    || publicVerify.siteSnapshotId !== current.siteSnapshotId
+    || publicVerify.snapshotHash !== current.snapshotHash
+    || publicVerify.baseSiteArtifactId !== current.productArtifactId) {
+    throw new Error("ContentSet SitePublication public evidence identity mismatch");
+  }
+  const activeBefore = await readActiveContentSet({ sourceRoot }).catch((error) => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  let run = await readPublicationRun({ sourceRoot, publicationRunId: current.publicationRunId });
+  if (run.siteSnapshotId !== current.siteSnapshotId || run.snapshotHash !== current.snapshotHash || run.contentSetId !== current.contentSetId) {
+    throw new Error("PublicationRun identity drift during finalize");
+  }
+  let activeChanged = false;
+  let releasedRun = run;
+  try {
+    if (activeBefore && activeBefore.contentSet.contentSetId !== current.contentSetId) {
+      const expected = current.contentManifest?.previousContentSetId || null;
+      await activateContentSet({ sourceRoot, nextContentSetId: current.contentSetId, expectedContentSetId: expected });
+      activeChanged = true;
+    } else if (activeBefore && activeBefore.contentSet.contentSetHash !== current.contentSetHash) {
+    throw new Error("ContentSet active pointer hash drift during finalize");
+    } else if (!activeBefore) {
+      await activateContentSet({ sourceRoot, nextContentSetId: current.contentSetId, expectedContentSetId: null });
+      activeChanged = true;
+    }
+    if (run.state !== "released") releasedRun = markPublicationReleased(run, publicVerify);
+    else if (!run.publicVerify || run.publicVerify.sitePublicationId !== publicVerify.sitePublicationId || run.publicVerify.snapshotHash !== publicVerify.snapshotHash || run.publicVerify.contentSetId !== publicVerify.contentSetId || run.publicVerify.contentSetHash !== publicVerify.contentSetHash) throw new Error("PublicationRun released evidence drift");
+    await writePublicationRun({ sourceRoot, run: releasedRun });
+    return await writePublicationRecord(publicationDirectory, {
+      ...current,
+      publicationRun: releasedRun,
+      state: "released",
+      publicVerify,
+      releasedAt: current.releasedAt || new Date().toISOString(),
+      failure: null,
+    });
+  } catch (error) {
+    if (activeChanged) {
+      await restoreActiveContentSet({
+        sourceRoot,
+        expectedContentSetId: current.contentSetId,
+        previousPointer: activeBefore?.pointer || null,
+      }).catch(() => {});
+    }
+    if (releasedRun !== run) await writePublicationRun({ sourceRoot, run }).catch(() => {});
+    throw error;
+  }
+}
+
 export async function finalizeSitePublication({ publicationDirectory, publicVerify, sourceRoot = null } = {}) {
   let current = await readSitePublicationRecord(publicationDirectory);
   if (!current.deploymentId || !publicVerify) throw new Error("SitePublication finalize requires deploymentId and publicVerify");
   if (publicVerify.sitePublicationId !== current.sitePublicationId || publicVerify.snapshotHash !== current.snapshotHash) {
     throw new Error("SitePublication finalize evidence identity mismatch");
+  }
+  const resolvedSourceRoot = sourceRoot || path.resolve(publicationDirectory, "..", "..", "..");
+  if (isContentSetPublication(current)) {
+    return finalizeContentSetPublication({ current, publicationDirectory, publicVerify, sourceRoot: resolvedSourceRoot });
   }
   const expectedReceipts = current.contentManifest?.contentReleaseReceipts || [];
   const actualReceipts = publicVerify.contentManifest?.contentReleaseReceipts || [];
@@ -96,7 +165,6 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
   const expected = [...(current.contentReleaseIds || [])].sort();
   const actual = [...(publicVerify.activeContentReleaseIds || [])].sort();
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("SitePublication finalize evidence is incomplete");
-  const resolvedSourceRoot = sourceRoot || path.resolve(publicationDirectory, "..", "..", "..");
   let lineageBinding = current.lineageBinding ? validatePublicationLineageBinding(current.lineageBinding, {
     sitePublicationId: current.sitePublicationId,
   }) : null;
@@ -220,6 +288,25 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
 
 export async function rollbackSitePublication({ publicationDirectory, reason = "explicit rollback" } = {}) {
   const current = await readSitePublicationRecord(publicationDirectory);
+  const sourceRoot = path.resolve(publicationDirectory, "..", "..", "..");
+  if (isContentSetPublication(current)) {
+    const active = await readActiveContentSet({ sourceRoot });
+    if (active.contentSet.contentSetId !== current.contentSetId) {
+      throw new Error("ContentSet rollback active identity does not match SiteSnapshot");
+    }
+    const previousContentSetId = current.contentManifest?.previousContentSetId || null;
+    if (!previousContentSetId) throw new Error("ContentSet rollback has no previous active snapshot");
+    await activateContentSet({ sourceRoot, nextContentSetId: previousContentSetId, expectedContentSetId: current.contentSetId });
+    const run = await readPublicationRun({ sourceRoot, publicationRunId: current.publicationRunId });
+    const rolledRun = markPublicationRolledBack(run, { reason, at: new Date().toISOString(), restoredContentSetId: previousContentSetId });
+    await writePublicationRun({ sourceRoot, run: rolledRun });
+    return writePublicationRecord(publicationDirectory, {
+      ...current,
+      publicationRun: rolledRun,
+      state: "rolled-back",
+      failure: { message: reason, at: new Date().toISOString() },
+    });
+  }
   return writePublicationRecord(publicationDirectory, { ...current, state: "rolled-back", failure: { message: reason, at: new Date().toISOString() } });
 }
 
@@ -287,6 +374,63 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
   }
   if (contentManifest.baseSiteArtifactId !== publication.productArtifactId) {
     throw identityDriftError("public content manifest ProductArtifact identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
+  }
+  if (isContentSetPublication(publication)) {
+    if (contentManifest.contentSetId !== publication.contentSetId
+      || contentManifest.contentSetHash !== publication.contentSetHash
+      || contentManifest.siteSnapshotId !== publication.siteSnapshotId
+      || contentManifest.snapshotHash !== publication.snapshotHash) {
+      throw propagationError("public ContentSet/SiteSnapshot identity does not match SitePublication", {
+        ...observedIdentity,
+        contentSetId: contentManifest.contentSetId || null,
+        contentSetHash: contentManifest.contentSetHash || null,
+        siteSnapshotId: contentManifest.siteSnapshotId || null,
+        expectedContentSetId: publication.contentSetId,
+        expectedContentSetHash: publication.contentSetHash,
+        expectedSiteSnapshotId: publication.siteSnapshotId,
+      });
+    }
+    const expectedEntries = publication.contentManifest?.contentEntries || [];
+    if (JSON.stringify(contentManifest.contentEntries || []) !== JSON.stringify(expectedEntries)) {
+      throw new Error("public ContentSet entry projection is incomplete or reordered");
+    }
+    if (JSON.stringify(contentManifest.homeContent || null) !== JSON.stringify(publication.contentManifest?.homeContent || null)) {
+      throw new Error("public Home ContentSet projection is incomplete or drifted");
+    }
+    for (const field of ["publishedSlugs", "publishedArticleSlugs", "practiceIds", "profileIds", "productIds", "businessObservationIds", "mediaPaths"]) {
+      assertExactArray(contentManifest[field], publication.contentManifest?.[field], field);
+    }
+    const routes = new Set(["/", "/products", "/business-observations", "/observations", "/about"]);
+    const pages = {};
+    for (const route of routes) {
+      const response = await fetchImpl(new URL(route, base), { redirect: "follow", cache: "no-store" });
+      if (!response.ok) throw new Error(`public verify ${route} returned HTTP ${response.status}`);
+      const text = await response.text();
+      if (!/<title>xingbuild/i.test(text)) throw new Error(`public verify ${route} is not an xingbuild page`);
+      pages[route] = { status: response.status, verified: true };
+    }
+    const media = {};
+    for (const mediaPath of publication.contentManifest?.mediaPaths || []) {
+      const response = await fetchImpl(new URL(mediaPath, base), { redirect: "follow", cache: "no-store" });
+      if (!response.ok) throw new Error(`public verify ${mediaPath} returned HTTP ${response.status}`);
+      media[mediaPath] = { status: response.status, verified: true };
+    }
+    return {
+      sitePublicationId: publication.sitePublicationId,
+      snapshotHash: publication.snapshotHash,
+      siteSnapshotId: publication.siteSnapshotId,
+      contentSetId: publication.contentSetId,
+      contentSetHash: publication.contentSetHash,
+      baseSiteArtifactId: contentManifest.baseSiteArtifactId,
+      version: publication.productVersion,
+      commit: publication.productCommit,
+      activeContentReleaseIds: [],
+      release: { version: release.version, commit: release.commit, baseSiteArtifactId: release.baseSiteArtifactId || null },
+      contentManifest,
+      pages,
+      media,
+      verifiedAt: new Date().toISOString(),
+    };
   }
   const actualIds = assertExactArray(contentManifest.activeContentReleaseIds, publication.contentReleaseIds, "activeContentReleaseIds");
   if (publication.contentManifest?.activeReceiptIds) {
@@ -452,6 +596,19 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
   const leaseDirectory = path.join(sourceRoot, ".content-workspace", "site-publications", ".site-lease");
   const lease = await acquireSitePublicationLease({ publicationDirectory: publication.client, leaseDirectory, sitePublicationId: publication.sitePublicationId, snapshotHash: publication.snapshotHash, ttlMs: 900000 });
   let current = { ...publication };
+  let publicationRun = null;
+  if (isContentSetPublication(current)) {
+    publicationRun = await readPublicationRun({ sourceRoot, publicationRunId: current.publicationRunId });
+    if (publicationRun.siteSnapshotId !== current.siteSnapshotId || publicationRun.snapshotHash !== current.snapshotHash || publicationRun.contentSetId !== current.contentSetId) {
+      throw new Error("PublicationRun identity does not match SitePublication resume");
+    }
+    if (current.deploymentId && publicationRun.deploymentId && current.deploymentId !== publicationRun.deploymentId) {
+      throw new Error("PublicationRun deployment identity drift on resume");
+    }
+    if (!current.deploymentId && publicationRun.deploymentId) {
+      current = { ...current, deploymentId: publicationRun.deploymentId, deployment: publicationRun.deployment || null };
+    }
+  }
   let propagationObservations = current.propagation?.observations || [];
   try {
     if (!current.deploymentId) {
@@ -465,11 +622,23 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
         throw error;
       }
       const deployment = readDeploymentResult(output);
+      if (publicationRun) {
+        publicationRun = {
+          ...publicationRun,
+          state: "deploying",
+          deploymentId: deployment.deploymentId,
+          deployment,
+          deploymentCount: 1,
+          updatedAt: new Date().toISOString(),
+        };
+        await writePublicationRun({ sourceRoot, run: publicationRun });
+      }
       current = await writePublicationRecord(publication.client, {
         ...current,
         state: ["pending", "processing", "running"].includes(deployment.status) ? "propagating" : "deploying",
         deploymentId: deployment.deploymentId,
         deployment,
+        publicationRun: publicationRun || current.publicationRun,
         recoveryId: publicationRecoveryId(publication.sitePublicationId, "transport"),
         deploymentRecordedAt: new Date().toISOString(),
       });
@@ -503,6 +672,10 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
     const productVerify = { version: current.productVersion, commit: current.productCommit, verifiedAt: publicVerify.verifiedAt };
     const contentVerify = { activeContentReleaseIds: publicVerify.activeContentReleaseIds, snapshotHash: publicVerify.snapshotHash, contentManifest: publicVerify.contentManifest, verifiedAt: publicVerify.verifiedAt };
     assertSitePublicationEvidence({ deployment: current.deployment || { deploymentId: current.deploymentId }, publicVerify, productVerify, contentVerify });
+    if (publicationRun) {
+      publicationRun = markPublicationReleased(publicationRun, publicVerify);
+      await writePublicationRun({ sourceRoot, run: publicationRun });
+    }
     return await finalizeSitePublication({ publicationDirectory: publication.client, publicVerify, sourceRoot }).then((finalized) => writePublicationRecord(publication.client, { ...finalized, productVerify, contentVerify }));
   } catch (error) {
     const state = error.recoverable === true ? "recoverable" : "failed";
@@ -527,6 +700,13 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
           : {}),
       failure: { message: error.message, code: error.code || null, at: new Date().toISOString() },
     };
+    if (publicationRun) {
+      publicationRun = error.recoverable
+        ? markPublicationRecoverable(publicationRun, { message: error.message, code: error.code || null, at: new Date().toISOString(), propagation: propagation || null })
+        : { ...publicationRun, state: "failed", recovery: { message: error.message, code: error.code || null, at: new Date().toISOString() }, updatedAt: new Date().toISOString() };
+      await writePublicationRun({ sourceRoot, run: publicationRun }).catch(() => {});
+      failed.publicationRun = publicationRun;
+    }
     await writePublicationRecord(publication.client, failed).catch(() => {});
     error.sitePublication = failed;
     throw error;

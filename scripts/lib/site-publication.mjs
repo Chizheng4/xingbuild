@@ -17,9 +17,17 @@ import { contentLogicalSlotId, validateContentReplacement } from "./content-repl
 import { compareAndSwapContentSlot, contentReceiptId, contentLogicalContentId, ensureContentSlotRegistry, resolveContentSlotCandidate } from "./content-slot-registry.mjs";
 import { assertContentSlotArtifactCompatible } from "./base-site-artifact.mjs";
 import { assertBindingCandidate, createOrReusePublicationLineageBinding } from "./publication-lineage-binding.mjs";
+import {
+  contentManifestFromContentSet,
+  readContentSet,
+  readActiveContentSet,
+} from "./content-set.mjs";
+import { createSiteSnapshot } from "./site-snapshot.mjs";
+import { createPublicationRun, publicationRunIdForSnapshot, readPublicationRun, writePublicationRun } from "./publication-run.mjs";
+import { readProductArtifact } from "./product-artifact.mjs";
 
-export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [] } = {}) {
-  return [productVersion, productCommit, ...contentReleaseIds].join("+");
+export function sitePublicationId({ productVersion, productCommit, contentReleaseIds = [], contentSetId = null } = {}) {
+  return [productVersion, productCommit, ...(contentSetId ? [contentSetId] : contentReleaseIds)].join("+");
 }
 
 export function sitePublicationIdempotencyKey({ sitePublicationId: id, snapshotHash = null } = {}) {
@@ -194,6 +202,50 @@ async function assembleContentSources({ staging, activeContentReleases }) {
   return contentSources;
 }
 
+function contentSetSourceFile(sourceRoot, entry) {
+  const relative = String(entry.sourcePath || "").replace(/^content\//, "");
+  if (!relative || relative.startsWith("../") || path.isAbsolute(relative)) {
+    throw new Error(`ContentSet sourcePath is unsafe: ${entry.entryId}`);
+  }
+  return path.join(sourceRoot, ".content-workspace", "content", relative);
+}
+
+async function assembleContentSetSources({ staging, sourceRoot, contentSet }) {
+  const contentDestination = path.join(staging, ".content-workspace", "content");
+  let contentSources = 0;
+  for (const entry of contentSet.entries) {
+    if (entry.kind === "home") {
+      if (!contentSet.homeContent) throw new Error("ContentSet home entry is missing immutable homeContent payload");
+      await mkdir(contentDestination, { recursive: true });
+      await writeFile(path.join(contentDestination, "home.json"), `${JSON.stringify(contentSet.homeContent, null, 2)}\n`);
+      contentSources += 1;
+      continue;
+    }
+    const sourceFile = contentSetSourceFile(sourceRoot, entry);
+    const relative = String(entry.sourcePath).replace(/^content\//, "");
+    await copyFileRequired(sourceFile, path.join(contentDestination, relative), `ContentSet source is missing: ${entry.entryId}`);
+    if (entry.kind === "practice") {
+      const mediaDirectory = path.join(sourceRoot, ".content-workspace", "content", "media", entry.target);
+      if (await stat(mediaDirectory).catch(() => null)) {
+        await mkdir(path.join(contentDestination, "media", entry.target), { recursive: true });
+        await cp(mediaDirectory, path.join(contentDestination, "media", entry.target), { recursive: true, force: true });
+        const publicMediaDirectory = path.join(staging, "public", "media", entry.target);
+        await mkdir(path.dirname(publicMediaDirectory), { recursive: true });
+        await cp(mediaDirectory, publicMediaDirectory, { recursive: true, force: true });
+      }
+    }
+    for (const mediaPath of entry.mediaProof || []) {
+      if (!mediaPath.startsWith("/media/")) throw new Error(`ContentSet media proof path is invalid: ${entry.entryId}`);
+      const relativeMedia = mediaPath.slice("/media/".length);
+      const sourceMedia = path.join(sourceRoot, ".content-workspace", "content", "media", relativeMedia);
+      const destinationMedia = path.join(staging, "public", "media", relativeMedia);
+      await copyFileRequired(sourceMedia, destinationMedia, `ContentSet media source is missing: ${entry.entryId} ${mediaPath}`);
+    }
+    contentSources += 1;
+  }
+  return contentSources;
+}
+
 async function buildAssembledClient({ productClient, outputRoot, activeContentReleases, sourceRoot }) {
   const productArtifactPath = path.join(productClient, "base-site-artifact.json");
   const productArtifact = JSON.parse(await readFile(productArtifactPath, "utf8"));
@@ -221,6 +273,37 @@ async function buildAssembledClient({ productClient, outputRoot, activeContentRe
     await cp(assembledClient, outputRoot, { recursive: true });
     await writeFile(path.join(outputRoot, "base-site-artifact.json"), `${JSON.stringify(productArtifact, null, 2)}\n`);
     return { productRelease, productArtifact, client: outputRoot };
+  } finally {
+    await rm(staging, { recursive: true, force: true });
+  }
+}
+
+async function buildAssembledClientFromContentSet({ productClient, outputRoot, contentSet, productArtifact, sourceRoot }) {
+  const staging = await mkdtemp(path.join(os.tmpdir(), "xingbuild-site-publication-"));
+  try {
+    await cp(productArtifact.baseSiteArtifact.sourceDirectory, staging, { recursive: true });
+    const nodeModules = path.join(sourceRoot, "node_modules");
+    if (await stat(nodeModules).catch(() => null)) await symlink(nodeModules, path.join(staging, "node_modules"), "dir");
+    await assembleContentSetSources({ staging, sourceRoot, contentSet });
+    const result = spawnSync("npm", ["run", "build"], {
+      cwd: staging,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        XINGBUILD_CONTENT_BUILD: "1",
+        XINGBUILD_PRODUCT_VERSION: productArtifact.productVersion,
+        XINGBUILD_PRODUCT_COMMIT: productArtifact.productCommit,
+      },
+    });
+    const output = `${result.stdout || ""}${result.stderr || ""}`;
+    if (output) process.stdout.write(output);
+    if (result.status !== 0) throw new Error(`site publication ContentSet assembly build failed with status ${result.status ?? "unknown"}`);
+    const assembledClient = path.join(staging, "dist", "client");
+    await rm(outputRoot, { recursive: true, force: true });
+    await mkdir(outputRoot, { recursive: true });
+    await cp(assembledClient, outputRoot, { recursive: true });
+    await writeFile(path.join(outputRoot, "base-site-artifact.json"), `${JSON.stringify(productArtifact.baseSiteArtifact, null, 2)}\n`);
+    return { client: outputRoot };
   } finally {
     await rm(staging, { recursive: true, force: true });
   }
@@ -280,8 +363,118 @@ export function createActiveContentSet(receipts = []) {
   return { activeContentReleases, ...activeContentSet };
 }
 
-export async function createSitePublication({ productClient, releasesRoot, outputRoot, publicationRoot = null, additionalContentManifest = null, candidatePackageDirectory = null, assemble = false, sourceRoot = process.cwd() } = {}) {
+async function readAuthoritativeContentSet(sourceRoot) {
+  try {
+    return (await readActiveContentSet({ sourceRoot })).contentSet;
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function contentSetPublicationOutput({ publicationRoot, outputRoot, productRelease, productCommit, snapshotHash }) {
+  return publicationRoot
+    ? path.join(publicationRoot, `${productRelease.version}-${productCommit.slice(0, 12)}-${snapshotHash.slice(0, 16)}`)
+    : outputRoot;
+}
+
+async function createContentSetSitePublication({ productClient, outputRoot, publicationRoot = null, sourceRoot, assemble = false, contentSetId = null } = {}) {
+  const productArtifact = await readProductArtifact({
+    clientDirectory: productClient,
+    sourceRoot,
+  });
+  const contentSet = contentSetId
+    ? await readContentSet({ sourceRoot, contentSetId })
+    : await readAuthoritativeContentSet(sourceRoot);
+  if (!contentSet) throw new Error("ContentSet active pointer is required; run one-time content:set:migrate before SiteSnapshot assembly");
+  const snapshot = createSiteSnapshot({ productArtifact, contentSet, previousSnapshotId: null });
+  const id = sitePublicationId({
+    productVersion: productArtifact.productVersion,
+    productCommit: productArtifact.productCommit,
+    contentSetId: contentSet.contentSetId,
+  });
+  const contentManifest = {
+    ...snapshot.contentManifest,
+    sitePublicationId: id,
+    siteSnapshotId: snapshot.siteSnapshotId,
+    snapshotHash: snapshot.snapshotHash,
+  };
+  const resolvedOutputRoot = contentSetPublicationOutput({
+    publicationRoot,
+    outputRoot,
+    productRelease: { version: productArtifact.productVersion },
+    productCommit: productArtifact.productCommit,
+    snapshotHash: snapshot.snapshotHash,
+  });
+  if (!resolvedOutputRoot) throw new Error("SitePublication outputRoot or publicationRoot is required");
+  let existingPublication = null;
+  try { existingPublication = JSON.parse(await readFile(path.join(resolvedOutputRoot, "site-publication.json"), "utf8")); } catch { /* first assembly */ }
+  if (existingPublication && (existingPublication.sitePublicationId !== id || existingPublication.snapshotHash !== snapshot.snapshotHash)) {
+    throw new Error("persisted ContentSet SitePublication identity drift");
+  }
+  if (existingPublication?.deploymentId && existingPublication.sitePublicationId !== id) {
+    throw new Error("refusing to overwrite a deployed ContentSet SitePublication with a different identity");
+  }
+  if (assemble) {
+    await buildAssembledClientFromContentSet({ productClient, outputRoot: resolvedOutputRoot, contentSet, productArtifact, sourceRoot });
+  } else {
+    await rm(resolvedOutputRoot, { recursive: true, force: true });
+    await mkdir(resolvedOutputRoot, { recursive: true });
+    await cp(productClient, resolvedOutputRoot, { recursive: true });
+  }
+  await writeJsonAtomically(path.join(resolvedOutputRoot, "content-manifest.json"), contentManifest);
+  let publicationRun;
+  try {
+    publicationRun = await readPublicationRun({ sourceRoot, publicationRunId: publicationRunIdForSnapshot(snapshot.siteSnapshotId) });
+    if (publicationRun.siteSnapshotId !== snapshot.siteSnapshotId || publicationRun.snapshotHash !== snapshot.snapshotHash) {
+      throw new Error("persisted PublicationRun SiteSnapshot identity drift");
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    publicationRun = createPublicationRun({ siteSnapshot: snapshot });
+    await writePublicationRun({ sourceRoot, run: publicationRun });
+  }
+  const persistedIdentityMatches = existingPublication?.sitePublicationId === id && existingPublication?.snapshotHash === snapshot.snapshotHash;
+  const persisted = {
+    sitePublicationId: id,
+    productVersion: productArtifact.productVersion,
+    productCommit: productArtifact.productCommit,
+    productArtifactId: productArtifact.productArtifactId,
+    contentReleaseIds: [],
+    contentSetId: contentSet.contentSetId,
+    contentSetHash: contentSet.contentSetHash,
+    siteSnapshotId: snapshot.siteSnapshotId,
+    siteSnapshot: snapshot,
+    snapshotHash: snapshot.snapshotHash,
+    publicationRunId: publicationRun.publicationRunId,
+    publicationRun,
+    contentManifest,
+    contentPackageRevisionIds: [],
+    publicationIdempotencyKey: sitePublicationIdempotencyKey({ sitePublicationId: id, snapshotHash: snapshot.snapshotHash }),
+    deploymentId: null,
+    publicVerify: null,
+    ...(persistedIdentityMatches ? existingPublication : {}),
+    client: undefined,
+    state: persistedIdentityMatches && ["recoverable", "propagating", "deploying", "verifying", "released", "rolled-back"].includes(existingPublication?.state)
+      ? existingPublication.state
+      : "assembled",
+    assembledAt: existingPublication?.assembledAt || new Date().toISOString(),
+  };
+  delete persisted.client;
+  await writeJsonAtomically(path.join(resolvedOutputRoot, "site-publication.json"), persisted);
+  if (persisted.deployment?.deploymentId) await writeJsonAtomically(path.join(resolvedOutputRoot, "deployment.json"), persisted.deployment);
+  return { ...persisted, client: resolvedOutputRoot, contentSet, activeContentReleases: contentSet.entries };
+}
+
+export async function createSitePublication({ productClient, releasesRoot, outputRoot, publicationRoot = null, additionalContentManifest = null, candidatePackageDirectory = null, candidateContentSetId = null, assemble = false, sourceRoot = process.cwd() } = {}) {
   sourceRoot = resolveSourceRootForReleases(releasesRoot, sourceRoot);
+  const authoritativeContentSet = await readAuthoritativeContentSet(sourceRoot);
+  if (authoritativeContentSet || candidateContentSetId) {
+    return createContentSetSitePublication({ productClient, outputRoot, publicationRoot, sourceRoot, assemble, contentSetId: candidateContentSetId });
+  }
+  if (path.resolve(sourceRoot) === path.resolve(process.cwd()) && !additionalContentManifest && process.env.XINGBUILD_LEGACY_RUNTIME !== "1") {
+    throw new Error("ContentSet active pointer is required for canonical SitePublication; legacy receipts are migration/audit-only");
+  }
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
   const productArtifact = await readFile(path.join(productClient, "base-site-artifact.json"), "utf8").then(JSON.parse).catch(() => null);
   const slotRegistry = await ensureContentSlotRegistry({ sourceRoot, releasesRoot });

@@ -14,6 +14,7 @@ const requiredFiles = [
   "docs/rules/engineering-architecture-and-principles.md",
   "src/App.jsx",
   "src/content/siteContent.js",
+  "src/content/homeContentAdapter.js",
   "src/content/showcaseRepository.js",
   "src/content/profileRepository.js",
   "src/content/practiceRepository.js",
@@ -79,6 +80,14 @@ const requiredFiles = [
   "scripts/lib/content-lifecycle-adapter.mjs",
   "scripts/lib/content-replacement.mjs",
   "scripts/lib/content-slot-registry.mjs",
+  "scripts/lib/content-set.mjs",
+  "scripts/lib/home-content-adapter.mjs",
+  "scripts/lib/content-set-candidate.mjs",
+  "scripts/lib/site-snapshot.mjs",
+  "scripts/lib/publication-run.mjs",
+  "scripts/lib/product-artifact.mjs",
+  "scripts/release-build.mjs",
+  "scripts/content-set-migrate.mjs",
   "scripts/lib/content-lifecycle-time.mjs",
   "tests/product-content-isolation.test.mjs",
   "scripts/verify-public-release.mjs",
@@ -109,6 +118,7 @@ const packageJson = JSON.parse(
 assert.equal(packageJson.scripts["content:publish"], "node scripts/content-release.mjs", "content publish must use the independent content engine");
 assert.equal(packageJson.scripts["content:prepare"], "node scripts/content-release.mjs --prepare", "content prepare must stay explicit");
 assert.equal(packageJson.scripts["content:build"], "node scripts/content-release.mjs --build", "content build must stay explicit");
+assert.equal(packageJson.scripts["release:build"], "node scripts/release-build.mjs", "final release build must use the exact HEAD/tag builder");
 assert.equal(packageJson.scripts["site-publication"], "node scripts/site-publication.mjs", "site publication must have one coordinator entry point");
 const version = await readFile(new URL("../VERSION.md", import.meta.url), "utf8");
 const current = await readFile(

@@ -35,6 +35,7 @@ const commit = process.env.XINGBUILD_PRODUCT_COMMIT || execFileSync("git", ["rev
   encoding: "utf8",
 }).trim();
 const releaseVersion = process.env.XINGBUILD_PRODUCT_VERSION || `v${packageJson.version}`;
+const baseSiteArtifactId = `${releaseVersion}-${commit.slice(0, 12)}`;
 
 writeFileSync(
   path.join(dist, "client", "release.json"),
@@ -42,7 +43,7 @@ writeFileSync(
     {
       version: releaseVersion,
       commit,
-      builtAt: new Date().toISOString(),
+      baseSiteArtifactId,
     },
     null,
     2,
@@ -55,6 +56,7 @@ writeFileSync(
     {
       version: releaseVersion,
       commit,
+      baseSiteArtifactId,
       publishedSlugs: [],
       publishedArticleSlugs: [],
     },

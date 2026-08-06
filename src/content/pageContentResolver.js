@@ -4,8 +4,10 @@ import { selectObservationBriefs } from "./observationRepository.js";
 import { findPractice } from "./practiceRepository.js";
 import { profile } from "./profileRepository.js";
 import { site } from "./siteContent.js";
+import { home } from "./homeContentAdapter.js";
 
 const contentResolvers = Object.freeze({
+  home: (reference) => reference.id === "home" ? home : null,
   site: (reference) => reference.id === "site" ? site : null,
   profile: (reference) => profile?.id === reference.id ? profile : null,
   practice: (reference) => findPractice(reference.id),

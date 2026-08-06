@@ -164,6 +164,8 @@ export async function createBaseSiteArtifact({ sourceRoot, productVersion, produ
     baseSiteArtifactId,
     productVersion,
     productCommit,
+    productArtifactContractVersion: "product-artifact-v1",
+    contentSetContractVersion: "content-set-v1",
     releaseManifestHash: hashArtifactValue(release),
     artifactContentHash: hashArtifactValue({ release, contentManifest }),
     sourceDeploymentId,

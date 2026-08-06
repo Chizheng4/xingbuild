@@ -16,6 +16,7 @@ const REGIONS = Object.freeze([
 ]);
 
 const CONTENT_REFERENCE_TYPES = Object.freeze([
+  "home",
   "site",
   "practice",
   "businessObservation",
@@ -56,7 +57,7 @@ export const pageDefinitions = Object.freeze([
     composition: "HomeComposition",
     regions: ["TopBand", "body", "ClosingSection"],
     contentRefs: {
-      site: { type: "site", id: "site" },
+      home: { type: "home", id: "home" },
       practice: { type: "practice", id: "robotaxi" },
       businessObservation: { type: "businessObservation", id: "enterprise-operating-framework" },
       briefs: { type: "observationBriefs", scope: "all" },
@@ -99,7 +100,7 @@ export const pageDefinitions = Object.freeze([
     composition: "CollectionComposition",
     regions: ["TopBand", "body"],
     contentRefs: {
-      site: { type: "site", id: "site" },
+      home: { type: "home", id: "home" },
       briefs: { type: "observationBriefs", scope: "all" },
     },
     navigationContext: { origin: "/observations", returnTo: "/observations" },

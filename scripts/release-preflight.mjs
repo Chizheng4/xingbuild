@@ -2,9 +2,11 @@
 
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import process from "node:process";
 import { assertProductContentCompatibility } from "./lib/content-compatibility.mjs";
 import { assertNoVersionStateFields, evaluateProductReleaseReadiness, parseCurrentIterationVersion } from "./lib/release-readiness.mjs";
+import { readProductArtifact } from "./lib/product-artifact.mjs";
 
 function git(...args) {
   try {
@@ -32,10 +34,29 @@ const result = evaluateProductReleaseReadiness({
   headTag: git("describe", "--tags", "--exact-match", "HEAD"),
   origin: git("remote", "get-url", "origin"),
 });
+let productArtifact = null;
+const artifactBlockers = [];
+const head = git("rev-parse", "HEAD");
+try {
+  productArtifact = await readProductArtifact({
+    clientDirectory: fileURLToPath(new URL("../dist/client", import.meta.url)),
+    sourceRoot: fileURLToPath(new URL("..", import.meta.url)),
+    version: `v${packageJson.version}`,
+    commit: head,
+  });
+} catch (error) {
+  artifactBlockers.push(`ProductArtifact：${error.message}`);
+}
+if (artifactBlockers.length) result.blockers.push(...artifactBlockers);
 if (!result.ready) {
   console.error(`发布未就绪：${result.version}`);
   for (const blocker of result.blockers) console.error(`- ${blocker}`);
   process.exit(1);
 }
 
-console.log(`发布就绪：${result.version}，main、版本记录、标签与工作区状态一致。`);
+console.log(`发布就绪：${result.version}，main、版本记录、标签、工作区与 ProductArtifact 身份一致。`);
+console.log(JSON.stringify({
+  productArtifactId: productArtifact.productArtifactId,
+  productArtifactHash: productArtifact.productArtifactHash,
+  baseSiteArtifactId: productArtifact.baseSiteArtifact.baseSiteArtifactId,
+}, null, 2));

@@ -1,94 +1,74 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.25.19`
+## 当前唯一版本：`v0.26.0`
 
-父版本：`v0.25.18` / `cca1f5970b695baee8435fca453a98c4623782e2`
+父版本：`v0.25.19` / `43ab99bea9b3221c3a912bc66102b6491f024284`
 
 ## 正式方案
 
-[`docs/design/v0.25.19 内容收据与活动站点投影单一身份方案.md`](../design/v0.25.19%20内容收据与活动站点投影单一身份方案.md)
+[`docs/design/v0.26.0 发布内核与 ContentSet 架构重构方案.md`](../design/v0.26.0%20发布内核与%20ContentSet%20架构重构方案.md)
 
-来源 Incident：v0.25.18 product transport 的 `content manifest receipt identity mismatch: practice-robotaxi-604214b3bfddf09f`。
+来源：v0.25.18–v0.25.19 连续发布 Incident，以及对现有 Registry、receipt、lineage、projection 和 SitePublication 运行时多重权威的结构性复盘。
 
-v0.25.18 已正确建立 authoritative ContentSlotRegistry，但本次 transport 暴露出更深的对象边界缺陷：不可变 `ContentReleaseReceipt.receiptHash` 与带当前 lineage binding 的活动站点投影共用同一字段，且由不同调用点重复计算。v0.25.19 不做单点条件修补，而是按“事实层 → 关系层 → 投影层 → SitePublication 快照 → deployment → 公网证据 → CAS finalize”重建身份闭环：receipt 事实与 ActiveContentProjection 分离，使用 `receiptHash` + `projectionHash` 两个明确身份，并要求 SitePublication 全链路消费同一个规范化投影。
-
-## 根本目标
+## 产品目标
 
 ```mermaid
 flowchart LR
-    A[immutable receipt] --> B[canonical ActiveContentProjection]
-    R[authoritative Registry] --> B
-    L[PublicationLineageBinding] --> B
-    P[ProductArtifact] --> B
-    B --> C[SitePublication snapshot]
-    C --> D[one deployment + exact publicVerify]
-    D --> E[CAS finalize]
+  A[ProductArtifact] --> C[SiteSnapshot]
+  B[ContentSet] --> C
+  C --> D[PublicationRun]
+  D --> E[一次 deployment + 公网精确验证]
 ```
 
-产品与内容继续保持独立生命周期；本版本只修复 receipt/projection 身份边界，不修改页面、内容正文、审核、媒体或产品视觉。
+- 产品、视觉、Engineering 和内容运营身份与生命周期保持独立；
+- 产品发布复用 active ContentSet；内容发布复用 ProductArtifact；
+- 每次物理上线只组装一个 SiteSnapshot，使用一个 Coordinator、一个 deployment 和一份公网证据；
+- 失败可恢复或整站回滚，不再运行时推导逐条内容 lineage；
+- 页面继续使用 PageDefinition → PageComposition → 共享 Capability → Content Slots；本版本不改 UI/IA/视觉。
 
-## 全链路不变量
+## Engineering 合同
 
-```mermaid
-flowchart TD
-    A[immutable receipt] --> B[Registry active slot]
-    B --> C[Lineage binding]
-    C --> D[单一 ActiveContentProjection]
-    D --> E[不可变 SitePublication snapshot]
-    E --> F[唯一 deployment]
-    F --> G[deployment JSON + 公网精确证据]
-    G --> H[CAS finalize]
-    H --> B
-```
-
-- 一个 `logicalContentId` 只有一个 active slot，替换必须通过 predecessor + CAS；
-- released receipt 的正文、来源、审核、媒体、`receiptHash` 不可变；
-- projection 只由 ProductArtifact、Registry、Receipt、Binding 确定性生成；
-- snapshot 组装后不重新推导 active 集合；
-- 失败只保留 recoverable/recovery，旧 active 不变；resume 复用同一 revision、snapshot 和 deployment；
-- Deploy Success 不是完成，只有 deployment JSON、双 manifest、目标页/媒体公网证据和 finalize 全部成立才算成功。
-
-## Engineering 正式实现范围
-
-1. 在现有 receipt 模块内建立唯一 ActiveContentProjection resolver；不创建第二套 Registry、lifecycle 或 Coordinator。
-2. `receiptHash` 只表示 immutable package receipt；`projectionHash` 只表示加入 Registry、lineage binding 和 ProductArtifact 后的活动投影。
-3. `readActiveContentReleases`、`createActiveContentSet`、manifest、Coordinator assembly/publicVerify/finalize/resume 全部消费同一个投影对象，禁止各处重新拼接和重算。
-4. 新旧 projection 兼容必须隔离：legacy 只能被明确解释，不能和新 schema 混合组装；输入/输出/hash 必须确定性。
-5. 34 active corpus、Robotaxi replacement、About recoverable package、resume/idempotency、drift/CAS/失败不污染 active 全部形成专项和真实验证；测试必须覆盖事实、关系、投影、快照、传输、公网六层，不以单 slug 夹具代替真实闭环。
+1. 建立 `ContentSet` 唯一 active 内容集合，覆盖所有公开内容类型，并完成 `home` 首页入口迁移。
+2. 使用 `.content-workspace/content-state/sets/<contentSetId>/content-set.json` 与原子 `active.json` 指针。
+3. 旧 receipts、ContentSlotRegistry、PublicationLineageBinding、projection 和 package 只读保留为迁移/审计证据，不再进入正常运行路径。
+4. 所有产品/内容入口统一委托现有 Site Publication Coordinator；不保留第二条 EdgeOne 执行路径。
+5. 最终 commit/tag 后生成 ProductArtifact；`release:preflight` 必须精确校验 ProductArtifact 与 HEAD/tag。
+6. 实现一次性本地 active + 公网 manifest 双向核对迁移；只导入当前公网已验证内容，已审核未上线内容保留 Candidate。
+7. 实现 SiteSnapshot、PublicationRun、resume、publicVerify、atomic finalize 和整站 rollback。
 
 ## 产品—内容兼容声明
 
 ```yaml
 contentImpact: compatible
-contentImpactReason: receipt-projection-identity-boundary
-affectedTargets: [content-release-receipt, active-content-projection, content-slot-registry, publication-lineage-binding, site-publication-coordinator, content-resume]
-affectedRoutes: [/, /about, /business-observations, /observations, /products]
-affectedFields: [receiptHash, projectionHash, lineageBindingId, predecessorReceiptId, baseSiteArtifactId]
-compatibilityEvidence: v0.25.19-active-content-projection-v1
+contentImpactReason: contentset-site-snapshot-kernel-rebuild
+affectedTargets: [content-set, home-content-adapter, site-snapshot, publication-run, coordinator, release-preflight]
+affectedRoutes: [/, /products, /business-observations, /observations, /about]
+affectedFields: [contentSetId, contentSetHash, productArtifactId, siteSnapshotId, snapshotHash]
+compatibilityEvidence: v0.26.0-contentset-slot-contract-and-migration
 ```
 
 ## 验收顺序
 
 ```text
-Engineering 实现 + 34 active corpus / replacement / legacy QA
-→ local commit/tag/clean
-→ 产品/视觉独立验收
-→ v0.25.19 product transport / 公网完整验证
-→ 内容 task 复用既有 About package
-→ Article / Business Observation 串行发布与逐项公网验证
+Engineering 实现与分层 QA
+→ v0.26.0 commit/tag/clean
+→ final build + ProductArtifact preflight
+→ 产品/视觉用同一 ProductArtifact 验收
+→ product transport / 公网完整验证
+→ 通知内容 task 恢复 ContentSet Candidate 运营
 ```
 
 ## 明确不做
 
-- 不手改 receipt、completion、manifest、Registry、lineage 或 contentHash；
-- 不重新扫描或放宽 legacy migration；
-- 不重发 33 条 observation、Robotaxi practice 或已发布内容；
-- 不修改 UI、IA、页面 schema、视觉、正文、审核、媒体或产品业务逻辑；
-- 不创建第二套 Coordinator、task、branch、worktree 或 scheduler。
+- 不回写 v0.25.19 及更早 tag/history；
+- 不继续为旧 lineage、slot、projection 增加局部补丁；
+- 不修改 UI、IA、schema、内容正文、审核、媒体或既有视觉合同；
+- 不自动发布已审核但尚未上线的内容；
+- 不创建并行 task、branch、worktree、scheduler 或第二套 Coordinator。
 
 ## 当前责任
 
-- 产品/视觉主线：维护本正式方案并完成能力验收；
-- Engineering 主线：`019fcbf2-20e3-7d51-a4de-87ad7c94b190`，只按本合同实现、测试和版本闭环；
-- 内容及发布主线：保留 `profile-about-93ea5608339c4973` recoverable package，产品上线后按顺序复用，再处理 Article 与 Business Observation；
-- Ops：不参与本产品版本。
+- 产品/视觉主线：维护本方案，执行 ProductArtifact 与公网视觉验收；
+- Engineering 主线：`019fcbf2-20e3-7d51-a4de-87ad7c94b190`，按本合同实现、测试、commit/tag、final build 和 preflight；
+- 内容及发布主线：在 v0.26.0 产品公网完整验证后，迁移到 ContentSet Candidate 流程；
+- Ops：继续只负责采集、去重和 EvidenceCandidate，不参与产品版本。

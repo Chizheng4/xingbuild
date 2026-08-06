@@ -45,11 +45,14 @@ import {
   readFieldValue,
   writeFieldValue,
 } from "./lib/content-targets.mjs";
+import { contentSetEntryFromCanonical, prepareContentSetCandidate as writeContentSetCandidate } from "./lib/content-set-candidate.mjs";
+import { readActiveContentSet } from "./lib/content-set.mjs";
+import { homeContent } from "../src/content/siteContent.js";
 
 export const root = projectRoot;
 const edgeone = path.join(root, "node_modules", ".bin", "edgeone");
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const kinds = new Set(["content", "article", "practice", "profile", "businessObservation"]);
+const kinds = new Set(["home", "content", "article", "practice", "profile", "businessObservation"]);
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
@@ -69,6 +72,7 @@ function runCapture(command, args, cwd, env = process.env) {
 }
 
 function targetPath(kind, target) {
+  if (kind === "home") return path.join("content", "home.json");
   if (kind === "content") return path.join("content", "observations", `${target}.json`);
   if (kind === "article") return path.join("content", "articles", `${target}.json`);
   if (kind === "profile") return path.join("content", "profile", `${target}.json`);
@@ -77,6 +81,7 @@ function targetPath(kind, target) {
 }
 
 function publicPath(kind, target) {
+  if (kind === "home") return "/";
   if (kind === "content") return `/observations/${target}`;
   if (kind === "article") return "/business-observations";
   if (kind === "profile") return "/about";
@@ -87,6 +92,7 @@ function publicPath(kind, target) {
 async function readTarget({ kind, target, sourceRoot }) {
   if (!kinds.has(kind) || !slugPattern.test(target)) throw new Error("content release requires one explicit valid target");
   const relative = targetPath(kind, target);
+  if (kind === "home" && target === "home") return { relative, file: null, value: homeContent };
   const file = path.join(contentRootDirectory({ sourceRoot }), relative.slice("content/".length));
   if (!(await isFile(file))) throw new Error(`content target is missing: ${relative}`);
   const value = JSON.parse(await readFile(file, "utf8"));
@@ -704,10 +710,68 @@ export async function resumeContentRelease({ packageDirectory, argv = ["--author
   return transportContentRelease({ packageInfo: { ...manifest, manifestPath, packageDirectory, client: path.join(packageDirectory, "dist", "client"), sourceRoot: root }, argv, env });
 }
 
-export async function publishContent({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, argv = process.argv.slice(2), env = process.env } = {}) {
+export async function publishLegacyContent({ kind, target, changeSetPath, baseSiteArtifact, artifactPath, argv = process.argv.slice(2), env = process.env } = {}) {
   const prepared = await prepareContentRelease({ kind, target, changeSetPath, baseSiteArtifact, artifactPath });
   const built = await buildContentRelease({ packageInfo: prepared });
   return transportContentRelease({ packageInfo: built, argv, env });
+}
+
+async function prepareContentSetEntry({ kind, target, changeSetPath = null, sourceRoot = root } = {}) {
+  const content = await readTarget({ kind, target, sourceRoot });
+  const reviewEvidence = await readReview({ kind, target, sourceRoot, content });
+  let contentValue = content.value;
+  let mediaManifest = content.practiceBundle?.manifest;
+  if (changeSetPath) {
+    const changeSet = await readContentChangeSet(changeSetPath, { rootDirectory: sourceRoot });
+    const documents = {
+      [content.relative]: content.value,
+      "content/products/robotaxi.json": content.value,
+      "content/media/robotaxi/manifest.json": mediaManifest,
+    };
+    const staged = applyContentChangeSetDocuments(documents, changeSet);
+    contentValue = staged[content.relative] || staged["content/products/robotaxi.json"] || content.value;
+    mediaManifest = staged["content/media/robotaxi/manifest.json"] || mediaManifest;
+  }
+  return contentSetEntryFromCanonical({
+    sourceRoot,
+    kind,
+    target,
+    contentValue,
+    mediaManifest,
+    sourceProof: sourceIds(content.value),
+    reviewProof: {
+      reviewId: reviewEvidence.review?.reviewId || null,
+      reviewedAt: reviewEvidence.reviewedAt || null,
+      status: "approved",
+    },
+    legacyAuditId: null,
+  });
+}
+
+export async function prepareContentSetCandidate({ kind, target, changeSetPath = null, sourceRoot = root } = {}) {
+  const entry = await prepareContentSetEntry({ kind, target, changeSetPath, sourceRoot });
+  const homePayload = kind === "home" ? homeContent : null;
+  return writeContentSetCandidate({ sourceRoot, entries: [entry], homeContent: homePayload });
+}
+
+export async function publishContentSet({ kind, target, changeSetPath = null, argv = process.argv.slice(2), env = process.env, sourceRoot = root } = {}) {
+  const prepared = await prepareContentSetCandidate({ kind, target, changeSetPath, sourceRoot });
+  const productClient = path.join(sourceRoot, "dist", "client");
+  const publication = await createSitePublication({
+    productClient,
+    releasesRoot: path.join(sourceRoot, ".content-workspace", "releases"),
+    publicationRoot: path.join(sourceRoot, ".content-workspace", "site-publications"),
+    candidateContentSetId: prepared.contentSet.contentSetId,
+    assemble: true,
+    sourceRoot,
+  });
+  await validateUploadQuota(publication.client);
+  return transportSitePublication({ publication, sourceRoot, argv, env, edgeonePath: path.join(sourceRoot, "node_modules", ".bin", "edgeone") });
+}
+
+export async function publishContent(options = {}) {
+  if (options.env?.XINGBUILD_LEGACY_RUNTIME === "1") return publishLegacyContent(options);
+  return publishContentSet(options);
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -737,17 +801,17 @@ async function main(argv = process.argv.slice(2)) {
   }
   if (!kinds.has(kind) || !target || !slugPattern.test(target)) throw new Error("Usage: node scripts/content-release.mjs [--prepare|--build] --kind <content|article|practice|profile|businessObservation> --slug <slug>|--id <id> [--change-set <ignored ChangeSet>] [--authorize-publish]");
   if (argv.includes("--prepare")) {
-    const result = await prepareContentRelease({ kind, target, changeSetPath, artifactPath });
-    console.log(`Content release prepared: ${result.contentReleaseId}`);
+    const result = await prepareContentSetCandidate({ kind, target, changeSetPath });
+    console.log(`ContentSet candidate prepared: ${result.contentSet.contentSetId}`);
     return;
   }
   if (argv.includes("--build")) {
-    const result = await buildContentRelease({ packageInfo: await prepareContentRelease({ kind, target, changeSetPath, artifactPath }) });
-    console.log(`Content release built: ${result.contentReleaseId}`);
+    const result = await prepareContentSetCandidate({ kind, target, changeSetPath });
+    console.log(`ContentSet candidate built: ${result.contentSet.contentSetId}`);
     return;
   }
-  const result = await publishContent({ kind, target, changeSetPath, artifactPath, argv });
-  console.log(`Content release completed: ${result.contentReleaseId} ${result.target}`);
+  const result = await publishContentSet({ kind, target, changeSetPath, argv });
+  console.log(`ContentSet publication completed: ${result.sitePublicationId}`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {

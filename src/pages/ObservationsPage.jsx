@@ -1,7 +1,7 @@
 import { ObservationEmptyState, ObservationStream } from "../components/observations/Briefs";
 import { CollectionLayout, LayoutShell } from "../components/site/LayoutShell";
 import { selectObservationBriefs } from "../content/observationRepository";
-import { site } from "../content/siteContent";
+import { home } from "../content/homeContentAdapter";
 import { observationCollectionHref, returnDestinationFor, safeReturnTo } from "../lib/navigation";
 import { ReturnNavigation } from "../components/navigation/ReturnNavigation";
 
@@ -22,7 +22,7 @@ export function ObservationsPage({ location }) {
         <header className="observation-stream-header">
           <h1>观察</h1>
         </header>
-        {briefs.length ? <ObservationStream items={briefs} returnTo={returnTo} /> : <ObservationEmptyState {...site.emptyStates.observations} />}
+        {briefs.length ? <ObservationStream items={briefs} returnTo={returnTo} /> : <ObservationEmptyState {...home.emptyStates.observations} />}
       </CollectionLayout>
     </LayoutShell>
   );

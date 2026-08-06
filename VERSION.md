@@ -1,4 +1,10 @@
 
+## v0.26.0 — 发布内核与 ContentSet 架构重构
+
+- 建立 `ContentSet v1` 作为全部公开内容（含 Home 首页入口）的唯一运行 active 身份，使用不可变集合文件与原子 `active.json` 指针；旧 receipt、Registry、lineage、projection 和 package 仅保留迁移/审计用途。
+- 建立 `ProductArtifact`、`SiteSnapshot`、`PublicationRun` 三对象闭环；产品与内容独立准备，Site Publication Coordinator 串行执行一次 deployment、传播验证、原子 active 切换与整站 rollback。
+- 现有产品/内容 publish 入口统一委托 Coordinator；最终 commit/tag/clean 后才生成并校验精确绑定 HEAD/tag 的 ProductArtifact，保留既有 UI、IA、schema、正文、审核、媒体和视觉事实。
+
 ## v0.25.19 — 内容收据与活动站点投影单一身份
 
 - 保持不可变 `ContentReleaseReceipt.receiptHash` 为 package receipt 身份，新增确定性的 `ActiveContentProjection.projectionHash` 作为 Registry、lineage binding 与 ProductArtifact 组合后的活动投影身份。

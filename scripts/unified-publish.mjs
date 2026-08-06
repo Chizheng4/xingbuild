@@ -18,6 +18,7 @@ import {
 } from "./lib/publish-target.mjs";
 import { createSitePublication } from "./lib/site-publication.mjs";
 import { transportSitePublication } from "./lib/site-publication-coordinator.mjs";
+import { readProductArtifact } from "./lib/product-artifact.mjs";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const expectedOrigin = "https://github.com/Chizheng4/xingbuild.git";
@@ -95,11 +96,15 @@ export async function readPreparedDist({ sourceCwd = root, version, head } = {})
   const client = path.join(sourceCwd, "dist", "client");
   const releasePath = path.join(client, "release.json");
   const manifestPath = path.join(client, "content-manifest.json");
+  const artifactPath = path.join(client, "base-site-artifact.json");
   if (!(await exists(releasePath))) throw new Error("prepared dist/client/release.json is required; publish will not build");
   const release = JSON.parse(await readFile(releasePath, "utf8"));
   if (release.version !== version || release.commit !== head) throw new Error(`prepared release.json does not match ${version}/${head}`);
   const manifest = await exists(manifestPath) ? JSON.parse(await readFile(manifestPath, "utf8")) : null;
-  return { client, release, manifest };
+  const artifact = await exists(artifactPath)
+    ? await readProductArtifact({ clientDirectory: client, sourceRoot: sourceCwd, version, commit: head })
+    : null;
+  return { client, release, manifest, artifact };
 }
 
 function configureNetwork() {
@@ -127,6 +132,7 @@ export async function publish({ kind, target, argv = process.argv.slice(2), env 
     prepared = await readPreparedDist({ sourceCwd: root, version: source.version, head: source.head });
     phase = "preflight";
     run("npm", ["run", "release:preflight"], root, { env: { ...env, XINGBUILD_RELEASE_WORKTREE: "1" } });
+    if (!prepared.artifact) throw new Error("ProductArtifact is required before product transport");
     phase = "authorization";
     assertPublishAuthorization({ argv, env });
     if (!(await exists(edgeone))) throw new Error("EdgeOne CLI is not installed in the project");

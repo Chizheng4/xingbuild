@@ -28,12 +28,12 @@ function HomeComposition({ content }) {
   const briefs = content.briefs;
   return (
     <LayoutShell className="page-composition page-composition--home home-page">
-      <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.site.homeTitle}</h1></section>
+      <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.home.homeTitle}</h1></section>
       <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.heroActions} />
       <section className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" actions={[]} /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
         <header className="section-heading"><p className="eyebrow">最新短文</p><h2 id="home-briefs-title">经营观察</h2></header>
-        {briefs.length ? <ObservationStream items={briefs.slice(0, 3)} returnTo="/" /> : <ObservationEmptyState {...content.site.emptyStates.observations} />}
+        {briefs.length ? <ObservationStream items={briefs.slice(0, 3)} returnTo="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}
       </section>
     </LayoutShell>
   );
@@ -65,7 +65,7 @@ function CollectionComposition({ content, location }) {
         <header className="observation-stream-header">
           <h1>观察</h1>
         </header>
-        {briefs.length ? <ObservationStream items={briefs} returnTo={returnTo} /> : <ObservationEmptyState {...content.site.emptyStates.observations} />}
+        {briefs.length ? <ObservationStream items={briefs} returnTo={returnTo} /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}
       </CollectionLayout>
     </LayoutShell>
   );
