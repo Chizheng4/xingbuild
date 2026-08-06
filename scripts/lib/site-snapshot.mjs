@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { contentManifestFromContentSet, validateContentSet } from "./content-set.mjs";
+import { assertProductArtifactIdentityShape, PRODUCT_ARTIFACT_IDENTITY_FIELDS } from "./product-artifact.mjs";
 
 export const SITE_SNAPSHOT_SCHEMA_VERSION = "site-snapshot-v1";
 
@@ -16,12 +17,10 @@ function text(value, field) {
 }
 
 export function productArtifactIdentity(productArtifact = {}) {
-  return {
-    productArtifactId: text(productArtifact.productArtifactId || productArtifact.baseSiteArtifactId, "productArtifactId"),
-    productVersion: text(productArtifact.productVersion || productArtifact.version, "productVersion"),
-    productCommit: text(productArtifact.productCommit || productArtifact.commit, "productCommit"),
-    baseSiteArtifactId: text(productArtifact.baseSiteArtifactId || productArtifact.productArtifactId, "baseSiteArtifactId"),
-  };
+  assertProductArtifactIdentityShape(productArtifact);
+  return Object.fromEntries(PRODUCT_ARTIFACT_IDENTITY_FIELDS
+    .filter((field) => productArtifact[field] != null)
+    .map((field) => [field, productArtifact[field]]));
 }
 
 function snapshotIdentity({ productArtifact, contentSet, contentManifest }) {

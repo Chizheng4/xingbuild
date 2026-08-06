@@ -58,5 +58,5 @@ console.log(`发布就绪：${result.version}，main、版本记录、标签、�
 console.log(JSON.stringify({
   productArtifactId: productArtifact.productArtifactId,
   productArtifactHash: productArtifact.productArtifactHash,
-  baseSiteArtifactId: productArtifact.baseSiteArtifact.baseSiteArtifactId,
+  baseSiteArtifactId: productArtifact.baseSiteArtifactId,
 }, null, 2));

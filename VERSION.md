@@ -1,4 +1,13 @@
 
+## v0.26.1 — ProductArtifact 规范化身份与 SiteSnapshot 契约
+
+日期：2026-08-06
+
+- 建立唯一 ProductArtifactIdentity 适配器，将 release、content-manifest、base-site-artifact 规范化为稳定扁平身份四元组与 hash。
+- SiteSnapshot、ContentSet manifest、PublicationRun、SitePublication 和 Coordinator 只消费规范化身份；未规范化对象、缺字段和身份漂移在组装前硬失败。
+- 复用 v0.26.0 已迁移的 35-entry active ContentSet，不修改内容正文、审核、媒体、页面或视觉事实。
+- 当前上线状态：Engineering 本地实现与门禁进行中，尚未推送 GitHub 或发布 EdgeOne。
+
 ## v0.26.0 — 发布内核与 ContentSet 架构重构
 
 - 建立 `ContentSet v1` 作为全部公开内容（含 Home 首页入口）的唯一运行 active 身份，使用不可变集合文件与原子 `active.json` 指针；旧 receipt、Registry、lineage、projection 和 package 仅保留迁移/审计用途。

@@ -9,6 +9,7 @@ import { assertActiveContentProjection } from "./content-release-receipt.mjs";
 import { compareAndSwapContentSlot, contentLogicalContentId, contentReceiptId, ensureContentSlotRegistry, restoreContentSlot } from "./content-slot-registry.mjs";
 import { activateContentSet, readActiveContentSet, restoreActiveContentSet } from "./content-set.mjs";
 import { markPublicationRecoverable, markPublicationReleased, markPublicationRolledBack, readPublicationRun, writePublicationRun } from "./publication-run.mjs";
+import { assertProductArtifactIdentityShape } from "./product-artifact.mjs";
 import {
   assertBindingCandidate,
   assertPublicationLineageBindingAgainstRegistry,
@@ -52,13 +53,26 @@ export async function readSitePublicationRecord(publicationDirectory) {
   return readJson(path.join(publicationDirectory, "site-publication.json"));
 }
 
+function publicationProductArtifactIdentity(publication = {}) {
+  const identity = publication.productArtifact || {
+    productArtifactId: publication.productArtifactId,
+    productVersion: publication.productVersion,
+    productCommit: publication.productCommit,
+    // Legacy records predate the explicit fourth tuple field; their
+    // productArtifactId is already the immutable base artifact id.
+    baseSiteArtifactId: publication.baseSiteArtifactId || publication.productArtifactId,
+    productArtifactHash: publication.productArtifactHash || undefined,
+  };
+  return assertProductArtifactIdentityShape(identity);
+}
+
 export function sitePublicationIdentity(publication = {}) {
   return {
     sitePublicationId: publication.sitePublicationId || null,
     snapshotHash: publication.snapshotHash || null,
-    version: publication.productVersion || null,
-    commit: publication.productCommit || null,
-    baseSiteArtifactId: publication.productArtifactId || null,
+    ...publicationProductArtifactIdentity(publication),
+    version: publication.productVersion || publication.productArtifact?.productVersion || null,
+    commit: publication.productCommit || publication.productArtifact?.productCommit || null,
   };
 }
 
@@ -86,7 +100,8 @@ async function finalizeContentSetPublication({ current, publicationDirectory, pu
     || publicVerify.contentSetHash !== current.contentSetHash
     || publicVerify.siteSnapshotId !== current.siteSnapshotId
     || publicVerify.snapshotHash !== current.snapshotHash
-    || publicVerify.baseSiteArtifactId !== current.productArtifactId) {
+    || publicVerify.baseSiteArtifactId !== (current.baseSiteArtifactId || current.productArtifactId)
+    || (current.productArtifactHash && publicVerify.productArtifactHash !== current.productArtifactHash)) {
     throw new Error("ContentSet SitePublication public evidence identity mismatch");
   }
   const activeBefore = await readActiveContentSet({ sourceRoot }).catch((error) => {
@@ -96,6 +111,12 @@ async function finalizeContentSetPublication({ current, publicationDirectory, pu
   let run = await readPublicationRun({ sourceRoot, publicationRunId: current.publicationRunId });
   if (run.siteSnapshotId !== current.siteSnapshotId || run.snapshotHash !== current.snapshotHash || run.contentSetId !== current.contentSetId) {
     throw new Error("PublicationRun identity drift during finalize");
+  }
+  if (run.productArtifactId !== current.productArtifactId
+    || run.productVersion !== current.productVersion
+    || run.productCommit !== current.productCommit
+    || run.baseSiteArtifactId !== (current.baseSiteArtifactId || current.productArtifactId)) {
+    throw new Error("PublicationRun ProductArtifact identity drift during finalize");
   }
   let activeChanged = false;
   let releasedRun = run;
@@ -375,6 +396,13 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
   if (contentManifest.baseSiteArtifactId !== publication.productArtifactId) {
     throw identityDriftError("public content manifest ProductArtifact identity does not match SitePublication", { ...observedIdentity, expected: expectedIdentity });
   }
+  if (publication.productArtifactHash && contentManifest.productArtifactHash !== publication.productArtifactHash) {
+    throw identityDriftError("public content manifest ProductArtifact hash does not match SitePublication", {
+      ...observedIdentity,
+      observedProductArtifactHash: contentManifest.productArtifactHash || null,
+      expectedProductArtifactHash: publication.productArtifactHash,
+    });
+  }
   if (isContentSetPublication(publication)) {
     if (contentManifest.contentSetId !== publication.contentSetId
       || contentManifest.contentSetHash !== publication.contentSetHash
@@ -422,6 +450,8 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       contentSetId: publication.contentSetId,
       contentSetHash: publication.contentSetHash,
       baseSiteArtifactId: contentManifest.baseSiteArtifactId,
+      productArtifactId: contentManifest.productArtifactId || publication.productArtifactId,
+      productArtifactHash: contentManifest.productArtifactHash || null,
       version: publication.productVersion,
       commit: publication.productCommit,
       activeContentReleaseIds: [],
@@ -576,7 +606,8 @@ export async function waitForPublicSitePublication({ publication, baseUrl = publ
 export async function transportSitePublication({ publication, sourceRoot, argv = [], env = process.env, edgeonePath, baseUrl = publicUrl, fetchImpl = fetch, runCaptureImpl = runCapture, maxAttempts = 30, initialDelayMs = 1000, maxDelayMs = 10000, sleepImpl } = {}) {
   assertFixedPublishTarget(env);
   assertPublishAuthorization({ argv, env });
-  if (!publication?.sitePublicationId || !publication.productVersion || !publication.productCommit) throw new Error("SitePublication identity is required");
+  const productArtifact = publicationProductArtifactIdentity(publication);
+  if (!publication?.sitePublicationId || !productArtifact.productVersion || !productArtifact.productCommit) throw new Error("SitePublication identity is required");
   const currentText = await readFile(path.join(sourceRoot, "docs/iterations/current.md"), "utf8");
   assertProductContentCompatibility({ currentText, activeContentReleaseIds: publication.contentReleaseIds || [] });
   const target = await readFixedEdgeoneTarget(sourceRoot);
@@ -588,9 +619,11 @@ export async function transportSitePublication({ publication, sourceRoot, argv =
   }
   if (persisted && (persisted.sitePublicationId !== publication.sitePublicationId
     || persisted.snapshotHash !== publication.snapshotHash
-    || persisted.productVersion !== publication.productVersion
-    || persisted.productCommit !== publication.productCommit
-    || (persisted.productArtifactId || null) !== (publication.productArtifactId || null))) {
+    || persisted.productVersion !== productArtifact.productVersion
+    || persisted.productCommit !== productArtifact.productCommit
+    || (persisted.productArtifactId || null) !== (productArtifact.productArtifactId || null)
+    || (persisted.baseSiteArtifactId || persisted.productArtifactId || null) !== (productArtifact.baseSiteArtifactId || null)
+    || (persisted.productArtifactHash || null) !== (productArtifact.productArtifactHash || null))) {
     throw new Error("persisted SitePublication identity does not match resume request");
   }
   const leaseDirectory = path.join(sourceRoot, ".content-workspace", "site-publications", ".site-lease");

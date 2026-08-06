@@ -22,7 +22,7 @@ import {
   readContentSet,
   readActiveContentSet,
 } from "./content-set.mjs";
-import { createSiteSnapshot } from "./site-snapshot.mjs";
+import { createSiteSnapshot, productArtifactIdentity } from "./site-snapshot.mjs";
 import { createPublicationRun, publicationRunIdForSnapshot, readPublicationRun, writePublicationRun } from "./publication-run.mjs";
 import { readProductArtifact } from "./product-artifact.mjs";
 
@@ -281,7 +281,7 @@ async function buildAssembledClient({ productClient, outputRoot, activeContentRe
 async function buildAssembledClientFromContentSet({ productClient, outputRoot, contentSet, productArtifact, sourceRoot }) {
   const staging = await mkdtemp(path.join(os.tmpdir(), "xingbuild-site-publication-"));
   try {
-    await cp(productArtifact.baseSiteArtifact.sourceDirectory, staging, { recursive: true });
+    await cp(productArtifact.documents.baseSiteArtifact.sourceDirectory, staging, { recursive: true });
     const nodeModules = path.join(sourceRoot, "node_modules");
     if (await stat(nodeModules).catch(() => null)) await symlink(nodeModules, path.join(staging, "node_modules"), "dir");
     await assembleContentSetSources({ staging, sourceRoot, contentSet });
@@ -302,7 +302,7 @@ async function buildAssembledClientFromContentSet({ productClient, outputRoot, c
     await rm(outputRoot, { recursive: true, force: true });
     await mkdir(outputRoot, { recursive: true });
     await cp(assembledClient, outputRoot, { recursive: true });
-    await writeFile(path.join(outputRoot, "base-site-artifact.json"), `${JSON.stringify(productArtifact.baseSiteArtifact, null, 2)}\n`);
+    await writeFile(path.join(outputRoot, "base-site-artifact.json"), `${JSON.stringify(productArtifact.documents.baseSiteArtifact, null, 2)}\n`);
     return { client: outputRoot };
   } finally {
     await rm(staging, { recursive: true, force: true });
@@ -388,6 +388,11 @@ async function createContentSetSitePublication({ productClient, outputRoot, publ
     : await readAuthoritativeContentSet(sourceRoot);
   if (!contentSet) throw new Error("ContentSet active pointer is required; run one-time content:set:migrate before SiteSnapshot assembly");
   const snapshot = createSiteSnapshot({ productArtifact, contentSet, previousSnapshotId: null });
+  // The adapter may retain immutable source documents for assembly, but every
+  // persisted/runtime publication object receives only the normalized flat
+  // ProductArtifactIdentity.  Raw manifests never become a second identity
+  // shape downstream of the adapter boundary.
+  const productIdentity = snapshot.productArtifact;
   const id = sitePublicationId({
     productVersion: productArtifact.productVersion,
     productCommit: productArtifact.productCommit,
@@ -437,9 +442,12 @@ async function createContentSetSitePublication({ productClient, outputRoot, publ
   const persistedIdentityMatches = existingPublication?.sitePublicationId === id && existingPublication?.snapshotHash === snapshot.snapshotHash;
   const persisted = {
     sitePublicationId: id,
-    productVersion: productArtifact.productVersion,
-    productCommit: productArtifact.productCommit,
-    productArtifactId: productArtifact.productArtifactId,
+    productArtifact: productIdentity,
+    productVersion: productIdentity.productVersion,
+    productCommit: productIdentity.productCommit,
+    productArtifactId: productIdentity.productArtifactId,
+    baseSiteArtifactId: productIdentity.baseSiteArtifactId,
+    productArtifactHash: productIdentity.productArtifactHash || null,
     contentReleaseIds: [],
     contentSetId: contentSet.contentSetId,
     contentSetHash: contentSet.contentSetHash,
@@ -476,7 +484,22 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     throw new Error("ContentSet active pointer is required for canonical SitePublication; legacy receipts are migration/audit-only");
   }
   const productRelease = JSON.parse(await readFile(path.join(productClient, "release.json"), "utf8"));
-  const productArtifact = await readFile(path.join(productClient, "base-site-artifact.json"), "utf8").then(JSON.parse).catch(() => null);
+  let productArtifact = null;
+  try {
+    productArtifact = await readProductArtifact({
+      clientDirectory: productClient,
+      sourceRoot,
+      version: productRelease.version,
+      commit: productRelease.commit,
+    });
+  } catch (error) {
+    // This branch is retained only for isolated legacy/audit fixtures.  The
+    // canonical ContentSet path above always fails before assembly when a
+    // ProductArtifact is incomplete; legacy records may still be inspected
+    // without inventing a product identity that cannot be proven.
+    if (!/base-site-artifact\.json is missing or unreadable/.test(error.message)) throw error;
+  }
+  const productIdentity = productArtifact ? productArtifactIdentity(productArtifact) : null;
   const slotRegistry = await ensureContentSlotRegistry({ sourceRoot, releasesRoot });
   const activeContentReleases = await readActiveContentReleases(releasesRoot, {
     sourceRoot,
@@ -487,7 +510,7 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     ...(additionalContentManifest?.kind ? [additionalContentManifest.kind] : []),
   ])];
   if (productArtifact) {
-    assertContentSlotArtifactCompatible(productArtifact, {
+    assertContentSlotArtifactCompatible(productArtifact.documents.baseSiteArtifact, {
       registryMode: slotRegistry.mode || "legacy",
       requiredKinds,
     });
@@ -608,7 +631,15 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     activeContentReleaseIds: activeContentSet.activeContentReleaseIds,
     activeReceiptIds: activeContentSet.activeReceiptIds,
     mediaPaths: activeContentSet.mediaPaths,
-    baseSiteArtifactId: productArtifact?.baseSiteArtifactId || additionalContentManifest?.baseSiteArtifactId || null,
+    ...(productIdentity ? {
+      productArtifactId: productIdentity.productArtifactId,
+      baseSiteArtifactId: productIdentity.baseSiteArtifactId,
+      productArtifactHash: productIdentity.productArtifactHash || null,
+      releaseManifestHash: productIdentity.releaseManifestHash || null,
+      contentManifestHash: productIdentity.contentManifestHash || null,
+      artifactContentHash: productIdentity.artifactContentHash || null,
+      sourceBundleHash: productIdentity.sourceBundleHash || null,
+    } : {}),
     activeContentProjections: activeContentSet.activeContentProjections,
     contentReleaseReceipts: activeContentSet.contentReleaseReceipts,
     candidateContentReleaseId: candidate?.contentReleaseId || null,
@@ -620,13 +651,16 @@ export async function createSitePublication({ productClient, releasesRoot, outpu
     lineageBinding: candidateLineageBinding,
   };
   assertContentManifestComplete(contentManifest, activeContentReleases);
-  const snapshotHash = createHash("sha256").update(JSON.stringify({ productRelease, productArtifactId: productArtifact?.baseSiteArtifactId || null, contentManifest })).digest("hex");
+  const snapshotHash = createHash("sha256").update(JSON.stringify({ productArtifact: productIdentity, contentManifest })).digest("hex");
   Object.assign(contentManifest, { sitePublicationId: id, snapshotHash });
   const publication = {
     sitePublicationId: id,
+    productArtifact: productIdentity || null,
     productVersion: productRelease.version,
     productCommit: productRelease.commit,
-    productArtifactId: productArtifact?.baseSiteArtifactId || null,
+    productArtifactId: productIdentity?.productArtifactId || null,
+    baseSiteArtifactId: productIdentity?.baseSiteArtifactId || null,
+    productArtifactHash: productIdentity?.productArtifactHash || null,
     contentReleaseIds: contentManifest.activeContentReleaseIds,
     candidateContentReleaseId: candidate?.contentReleaseId || null,
     candidatePackageRevisionId: candidate?.packageRevisionId || null,

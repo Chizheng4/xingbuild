@@ -61,7 +61,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       tag: result.tag,
       productArtifactId: result.artifact.productArtifactId,
       productArtifactHash: result.artifact.productArtifactHash,
-      baseSiteArtifactId: result.artifact.baseSiteArtifact.baseSiteArtifactId,
+      baseSiteArtifactId: result.artifact.baseSiteArtifactId,
     }, null, 2));
   } catch (error) {
     console.error(`最终 ProductArtifact 构建已停止：${error.message}`);

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { access, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertProductArtifactIdentityShape } from "./product-artifact.mjs";
 
 /**
  * ContentSet is the runtime authority for public content.  Receipts, slot
@@ -199,13 +200,28 @@ export function contentSetCollections(contentSet = {}) {
 export function contentManifestFromContentSet(contentSet, { productArtifact = {} } = {}) {
   validateContentSet(contentSet);
   const collections = contentSetCollections(contentSet);
-  const version = productArtifact.productVersion || productArtifact.version || null;
-  const commit = productArtifact.productCommit || productArtifact.commit || null;
-  const baseSiteArtifactId = productArtifact.baseSiteArtifactId || productArtifact.productArtifactId || null;
+  const hasProductIdentity = productArtifact && typeof productArtifact === "object" && Object.keys(productArtifact).length > 0;
+  let identity = null;
+  if (hasProductIdentity) {
+    try {
+      identity = assertProductArtifactIdentityShape(productArtifact);
+    } catch (error) {
+      throw new Error(`ContentSet manifest requires normalized ProductArtifact identity: ${error.message}`);
+    }
+  }
+  const version = identity?.productVersion || null;
+  const commit = identity?.productCommit || null;
+  const baseSiteArtifactId = identity?.baseSiteArtifactId || null;
   const manifest = {
     ...(version ? { version } : {}),
     ...(commit ? { commit } : {}),
     ...(baseSiteArtifactId ? { baseSiteArtifactId } : {}),
+    ...(identity?.productArtifactId ? { productArtifactId: identity.productArtifactId } : {}),
+    ...(identity?.productArtifactHash ? { productArtifactHash: identity.productArtifactHash } : {}),
+    ...(identity?.releaseManifestHash ? { releaseManifestHash: identity.releaseManifestHash } : {}),
+    ...(identity?.contentManifestHash ? { contentManifestHash: identity.contentManifestHash } : {}),
+    ...(identity?.artifactContentHash ? { artifactContentHash: identity.artifactContentHash } : {}),
+    ...(identity?.sourceBundleHash ? { sourceBundleHash: identity.sourceBundleHash } : {}),
     contentSetId: contentSet.contentSetId,
     contentSetHash: contentSet.contentSetHash,
     previousContentSetId: contentSet.previousContentSetId || null,

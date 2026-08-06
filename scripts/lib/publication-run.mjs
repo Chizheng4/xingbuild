@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertProductArtifactIdentityShape } from "./product-artifact.mjs";
 import { assertSiteSnapshotIdentity } from "./site-snapshot.mjs";
 
 export const PUBLICATION_RUN_SCHEMA_VERSION = "publication-run-v1";
@@ -38,13 +39,19 @@ export function publicationRunIdForSnapshot(siteSnapshotId) {
 
 export function createPublicationRun({ siteSnapshot, previousRunId = null, createdAt = new Date().toISOString() } = {}) {
   assertSiteSnapshotIdentity(siteSnapshot);
+  const productArtifact = assertProductArtifactIdentityShape(siteSnapshot.productArtifact);
   const publicationRunId = publicationRunIdForSnapshot(siteSnapshot.siteSnapshotId);
   return {
     schemaVersion: PUBLICATION_RUN_SCHEMA_VERSION,
     publicationRunId,
     siteSnapshotId: siteSnapshot.siteSnapshotId,
     snapshotHash: siteSnapshot.snapshotHash,
-    productArtifactId: siteSnapshot.productArtifact.productArtifactId,
+    productArtifact,
+    productArtifactId: productArtifact.productArtifactId,
+    productVersion: productArtifact.productVersion,
+    productCommit: productArtifact.productCommit,
+    baseSiteArtifactId: productArtifact.baseSiteArtifactId,
+    productArtifactHash: productArtifact.productArtifactHash || null,
     contentSetId: siteSnapshot.contentSetId,
     contentSetHash: siteSnapshot.contentSetHash,
     previousRunId: previousRunId || null,
@@ -66,6 +73,22 @@ export function validatePublicationRun(run = {}) {
   text(run.siteSnapshotId, "siteSnapshotId");
   text(run.snapshotHash, "snapshotHash");
   text(run.productArtifactId, "productArtifactId");
+  const productArtifact = assertProductArtifactIdentityShape(run.productArtifact || {
+    productArtifactId: run.productArtifactId,
+    productVersion: run.productVersion,
+    productCommit: run.productCommit,
+    // Legacy PublicationRun records predate the explicit fourth tuple field;
+    // this compatibility boundary accepts it only when it is the same
+    // ProductArtifact id already persisted on that record.
+    baseSiteArtifactId: run.baseSiteArtifactId || run.productArtifactId,
+    productArtifactHash: run.productArtifactHash || undefined,
+  });
+  if (productArtifact.productArtifactId !== run.productArtifactId
+    || productArtifact.productVersion !== run.productVersion
+    || productArtifact.productCommit !== run.productCommit
+    || productArtifact.baseSiteArtifactId !== (run.baseSiteArtifactId || run.productArtifactId)) {
+    throw new Error("PublicationRun ProductArtifact identity mismatch");
+  }
   text(run.contentSetId, "contentSetId");
   text(run.contentSetHash, "contentSetHash");
   if (!PUBLICATION_RUN_STATES.includes(run.state)) throw new Error(`PublicationRun state is invalid: ${run.state}`);
