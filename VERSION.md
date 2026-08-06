@@ -1,4 +1,10 @@
 
+## v0.25.19 — 内容收据与活动站点投影单一身份
+
+- 保持不可变 `ContentReleaseReceipt.receiptHash` 为 package receipt 身份，新增确定性的 `ActiveContentProjection.projectionHash` 作为 Registry、lineage binding 与 ProductArtifact 组合后的活动投影身份。
+- `readActiveContentReleases`、`createActiveContentSet`、manifest、SitePublication assembly、Coordinator publicVerify/finalize/resume 统一消费同一个 projection resolver；旧 projection 只能隔离兼容，不能与新 projection 混组。
+- 覆盖真实 34 active corpus、Robotaxi replacement、About recoverable package、resume 幂等、projection/binding/ProductArtifact drift、CAS 竞争及失败不污染 active；不修改页面、内容正文、审核、媒体或既有身份。
+
 ## v0.25.18 — ContentSlotRegistry 权威边界与一次性 Legacy 迁移
 
 - 将 ContentSlotRegistry 读取拆分为 authoritative read 与显式 legacy bootstrap；权威 Registry 建立后，日常 prepare/build/transport/resume 不再扫描旧 package corpus。

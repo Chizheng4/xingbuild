@@ -4,6 +4,7 @@ import path from "node:path";
 import { resolveContentLifecycleTimes } from "./content-lifecycle-time.mjs";
 
 export const CONTENT_RELEASE_RECEIPT_VERSION = "content-release-receipt-v1";
+export const ACTIVE_CONTENT_PROJECTION_VERSION = "active-content-projection-v1";
 
 const targetCollections = Object.freeze({
   content: "publishedSlugs",
@@ -17,6 +18,10 @@ export const contentTargetCollectionNames = Object.freeze(Object.values(targetCo
 
 function stableHash(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+function normalizedStringArray(value = []) {
+  return [...new Set(Array.isArray(value) ? value.filter((item) => typeof item === "string" && item) : [])].sort();
 }
 
 function exactStringArray(value, field, packageDirectory) {
@@ -178,27 +183,7 @@ export async function readContentReleaseReceipt(packageDirectory) {
     }
   }
   const projectionEvidence = await readProjection(packageDirectory, release, collections);
-  const receiptIdentity = {
-    receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
-    contentReleaseId: release.contentReleaseId,
-    logicalContentId: release.logicalContentId || null,
-    packageRevisionId: release.packageRevisionId || null,
-    predecessorReceiptId: release.predecessorReceiptId || null,
-    supersedesPackageId: release.supersedesPackageId || null,
-    contentHash: release.contentHash,
-    kind: release.kind,
-    target: release.target,
-    targetPath: release.targetPath || null,
-    changeSetId: release.changeSetId || null,
-    changedTargets: release.changedTargets || [],
-    beforeHash: release.beforeHash || null,
-    afterHash: release.afterHash || null,
-    baseSiteArtifactId: release.baseSiteArtifactId,
-    firstPublishedAt: lifecycleTimes.firstPublishedAt,
-    revisionReleasedAt: lifecycleTimes.revisionReleasedAt,
-    publishedAt: lifecycleTimes.publishedAt,
-    ...collections,
-  };
+  const receiptIdentity = contentReceiptIdentity(release, { baseSiteArtifactId: release.baseSiteArtifactId });
   return {
     ...release,
     ...collections,
@@ -213,23 +198,16 @@ export async function readContentReleaseReceipt(packageDirectory) {
   };
 }
 
-export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt.baseSiteArtifactId, lineageBinding = null } = {}) {
-  const collections = receiptTargetCollections(receipt, { packageDirectory: receipt.packageDirectory || receipt.contentReleaseId });
+export function contentReceiptIdentity(receipt, { baseSiteArtifactId = receipt?.baseSiteArtifactId || null } = {}) {
+  const collections = receiptTargetCollections(receipt, { packageDirectory: receipt?.packageDirectory || receipt?.contentReleaseId || "content release receipt" });
   const lifecycleTimes = resolveContentLifecycleTimes(receipt, { now: () => "1970-01-01T00:00:00.000Z" });
-  const projectedLineageBinding = lineageBinding || null;
-  const predecessorReceiptId = projectedLineageBinding?.predecessorReceiptId
-    || receipt.predecessorReceiptId
-    || null;
-  const supersedesPackageId = projectedLineageBinding?.predecessorPackageId
-    || receipt.supersedesPackageId
-    || null;
-  const identity = {
+  return {
     receiptVersion: CONTENT_RELEASE_RECEIPT_VERSION,
     contentReleaseId: receipt.contentReleaseId,
     logicalContentId: receipt.logicalContentId || null,
     packageRevisionId: receipt.packageRevisionId || null,
-    predecessorReceiptId,
-    supersedesPackageId,
+    predecessorReceiptId: receipt.predecessorReceiptId || null,
+    supersedesPackageId: receipt.supersedesPackageId || null,
     contentHash: receipt.contentHash,
     kind: receipt.kind,
     target: receipt.target,
@@ -244,6 +222,126 @@ export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt
     publishedAt: lifecycleTimes.publishedAt,
     ...collections,
   };
-  if (projectedLineageBinding?.lineageBindingId) identity.lineageBindingId = projectedLineageBinding.lineageBindingId;
-  return { ...identity, receiptHash: stableHash(identity) };
+}
+
+export function createImmutableContentReceiptProjection(receipt, { baseSiteArtifactId = receipt?.baseSiteArtifactId || null, preserveReceiptHash = true } = {}) {
+  const receiptIdentity = receipt?.receiptIdentity || contentReceiptIdentity(receipt, { baseSiteArtifactId });
+  const computedReceiptHash = stableHash(receiptIdentity);
+  if (receipt?.receiptIdentity && receipt?.receiptHash && receipt.receiptHash !== computedReceiptHash) {
+    throw new Error(`ContentReleaseReceipt receiptHash drift: ${receipt.contentReleaseId || "unknown"}`);
+  }
+  return {
+    ...receiptIdentity,
+    // A released receipt may carry a legacy hash whose raw identity predates
+    // Registry-derived logicalContentId fields. Active readers preserve that
+    // package fact; untrusted candidate manifests must be recomputed.
+    receiptHash: preserveReceiptHash && receipt?.receiptHash ? receipt.receiptHash : computedReceiptHash,
+  };
+}
+
+/**
+ * The package projection is intentionally separate from the active-site
+ * projection.  Its hash is the immutable receipt identity and never absorbs
+ * Registry, lineage binding, or the current ProductArtifact.
+ */
+export function contentReceiptProjection(receipt, { baseSiteArtifactId = receipt?.baseSiteArtifactId || null } = {}) {
+  return createImmutableContentReceiptProjection(receipt, { baseSiteArtifactId });
+}
+
+export function activeContentProjectionIdentity(projection = {}) {
+  return {
+    projectionVersion: ACTIVE_CONTENT_PROJECTION_VERSION,
+    contentReleaseId: projection.contentReleaseId,
+    receiptId: projection.receiptId || null,
+    logicalContentId: projection.logicalContentId || null,
+    packageRevisionId: projection.packageRevisionId || null,
+    receiptHash: projection.receiptHash,
+    predecessorReceiptId: projection.predecessorReceiptId || null,
+    supersedesPackageId: projection.supersedesPackageId || null,
+    lineageBindingId: projection.lineageBindingId || null,
+    registryRevision: Number.isInteger(projection.registryRevision) ? projection.registryRevision : null,
+    baseSiteArtifactId: projection.baseSiteArtifactId || null,
+    contentHash: projection.contentHash,
+    kind: projection.kind,
+    target: projection.target,
+    targetPath: projection.targetPath || null,
+    changeSetId: projection.changeSetId || null,
+    changedTargets: projection.changedTargets || [],
+    beforeHash: projection.beforeHash || null,
+    afterHash: projection.afterHash || null,
+    firstPublishedAt: projection.firstPublishedAt || null,
+    revisionReleasedAt: projection.revisionReleasedAt || null,
+    publishedAt: projection.publishedAt || null,
+    publishedSlugs: normalizedStringArray(projection.publishedSlugs),
+    publishedArticleSlugs: normalizedStringArray(projection.publishedArticleSlugs),
+    practiceIds: normalizedStringArray(projection.practiceIds),
+    profileIds: normalizedStringArray(projection.profileIds),
+    businessObservationIds: normalizedStringArray(projection.businessObservationIds),
+    mediaPaths: normalizedStringArray(projection.mediaPaths),
+  };
+}
+
+export function createActiveContentProjection({ receipt, activeSlot = null, lineageBinding = null, productArtifactId = null, registryRevision = null, mediaPaths = [] } = {}) {
+  if (!receipt || typeof receipt !== "object") throw new Error("ActiveContentProjection receipt is required");
+  const packageProjection = createImmutableContentReceiptProjection(receipt, { baseSiteArtifactId: receipt.baseSiteArtifactId || null });
+  const logicalContentId = receipt.logicalContentId || (receipt.kind && receipt.target ? `${receipt.kind}:${receipt.target}` : null);
+  const receiptId = receipt.receiptId || (receipt.contentReleaseId ? `${receipt.contentReleaseId}${receipt.packageRevisionId ? `@${receipt.packageRevisionId}` : ""}` : null);
+  if (!receiptId || !logicalContentId || !packageProjection.receiptHash) throw new Error("ActiveContentProjection immutable receipt identity is incomplete");
+  if (activeSlot) {
+    if (activeSlot.logicalContentId !== logicalContentId) throw new Error(`ActiveContentProjection logical identity drift: ${logicalContentId}`);
+    const predecessorReceiptId = lineageBinding?.predecessorReceiptId || null;
+    const activeReceiptMatches = !activeSlot.activeReceiptId || activeSlot.activeReceiptId === receiptId || activeSlot.activeReceiptId === predecessorReceiptId;
+    if (!activeReceiptMatches) throw new Error(`ActiveContentProjection active receipt drift: ${logicalContentId}`);
+    if (activeSlot.activeContentReleaseId && activeSlot.activeContentReleaseId !== receipt.contentReleaseId) throw new Error(`ActiveContentProjection content release drift: ${logicalContentId}`);
+    const predecessorPackageRevisionId = activeSlot.activePackageRevisionId && activeSlot.activeReceiptId === predecessorReceiptId
+      ? activeSlot.activePackageRevisionId
+      : null;
+    if (activeSlot.activePackageRevisionId
+      && activeSlot.activePackageRevisionId !== (receipt.packageRevisionId || null)
+      && activeSlot.activePackageRevisionId !== predecessorPackageRevisionId) throw new Error(`ActiveContentProjection package revision drift: ${logicalContentId}`);
+  }
+  if (lineageBinding) {
+    if (lineageBinding.logicalContentId !== logicalContentId
+      || lineageBinding.candidateContentReleaseId !== receipt.contentReleaseId
+      || lineageBinding.packageRevisionId !== (receipt.packageRevisionId || null)) {
+      throw new Error(`ActiveContentProjection lineage binding drift: ${logicalContentId}`);
+    }
+  }
+  const projection = {
+    projectionVersion: ACTIVE_CONTENT_PROJECTION_VERSION,
+    contentReleaseId: receipt.contentReleaseId,
+    receiptId,
+    logicalContentId,
+    packageRevisionId: receipt.packageRevisionId || null,
+    receiptHash: packageProjection.receiptHash,
+    predecessorReceiptId: lineageBinding?.predecessorReceiptId || activeSlot?.predecessorReceiptId || receipt.predecessorReceiptId || null,
+    supersedesPackageId: lineageBinding?.predecessorPackageId || receipt.supersedesPackageId || null,
+    lineageBindingId: lineageBinding?.lineageBindingId || null,
+    registryRevision: Number.isInteger(registryRevision) ? registryRevision : (Number.isInteger(activeSlot?.registryRevision) ? activeSlot.registryRevision : null),
+    baseSiteArtifactId: productArtifactId || receipt.baseSiteArtifactId || null,
+    contentHash: receipt.contentHash,
+    kind: receipt.kind,
+    target: receipt.target,
+    targetPath: receipt.targetPath || null,
+    changeSetId: receipt.changeSetId || null,
+    changedTargets: receipt.changedTargets || [],
+    beforeHash: receipt.beforeHash || null,
+    afterHash: receipt.afterHash || null,
+    firstPublishedAt: receipt.firstPublishedAt || null,
+    revisionReleasedAt: receipt.revisionReleasedAt || null,
+    publishedAt: receipt.publishedAt || null,
+    ...receiptTargetCollections(receipt, { packageDirectory: receipt.packageDirectory || receipt.contentReleaseId }),
+    mediaPaths: normalizedStringArray(mediaPaths.length ? mediaPaths : receipt.mediaPaths),
+  };
+  const identity = activeContentProjectionIdentity(projection);
+  return { ...projection, projectionHash: stableHash(identity) };
+}
+
+export function assertActiveContentProjection(projection) {
+  if (!projection || projection.projectionVersion !== ACTIVE_CONTENT_PROJECTION_VERSION) throw new Error("ActiveContentProjection version is unsupported");
+  if (typeof projection.receiptHash !== "string" || !projection.receiptHash) throw new Error("ActiveContentProjection receiptHash is missing");
+  if (typeof projection.projectionHash !== "string" || !projection.projectionHash) throw new Error("ActiveContentProjection projectionHash is missing");
+  const expected = stableHash(activeContentProjectionIdentity(projection));
+  if (projection.projectionHash !== expected) throw new Error(`ActiveContentProjection projectionHash drift: ${projection.contentReleaseId}`);
+  return projection;
 }

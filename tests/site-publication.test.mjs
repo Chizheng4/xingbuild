@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { assertSitePublicationEvidence, createActiveContentSet, createSitePublication, readActiveContentReleases, sitePublicationId, sitePublicationIdempotencyKey, validateUploadQuota } from "../scripts/lib/site-publication.mjs";
+import { assertActiveContentProjection, createActiveContentProjection, createImmutableContentReceiptProjection } from "../scripts/lib/content-release-receipt.mjs";
 import { validateContentReplacement } from "../scripts/lib/content-replacement.mjs";
 import { fileURLToPath } from "node:url";
 
@@ -108,6 +109,68 @@ test("ActiveContentSet ignores stale package-global collections and emits one ca
   assert.deepEqual(set.publishedSlugs, ["canonical"]);
   assert.deepEqual(set.activeContentReleaseIds, ["content-stale-" + "4".repeat(16)]);
   assert.deepEqual(set.contentReleaseReceipts[0].publishedSlugs, ["canonical"]);
+});
+
+test("immutable receiptHash stays separate from a deterministic active projectionHash", () => {
+  const receipt = {
+    contentReleaseId: "content-projection",
+    packageRevisionId: "revision-projection",
+    logicalContentId: "content:projection",
+    contentHash: "a".repeat(64),
+    kind: "content",
+    target: "projection",
+    targetPath: "/observations/projection",
+    baseSiteArtifactId: "v0.25.18-legacybase",
+    changedTargets: [],
+    publishedSlugs: ["projection"],
+    publishedArticleSlugs: [],
+    practiceIds: [],
+    profileIds: [],
+    businessObservationIds: [],
+  };
+  const packageProjection = createImmutableContentReceiptProjection(receipt);
+  const binding = {
+    logicalContentId: "content:projection",
+    candidateContentReleaseId: "content-projection",
+    packageRevisionId: "revision-projection",
+    predecessorReceiptId: "content-projection-old",
+    predecessorPackageId: "content-projection-old",
+    lineageBindingId: "lineage-binding-projection",
+  };
+  const input = {
+    receipt: { ...receipt, receiptHash: packageProjection.receiptHash },
+    activeSlot: {
+      logicalContentId: "content:projection",
+      activeReceiptId: "content-projection-old",
+      activeContentReleaseId: "content-projection",
+      predecessorReceiptId: "content-projection-old",
+      registryRevision: 3,
+    },
+    lineageBinding: binding,
+    productArtifactId: "v0.25.19-currentbase",
+    registryRevision: 3,
+  };
+  const first = createActiveContentProjection(input);
+  const second = createActiveContentProjection(input);
+  assert.equal(first.receiptHash, packageProjection.receiptHash);
+  assert.notEqual(first.receiptHash, first.projectionHash);
+  assert.equal(first.projectionHash, second.projectionHash);
+  assert.doesNotThrow(() => assertActiveContentProjection(first));
+  assert.throws(() => assertActiveContentProjection({ ...first, projectionHash: "0".repeat(64) }), /projectionHash drift/);
+});
+
+test("real active corpus emits one projection per slot without receipt identity mismatch", async () => {
+  const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+  const active = await readActiveContentReleases(path.join(root, ".content-workspace", "releases"), { productArtifactId: "v0.25.19-test-artifact" });
+  const set = createActiveContentSet(active);
+  assert.equal(set.activeContentProjections.length, 34);
+  assert.equal(new Set(set.activeContentProjections.map((item) => item.logicalContentId)).size, 34);
+  assert.equal(set.publishedSlugs.length, 33);
+  assert.deepEqual(set.practiceIds, ["robotaxi"]);
+  assert.ok(set.activeContentProjections.every((item) => item.receiptHash && item.projectionHash && item.receiptHash !== item.projectionHash));
+  const practice = set.activeContentProjections.find((item) => item.logicalContentId === "practice:robotaxi");
+  assert.equal(practice.predecessorReceiptId, "practice-robotaxi-d67fcedd760acc5a");
+  assert.equal(practice.lineageBindingId, "lineage-binding-715d04869b29a13ffdf442d0");
 });
 
 test("site publication requires deployment and both public verification records", () => {

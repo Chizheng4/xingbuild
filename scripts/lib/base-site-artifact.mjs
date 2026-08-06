@@ -13,7 +13,7 @@ export const CONTENT_SLOT_CAPABILITY_CONTRACT = Object.freeze({
   registeredTargets: "ContentSlotRegistry",
   mediaContract: "approved-media-manifest-v1",
   routeContract: "content-target-path-v1",
-  fieldContract: ["logicalContentId", "activeReceiptId", "predecessorReceiptId", "packageRevisionId", "snapshotHash"],
+  fieldContract: ["logicalContentId", "activeReceiptId", "predecessorReceiptId", "packageRevisionId", "receiptHash", "projectionHash", "snapshotHash"],
 });
 
 function hasText(value) {

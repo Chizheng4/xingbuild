@@ -5,6 +5,7 @@ import { assertProductContentCompatibility } from "./content-compatibility.mjs";
 import { acquireSitePublicationLease, releaseSitePublicationLease, assertSitePublicationEvidence } from "./site-publication.mjs";
 import { writeJsonAtomically } from "./content-release-state.mjs";
 import { assertContentLifecycleProjection } from "./content-lifecycle-time.mjs";
+import { assertActiveContentProjection } from "./content-release-receipt.mjs";
 import { compareAndSwapContentSlot, contentLogicalContentId, contentReceiptId, ensureContentSlotRegistry, restoreContentSlot } from "./content-slot-registry.mjs";
 import {
   assertBindingCandidate,
@@ -79,6 +80,18 @@ export async function finalizeSitePublication({ publicationDirectory, publicVeri
   for (const expected of expectedReceipts) {
     const actual = actualReceipts.find((item) => item.contentReleaseId === expected.contentReleaseId);
     if (actual) assertContentLifecycleProjection(actual, expected, expected.contentReleaseId);
+  }
+  const expectedProjections = current.contentManifest?.activeContentProjections || [];
+  const actualProjections = publicVerify.contentManifest?.activeContentProjections || [];
+  if (expectedProjections.length) {
+    if (actualProjections.length !== expectedProjections.length) throw new Error("SitePublication finalize active projection set is incomplete");
+    for (const expected of expectedProjections) {
+      const actual = actualProjections.find((item) => item.contentReleaseId === expected.contentReleaseId);
+      if (!actual || actual.projectionHash !== expected.projectionHash || actual.receiptHash !== expected.receiptHash) {
+        throw new Error(`SitePublication finalize active projection identity mismatch: ${expected.contentReleaseId}`);
+      }
+      assertActiveContentProjection(actual);
+    }
   }
   const expected = [...(current.contentReleaseIds || [])].sort();
   const actual = [...(publicVerify.activeContentReleaseIds || [])].sort();
@@ -293,6 +306,19 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
     }
     assertContentLifecycleProjection(actual, expected, expected.contentReleaseId);
   }
+  const expectedProjections = publication.contentManifest?.activeContentProjections || [];
+  if (expectedProjections.length) {
+    const actualProjections = contentManifest.activeContentProjections;
+    if (!Array.isArray(actualProjections) || actualProjections.length !== expectedProjections.length) throw new Error("public content manifest active projection set is incomplete");
+    for (const expected of expectedProjections) {
+      const actual = actualProjections.find((item) => item.contentReleaseId === expected.contentReleaseId);
+      if (!actual || actual.projectionHash !== expected.projectionHash || actual.receiptHash !== expected.receiptHash) {
+        throw new Error(`public content manifest active projection identity mismatch: ${expected.contentReleaseId}`);
+      }
+      assertActiveContentProjection(actual);
+    }
+    if (JSON.stringify(actualProjections) !== JSON.stringify(actualReceipts)) throw new Error("public content manifest projection and receipt views diverge");
+  }
   if (publication.lineageBinding) {
     const expectedBinding = validatePublicationLineageBinding(publication.lineageBinding, { sitePublicationId: publication.sitePublicationId });
     const actualCandidate = actualReceipts.find((item) => item.contentReleaseId === expectedBinding.candidateContentReleaseId
@@ -355,6 +381,7 @@ export async function verifyPublicSitePublication({ publication, baseUrl = publi
       profileIds: contentManifest.profileIds,
       businessObservationIds: contentManifest.businessObservationIds,
       mediaPaths: contentManifest.mediaPaths,
+      activeContentProjections: contentManifest.activeContentProjections || [],
       contentReleaseReceipts: actualReceipts,
       candidatePackageRevisionId: contentManifest.candidatePackageRevisionId || null,
       contentReplacement: contentManifest.contentReplacement || null,

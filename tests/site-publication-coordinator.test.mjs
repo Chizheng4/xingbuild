@@ -4,7 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { assertProductContentCompatibility } from "../scripts/lib/content-compatibility.mjs";
-import { transportSitePublication, waitForPublicSitePublication } from "../scripts/lib/site-publication-coordinator.mjs";
+import { createActiveContentProjection, createImmutableContentReceiptProjection } from "../scripts/lib/content-release-receipt.mjs";
+import { transportSitePublication, verifyPublicSitePublication, waitForPublicSitePublication } from "../scripts/lib/site-publication-coordinator.mjs";
 import { acquireSitePublicationLease, releaseSitePublicationLease } from "../scripts/lib/site-publication.mjs";
 
 const compatibleCurrent = [
@@ -103,6 +104,51 @@ test("public verification includes declared media evidence", async () => {
     maxAttempts: 1,
   });
   assert.deepEqual(Object.keys(verified.media), ["/media/robotaxi/evidence.mp4"]);
+});
+
+test("public verification consumes the canonical active projection and rejects projection drift", async () => {
+  const receipt = {
+    contentReleaseId: "content-projection",
+    logicalContentId: "content:projection",
+    contentHash: "b".repeat(64),
+    kind: "content",
+    target: "projection",
+    targetPath: "/observations/projection",
+    baseSiteArtifactId: "v0.25.0-aaaaaaaaaaaa",
+    publishedSlugs: ["projection"],
+    publishedArticleSlugs: [],
+    practiceIds: [],
+    profileIds: [],
+    businessObservationIds: [],
+  };
+  const receiptWithHash = { ...receipt, receiptHash: createImmutableContentReceiptProjection(receipt).receiptHash };
+  const projection = createActiveContentProjection({ receipt: receiptWithHash, productArtifactId: receipt.baseSiteArtifactId, registryRevision: 1 });
+  const publication = publicationFixture({
+    sitePublicationId: "pub-projection",
+    snapshotHash: "snapshot-projection",
+    contentReleaseIds: [receipt.contentReleaseId],
+    contentManifest: {
+      publishedSlugs: ["projection"],
+      activeContentProjections: [projection],
+      contentReleaseReceipts: [projection],
+    },
+  });
+  const fetchImpl = async (url) => {
+    const pathname = new URL(url).pathname;
+    if (pathname === "/release.json") return Response.json({ version: publication.productVersion, commit: publication.productCommit });
+    if (pathname === "/content-manifest.json") return Response.json({
+      version: publication.productVersion,
+      commit: publication.productCommit,
+      sitePublicationId: publication.sitePublicationId,
+      snapshotHash: publication.snapshotHash,
+      baseSiteArtifactId: publication.productArtifactId,
+      activeContentReleaseIds: publication.contentReleaseIds,
+      ...publication.contentManifest,
+      activeContentProjections: [{ ...projection, projectionHash: "0".repeat(64) }],
+    });
+    return new Response("<title>xingbuild</title>", { status: 200 });
+  };
+  await assert.rejects(verifyPublicSitePublication({ publication, fetchImpl }), /active projection identity mismatch|projectionHash drift/);
 });
 
 test("partial public manifest hard fails without propagation retries", async () => {
