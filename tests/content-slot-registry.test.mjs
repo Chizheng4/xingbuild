@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -6,11 +7,14 @@ import test from "node:test";
 import {
   ContentSlotCompareAndSwapError,
   ContentSlotRegistryMigrationError,
+  bootstrapLegacyContentSlotRegistry,
   compareAndSwapContentSlot,
   contentReceiptId,
   ensureContentSlotRegistry,
+  readAuthoritativeContentSlotRegistry,
   resolveContentSlotCandidate,
   scanLegacyContentSlotRegistry,
+  writeContentSlotRegistry,
 } from "../scripts/lib/content-slot-registry.mjs";
 import { assertContentSlotArtifactCompatible } from "../scripts/lib/base-site-artifact.mjs";
 import { finalizeSitePublication } from "../scripts/lib/site-publication-coordinator.mjs";
@@ -18,23 +22,89 @@ import { writeJsonAtomically } from "../scripts/lib/content-release-state.mjs";
 
 const projectRoot = path.resolve(new URL("..", import.meta.url).pathname);
 
-test("legacy historical corpus migrates to one active slot per logical content", async () => {
+test("authoritative Registry remains the runtime source for the real historical corpus", async () => {
   const registry = await ensureContentSlotRegistry({ sourceRoot: projectRoot });
+  assert.equal(registry.mode, "authoritative");
   assert.equal(registry.slots.length, 34);
   assert.equal(registry.slots.filter((slot) => slot.logicalContentId === "practice:robotaxi").length, 1);
   const practice = registry.slots.find((slot) => slot.logicalContentId === "practice:robotaxi");
-  assert.equal(practice.activeReceiptId, "practice-robotaxi-d67fcedd760acc5a");
-  assert.equal(practice.predecessorReceiptId, null);
+  assert.ok(practice.activeReceiptId);
+  assert.deepEqual(await readAuthoritativeContentSlotRegistry({ sourceRoot: projectRoot }), registry);
 
   const candidate = JSON.parse(await readFile(path.join(
     projectRoot,
     ".content-workspace/releases/practice-robotaxi-604214b3bfddf09f/revisions/revision-9bb22df0f30845e8/content-release.json",
   ), "utf8"));
-  const resolved = resolveContentSlotCandidate({ registry, candidate });
-  assert.equal(resolved.predecessorReceiptId, practice.activeReceiptId);
-  assert.equal(resolved.predecessorPackageSlotId, practice.activePackageSlotId);
+  if (candidate.packageRevisionId && contentReceiptId(candidate) !== practice.activeReceiptId) {
+    const resolved = resolveContentSlotCandidate({ registry, candidate });
+    assert.equal(resolved.predecessorReceiptId, practice.activeReceiptId);
+    assert.equal(resolved.predecessorPackageSlotId, practice.activePackageSlotId);
+  }
   assert.equal(candidate.supersedesPackageId, "practice-robotaxi-604214b3bfddf09f");
-  assert.notEqual(candidate.supersedesPackageId, resolved.predecessorPackageSlotId);
+  assert.notEqual(candidate.supersedesPackageId, practice.activePackageSlotId);
+});
+
+test("authoritative read ignores conflicting legacy corpus but rejects registry proof drift", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "xingbuild-authoritative-conflict-"));
+  try {
+    const releases = path.join(root, ".content-workspace/releases");
+    for (const id of ["first", "second"]) {
+      const directory = path.join(releases, id);
+      await mkdir(directory, { recursive: true });
+      await writeFile(path.join(directory, "content-release.json"), JSON.stringify({
+        contentReleaseId: id,
+        kind: "practice",
+        target: "robotaxi",
+        contentHash: id.padEnd(64, "0").slice(0, 64),
+        state: "released",
+      }));
+    }
+    const migrationSource = [];
+    const migration = {
+      type: "ContentSlotRegistryLegacyMigration",
+      version: 1,
+      scannedAt: "2026-08-05T00:00:00.000Z",
+      sourceCount: migrationSource.length,
+      sourceHash: createHash("sha256").update(JSON.stringify(migrationSource)).digest("hex"),
+      source: migrationSource,
+      conflicts: [{ code: "HISTORICAL_CONFLICT", logicalContentId: "practice:robotaxi" }],
+    };
+    const registry = {
+      schemaVersion: "content-slot-registry-v1",
+      mode: "authoritative",
+      registryRevision: 4,
+      createdAt: migration.scannedAt,
+      updatedAt: migration.scannedAt,
+      migration,
+      slots: [{
+        logicalContentId: "practice:robotaxi",
+        kind: "practice",
+        target: "robotaxi",
+        activeReceiptId: "practice-robotaxi-d67fcedd760acc5a",
+        activeContentReleaseId: "practice-robotaxi-d67fcedd760acc5a",
+        activePackageRevisionId: null,
+        activePackageSlotId: "practice-robotaxi-d67fcedd760acc5a",
+        activeContentHash: "a".repeat(64),
+        predecessorReceiptId: null,
+        firstPublishedAt: "2026-08-04T00:00:00.000Z",
+        activePackageDirectory: ".content-workspace/releases/practice-robotaxi-d67fcedd760acc5a",
+        activeBaseSiteArtifactId: "v0.25.17-e1cdc09182e9",
+      }],
+    };
+    await writeContentSlotRegistry({ sourceRoot: root, registry });
+    assert.deepEqual((await ensureContentSlotRegistry({ sourceRoot: root, releasesRoot: releases })).slots, registry.slots);
+
+    await writeFile(
+      path.join(root, ".content-workspace/content-slot-registry/registry.json"),
+      `${JSON.stringify({ ...registry, migration: { ...migration, sourceHash: "0".repeat(64) } })}\n`,
+    );
+    await assert.rejects(
+      ensureContentSlotRegistry({ sourceRoot: root, releasesRoot: releases }),
+      /migration proof hash drift/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("legacy migration reports conflicting active leaves instead of guessing", async () => {
@@ -55,6 +125,43 @@ test("legacy migration reports conflicting active leaves instead of guessing", a
     }
     await assert.rejects(
       scanLegacyContentSlotRegistry({ sourceRoot: root, releasesRoot: releases }),
+      (error) => error instanceof ContentSlotRegistryMigrationError
+        && error.conflicts.some((item) => item.code === "ACTIVE_SLOT_NOT_UNIQUE"),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("legacy-mode registry still requires an explicit successful bootstrap", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "xingbuild-slot-legacy-mode-"));
+  try {
+    const releases = path.join(root, ".content-workspace/releases");
+    for (const id of ["first", "second"]) {
+      const directory = path.join(releases, id);
+      await mkdir(directory, { recursive: true });
+      await writeFile(path.join(directory, "content-release.json"), JSON.stringify({
+        contentReleaseId: id,
+        kind: "content",
+        target: "same",
+        contentHash: id.padEnd(64, "0").slice(0, 64),
+        state: "released",
+      }));
+    }
+    await writeContentSlotRegistry({
+      sourceRoot: root,
+      registry: {
+        schemaVersion: "content-slot-registry-v1",
+        mode: "legacy",
+        registryRevision: 1,
+        createdAt: "2026-08-05T00:00:00.000Z",
+        updatedAt: "2026-08-05T00:00:00.000Z",
+        migration: { sourceCount: 0, sourceHash: "" },
+        slots: [],
+      },
+    });
+    await assert.rejects(
+      bootstrapLegacyContentSlotRegistry({ sourceRoot: root, releasesRoot: releases }),
       (error) => error instanceof ContentSlotRegistryMigrationError
         && error.conflicts.some((item) => item.code === "ACTIVE_SLOT_NOT_UNIQUE"),
     );

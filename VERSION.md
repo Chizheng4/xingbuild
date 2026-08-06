@@ -1,4 +1,11 @@
 
+## v0.25.18 — ContentSlotRegistry 权威边界与一次性 Legacy 迁移
+
+- 将 ContentSlotRegistry 读取拆分为 authoritative read 与显式 legacy bootstrap；权威 Registry 建立后，日常 prepare/build/transport/resume 不再扫描旧 package corpus。
+- 保留缺失或 legacy Registry 的严格迁移门禁：缺 predecessor、多个 active leaf、冲突、schema/迁移证明 hash drift 与 CAS drift 均硬失败，不猜测 active。
+- Coordinator、ContentLifecycleAdapter、reconcile、resume 和 SitePublication active projection 继续复用同一 Registry、PublicationLineageBinding、lease、bounded publicVerify 与 atomic finalize；不创建第二套 lifecycle/coordinator。
+- 使用真实 v0.25.17 corpus 验证 authoritative+历史冲突可运行，缺失/legacy bootstrap 仍阻断；不修改 UI、IA、schema、视觉、正文、审核、媒体或既有 contentReleaseId。
+
 ## v0.25.17 — 不可变 Revision 与 Registry Lineage Binding
 
 - 新增不可变 `PublicationLineageBinding` sidecar，以 `ContentSlotRegistry` 的真实 active receipt、registry revision 和 binding hash 固化 replacement predecessor。

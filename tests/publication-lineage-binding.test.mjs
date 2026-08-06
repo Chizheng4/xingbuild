@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -28,7 +29,14 @@ function registry(revision = 2, active = activeReceiptId) {
     registryRevision: revision,
     createdAt: "2026-08-05T00:00:00.000Z",
     updatedAt: "2026-08-05T00:00:00.000Z",
-    migration: { sourceCount: 0, sourceHash: "" },
+    migration: {
+      type: "ContentSlotRegistryLegacyMigration",
+      version: 1,
+      sourceCount: 0,
+      source: [],
+      sourceHash: createHash("sha256").update("[]").digest("hex"),
+      conflicts: [],
+    },
     slots: [{
       logicalContentId,
       kind: "practice",

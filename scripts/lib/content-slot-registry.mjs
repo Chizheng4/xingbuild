@@ -24,6 +24,8 @@ function hasText(value) {
   return typeof value === "string" && value.trim() !== "";
 }
 
+const HASH_PATTERN = /^[a-f0-9]{64}$/;
+
 export function contentSlotRegistryPath(sourceRoot) {
   return path.join(sourceRoot, CONTENT_SLOT_REGISTRY_DIRECTORY, CONTENT_SLOT_REGISTRY_FILE);
 }
@@ -86,6 +88,9 @@ function assertRegistryShape(registry) {
   if (!registry || registry.schemaVersion !== CONTENT_SLOT_REGISTRY_VERSION) {
     throw new Error(`content slot registry schema is unsupported: ${registry?.schemaVersion || "missing"}`);
   }
+  if (registry.mode !== "legacy" && registry.mode !== "authoritative") {
+    throw new Error(`content slot registry mode is unsupported: ${registry.mode || "missing"}`);
+  }
   if (!Number.isInteger(registry.registryRevision) || registry.registryRevision < 1) {
     throw new Error("content slot registry revision is invalid");
   }
@@ -98,6 +103,24 @@ function assertRegistryShape(registry) {
     if (seen.has(slot.logicalContentId)) throw new Error(`content slot registry duplicate logicalContentId: ${slot.logicalContentId}`);
     seen.add(slot.logicalContentId);
     if (slot.activeReceiptId === slot.predecessorReceiptId) throw new Error(`content slot registry self predecessor: ${slot.logicalContentId}`);
+  }
+  if (registry.mode === "authoritative") {
+    const migration = registry.migration;
+    if (!migration
+      || migration.type !== "ContentSlotRegistryLegacyMigration"
+      || migration.version !== 1
+      || !Array.isArray(migration.source)
+      || !Number.isInteger(migration.sourceCount)
+      || migration.sourceCount !== migration.source.length
+      || !HASH_PATTERN.test(migration.sourceHash || "")) {
+      throw new Error("authoritative content slot registry migration proof is incomplete");
+    }
+    if (hashValue(migration.source) !== migration.sourceHash) {
+      throw new Error("authoritative content slot registry migration proof hash drift");
+    }
+    if (migration.conflicts != null && !Array.isArray(migration.conflicts)) {
+      throw new Error("authoritative content slot registry migration conflicts are invalid");
+    }
   }
   return registry;
 }
@@ -253,16 +276,38 @@ export async function writeContentSlotRegistry({ sourceRoot, registry } = {}) {
   return registry;
 }
 
-export async function readContentSlotRegistry({ sourceRoot, migrate = true, releasesRoot } = {}) {
+/**
+ * Read the persisted authoritative registry without consulting the legacy
+ * package corpus.  Once the registry is authoritative, its slots and
+ * migration proof are the only active-slot inputs; the old corpus is history.
+ */
+export async function readAuthoritativeContentSlotRegistry({ sourceRoot } = {}) {
+  if (!sourceRoot || !path.isAbsolute(sourceRoot)) throw new Error("content slot registry sourceRoot must be absolute");
+  const file = contentSlotRegistryPath(sourceRoot);
+  if (!(await exists(file))) throw new Error(`authoritative content slot registry is missing: ${file}`);
+  const registry = validateContentSlotRegistry(await readJson(file));
+  if (registry.mode !== "authoritative") {
+    throw new Error(`content slot registry is not authoritative: ${file}`);
+  }
+  return registry;
+}
+
+/**
+ * Explicitly perform the one-time legacy bootstrap.  This is intentionally
+ * the only runtime path that scans released package history.  A registry that
+ * is already authoritative is immutable input and cannot be reinterpreted by
+ * a migration scan.
+ */
+export async function bootstrapLegacyContentSlotRegistry({ sourceRoot, releasesRoot = path.join(sourceRoot || "", ".content-workspace", "releases") } = {}) {
+  if (!sourceRoot || !path.isAbsolute(sourceRoot)) throw new Error("content slot registry sourceRoot must be absolute");
   const file = contentSlotRegistryPath(sourceRoot);
   if (await exists(file)) {
     const existing = validateContentSlotRegistry(await readJson(file));
-    if (!migrate) return existing;
+    if (existing.mode === "authoritative") {
+      throw new Error(`content slot registry is already authoritative; legacy bootstrap is not allowed: ${file}`);
+    }
     const scanned = await scanLegacyContentSlotRegistry({ sourceRoot, releasesRoot });
     if (existing.migration?.sourceHash && scanned.migration.sourceHash !== existing.migration.sourceHash) {
-      if (existing.mode === "authoritative") {
-        throw new Error(`content slot registry source corpus drift after authoritative finalize: ${file}`);
-      }
       const refreshed = {
         ...scanned,
         mode: existing.mode || "legacy",
@@ -276,10 +321,25 @@ export async function readContentSlotRegistry({ sourceRoot, migrate = true, rele
     }
     return existing;
   }
-  if (!migrate) throw new Error(`content slot registry is missing: ${file}`);
   const registry = await scanLegacyContentSlotRegistry({ sourceRoot, releasesRoot });
   await writeContentSlotRegistry({ sourceRoot, registry });
   return registry;
+}
+
+export async function readContentSlotRegistry({ sourceRoot, migrate = true, releasesRoot } = {}) {
+  if (!sourceRoot || !path.isAbsolute(sourceRoot)) throw new Error("content slot registry sourceRoot must be absolute");
+  const file = contentSlotRegistryPath(sourceRoot);
+  if (await exists(file)) {
+    const existing = validateContentSlotRegistry(await readJson(file));
+    // Authoritative reads are deliberately corpus-independent.  This branch
+    // must stay before any migration option handling so prepare/build/
+    // transport/resume cannot accidentally re-enter the legacy scanner.
+    if (existing.mode === "authoritative") return existing;
+    if (!migrate) return existing;
+    return bootstrapLegacyContentSlotRegistry({ sourceRoot, releasesRoot });
+  }
+  if (!migrate) throw new Error(`content slot registry is missing: ${file}`);
+  return bootstrapLegacyContentSlotRegistry({ sourceRoot, releasesRoot });
 }
 
 export async function ensureContentSlotRegistry(options = {}) {
