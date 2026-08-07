@@ -1,4 +1,21 @@
 
+## v0.26.7 — 首页 CTA 共享尺寸回归修复
+
+父版本：`v0.26.6` / `098499040449aadd8f4bdc14a11bd9fd9df10889`
+
+- 将 Home ActionGroup 的对齐责任移到独立 Home 容器，恢复共享 `--measure-action-group` 等宽尺寸；桌面两个按钮约 218px，整体与 Hero 主轴居中。
+- 保留 HomeProductProjection/ProductsShowcase 独立页面组合、CTA 文案/目标、H-02、视频和安全交互；不修改 ContentSet、正文、审核、来源、媒体或发布架构。
+
+## 验证合同
+
+- `npm run check`、`npm run release:prepare`、页面/视觉专项、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`。
+- Web `1600×1067`、`1280×1067`、Mobile `390×844`、窄屏 `320×844`；五路由无溢出、CTA/视频/H-02/经营观察回归。
+- 提交后 exact HEAD `release:build` 生成并校验 ProductArtifact；未执行 content publish。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.6 — 视觉验收收口与经营观察页面投影
 
 父版本：`v0.26.5` / `8f219394c25a4527cd128c6b9b0d2cee873fcf7f`

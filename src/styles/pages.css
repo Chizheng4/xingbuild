@@ -204,7 +204,7 @@
   .page-composition--home { gap: var(--rhythm-section-flow); }
   .home-page__positioning-shell { width: min(100%, var(--measure-product-hero)); margin-inline: auto; text-align: center; }
   .home-page__positioning { max-width: 100%; margin-inline: auto; font: 650 var(--type-positioning)/var(--leading-positioning) var(--font-ui); letter-spacing: -0.035em; }
-  .home-page__actions { width: min(100%, var(--measure-product-hero)); margin-inline: auto; justify-content: center; margin-top: calc(var(--rhythm-section-flow) * -0.45); }
+  .home-page__actions-align { display: flex; width: min(100%, var(--measure-product-hero)); margin-inline: auto; justify-content: center; margin-top: calc(var(--rhythm-section-flow) * -0.45); }
   .home-page__projection, .home-page__latest-briefs { min-width: 0; }
   .home-product-section, .products-showcase { display: grid; gap: 0; min-width: 0; }
   .home-product-section { gap: var(--space-1); }
@@ -227,7 +227,7 @@
   .page-composition--reading .reading-shell { width: min(100%, var(--measure-reading)); margin-inline: auto; }
 
   @media (max-width: 58.25rem) {
-    .home-page__actions { margin-top: 0; }
+    .home-page__actions-align { margin-top: 0; }
   }
   @media (max-width: 32.4375rem) {
     .page-composition { padding-block-start: var(--space-6); }

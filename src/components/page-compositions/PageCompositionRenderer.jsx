@@ -32,7 +32,9 @@ function HomeComposition({ content }) {
   return (
     <LayoutShell className="page-composition page-composition--home home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.home.homeTitle}</h1></section>
-      <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
+      <div className="home-page__actions-align">
+        <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
+      </div>
       <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-section-label"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
         <header className="section-heading"><h2 id="home-briefs-title">最新观察简讯</h2></header>

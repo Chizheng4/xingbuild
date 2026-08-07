@@ -15,7 +15,7 @@ test("Home keeps independent label anchoring, centered hero, and centered action
   assert.match(home, /最新作品/);
   assert.doesNotMatch(home, /align="start"/);
   assert.match(hero, /align = "center"/);
-  assert.match(pages, /\.home-page__actions \{ width: min\(100%, var\(--measure-product-hero\)\); margin-inline: auto; justify-content: center;/);
+  assert.match(pages, /\.home-page__actions-align \{ display: flex; width: min\(100%, var\(--measure-product-hero\)\); margin-inline: auto; justify-content: center;/);
 });
 
 test("business observations owns a full-row H1 and aligned column headings", () => {
