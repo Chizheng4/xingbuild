@@ -208,7 +208,6 @@
   .home-page__projection, .home-page__latest-briefs { min-width: 0; }
   .home-product-section, .products-showcase { display: grid; gap: 0; min-width: 0; }
   .home-product-section { gap: var(--space-1); }
-  .home-product-section__section-label { width: min(100%, var(--measure-product-hero)); margin: 0 auto; }
   .home-page__latest-briefs { display: grid; gap: var(--space-6); }
 
   .practice-page { gap: var(--space-8); }

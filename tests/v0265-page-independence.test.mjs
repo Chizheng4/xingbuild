@@ -13,10 +13,10 @@ test("Home and Products own separate page-level composition contracts", () => {
   assert.match(renderer, /ProductsShowcase/);
   assert.doesNotMatch(renderer, /ShowcaseFlow/);
   assert.doesNotMatch(home, /LatestUpdateCard|heroActions/);
-  assert.match(home, /home-product-section__section-label/);
-  assert.match(home, /id="home-product-section-label"/);
+  assert.match(home, /eyebrow="最新作品" eyebrowAlign="start"/);
+  assert.match(home, /headingId="home-product-title"/);
   assert.match(products, /LatestUpdateCard|heroActions/);
-  assert.doesNotMatch(products, /home-product-section__section-label|最新作品/);
+  assert.doesNotMatch(products, /最新作品/);
   assert.doesNotMatch(definitions, /shared-content-projection|统一投影/);
   assert.doesNotMatch(legacy, /PracticePresentation|showClosing|sectionLabel|heroAlign/);
 });

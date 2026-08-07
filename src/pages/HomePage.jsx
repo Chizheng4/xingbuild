@@ -23,7 +23,7 @@ export function HomePage() {
         <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
       </div>
       <TwoColumnLayout renderRail={renderRail}>
-        <section className="home-page__projection" aria-labelledby="home-product-section-label"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
+        <section className="home-page__projection" aria-labelledby="home-product-title"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
         <section className="home-page__projection"><BusinessObservationPresentation observation={framework} headingLevel={2} headingId="home-business-title" /></section>
       </TwoColumnLayout>
     </LayoutShell>

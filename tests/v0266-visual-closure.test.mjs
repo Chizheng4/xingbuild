@@ -12,7 +12,8 @@ const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url)
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
 test("Home keeps independent label anchoring, centered hero, and centered action axis", () => {
-  assert.match(home, /最新作品/);
+  assert.match(home, /eyebrow="最新作品" eyebrowAlign="start"/);
+  assert.match(home, /projectHomeClosingAction/);
   assert.doesNotMatch(home, /align="start"/);
   assert.match(hero, /align = "center"/);
   assert.match(pages, /\.home-page__actions-align \{ display: flex; width: min\(100%, var\(--measure-product-hero\)\); margin-inline: auto; justify-content: center;/);

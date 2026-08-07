@@ -1,7 +1,12 @@
 import { robotaxiProductConfiguration } from "../../content/productConfiguration.js";
 import { ClosingAction } from "../showcase/ClosingAction.jsx";
 import { LatestUpdateCard } from "../showcase/LatestUpdateCard.jsx";
-import { ProductHero, PracticeModuleList, projectClosingAction } from "../practice/PracticePrimitives.jsx";
+import { ProductHero, PracticeModuleList } from "../practice/PracticePrimitives.jsx";
+
+function projectProductsClosingAction() {
+  const { title, summary, action } = robotaxiProductConfiguration.closing;
+  return { title, summary, action };
+}
 
 function EmptyProductsShowcase() {
   return <section className="products-showcase content-empty-state" aria-label="内容状态"><p>暂无已发布内容</p></section>;
@@ -15,7 +20,7 @@ export function ProductsShowcase({ practice }) {
       <LatestUpdateCard />
       <ProductHero practice={practice} headingLevel={1} actions={robotaxiProductConfiguration.heroActions} />
       <PracticeModuleList modules={practice.modules} headingLevel={2} />
-      <ClosingAction closing={projectClosingAction(practice)} />
+      <ClosingAction closing={projectProductsClosingAction()} />
     </div>
   );
 }

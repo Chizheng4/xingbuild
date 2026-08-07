@@ -7,7 +7,6 @@ export {
   ProductHero,
   PracticeModule,
   PracticeModuleList,
-  projectClosingAction,
 } from "./PracticePrimitives.jsx";
 
 export function PracticePage({ practice, renderRail }) {

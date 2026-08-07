@@ -524,6 +524,7 @@
   .product-hero { display: grid; justify-items: center; gap: var(--space-4); width: min(100%, var(--measure-product-hero)); margin-inline: auto; padding-block: 0; text-align: center; }
   .product-hero--start { justify-items: start; text-align: start; }
   .product-hero__heading { display: grid; gap: var(--space-1); justify-items: center; min-width: 0; }
+  .product-hero__eyebrow--start { justify-self: start; text-align: start; }
   .product-hero--start .product-hero__heading { justify-items: start; }
   .product-hero h1, .product-hero h2 { margin: 0; font: 650 var(--type-product-title)/1.1 var(--font-ui); letter-spacing: -0.035em; }
   .product-hero--compact h2 { font: 650 var(--type-page-title)/var(--leading-title) var(--font-ui); }

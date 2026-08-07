@@ -36,12 +36,14 @@ test("v0.26.6 keeps the approved visual contract with independent page projectio
 
 test("v0.26.3 closes optional labels and preserves the registered release action", () => {
   assert.match(practice, /eyebrow = null/);
-  assert.match(practice, /eyebrow \? <p className="eyebrow product-hero__eyebrow">/);
+  assert.match(practice, /eyebrow \? <p className=\{`eyebrow product-hero__eyebrow\$\{eyebrowClass\}`\}>/);
   assert.match(practice, /practice\.intro \? <p className="product-hero__intro">/);
   assert.match(practice, /showBoundary = false/);
   assert.match(practice, /showBoundary && practice\.boundary/);
   assert.match(practice, /<ActionGroup actions=\{actions\} equalWidth \/>/);
-  assert.match(practice, /projectClosingAction/);
+  assert.doesNotMatch(practice, /projectClosingAction/);
+  assert.match(homeProjection, /projectHomeClosingAction/);
+  assert.match(productsProjection, /projectProductsClosingAction/);
   assert.match(showcase, /const title = typeof module\.label === "string"/);
   assert.match(showcase, /const group = typeof module\.group === "string"/);
   assert.match(showcase, /group && group !== title/);

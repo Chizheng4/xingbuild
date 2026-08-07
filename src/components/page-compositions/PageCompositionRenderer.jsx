@@ -35,7 +35,7 @@ function HomeComposition({ content }) {
       <div className="home-page__actions-align">
         <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
       </div>
-      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-section-label"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
+      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-title"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
         <header className="section-heading"><h2 id="home-briefs-title">最新观察简讯</h2></header>
         {briefs.length ? <ObservationRail items={briefs} anchorRef={productRef} origin="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}

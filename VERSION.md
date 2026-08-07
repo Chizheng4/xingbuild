@@ -1,4 +1,22 @@
 
+## v0.26.8 — 首页作品锚点与 Product Presentation Closing Action
+
+父版本：`v0.26.7` / `763861c57b9047b863841300c8d9acb4aa05bedf`
+
+- 修正首页“最新作品”标签自身锚点，使其与 Robotaxi 标题左起点一致并保持 4px 紧邻；Robotaxi 标题与说明继续居中。
+- 为 Home 与 `/products` 分别建立独立 Product Presentation Closing Action：Home 使用作品集语义与已登记 Robotaxi 操作，Products 使用既有 Robotaxi closing summary；两页均不显示默认“继续进入”。
+- 不修改 ContentSet、正文、审核、来源、媒体、内容发布工具或 Site Publication 架构。
+
+## 验证合同
+
+- `npm run check`、`npm run release:prepare`、页面独立性/视觉专项、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`。
+- Web `1600×1067`、`1280×1067`、Mobile `390×844`、窄屏 `320×844`；五路由无溢出、H-02 几何、Closing Action 文案/独立投影、CTA/视频/键盘/Reduced Motion 回归。
+- 提交后 exact HEAD `release:build` 生成并校验 ProductArtifact；未执行 product transport 或 content publish。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.7 — 首页 CTA 共享尺寸回归修复
 
 父版本：`v0.26.6` / `098499040449aadd8f4bdc14a11bd9fd9df10889`
