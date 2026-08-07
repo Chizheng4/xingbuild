@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { ObservationEmptyState, ObservationStream, ObservationRail } from "../observations/Briefs";
-import { ShowcaseFlow } from "../showcase/ShowcaseFlow.jsx";
+import { HomeProductProjection } from "./HomeProductProjection.jsx";
+import { ProductsShowcase } from "./ProductsShowcase.jsx";
 import { EvergreenArticle } from "../reading/EvergreenArticle";
 import { RichDocument } from "../reading/RichDocument";
 import { ResumeActions } from "../profile/ResumeActions.jsx";
@@ -32,7 +33,7 @@ function HomeComposition({ content }) {
     <LayoutShell className="page-composition page-composition--home home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.home.homeTitle}</h1></section>
       <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
-      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" sectionLabel="最新作品" heroAlign="start" actions={[]} showClosing /></section>
+      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-section-label"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
         <header className="section-heading"><h2 id="home-briefs-title">最新观察简讯</h2></header>
         {briefs.length ? <ObservationRail items={briefs} anchorRef={productRef} origin="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}
@@ -45,7 +46,7 @@ function ShowcaseComposition({ content }) {
   const practice = content.practice;
   return (
     <LayoutShell className="page-composition page-composition--showcase practice-page">
-      {practice ? <ShowcaseFlow practice={practice} showLatestUpdate showClosing heroEyebrow={null} /> : <EmptyContentState />}
+      {practice ? <ProductsShowcase practice={practice} /> : <EmptyContentState />}
     </LayoutShell>
   );
 }

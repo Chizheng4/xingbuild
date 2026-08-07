@@ -6,7 +6,7 @@ import { APPROVED_ROBOTAXI_MEDIA_ID, projectRobotaxiVisualQaFixture } from "../s
 
 const header = await readFile(new URL("../src/components/site/SiteHeader.jsx", import.meta.url), "utf8");
 const latest = await readFile(new URL("../src/components/showcase/LatestUpdateCard.jsx", import.meta.url), "utf8");
-const hero = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+const hero = await readFile(new URL("../src/components/practice/PracticePrimitives.jsx", import.meta.url), "utf8");
 const tokens = await readFile(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url), "utf8");

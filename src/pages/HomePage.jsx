@@ -1,6 +1,6 @@
 import { ObservationRail } from "../components/observations/Briefs";
 import { BusinessObservationPresentation } from "../components/business-observations/BusinessObservationPresentation";
-import { PracticePresentation } from "../components/practice/PracticePage";
+import { HomeProductProjection } from "../components/page-compositions/HomeProductProjection.jsx";
 import { ActionGroup } from "../components/site/ActionGroup.jsx";
 import { LayoutShell, TwoColumnLayout } from "../components/site/LayoutShell";
 import { selectObservationBriefs } from "../content/observationRepository";
@@ -21,7 +21,7 @@ export function HomePage() {
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{home.homeTitle}</h1></section>
       <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
       <TwoColumnLayout renderRail={renderRail}>
-        <section className="home-page__projection" aria-labelledby="home-product-title"><PracticePresentation practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" /></section>
+        <section className="home-page__projection" aria-labelledby="home-product-section-label"><HomeProductProjection practice={practice ? { ...practice, title: practice.title } : null} /></section>
         <section className="home-page__projection"><BusinessObservationPresentation observation={framework} headingLevel={2} headingId="home-business-title" /></section>
       </TwoColumnLayout>
     </LayoutShell>

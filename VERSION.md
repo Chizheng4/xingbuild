@@ -1,4 +1,22 @@
 
+## v0.26.5 — 页面独立内容接入与兼容重构
+
+父版本：`v0.26.4` / `d5795b64a2a65bd13fe755e1ae4cc199c9384969`
+
+- 首页与 `/products` 改为各自持有页面内容组合、CTA、媒体槽位与 ClosingAction；共享层只保留内容对象读取、无页面语义 primitives、tokens 与媒体安全能力。
+- 移除 `ShowcaseFlow → PracticePresentation` 的页面级统一投影耦合，保留兼容入口与页面中立的模块槽位 helper；`pageDefinitions` 改为独立内容投影契约。
+- 不修改 ContentSet、正文、审核、来源、媒体、ProductArtifact、SiteSnapshot、SitePublication、Coordinator 或既有内容身份。
+
+## 验证合同
+
+- 页面独立性回归：同一 Robotaxi 对象可由首页与 `/products` 分别读取，但一页结构/CTA/ClosingAction 变化不影响另一页。
+- `npm run check`、`npm run release:prepare`、分层 QA、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check` 与提交后 exact HEAD `release:build`。
+- Web `1600×1067`、Mobile `390×844`、窄屏 `320×844` 五路由每页一个 H1、无横向溢出、无 console/page error；保留 v0.26.4 的视觉与内容兼容合同。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.4 — H-02 首页产品内容区标签位置
 
 日期：2026-08-07

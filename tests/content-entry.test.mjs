@@ -125,9 +125,12 @@ test("practice media keeps reader interaction separate from internal provenance"
 });
 
 test("practice headings advance from the presentation root rather than using a fixed module level", async () => {
-  const practicePage = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
-  assert.match(practicePage, /headingLevel=\{headingLevel \+ 1\}/);
-  assert.match(practicePage, /const Heading = `h\$\{headingLevel\}`/);
+  const primitives = await readFile(new URL("../src/components/practice/PracticePrimitives.jsx", import.meta.url), "utf8");
+  const home = await readFile(new URL("../src/components/page-compositions/HomeProductProjection.jsx", import.meta.url), "utf8");
+  const products = await readFile(new URL("../src/components/page-compositions/ProductsShowcase.jsx", import.meta.url), "utf8");
+  assert.match(primitives, /const Heading = `h\$\{headingLevel\}`/);
+  assert.match(home, /headingLevel=\{3\}/);
+  assert.match(products, /headingLevel=\{2\}/);
 });
 
 test("media manifest directory is the single registered practice mapping", () => {

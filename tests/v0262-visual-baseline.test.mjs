@@ -3,8 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const renderer = await readFile(new URL("../src/components/page-compositions/PageCompositionRenderer.jsx", import.meta.url), "utf8");
+const homeProjection = await readFile(new URL("../src/components/page-compositions/HomeProductProjection.jsx", import.meta.url), "utf8");
+const productsProjection = await readFile(new URL("../src/components/page-compositions/ProductsShowcase.jsx", import.meta.url), "utf8");
 const pageDefinitions = await readFile(new URL("../src/content/pageDefinitions.js", import.meta.url), "utf8");
-const practice = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+const practice = await readFile(new URL("../src/components/practice/PracticePrimitives.jsx", import.meta.url), "utf8");
 const showcase = await readFile(new URL("../src/components/showcase/ShowcaseModule.jsx", import.meta.url), "utf8");
 const latest = await readFile(new URL("../src/components/showcase/LatestUpdateCard.jsx", import.meta.url), "utf8");
 const closing = await readFile(new URL("../src/components/showcase/ClosingAction.jsx", import.meta.url), "utf8");
@@ -12,12 +14,18 @@ const article = await readFile(new URL("../src/components/reading/EvergreenArtic
 const tokens = await readFile(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
-test("v0.26.4 keeps the approved Baseline 1 to 2 shared composition contract and moves H-02 into the product section", () => {
-  assert.match(renderer, /sectionLabel="最新作品"/);
-  assert.match(renderer, /heroAlign="start"/);
-  assert.doesNotMatch(renderer, /heroEyebrow="最新作品"/);
+test("v0.26.5 keeps the approved visual contract with independent page projections", () => {
+  assert.match(renderer, /<HomeProductProjection practice=/);
+  assert.match(renderer, /<ProductsShowcase practice=/);
+  assert.doesNotMatch(renderer, /ShowcaseFlow/);
+  assert.match(homeProjection, /最新作品/);
+  assert.match(homeProjection, /align="start"/);
+  assert.doesNotMatch(homeProjection, /heroEyebrow/);
   assert.match(renderer, /robotaxiProductConfiguration\.homeActions/);
-  assert.match(renderer, /showClosing/);
+  assert.match(homeProjection, /<ClosingAction closing=/);
+  assert.match(productsProjection, /<LatestUpdateCard \/>/);
+  assert.match(productsProjection, /robotaxiProductConfiguration\.heroActions/);
+  assert.match(productsProjection, /<ClosingAction closing=/);
   assert.match(renderer, /最新观察简讯/);
   assert.match(renderer, /<ObservationRail items=\{briefs\}/);
   assert.match(renderer, /business-observations-page__header/);

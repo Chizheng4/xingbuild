@@ -8,7 +8,7 @@ const pages = await readFile(new URL("../src/styles/pages.css", import.meta.url)
 const header = await readFile(new URL("../src/components/site/SiteHeader.jsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 const home = await readFile(new URL("../src/pages/HomePage.jsx", import.meta.url), "utf8");
-const practice = await readFile(new URL("../src/components/practice/PracticePage.jsx", import.meta.url), "utf8");
+const practice = await readFile(new URL("../src/components/practice/PracticePrimitives.jsx", import.meta.url), "utf8");
 const showcaseModule = await readFile(new URL("../src/components/showcase/ShowcaseModule.jsx", import.meta.url), "utf8");
 const framework = await readFile(new URL("../src/components/framework/FrameworkExplorer.jsx", import.meta.url), "utf8");
 const brief = await readFile(new URL("../src/components/observations/Briefs.jsx", import.meta.url), "utf8");
@@ -33,7 +33,7 @@ test("navigation and home project the approved IA without a fourth primary item"
   assert.doesNotMatch(header, /label: "观察"/);
   for (const path of ["/products", "/business-observations", "/observations", "/about"]) assert.match(app, new RegExp(path.replace("/", "\\/")));
   assert.match(home, /site\.homeTitle/);
-  assert.match(home, /PracticePresentation/);
+  assert.match(home, /HomeProductProjection/);
   assert.match(home, /BusinessObservationPresentation/);
   assert.match(home, /home-page__positioning-shell[\s\S]*<TwoColumnLayout/);
 });

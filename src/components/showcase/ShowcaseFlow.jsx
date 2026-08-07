@@ -1,6 +1,6 @@
-import { PracticePresentation } from "../practice/PracticePage.jsx";
+import { PracticeModuleList } from "../practice/PracticePrimitives.jsx";
 
-/** Shared showcase composition entry point; product pages provide the data. */
-export function ShowcaseFlow(props) {
-  return <PracticePresentation {...props} />;
+/** Compatibility slot helper; page-level composition is intentionally local. */
+export function ShowcaseFlow({ modules = [], headingLevel = 2 }) {
+  return <PracticeModuleList modules={modules} headingLevel={headingLevel} />;
 }

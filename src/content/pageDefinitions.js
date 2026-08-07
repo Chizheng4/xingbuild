@@ -53,7 +53,7 @@ export const pageDefinitions = Object.freeze([
   pageDefinition({
     id: "home",
     route: "/",
-    intent: "定位语与最新作品、经营观察的统一投影",
+    intent: "定位语、独立最新作品接入与经营观察",
     composition: "HomeComposition",
     regions: ["TopBand", "body", "ClosingSection"],
     contentRefs: {
@@ -64,7 +64,7 @@ export const pageDefinitions = Object.freeze([
     },
     navigationContext: { origin: "/", returnTo: "/" },
     responsivePolicy: "shared",
-    acceptance: ["single-positioning-h1", "shared-content-projection", "no-empty-rail"],
+    acceptance: ["single-positioning-h1", "independent-content-projection", "no-empty-rail"],
   }),
   pageDefinition({
     id: "products",
