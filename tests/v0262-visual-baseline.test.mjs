@@ -12,8 +12,10 @@ const article = await readFile(new URL("../src/components/reading/EvergreenArtic
 const tokens = await readFile(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
-test("v0.26.3 keeps the approved Baseline 1 to 2 shared composition contract", () => {
-  assert.match(renderer, /heroEyebrow="最新作品"/);
+test("v0.26.4 keeps the approved Baseline 1 to 2 shared composition contract and moves H-02 into the product section", () => {
+  assert.match(renderer, /sectionLabel="最新作品"/);
+  assert.match(renderer, /heroAlign="start"/);
+  assert.doesNotMatch(renderer, /heroEyebrow="最新作品"/);
   assert.match(renderer, /robotaxiProductConfiguration\.homeActions/);
   assert.match(renderer, /showClosing/);
   assert.match(renderer, /最新观察简讯/);

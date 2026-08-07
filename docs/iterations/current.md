@@ -1,27 +1,27 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.26.3`
+## 当前唯一版本：`v0.26.4`
 
-父版本：`v0.26.2` / `88e0880b472fe94b082db2c8017ae209b9eab56c`
+父版本：`v0.26.3` / `211b3c5c4cfcdf1c79ac4799c7e10111f537a718`
 
 ## 正式方案
 
-[`docs/design/v0.26.3 Baseline 2 视觉验收差异收口方案.md`](../design/v0.26.3%20Baseline%202%20视觉验收差异收口方案.md)
+[`docs/design/v0.26.4 H-02 首页产品内容区标签位置方案.md`](../design/v0.26.4%20H-02%20首页产品内容区标签位置方案.md)
 
-来源：v0.26.2 正式公网视觉验收 OA-01～OA-05；v0.26.2 保持冻结，不回写已上线版本。
+来源：`XBUILD-VISUAL-ACCEPTANCE-LEDGER-001` 的 H-02 独立视觉复验阻断；v0.26.3 保持冻结，不回写已上线版本。
 
 ## 产品目标
 
 ```mermaid
 flowchart LR
-  A[v0.26.2 公网验收 Block] --> B[OA-01～OA-05]
-  B --> C[共享组件投影收口]
+  A[v0.26.3 H-02 Block] --> B[首页产品内容区标签位置]
+  B --> C[共享产品内容投影]
   C --> D[Web→Mobile 复验]
   D --> E[产品 transport]
 ```
 
-- 继承 v0.26.2 冷白、克制、专业的全站视觉，不重造视觉系统。
-- 只收口 OA-01～OA-05，修正共享组件投影与页面语义。
+- 继承 v0.26.3 已上线的冷白、克制、专业全站视觉，不重造视觉系统。
+- 只收口 H-02，修正首页产品内容区标签的结构投影。
 - 页面继续由 `SiteShell → PageComposition → 共享组件 → ContentSet slots` 组合，不创建页面私有布局。
 - 产品版本、ContentSet、既有 38-entry 内容事实和独立运营身份保持分离。
 
@@ -29,7 +29,7 @@ flowchart LR
 
 | ID | 路由 / 组件 | 变更 |
 | --- | --- | --- |
-| OA-01 | `/` / Home ActionGroup | 首页主 CTA 为“查看最新B端产品”→`/products`；产品页继续使用 Robotaxi 外链 CTA |
+| H-02 | `/` / 产品内容区标签 | `最新作品` 位于产品内容区左上角，与 `Robotaxi运营平台` 4px 紧邻；不在 Hero 中轴，不留空白 |
 | OA-02 | 首页与产品页 / Hero ActionGroup | 同组按钮共享等宽能力，移动保持单行 |
 | OA-03 | `/products` / ShowcaseModule | `group===label` 时隐藏重复视觉 label，保留字段能力 |
 | OA-04 | `/products` / ProductHero + ClosingAction | 空 boundary、默认 eyebrow、重复摘要自动收紧 |

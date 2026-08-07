@@ -32,7 +32,7 @@ function HomeComposition({ content }) {
     <LayoutShell className="page-composition page-composition--home home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.home.homeTitle}</h1></section>
       <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.homeActions} equalWidth />
-      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" heroEyebrow="最新作品" actions={[]} showClosing /></section>
+      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" sectionLabel="最新作品" heroAlign="start" actions={[]} showClosing /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
         <header className="section-heading"><h2 id="home-briefs-title">最新观察简讯</h2></header>
         {briefs.length ? <ObservationRail items={briefs} anchorRef={productRef} origin="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}

@@ -5,10 +5,11 @@ import { ClosingAction } from "../showcase/ClosingAction.jsx";
 import { LatestUpdateCard } from "../showcase/LatestUpdateCard.jsx";
 import { ShowcaseModule } from "../showcase/ShowcaseModule.jsx";
 
-export function ProductHero({ practice, headingLevel = 1, headingId, actions = [], eyebrow = null, showBoundary = false }) {
+export function ProductHero({ practice, headingLevel = 1, headingId, actions = [], eyebrow = null, showBoundary = false, align = "center" }) {
   const Heading = `h${headingLevel}`;
+  const alignmentClass = align === "start" ? " product-hero--start" : "";
   return (
-    <header className={`product-hero${headingLevel > 1 ? " product-hero--compact" : ""}`}>
+    <header className={`product-hero${headingLevel > 1 ? " product-hero--compact" : ""}${alignmentClass}`}>
       <div className="product-hero__heading">
         {eyebrow ? <p className="eyebrow product-hero__eyebrow">{eyebrow}</p> : null}
         <Heading id={headingId}>{practice.title}</Heading>
@@ -20,11 +21,11 @@ export function ProductHero({ practice, headingLevel = 1, headingId, actions = [
   );
 }
 
-export function PracticeHeader({ practice, headingLevel = 1, headingId, showLatestUpdate = false, actions = robotaxiProductConfiguration.heroActions, eyebrow = null, showBoundary = false }) {
+export function PracticeHeader({ practice, headingLevel = 1, headingId, showLatestUpdate = false, actions = robotaxiProductConfiguration.heroActions, eyebrow = null, showBoundary = false, heroAlign = "center" }) {
   return (
     <>
       {showLatestUpdate ? <LatestUpdateCard /> : null}
-      <ProductHero practice={practice} headingLevel={headingLevel} headingId={headingId} actions={actions} eyebrow={eyebrow} showBoundary={showBoundary} />
+      <ProductHero practice={practice} headingLevel={headingLevel} headingId={headingId} actions={actions} eyebrow={eyebrow} showBoundary={showBoundary} align={heroAlign} />
     </>
   );
 }
@@ -46,13 +47,15 @@ export function PracticeModuleList({ modules = [], headingLevel = 2 }) {
   return <section className="practice-module-list" aria-label="产品说明与媒体">{modules.map((module) => <PracticeModule key={module.id} module={module} headingLevel={headingLevel} />)}</section>;
 }
 
-export function PracticePresentation({ practice, headingLevel = 1, headingId, showLatestUpdate = false, showClosing = false, actions = robotaxiProductConfiguration.heroActions, heroEyebrow = null, showBoundary = false }) {
+export function PracticePresentation({ practice, headingLevel = 1, headingId, showLatestUpdate = false, showClosing = false, actions = robotaxiProductConfiguration.heroActions, heroEyebrow = null, heroAlign = "center", sectionLabel = null, showBoundary = false }) {
   if (!practice) {
     return <section className="practice-presentation content-empty-state" aria-label="内容状态"><p>暂无已发布内容</p></section>;
   }
+  const hasSectionLabel = typeof sectionLabel === "string" && sectionLabel.trim();
   return (
-    <div className="practice-presentation">
-      <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} showLatestUpdate={showLatestUpdate} actions={actions} eyebrow={heroEyebrow} showBoundary={showBoundary} />
+    <div className={`practice-presentation${hasSectionLabel ? " practice-presentation--section-labeled" : ""}`}>
+      {hasSectionLabel ? <p className="eyebrow practice-presentation__section-label">{sectionLabel}</p> : null}
+      <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} showLatestUpdate={showLatestUpdate} actions={actions} eyebrow={heroEyebrow} heroAlign={heroAlign} showBoundary={showBoundary} />
       <PracticeModuleList modules={practice.modules} headingLevel={headingLevel + 1} />
       {showClosing ? <ClosingAction closing={projectClosingAction(practice)} /> : null}
     </div>
