@@ -551,7 +551,7 @@
     background: var(--color-surface-subtle);
   }
   .closing-action h2, .resume-actions h2 { margin: 0; font: 650 var(--type-section-title)/var(--leading-title) var(--font-ui); }
-  .closing-action p:not(.eyebrow), .resume-actions p:not(.eyebrow) { max-width: 46rem; margin: var(--space-2) 0 0; color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
+  .closing-action p:not(.eyebrow), .resume-actions p:not(.eyebrow) { max-width: 46rem; margin: var(--space-2) 0 0; color: var(--color-text-muted-on-subtle); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .resume-actions { margin-top: var(--rhythm-section); background: var(--color-surface); border: 1px solid var(--color-border); }
   .resume-actions__links { display: flex; flex-wrap: wrap; gap: var(--space-3); }
   .resume-actions__links a { min-height: var(--touch-target); display: inline-flex; align-items: center; color: var(--color-accent-strong); font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui); }

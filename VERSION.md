@@ -1,4 +1,20 @@
 
+## v0.26.9 — ClosingAction 浅色表面对比度收口
+
+父版本：`v0.26.8` / `ae3820f45b6cddad57bc2301f318f0faf10ce396`
+
+- 新增 `--color-text-muted-on-subtle: #526277` 语义 token，仅供浅色 ClosingAction summary 使用；全站 `--color-text-muted: #64748B` 保持不变。
+- 保留 v0.26.8 的 B-01/B-02、页面独立投影、CTA、媒体与内容发布边界，不修改内容事实或发布架构。
+
+## 验证合同
+
+- `npm run check`、`npm run release:prepare`、视觉/axe 专项、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`。
+- 五路由 Web/Mobile/窄屏对比度与布局回归；提交后 exact HEAD `release:build` 生成 ProductArtifact；未执行 product transport 或 content publish。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.8 — 首页作品锚点与 Product Presentation Closing Action
 
 父版本：`v0.26.7` / `763861c57b9047b863841300c8d9acb4aa05bedf`
