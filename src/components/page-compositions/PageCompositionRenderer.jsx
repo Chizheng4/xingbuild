@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { ObservationEmptyState, ObservationStream, ObservationRail } from "../observations/Briefs";
 import { ShowcaseFlow } from "../showcase/ShowcaseFlow.jsx";
 import { EvergreenArticle } from "../reading/EvergreenArticle";
@@ -24,16 +25,17 @@ function EmptyContentState() {
 }
 
 function HomeComposition({ content }) {
+  const productRef = useRef(null);
   const practice = content.practice;
   const briefs = content.briefs;
   return (
     <LayoutShell className="page-composition page-composition--home home-page">
       <section className="home-page__positioning-shell"><h1 className="home-page__positioning">{content.home.homeTitle}</h1></section>
       <ActionGroup className="home-page__actions" actions={robotaxiProductConfiguration.heroActions} />
-      <section className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" actions={[]} /></section>
+      <section ref={productRef} className="home-page__projection" aria-labelledby="home-product-title"><ShowcaseFlow practice={practice ? { ...practice, title: practice.title } : null} headingLevel={2} headingId="home-product-title" heroEyebrow="最新作品" actions={[]} showClosing /></section>
       <section className="home-page__latest-briefs" aria-labelledby="home-briefs-title">
-        <header className="section-heading"><p className="eyebrow">最新短文</p><h2 id="home-briefs-title">经营观察</h2></header>
-        {briefs.length ? <ObservationStream items={briefs.slice(0, 3)} returnTo="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}
+        <header className="section-heading"><h2 id="home-briefs-title">最新观察简讯</h2></header>
+        {briefs.length ? <ObservationRail items={briefs} anchorRef={productRef} origin="/" /> : <ObservationEmptyState {...content.home.emptyStates.observations} />}
       </section>
     </LayoutShell>
   );
@@ -43,7 +45,7 @@ function ShowcaseComposition({ content }) {
   const practice = content.practice;
   return (
     <LayoutShell className="page-composition page-composition--showcase practice-page">
-      {practice ? <ShowcaseFlow practice={practice} showLatestUpdate showClosing /> : <EmptyContentState />}
+      {practice ? <ShowcaseFlow practice={practice} showLatestUpdate showClosing heroEyebrow={null} /> : <EmptyContentState />}
     </LayoutShell>
   );
 }
@@ -95,21 +97,29 @@ function ProfileReading({ profile: about }) {
   );
 }
 
-function ArticleReading({ article, briefs }) {
+function ArticleReading({ article, briefs, home }) {
   if (!article) return <EmptyContentState />;
-  const renderRail = briefs.length
-    ? (anchorRef) => <ObservationRail items={briefs} anchorRef={anchorRef} origin="/business-observations" />
-    : undefined;
+  const renderRail = (anchorRef) => (
+    <div className="business-observations-rail">
+      <header className="business-observations-rail__header"><h2>最新简讯</h2></header>
+      {briefs.length
+        ? <ObservationRail items={briefs} anchorRef={anchorRef} origin="/business-observations" />
+        : <ObservationEmptyState {...home?.emptyStates?.observations} />}
+    </div>
+  );
   return (
     <LayoutShell className="page-composition page-composition--reading framework-page">
-      <TwoColumnLayout renderRail={renderRail}><EvergreenArticle article={article} /></TwoColumnLayout>
+      <TwoColumnLayout renderRail={renderRail}>
+        <header className="business-observations-page__header"><h1>经营观察</h1></header>
+        <EvergreenArticle article={article} headingLevel={2} />
+      </TwoColumnLayout>
     </LayoutShell>
   );
 }
 
 function ReadingComposition({ content }) {
   if (content.profile) return <ProfileReading profile={content.profile} />;
-  if (content.article) return <ArticleReading article={content.article} briefs={content.briefs || []} />;
+  if (content.article) return <ArticleReading article={content.article} briefs={content.briefs || []} home={content.home} />;
   return <EmptyContentState />;
 }
 

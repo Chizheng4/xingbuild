@@ -86,6 +86,7 @@ export const pageDefinitions = Object.freeze([
     composition: "ReadingComposition",
     regions: ["RichDocument", "rail"],
     contentRefs: {
+      home: { type: "home", id: "home" },
       article: { type: "evergreenArticle", id: "enterprise-operating-system" },
       briefs: { type: "observationBriefs", scope: "all" },
     },

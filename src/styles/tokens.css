@@ -5,9 +5,9 @@
     --color-canvas: #f8fafc;
     --color-surface: #ffffff;
     --color-surface-subtle: #f1f5f9;
-    --color-observation-surface: #f1f5f9;
+    --color-observation-surface: #ffffff;
     --color-text: #111827;
-    --color-text-muted: #475569;
+    --color-text-muted: #64748b;
     --color-border: #e2e8f0;
     --color-accent: #1769e0;
     --color-accent-strong: #0f56c7;
@@ -22,7 +22,9 @@
     --color-card-surface-hover: #f8fafc;
     --color-card-border: #e2e8f0;
     --color-card-border-hover: #bfdbfe;
+    --border-reading: #eef2f7;
     --shadow-media: 0 2px 8px rgba(15, 23, 42, 0.08), 0 20px 56px rgba(15, 23, 42, 0.10);
+    --shadow-reading: none;
     --shadow-control: 0 4px 16px rgba(15, 23, 42, 0.08);
     --shadow-card-hover: var(--shadow-control);
 

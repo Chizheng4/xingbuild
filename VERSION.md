@@ -1,4 +1,13 @@
 
+## v0.26.2 — 全站视觉 Baseline 1→2 差异与组件契约
+
+日期：2026-08-07
+
+- 在既有 PageComposition、ShowcaseModule、ObservationRail、RichDocument、ClosingAction 与 tokens 上收敛 Baseline 1→2 的局部视觉差异。
+- 首页补齐最新作品、产品 ClosingAction 与最新观察简讯；经营观察分离页面 H1 与右侧最新简讯；产品页收紧空槽位并保留 NEW、真实版本和已登记动作。
+- 手机端 ShowcaseModule 保持说明在上、媒体在下，ClosingAction 改为等宽纵向动作；阅读内容保持近乎平面的冷白表面，辅助文字统一为 `#64748B`。
+- 不修改 ContentSet、正文、审核、来源、媒体、ProductArtifact、SiteSnapshot、SitePublication、Coordinator 或既有页面事实。
+
 ## v0.26.1 — ProductArtifact 规范化身份与 SiteSnapshot 契约
 
 日期：2026-08-06
