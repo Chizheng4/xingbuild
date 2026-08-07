@@ -1,37 +1,39 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.26.2`
+## 当前唯一版本：`v0.26.3`
 
-父版本：`v0.26.1` / `e0b1fae8a738a6d442cbd1235b431b530824ca8a`
+父版本：`v0.26.2` / `88e0880b472fe94b082db2c8017ae209b9eab56c`
 
 ## 正式方案
 
-[`docs/design/v0.26.2 全站视觉 Baseline 1→2 差异与组件契约方案.md`](../design/v0.26.2%20全站视觉%20Baseline%201%E2%86%922%20差异与组件契约方案.md)
+[`docs/design/v0.26.3 Baseline 2 视觉验收差异收口方案.md`](../design/v0.26.3%20Baseline%202%20视觉验收差异收口方案.md)
 
-来源：Xing 已确认的 Baseline 1→2 视觉差异稿；当前 v0.26.1 保持冻结，不回写已上线版本。
+来源：v0.26.2 正式公网视觉验收 OA-01～OA-05；v0.26.2 保持冻结，不回写已上线版本。
 
 ## 产品目标
 
 ```mermaid
 flowchart LR
-  A[正式网站 Baseline 1] --> B[确认的 B2 局部差异]
-  B --> C[共享 PageComposition 与既有 tokens]
-  C --> D[Web 视觉验收]
-  D --> E[Mobile 投影验收]
-  E --> F[产品 transport]
+  A[v0.26.2 公网验收 Block] --> B[OA-01～OA-05]
+  B --> C[共享组件投影收口]
+  C --> D[Web→Mobile 复验]
+  D --> E[产品 transport]
 ```
 
-- 保持现有冷白、克制、专业的全站视觉；不重造视觉系统。
-- 仅收敛首页、B 端产品、经营观察、About 的已确认标题责任、槽位收紧、阅读顺序、行动区布局和辅助色。
+- 继承 v0.26.2 冷白、克制、专业的全站视觉，不重造视觉系统。
+- 只收口 OA-01～OA-05，修正共享组件投影与页面语义。
 - 页面继续由 `SiteShell → PageComposition → 共享组件 → ContentSet slots` 组合，不创建页面私有布局。
-- 媒体窗口保留轻微环境阴影；阅读内容和底部行动区不使用媒体同款厚重阴影。
-- 产品版本、内容 ContentSet、既有 38-entry 内容事实和独立运营身份保持分离。
+- 产品版本、ContentSet、既有 38-entry 内容事实和独立运营身份保持分离。
 
 ## 页面与视觉合同
 
 | ID | 路由 / 组件 | 变更 |
 | --- | --- | --- |
-| B2-HOME-01 | `/` / ProductHeading | `最新作品` 与 `Robotaxi 运营平台` 使用现有 `--space-1`（4px）紧邻，不创建新 section |
+| OA-01 | `/` / Home ActionGroup | 首页主 CTA 为“查看最新B端产品”→`/products`；产品页继续使用 Robotaxi 外链 CTA |
+| OA-02 | 首页与产品页 / Hero ActionGroup | 同组按钮共享等宽能力，移动保持单行 |
+| OA-03 | `/products` / ShowcaseModule | `group===label` 时隐藏重复视觉 label，保留字段能力 |
+| OA-04 | `/products` / ProductHero + ClosingAction | 空 boundary、默认 eyebrow、重复摘要自动收紧 |
+| OA-05 | 全站 / MediaStage | 仅媒体使用单层轻阴影，其他内容保持平面 |
 | B2-HOME-02 | `/` / ClosingAction | 产品内容后保留既有浅色行动区，不新增边框或媒体阴影 |
 | B2-HOME-03 | `/` / ObservationRail | 使用 `最新观察简讯`，最后增加 `更多观察`，不改正文和来源 |
 | B2-PRODUCT-01 | `/products` / LatestUpdateCard | 保留 `NEW + v... + 查看最新版`，链接使用已登记 Robotaxi 地址 |
@@ -48,30 +50,29 @@ flowchart LR
 
 ```yaml
 contentImpact: compatible
-contentImpactReason: visual-layout-and-token-only
+contentImpactReason: visual-projection-and-token-only
 affectedTargets: [home, practice, article, businessObservation, profile, observation]
 affectedRoutes: [/, /products, /business-observations, /observations, /about]
-affectedFields: [page-heading-slot, observation-rail-heading, closing-action-layout, shared-muted-text-token]
-compatibilityEvidence: v0.26.2-baseline-1-2-delta
+affectedFields: [home-hero-action, hero-action-width, showcase-group-label, product-boundary, closing-eyebrow, media-shadow-token]
+compatibilityEvidence: v0.26.2-official-oa-01-oa-05
 ```
 
 本版本不修改 ContentSet、正文、审核、来源、媒体或产品版本之外的内容事实；内容 task 不需要重新准备或重发既有内容。
 
 ## Engineering 合同
 
-1. 复用既有 `PageComposition`、`ShowcaseModule`、`ObservationRail`、`RichDocument`、`ClosingAction` 和 tokens；不新增第二套 CSS 或页面私有布局。
-2. 空眉题、空边界、空 label 使用条件渲染自动收紧，不用 `visibility:hidden` 保留空白。
-3. 首页与 `/products` 继续读取同一套 B 端结构化对象；只允许已登记标题和 CTA 的页面投影差异。
-4. `--shadow-media` 只用于 `MediaStage`；Brief、长文、观察集合、About 和 ClosingAction 不复用媒体阴影。
-5. 每页保持一个 H1；经营观察页面标题、观察栏标题和文章标题责任分离。
-6. 版本号继续读取真实 Robotaxi 产品版本事实，不由内容 task 管理。
-7. 不修改 ContentSet、内容发布、ProductArtifact、SiteSnapshot、SitePublication 或 Coordinator 逻辑。
+1. 复用既有 `PageComposition`、`ActionGroup`、`ShowcaseModule`、`ProductHero`、`ClosingAction`、`MediaStage` 和 tokens；不新增第二套 CSS。
+2. 首页与 `/products` 使用明确的页面投影配置，禁止混用 CTA 语义。
+3. Hero action 组等宽由共享组件实现；不写页面私有宽度补丁。
+4. 空 boundary、重复 label、默认 eyebrow 和重复摘要使用条件渲染自动收紧。
+5. 阴影只由 `MediaStage` 单层 token 控制；内容正文与行动区无媒体阴影。
+6. 不修改 ContentSet、内容发布、ProductArtifact、SiteSnapshot、SitePublication 或 Coordinator 逻辑。
 
 ## 验收顺序
 
 ```text
 Engineering 实现与分层 QA
-→ v0.26.2 commit/tag/clean
+→ v0.26.3 commit/tag/clean
 → final build + ProductArtifact preflight
 → xingbuild-visual-ux-review Web 验收
 → Mobile 投影验收
@@ -83,8 +84,8 @@ Engineering 实现与分层 QA
 
 - Web `1600×1067`、Mobile `390×844`、窄屏 `320px` 和等效 200% 缩放无横向溢出。
 - 五路由 `/`、`/products`、`/business-observations`、`/observations`、`/about` 每页一个 H1、无控制台错误。
-- 首页顺序为 `最新作品 → Robotaxi 运营平台 → ClosingAction → 最新观察简讯 → 更多观察`。
-- `/products` 的版本入口跳转 Robotaxi；四模块说明、媒体和空槽位关系正确；手机端 ClosingAction 上下排列。
+- 首页主 CTA 为 `查看最新B端产品`，产品页主 CTA 为 `进入 Robotaxi运营平台`；目标分别正确。
+- Hero action 组等宽；四模块重复 group/label 收紧；空 boundary/默认 eyebrow/重复摘要不渲染；MediaStage 仅轻阴影。
 - `/business-observations` 左右标题平齐；`企业经营体系`不承担页面 H1。
 - `/about` 连续阅读稳定；阅读面没有媒体同款厚重浮起。
 - 键盘焦点、可访问名称、Reduced Motion、自然换行通过。

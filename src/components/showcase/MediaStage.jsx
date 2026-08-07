@@ -72,7 +72,7 @@ export function MediaStage({ media, action, className = "" }) {
 
   const stageClass = `media-stage media-stage--${media?.type || "empty"}${safeAction ? " is-interactive" : ""}${className ? ` ${className}` : ""}`;
   const stage = safeAction
-    ? <a className={stageClass} style={ratioStyle(media?.ratio)} href={safeAction.href} target="_blank" rel="noreferrer" aria-label="进入 Robotaxi 运营平台" aria-busy={status === "loading"}>{content}{status === "loading" && media?.src ? <span className="media-stage__loading" aria-hidden="true">媒体加载中</span> : null}</a>
+    ? <a className={stageClass} style={ratioStyle(media?.ratio)} href={safeAction.href} target="_blank" rel="noreferrer" aria-label="进入 Robotaxi运营平台" aria-busy={status === "loading"}>{content}{status === "loading" && media?.src ? <span className="media-stage__loading" aria-hidden="true">媒体加载中</span> : null}</a>
     : <div className={stageClass} style={ratioStyle(media?.ratio)} aria-busy={status === "loading"}>{content}{status === "loading" && media?.src ? <span className="media-stage__loading" aria-hidden="true">媒体加载中</span> : null}</div>;
   return stage;
 }

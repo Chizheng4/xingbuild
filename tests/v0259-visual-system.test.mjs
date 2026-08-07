@@ -30,6 +30,10 @@ test("product actions and resume artifact keep their owner and safety boundaries
     { id: "browse-observations", href: "/business-observations" },
   ]);
   assert.equal(robotaxiProductConfiguration.closing.action.href, "https://robotaxi.xingbuild.top/");
+  assert.deepEqual(robotaxiProductConfiguration.homeActions.map(({ label, href }) => ({ label, href })), [
+    { label: "查看最新B端产品", href: "/products" },
+    { label: "浏览经营观察", href: "/business-observations" },
+  ]);
   assert.equal(resumeArtifact.htmlSha256, "453258563a8d51fc150c1ce436549ac8fd94649765cf9e98230f096216734507");
   assert.equal(resumeArtifact.pdfSha256, "71cf0ece679a415222de8e359f2e11699c832ed2bd3783a803fd3f979868c386");
   for (const file of ["src/components/showcase/MediaStage.jsx", "src/components/showcase/ShowcaseFlow.jsx", "src/components/showcase/ShowcaseModule.jsx", "src/components/profile/ResumeActions.jsx", "vite.config.mjs"]) {
@@ -46,7 +50,7 @@ test("MediaStage and the same-origin adapter keep media behavior explicit", asyn
   assert.match(mediaStage, /playsInline/);
   assert.doesNotMatch(mediaStage, /controls=/);
   assert.match(mediaStage, /IntersectionObserver/);
-  assert.match(mediaStage, /aria-label="进入 Robotaxi 运营平台"/);
+  assert.match(mediaStage, /aria-label="进入 Robotaxi运营平台"/);
   assert.match(vite, /\/__xingbuild\/robotaxi-release/);
   assert.match(vite, /contentMediaPreview/);
   assert.match(vite, /Cache-Control/);

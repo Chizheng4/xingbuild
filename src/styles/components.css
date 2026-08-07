@@ -471,6 +471,11 @@
     align-items: center;
     gap: var(--space-3);
   }
+  .action-group--equal {
+    display: grid;
+    grid-template-columns: repeat(var(--action-count), minmax(0, 1fr));
+    width: min(100%, var(--measure-action-group));
+  }
   .action-group__action {
     min-height: var(--touch-target);
     display: inline-flex;
@@ -496,6 +501,7 @@
     border-color: var(--color-accent-strong);
   }
   .action-group__action:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+  .action-group--equal .action-group__action { min-width: 0; }
 
   .latest-update-card {
     width: fit-content;

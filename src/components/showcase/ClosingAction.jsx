@@ -2,7 +2,7 @@ import { ActionGroup } from "../site/ActionGroup.jsx";
 
 export function ClosingAction({ closing }) {
   if (!closing) return null;
-  const eyebrow = closing.eyebrow ?? "继续进入";
+  const eyebrow = typeof closing.eyebrow === "string" ? closing.eyebrow.trim() : "";
   return (
     <section className="closing-action" aria-labelledby="closing-action-title">
       <div>

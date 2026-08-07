@@ -1,4 +1,13 @@
 
+## v0.26.3 — Baseline 2 视觉验收差异收口
+
+日期：2026-08-07
+
+- 首页主 CTA 与产品页 CTA 按页面语义分离；共享 Hero ActionGroup 提供桌面/移动等宽按钮能力。
+- ShowcaseModule 隐藏重复 group/label；ProductHero 与 ClosingAction 收紧当前产品的 boundary、默认 eyebrow 和重复摘要。
+- MediaStage 保留单层低扩散轻阴影；内容、About、简讯和行动区不复用媒体阴影。
+- 不修改 ContentSet、正文、审核、来源、媒体、ProductArtifact、SiteSnapshot、SitePublication、Coordinator 或既有页面事实。
+
 ## v0.26.2 — 全站视觉 Baseline 1→2 差异与组件契约
 
 日期：2026-08-07

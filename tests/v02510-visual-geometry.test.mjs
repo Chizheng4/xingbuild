@@ -39,7 +39,7 @@ test("v0.25.10 geometry contracts are explicit and remove public metadata", () =
   assert.match(hero, /product-hero\$\{headingLevel > 1/);
   assert.match(tokens, /--type-product-title: clamp\(2\.75rem, 3\.4vw, 3\.5rem\)/);
   assert.match(tokens, /--measure-product-hero: 57\.5rem/);
-  assert.match(tokens, /0 2px 8px rgba\(15, 23, 42, 0\.08\), 0 20px 56px rgba\(15, 23, 42, 0\.10\)/);
+  assert.match(tokens, /--shadow-media: 0 8px 24px rgba\(15, 23, 42, 0\.08\)/);
   assert.match(components, /width: fit-content/);
   assert.match(components, /product-hero--compact/);
   assert.match(pages, /home-page__positioning-shell \{ width: min\(100%, var\(--measure-product-hero\)\)/);

@@ -154,7 +154,7 @@ test("MediaStage keeps navigation separate from video playback and exposes fallb
   assert.match(mediaStage, /preload="metadata"/);
   assert.doesNotMatch(mediaStage, /controls=/);
   assert.match(mediaStage, /target="_blank" rel="noreferrer"/);
-  assert.match(mediaStage, /aria-label="进入 Robotaxi 运营平台"/);
+  assert.match(mediaStage, /aria-label="进入 Robotaxi运营平台"/);
   assert.match(mediaStage, /IntersectionObserver/);
   assert.match(mediaStage, /onError=\{\(\) => setStatus\("failed"\)\}/);
   assert.match(mediaStage, /MediaFallback/);

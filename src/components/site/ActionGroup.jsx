@@ -13,10 +13,19 @@ function Action({ action, className = "" }) {
   return null;
 }
 
-export function ActionGroup({ actions = [], className = "" }) {
+export function ActionGroup({ actions = [], className = "", equalWidth = false }) {
   const visibleActions = actions.filter((action) => action?.href && action?.label);
   if (!visibleActions.length) return null;
-  return <div className={`action-group ${className}`.trim()}>{visibleActions.map((action) => <Action action={action} key={action.id || `${action.href}:${action.label}`} />)}</div>;
+  const classes = ["action-group", equalWidth ? "action-group--equal" : "", className].filter(Boolean).join(" ");
+  return (
+    <div
+      className={classes}
+      data-action-count={equalWidth ? visibleActions.length : undefined}
+      style={equalWidth ? { "--action-count": String(visibleActions.length) } : undefined}
+    >
+      {visibleActions.map((action) => <Action action={action} key={action.id || `${action.href}:${action.label}`} />)}
+    </div>
+  );
 }
 
 export { Action };

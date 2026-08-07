@@ -2,7 +2,9 @@ import { SystemStage } from "./SystemStage.jsx";
 
 export function ShowcaseModule({ module, headingLevel = 2 }) {
   const Heading = `h${headingLevel}`;
-  const label = typeof module.group === "string" ? module.group.trim() : "";
+  const title = typeof module.label === "string" ? module.label.trim() : "";
+  const group = typeof module.group === "string" ? module.group.trim() : "";
+  const label = group && group !== title ? group : "";
   return (
     <article className="showcase-module">
       <div className="showcase-module__copy">

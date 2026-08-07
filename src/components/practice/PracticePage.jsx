@@ -5,7 +5,7 @@ import { ClosingAction } from "../showcase/ClosingAction.jsx";
 import { LatestUpdateCard } from "../showcase/LatestUpdateCard.jsx";
 import { ShowcaseModule } from "../showcase/ShowcaseModule.jsx";
 
-export function ProductHero({ practice, headingLevel = 1, headingId, actions = [], eyebrow = null }) {
+export function ProductHero({ practice, headingLevel = 1, headingId, actions = [], eyebrow = null, showBoundary = false }) {
   const Heading = `h${headingLevel}`;
   return (
     <header className={`product-hero${headingLevel > 1 ? " product-hero--compact" : ""}`}>
@@ -14,19 +14,27 @@ export function ProductHero({ practice, headingLevel = 1, headingId, actions = [
         <Heading id={headingId}>{practice.title}</Heading>
       </div>
       {practice.intro ? <p className="product-hero__intro">{practice.intro}</p> : null}
-      {practice.boundary ? <p className="product-hero__boundary">{practice.boundary}</p> : null}
-      {actions.length ? <ActionGroup actions={actions} /> : null}
+      {showBoundary && practice.boundary ? <p className="product-hero__boundary">{practice.boundary}</p> : null}
+      {actions.length ? <ActionGroup actions={actions} equalWidth /> : null}
     </header>
   );
 }
 
-export function PracticeHeader({ practice, headingLevel = 1, headingId, showLatestUpdate = false, actions = robotaxiProductConfiguration.heroActions, eyebrow = null }) {
+export function PracticeHeader({ practice, headingLevel = 1, headingId, showLatestUpdate = false, actions = robotaxiProductConfiguration.heroActions, eyebrow = null, showBoundary = false }) {
   return (
     <>
       {showLatestUpdate ? <LatestUpdateCard /> : null}
-      <ProductHero practice={practice} headingLevel={headingLevel} headingId={headingId} actions={actions} eyebrow={eyebrow} />
+      <ProductHero practice={practice} headingLevel={headingLevel} headingId={headingId} actions={actions} eyebrow={eyebrow} showBoundary={showBoundary} />
     </>
   );
+}
+
+function projectClosingAction(practice) {
+  const closing = practice.closing || robotaxiProductConfiguration.closing;
+  const duplicateSummary = [practice.intro, practice.boundary]
+    .filter((value) => typeof value === "string" && value.trim())
+    .some((value) => typeof closing.summary === "string" && value.trim() === closing.summary.trim());
+  return duplicateSummary ? { ...closing, summary: null } : closing;
 }
 
 export function PracticeModule({ module, headingLevel = 2 }) {
@@ -38,15 +46,15 @@ export function PracticeModuleList({ modules = [], headingLevel = 2 }) {
   return <section className="practice-module-list" aria-label="产品说明与媒体">{modules.map((module) => <PracticeModule key={module.id} module={module} headingLevel={headingLevel} />)}</section>;
 }
 
-export function PracticePresentation({ practice, headingLevel = 1, headingId, showLatestUpdate = false, showClosing = false, actions = robotaxiProductConfiguration.heroActions, heroEyebrow = null }) {
+export function PracticePresentation({ practice, headingLevel = 1, headingId, showLatestUpdate = false, showClosing = false, actions = robotaxiProductConfiguration.heroActions, heroEyebrow = null, showBoundary = false }) {
   if (!practice) {
     return <section className="practice-presentation content-empty-state" aria-label="内容状态"><p>暂无已发布内容</p></section>;
   }
   return (
     <div className="practice-presentation">
-      <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} showLatestUpdate={showLatestUpdate} actions={actions} eyebrow={heroEyebrow} />
+      <PracticeHeader practice={practice} headingLevel={headingLevel} headingId={headingId} showLatestUpdate={showLatestUpdate} actions={actions} eyebrow={heroEyebrow} showBoundary={showBoundary} />
       <PracticeModuleList modules={practice.modules} headingLevel={headingLevel + 1} />
-      {showClosing ? <ClosingAction closing={practice.closing || robotaxiProductConfiguration.closing} /> : null}
+      {showClosing ? <ClosingAction closing={projectClosingAction(practice)} /> : null}
     </div>
   );
 }

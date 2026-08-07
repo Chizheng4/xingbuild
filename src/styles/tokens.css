@@ -23,7 +23,7 @@
     --color-card-border: #e2e8f0;
     --color-card-border-hover: #bfdbfe;
     --border-reading: #eef2f7;
-    --shadow-media: 0 2px 8px rgba(15, 23, 42, 0.08), 0 20px 56px rgba(15, 23, 42, 0.10);
+    --shadow-media: 0 8px 24px rgba(15, 23, 42, 0.08);
     --shadow-reading: none;
     --shadow-control: 0 4px 16px rgba(15, 23, 42, 0.08);
     --shadow-card-hover: var(--shadow-control);
@@ -88,6 +88,7 @@
     --showcase-description-width: 17.5rem;
     --showcase-gap: 3rem;
     --showcase-mobile-gap: 1.25rem;
+    --measure-action-group: 28rem;
     --showcase-module-gap: clamp(6rem, 6vw, 7.5rem);
     --showcase-module-gap-mobile: clamp(3.5rem, 8vw, 4.5rem);
     --rail-mobile-gap: 3.5rem;
