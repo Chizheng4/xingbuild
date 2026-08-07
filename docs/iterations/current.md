@@ -1,33 +1,34 @@
 # 当前迭代
 
-## 当前唯一版本：`v0.26.5`
+## 当前唯一版本：`v0.26.6`
 
-父版本：`v0.26.4` / `d5795b64a2a65bd13fe755e1ae4cc199c9384969`
+父版本：`v0.26.5` / `8f219394c25a4527cd128c6b9b0d2cee873fcf7f`
 
 ## 正式方案
 
-[`docs/design/v0.26.5 页面独立内容接入与兼容重构方案.md`](../design/v0.26.5%20页面独立内容接入与兼容重构方案.md)
+[`docs/design/v0.26.6 视觉验收收口与经营观察页面投影方案.md`](../design/v0.26.6%20视觉验收收口与经营观察页面投影方案.md)
 
-来源：`XBUILD-VISUAL-ACCEPTANCE-LEDGER-001` 的 H-13 页面独立性阻断；v0.26.4 保持冻结，不回写已上线版本。
+来源：v0.26.5 独立视觉验收的 S-02、H-02、H-06/H-07/H-08/H-14、S-10、S-11 与 accessibility evidence 阻断；v0.26.4 保持冻结，不回写已上线版本。
 
 ## 产品目标
 
 ```mermaid
 flowchart LR
-  A[v0.26.3 H-02 Block] --> B[首页产品内容区标签位置]
-  B --> C[共享产品内容投影]
+  A[v0.26.5 页面独立组合] --> B[Home / Products 独立接入]
+  B --> C[视觉与可访问性投影收口]
   C --> D[Web→Mobile 复验]
-  D --> E[产品 transport]
+  D --> E[内容兼容门禁]
+  E --> F[产品 transport]
 ```
 
 - 继承 v0.26.3 已上线的冷白、克制、专业全站视觉，不重造视觉系统。
-- 解除首页与 `/products` 页面投影耦合，建立独立页面内容接入合同。
+- 在已解除页面编排耦合的基础上，收口 Home Hero、经营观察页面投影和无障碍证据。
 - 页面继续由 `SiteShell → PageComposition → 共享组件 → ContentSet slots` 组合，不创建页面私有布局。
 - 产品版本、ContentSet、既有 38-entry 内容事实和独立运营身份保持分离。
 
 ## 页面与视觉合同
 
-本版本正式合同见 [v0.26.5 页面独立内容接入与兼容重构方案](../design/v0.26.5%20页面独立内容接入与兼容重构方案.md)。
+本版本正式合同见 [v0.26.6 视觉验收收口与经营观察页面投影方案](../design/v0.26.6%20视觉验收收口与经营观察页面投影方案.md)。
 
 | ID | 路由 / 组件 | 变更 |
 | --- | --- | --- |
@@ -52,33 +53,34 @@ flowchart LR
 
 ```yaml
 contentImpact: compatible
-contentImpactReason: visual-projection-and-token-only
-affectedTargets: [home, practice, article, businessObservation, profile, observation]
+contentImpactReason: visual-projection-and-accessibility-only
+affectedTargets: [home, practice, article, businessObservation]
 affectedRoutes: [/, /products, /business-observations, /observations, /about]
-affectedFields: [home-hero-action, hero-action-width, showcase-group-label, product-boundary, closing-eyebrow, media-shadow-token]
-compatibilityEvidence: v0.26.2-official-oa-01-oa-05
+affectedFields: [home-action-group-alignment, home-product-label-anchor, business-observation-heading, article-summary-projection, figure-projection, accessibility-contrast]
+compatibilityEvidence: v0.26.5-independent-visual-block
 ```
 
-本版本不修改 ContentSet、正文、审核、来源、媒体或产品版本之外的内容事实；内容 task 不需要重新准备或重发既有内容。
+本版本不修改 ContentSet、正文、审核、来源、媒体或产品版本之外的内容事实；内容 task 不需要重新准备或重发既有内容。v0.26.4 继续在线，v0.26.5 不 transport。
 
 ## Engineering 合同
 
-1. 复用既有 `PageComposition`、`ActionGroup`、`ShowcaseModule`、`ProductHero`、`ClosingAction`、`MediaStage` 和 tokens；不新增第二套 CSS。
-2. 首页与 `/products` 使用明确的页面投影配置，禁止混用 CTA 语义。
-3. Hero action 组等宽由共享组件实现；不写页面私有宽度补丁。
-4. 空 boundary、重复 label、默认 eyebrow 和重复摘要使用条件渲染自动收紧。
-5. 阴影只由 `MediaStage` 单层 token 控制；内容正文与行动区无媒体阴影。
-6. 不修改 ContentSet、内容发布、ProductArtifact、SiteSnapshot、SitePublication 或 Coordinator 逻辑。
+1. 保留 v0.26.5 的 `HomeProductProjection` 与 `ProductsShowcase` 独立页面组合，不回退到共享页面级编排器。
+2. Home 的 `最新作品` 独立左上锚定，ProductHero 标题/说明独立居中；Hero ActionGroup 桌面中心与主视觉轴重合，移动单行。
+3. `/business-observations` 的 H1 移出双栏，在双栏前建立整行页眉和同基线栏目标题行；文章标题降级。
+4. 通过 projection props 隐藏摘要和图形，不删除源字段、图片文件或正文 block；隐藏后无空白占位。
+5. 保存 axe violation 的 selector/node/颜色/对比度证据；`color-contrast` serious violation 必须为 0。
+6. 保持页面独立性运行时测试、ContentSet 兼容检查和产品构建内容隔离；不修改内容发布逻辑。
 
 ## 验收顺序
 
 ```text
 Engineering 实现与分层 QA
-→ v0.26.3 commit/tag/clean
+→ v0.26.6 commit/tag/clean
 → final build + ProductArtifact preflight
 → xingbuild-visual-ux-review Web 验收
 → Mobile 投影验收
 → 既有持续授权 product transport / 公网验证
+→ design-ui 公网视觉验收
 → 内容保持既有 active，不重发
 ```
 
@@ -86,18 +88,18 @@ Engineering 实现与分层 QA
 
 - Web `1600×1067`、Mobile `390×844`、窄屏 `320px` 和等效 200% 缩放无横向溢出。
 - 五路由 `/`、`/products`、`/business-observations`、`/observations`、`/about` 每页一个 H1、无控制台错误。
-- 首页主 CTA 为 `查看最新B端产品`，产品页主 CTA 为 `进入 Robotaxi运营平台`；目标分别正确。
-- Hero action 组等宽；四模块重复 group/label 收紧；空 boundary/默认 eyebrow/重复摘要不渲染；MediaStage 仅轻阴影。
-- `/business-observations` 左右标题平齐；`企业经营体系`不承担页面 H1。
-- `/about` 连续阅读稳定；阅读面没有媒体同款厚重浮起。
-- 键盘焦点、可访问名称、Reduced Motion、自然换行通过。
-- 38-entry active ContentSet、33 条观察、article/profile/businessObservation/practice 身份不变；不运行内容发布。
+- 首页 ActionGroup 桌面中心与 Hero 主轴误差 ≤1px；`最新作品` 左上锚定、垂直 gap=4px；Robotaxi 标题/说明居中。
+- `/business-observations` H1 整行居中；`最新经营观察`/`最新简讯` 同基线同字号；文章标题降级；摘要/图形不渲染且无空白。
+- 键盘焦点、可访问名称、Reduced Motion、自然换行通过；axe violations=0，contrast node evidence 完整。
+- v0.26.5 页面独立性测试继续通过；Home 与 `/products` 结构、CTA、ClosingAction 不互相继承。
+- `content:check`、`article:check`、`practice:check` 通过；既有 active ContentSet 的数量、hash、ContentReleaseId、mediaId、review 和发布事实精确不变。
+- 产品 build 不读取或写入 `.content-workspace`；不运行 content publish；失败保持 v0.26.4 线上运行。
 
 ## 明确不做
 
-- 不回写 v0.26.1 或更早 tag/history。
+- 不回写 v0.26.4、v0.26.5 或更早 tag/history。
 - 不复制参考站品牌，不引入纸张式大卡片、装饰线、纯黑按钮、厚重阴影或炫光。
-- 不改产品定位、业务事实、路由、IA、schema、ContentSet、正文、审核、媒体或发布架构。
+- 不改产品定位、业务事实、ContentSet、正文、审核、来源、媒体或发布架构；本版本只收口已确认页面投影。
 - 不创建并行 task、branch、worktree、scheduler 或第二套发布器。
 
 ## 当前责任

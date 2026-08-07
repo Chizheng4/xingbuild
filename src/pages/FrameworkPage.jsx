@@ -18,9 +18,10 @@ export function FrameworkPage() {
   );
   return (
     <LayoutShell className="framework-page">
+      <header className="business-observations-page__header"><h1>经营观察</h1></header>
       <TwoColumnLayout renderRail={renderRail}>
-        <header className="business-observations-page__header"><h1>经营观察</h1></header>
-        <EvergreenArticle article={article} headingLevel={2} />
+        <header className="business-observations-column-heading"><h2>最新经营观察</h2></header>
+        <EvergreenArticle article={article} headingLevel={3} showSummary={false} showFigures={false} showArchitectureViews={false} />
       </TwoColumnLayout>
     </LayoutShell>
   );

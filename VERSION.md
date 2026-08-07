@@ -1,4 +1,22 @@
 
+## v0.26.6 — 视觉验收收口与经营观察页面投影
+
+父版本：`v0.26.5` / `8f219394c25a4527cd128c6b9b0d2cee873fcf7f`
+
+- 收口 Home Hero 主轴与 ActionGroup、最新作品标签锚点；保留 Robotaxi 标题/说明居中并保持移动端 4px 绑定。
+- 将经营观察 H1 提升到双栏前整行，建立左右同基线栏目标题；文章标题降级并关闭摘要、架构图投影，保留源字段、图片文件和正文 block。
+- 保存具体 axe selector/node/HTML/颜色对比证据并收口 `color-contrast` serious violations=0；不修改 ContentSet、正文、审核、来源、媒体或发布架构。
+
+## 验证合同
+
+- `npm run check`、`npm run release:prepare`、分层 `release:qa`、视觉/交互 QA、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`。
+- Web `1600×1067`、Mobile `390×844`、窄屏 `320×844` 五路由 viewport-only 证据；页面独立性、键盘焦点、Reduced Motion、媒体行为和 axe 证据。
+- 提交后 exact HEAD `release:build` 生成并校验 ProductArtifact；未执行 product transport 或 content publish。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.5 — 页面独立内容接入与兼容重构
 
 父版本：`v0.26.4` / `d5795b64a2a65bd13fe755e1ae4cc199c9384969`

@@ -11,7 +11,7 @@ export function HomeProductProjection({ practice }) {
   return (
     <div className="home-product-section">
       <p id="home-product-section-label" className="eyebrow home-product-section__section-label">最新作品</p>
-      <ProductHero practice={practice} headingLevel={2} headingId="home-product-title" actions={[]} align="start" />
+      <ProductHero practice={practice} headingLevel={2} headingId="home-product-title" actions={[]} />
       <PracticeModuleList modules={practice.modules} headingLevel={3} />
       <ClosingAction closing={projectClosingAction(practice)} />
     </div>

@@ -204,12 +204,11 @@
   .page-composition--home { gap: var(--rhythm-section-flow); }
   .home-page__positioning-shell { width: min(100%, var(--measure-product-hero)); margin-inline: auto; text-align: center; }
   .home-page__positioning { max-width: 100%; margin-inline: auto; font: 650 var(--type-positioning)/var(--leading-positioning) var(--font-ui); letter-spacing: -0.035em; }
-  .home-page__actions { justify-content: center; margin-top: calc(var(--rhythm-section-flow) * -0.45); }
+  .home-page__actions { width: min(100%, var(--measure-product-hero)); margin-inline: auto; justify-content: center; margin-top: calc(var(--rhythm-section-flow) * -0.45); }
   .home-page__projection, .home-page__latest-briefs { min-width: 0; }
   .home-product-section, .products-showcase { display: grid; gap: 0; min-width: 0; }
   .home-product-section { gap: var(--space-1); }
   .home-product-section__section-label { width: min(100%, var(--measure-product-hero)); margin: 0 auto; }
-  .home-product-section .product-hero--start { padding-block-start: 0; }
   .home-page__latest-briefs { display: grid; gap: var(--space-6); }
 
   .practice-page { gap: var(--space-8); }

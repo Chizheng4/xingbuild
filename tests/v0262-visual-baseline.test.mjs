@@ -14,12 +14,12 @@ const article = await readFile(new URL("../src/components/reading/EvergreenArtic
 const tokens = await readFile(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const components = await readFile(new URL("../src/styles/components.css", import.meta.url), "utf8");
 
-test("v0.26.5 keeps the approved visual contract with independent page projections", () => {
+test("v0.26.6 keeps the approved visual contract with independent page projections", () => {
   assert.match(renderer, /<HomeProductProjection practice=/);
   assert.match(renderer, /<ProductsShowcase practice=/);
   assert.doesNotMatch(renderer, /ShowcaseFlow/);
   assert.match(homeProjection, /最新作品/);
-  assert.match(homeProjection, /align="start"/);
+  assert.doesNotMatch(homeProjection, /align="start"/);
   assert.doesNotMatch(homeProjection, /heroEyebrow/);
   assert.match(renderer, /robotaxiProductConfiguration\.homeActions/);
   assert.match(homeProjection, /<ClosingAction closing=/);
@@ -30,7 +30,7 @@ test("v0.26.5 keeps the approved visual contract with independent page projectio
   assert.match(renderer, /<ObservationRail items=\{briefs\}/);
   assert.match(renderer, /business-observations-page__header/);
   assert.match(renderer, /<h1>经营观察<\/h1>/);
-  assert.match(renderer, /headingLevel=\{2\}/);
+  assert.match(renderer, /headingLevel=\{3\} showSummary=\{false\} showFigures=\{false\} showArchitectureViews=\{false\}/);
   assert.match(pageDefinitions, /id: "business-observations"[\s\S]*home: \{ type: "home", id: "home" \}/);
 });
 

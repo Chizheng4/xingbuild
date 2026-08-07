@@ -11,7 +11,7 @@ function SourceLinks({ sources = [], prefix = "来源：" }) {
   })}</p>;
 }
 
-export function RichDocument({ blocks = [], sources }) {
+export function RichDocument({ blocks = [], sources, showFigures = true, showArchitectureViews = true }) {
   return (
     <div className="rich-document">
       {blocks.map((block, index) => {
@@ -21,11 +21,14 @@ export function RichDocument({ blocks = [], sources }) {
         if (block.type === "list") return <ul key={index}>{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;
         if (block.type === "definitionList") return <dl key={index}>{block.items.map((item) => <div key={item.term}><dt>{item.term}</dt><dd>{item.description}</dd></div>)}</dl>;
         if (block.type === "callout") return <div className="rich-document__callout" role="note" key={index}>{block.text}</div>;
-        if (block.type === "figure") { const assets = diagramFigureAssets(block.sourcePath); return <figure className="rich-document__figure" key={index}>
+        if (block.type === "figure") {
+          if (!showFigures) return null;
+          const assets = diagramFigureAssets(block.sourcePath);
+          return <figure className="rich-document__figure" key={index}>
           <picture>{assets ? <source media="(max-width: 32.4375rem)" srcSet={assets.mobile} /> : null}<img src={assets?.desktop} alt={block.alt} /></picture>
           <figcaption>{block.caption}</figcaption>
         </figure>; }
-        if (block.type === "architectureViews") return <EnterpriseArchitectureViews key={block.id} />;
+        if (block.type === "architectureViews") return showArchitectureViews ? <EnterpriseArchitectureViews key={block.id} /> : null;
         if (block.type === "link") return <p key={index}><Link href={block.href}>{block.text}</Link></p>;
         return null;
       })}
