@@ -120,7 +120,9 @@
     --rhythm-card-summary-meta: 1rem;
     --rhythm-about-section: clamp(2.5rem, 2rem + 1.5vw, 4rem);
     --space-hero-start: clamp(3rem, 2.5rem + 1.5vw, 4rem);
-    --space-content-entry: clamp(2rem, 1.5rem + 1.5vw, 3rem);
+    /* v0.26.11 ordinary page entry: one fixed owner for the 48/32px contract. */
+    --space-content-entry: 3rem;
+    --action-label-narrow: 0.78125rem;
     --space-reading-section: 2.5rem;
 
     /* v0.26.10 page-flow contracts: each relationship has one parent owner. */
@@ -133,5 +135,9 @@
     --rhythm-business-heading-content: 4rem;
     --rhythm-business-heading-content-mobile: 3rem;
     --rhythm-products-card-hero: 1.5rem;
+  }
+
+  @media (max-width: 58.25rem) {
+    :root { --space-content-entry: 2rem; }
   }
 }

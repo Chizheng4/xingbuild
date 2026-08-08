@@ -238,7 +238,6 @@
     .framework-page .business-observations-page__header { margin-bottom: var(--rhythm-business-heading-content-mobile); }
   }
   @media (max-width: 32.4375rem) {
-    .page-composition { padding-block-start: var(--space-6); }
     .page-composition--home { padding-block-start: var(--rhythm-home-focus-mobile); }
     .home-page__positioning { font-size: clamp(1.75rem, 8vw, 2.25rem); }
   }

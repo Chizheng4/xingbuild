@@ -572,7 +572,8 @@
   @media (max-width: 58.25rem) {
     .showcase-module { grid-template-columns: minmax(0, 1fr); gap: var(--showcase-mobile-gap); }
     .showcase-module__copy { padding-top: 0; }
-    .closing-action { flex-direction: column; align-items: stretch; gap: var(--space-6); margin-top: var(--showcase-module-gap-mobile); }
+    .closing-action { flex-direction: column; align-items: stretch; gap: var(--space-6); }
+    .closing-action { margin-top: var(--showcase-module-gap-mobile); }
     .closing-action .action-group { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); }
     .closing-action .action-group__action { width: 100%; white-space: nowrap; }
   }
@@ -580,9 +581,8 @@
     .latest-update-card__link { flex-wrap: wrap; row-gap: var(--space-1); }
     .latest-update-card__title, .latest-update-card__action { white-space: normal; }
     .action-group { gap: var(--space-2); }
-    .action-group__action { padding-inline: 0.75rem; font-size: var(--type-meta); }
-    .product-hero { padding-block-start: var(--space-8); }
-    .home-product-section .product-hero { padding-block-start: 0; }
+    /* Shared narrow action token keeps the longest CTA inside equal buttons. */
+    .action-group__action { padding-inline: var(--space-2); font-size: var(--action-label-narrow); }
     .closing-action, .resume-actions { padding: var(--space-6); }
   }
   @media (prefers-reduced-motion: reduce) {

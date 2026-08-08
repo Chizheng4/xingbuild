@@ -1,3 +1,22 @@
+## v0.26.11 — 公网视觉差异收口
+
+父版本：`v0.26.10` / `253d1d964338bb6f0bb9a53ac272a955f2e2ecb8`
+
+- 收口 `/products` 版本卡→ProductHero 的单一 `24px` 关系 owner，移除移动端重复 ProductHero 上内边距。
+- 将普通页面入口共享 token 固定为 Web `48px`、Mobile/窄屏 `32px`；首页独立 `64/40px` 保持不变。
+- 共享 ActionGroup 在 `320px` 使用窄屏 action token，最长 Robotaxi CTA 保持等宽、单行并保留至少 `4px` DOM Range 安全边界。
+- 不修改 ContentSet、正文、审核、来源、媒体、content CLI、Coordinator 或 SitePublication 语义。
+
+## 验证合同
+
+- 五路由 × `1600×1067`、`1280×1067`、`390×844`、`320×844`；Products/Observations/About 的入口与 CTA 计算几何、viewport、overflow、console、axe、键盘、Reduced Motion、媒体行为。
+- `npm run check`、`npm run release:prepare`、视觉/交互 QA、`npm run release:build`、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`；既有 retained failures 分层保留。
+- 提交后 exact HEAD `release:build` 生成并校验 ProductArtifact；未执行 content prepare/build/transport/finalize。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.10 — 全站垂直节奏与 ProductHero 密度
 
 父版本：`v0.26.9` / `13119436d2a6f0a07f2a3316c3a81c23efd28c4c`
@@ -944,4 +963,3 @@ Engineering local implementation checkpoint；待产品/视觉独立验收，尚
 - 分离结构化内容、页面组件与视觉样式。
 - 建立迭代、启动、发布前检查和 EdgeOne 发布流程。
 - 建立本地 Git 稳定提交和标签规则；线上仓库与生产发布保持独立授权。
-- 当前上线状态：尚未发布，`xingbuild.top` 尚未绑定。
