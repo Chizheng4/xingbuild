@@ -123,6 +123,8 @@
     /* v0.26.11 ordinary page entry: one fixed owner for the 48/32px contract. */
     --space-content-entry: 3rem;
     --action-label-narrow: 0.78125rem;
+    --action-label-narrow-safe: 0.734375rem;
+    --action-group-safe-breakpoint: 17.5rem;
     --space-reading-section: 2.5rem;
 
     /* v0.26.10 page-flow contracts: each relationship has one parent owner. */

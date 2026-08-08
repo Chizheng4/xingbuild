@@ -1,3 +1,21 @@
+## v0.26.12 — 共享 ActionGroup 可用宽度与窄屏安全边界
+
+父版本：`v0.26.11` / `cba8406d707a5ec8c8e2a83096965973c3d47766`
+
+- 为共享 equal-width `ActionGroup` 建立实际 inline-size container 预算；classic scrollbar 下自动进入共享安全模式。
+- `/products` `320px` 最长 CTA 保持等宽、单行，并通过共享窄屏 token 保留至少 `4px` 文字安全边界。
+- 不修改页面 gutter、文案、ContentSet、正文、审核、来源、媒体、content CLI、Coordinator 或 SitePublication 语义。
+
+## 验证合同
+
+- overlay/classic scrollbar 双环境记录 `innerWidth/clientWidth`、ActionGroup/button rect、文字 Range、safe inset、`scrollWidth`。
+- 五路由 × `1600×1067`、`1280×1067`、`390×844`、`320×844`；Home/普通页入口、Products 卡片→标题、ClosingAction、视频、外链、axe、键盘和 Reduced Motion 回归。
+- `npm run check`、`npm run release:prepare`、双滚动条 QA、`npm run release:build`、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`；既有 retained failures 分层保留。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
+
 ## v0.26.11 — 公网视觉差异收口
 
 父版本：`v0.26.10` / `253d1d964338bb6f0bb9a53ac272a955f2e2ecb8`

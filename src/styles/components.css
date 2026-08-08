@@ -475,6 +475,7 @@
     display: grid;
     grid-template-columns: repeat(var(--action-count), minmax(0, 1fr));
     width: min(100%, var(--measure-action-group));
+    container: action-group / inline-size;
   }
   .action-group__action {
     min-height: var(--touch-target);
@@ -584,6 +585,10 @@
     /* Shared narrow action token keeps the longest CTA inside equal buttons. */
     .action-group__action { padding-inline: var(--space-2); font-size: var(--action-label-narrow); }
     .closing-action, .resume-actions { padding: var(--space-6); }
+  }
+  /* v0.26.12: the shared group owns the classic-scrollbar safe mode. */
+  @container action-group (max-width: 17.5rem) {
+    .action-group--equal .action-group__action { font-size: var(--action-label-narrow-safe); }
   }
   @media (prefers-reduced-motion: reduce) {
     .action-group__action { transition: none; }
