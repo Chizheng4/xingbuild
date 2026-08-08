@@ -1,3 +1,18 @@
+## v0.26.10 — 全站垂直节奏与 ProductHero 密度
+
+父版本：`v0.26.9` / `13119436d2a6f0a07f2a3316c3a81c23efd28c4c`
+
+- 以语义 spacing token 和单一父级 flow owner 收口首页首屏、经营观察页眉、ShowcaseModule→ClosingAction 与 `/products` ProductHero 密度。
+- 保持 Home/Products 独立 IA、ContentSet、媒体、正文、审核、来源和发布协调器边界不变。
+
+## 验证合同
+
+- `npm run check`、`npm run release:prepare`、内容检查、视觉 spacing、viewport/interactive/axe QA、`npm run release:closeout-check`、`npm run release:preflight`、`git diff --check`。
+- 五路由 Web/Mobile/窄屏几何、键盘、Reduced Motion、视频与无障碍证据；提交后 exact HEAD `release:build` 生成 ProductArtifact；未执行 product transport 或 content publish。
+
+## 状态
+
+Engineering local implementation checkpoint；待产品/视觉独立验收，尚未 product transport。
 
 ## v0.26.9 — ClosingAction 浅色表面对比度收口
 

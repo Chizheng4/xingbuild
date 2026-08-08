@@ -506,17 +506,21 @@
   .latest-update-card {
     width: fit-content;
     max-width: min(100%, var(--measure-update-card));
-    min-height: 2.75rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-inline: auto;
-    padding: 0.625rem 1rem;
+    padding: 0.5rem 1rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
     background: var(--color-surface);
   }
   .latest-update-card__link { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: var(--space-3); min-width: 0; color: var(--color-text); }
   .latest-update-card__link:hover { color: var(--color-text); }
-  .latest-update-card__title { color: var(--color-text); font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui); white-space: nowrap; }
-  .latest-update-card__action { color: var(--color-accent-strong); font: 600 var(--type-ui)/var(--leading-ui) var(--font-ui); white-space: nowrap; }
+  .latest-update-card__title { color: var(--color-text); font: 600 var(--type-meta)/var(--leading-meta) var(--font-ui); white-space: nowrap; }
+  .latest-update-card__action { color: var(--color-accent-strong); font: 600 var(--type-meta)/var(--leading-meta) var(--font-ui); white-space: nowrap; }
   .latest-update-card__link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 0.25rem; }
   .latest-update-card--empty { color: var(--color-text-muted); font: 400 var(--type-ui)/var(--leading-ui) var(--font-ui); }
   .latest-update-card--empty p { margin: 0; }
@@ -545,7 +549,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-8);
-    margin-top: clamp(5rem, 7vw, 7rem);
+    margin-top: var(--showcase-module-gap);
     padding: var(--space-8);
     border-radius: var(--radius-card);
     background: var(--color-surface-subtle);
@@ -568,7 +572,7 @@
   @media (max-width: 58.25rem) {
     .showcase-module { grid-template-columns: minmax(0, 1fr); gap: var(--showcase-mobile-gap); }
     .showcase-module__copy { padding-top: 0; }
-    .closing-action { flex-direction: column; align-items: stretch; gap: var(--space-6); }
+    .closing-action { flex-direction: column; align-items: stretch; gap: var(--space-6); margin-top: var(--showcase-module-gap-mobile); }
     .closing-action .action-group { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); }
     .closing-action .action-group__action { width: 100%; white-space: nowrap; }
   }

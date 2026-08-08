@@ -90,8 +90,8 @@
     --showcase-gap: 3rem;
     --showcase-mobile-gap: 1.25rem;
     --measure-action-group: 28rem;
-    --showcase-module-gap: clamp(6rem, 6vw, 7.5rem);
-    --showcase-module-gap-mobile: clamp(3.5rem, 8vw, 4.5rem);
+    --showcase-module-gap: 6rem;
+    --showcase-module-gap-mobile: 3.5rem;
     --rail-mobile-gap: 3.5rem;
     --media-ratio: 8 / 5;
     --graph-min-height-narrow: 18.75rem;
@@ -122,5 +122,16 @@
     --space-hero-start: clamp(3rem, 2.5rem + 1.5vw, 4rem);
     --space-content-entry: clamp(2rem, 1.5rem + 1.5vw, 3rem);
     --space-reading-section: 2.5rem;
+
+    /* v0.26.10 page-flow contracts: each relationship has one parent owner. */
+    --rhythm-home-focus: 4rem;
+    --rhythm-home-focus-mobile: 2.5rem;
+    --rhythm-home-positioning-action: 2.5rem;
+    --rhythm-home-positioning-action-mobile: 1.5rem;
+    --rhythm-home-action-product: 4rem;
+    --rhythm-home-action-product-mobile: 2.5rem;
+    --rhythm-business-heading-content: 4rem;
+    --rhythm-business-heading-content-mobile: 3rem;
+    --rhythm-products-card-hero: 1.5rem;
   }
 }
